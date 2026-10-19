@@ -13,6 +13,12 @@ import 'features/profile/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await SupabaseConfig.initialize();
+  } catch (e) {
+    debugPrint('Supabase initialization: $e');
+  }
+
   runApp(
     const ProviderScope(
       child: RankearnUserApp(),

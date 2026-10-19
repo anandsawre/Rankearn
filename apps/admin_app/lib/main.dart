@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 import 'features/overview/overview_tab.dart';
 import 'features/finance/finance_tab.dart';
@@ -23,6 +24,11 @@ import 'features/settings/settings_tab.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await SupabaseConfig.initialize();
+  } catch (e) {
+    debugPrint('Supabase initialization: $e');
+  }
 
   runApp(
     const ProviderScope(
