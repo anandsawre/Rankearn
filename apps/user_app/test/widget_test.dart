@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:user_app/main.dart';
 
 void main() {
-  testWidgets('RankearnUserApp renders shell and tabs successfully', (WidgetTester tester) async {
+  testWidgets('RankearnUserApp renders shell, header, and all 6 navigation tabs', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: RankearnUserApp(),
@@ -17,7 +16,7 @@ void main() {
     expect(find.text('Rankearn'), findsWidgets);
     expect(find.text('START LEARNING WITH EARNING'), findsOneWidget);
 
-    // Verify bottom navigation tabs are present
+    // Verify all 6 bottom navigation tabs are present
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Tests'), findsOneWidget);
     expect(find.text('Earn'), findsOneWidget);
@@ -25,12 +24,12 @@ void main() {
     expect(find.text('Wallet'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
 
-    // Verify home screen contents
-    expect(find.text('Popular Test Series'), findsOneWidget);
-    expect(find.text('Wallet Balance'), findsOneWidget);
+    // Verify Dashboard home screen contents
+    expect(find.text('Popular Mock Tests'), findsOneWidget);
+    expect(find.text('Avg Score'), findsOneWidget);
   });
 
-  testWidgets('UserApp navigation tab switching works', (WidgetTester tester) async {
+  testWidgets('UserApp Wallet tab renders stats, actions, and transaction ledger', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: RankearnUserApp(),
@@ -43,14 +42,17 @@ void main() {
     await tester.tap(find.text('Wallet'));
     await tester.pumpAndSettle();
 
-    // Verify wallet content is displayed
-    expect(find.text('Available Balance'), findsOneWidget);
-    expect(find.text('+ Top-up Coins'), findsOneWidget);
+    // Verify wallet content is displayed with pixel parity to React Wallet.tsx
+    expect(find.text('BALANCE'), findsOneWidget);
+    expect(find.text('TOTAL EARNED'), findsOneWidget);
+    expect(find.text('TOTAL SPENT'), findsOneWidget);
+    expect(find.text('WITHDRAW'), findsOneWidget);
+    expect(find.text('Add Coins'), findsOneWidget);
     expect(find.text('Withdraw (₹)'), findsOneWidget);
-    expect(find.text('Recent Transactions'), findsOneWidget);
+    expect(find.text('Transactions'), findsOneWidget);
   });
 
-  testWidgets('Spin tab renders LuckyWheelScreen with wheel and spin button', (WidgetTester tester) async {
+  testWidgets('UserApp Spin tab renders LuckyWheelScreen with custom canvas wheel and spin button', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: RankearnUserApp(),
@@ -68,6 +70,27 @@ void main() {
     expect(find.text('Spin the Wheel to Win Coins!'), findsOneWidget);
     expect(find.text('SPIN FOR FREE'), findsOneWidget);
     expect(find.text('SPIN'), findsOneWidget);
+  });
+
+  testWidgets('UserApp Profile tab renders candidate header, pro pass, and account details', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: RankearnUserApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Switch to Profile tab
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+
+    // Verify profile contents matching React Profile.tsx
+    expect(find.text('Vikram Singh'), findsOneWidget);
+    expect(find.text('70th BPSC Aspirant'), findsOneWidget);
+    expect(find.text('Rankearn PRO Pass'), findsOneWidget);
+    expect(find.text('Account Details'), findsOneWidget);
+    expect(find.text('Sign Out from Account'), findsOneWidget);
   });
 
   testWidgets('Tests tab clicking Start Test Now opens QuizScreen', (WidgetTester tester) async {
@@ -90,12 +113,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify QuizScreen is rendered with question text, options, and timer
-    expect(find.text('Question 1 of 2'), findsOneWidget);
-    expect(find.text('Which Mauryan ruler embraced Buddhism after the Kalinga War?'), findsOneWidget);
+    expect(find.text('Question 1 of 5'), findsOneWidget);
+    expect(find.text('When was the state of Bihar carved out from the Bengal Presidency?'), findsOneWidget);
     expect(find.text('Save & Next →'), findsOneWidget);
   });
 
-  testWidgets('Earn tab clicking Enter 1v1 Arena opens BattleScreen', (WidgetTester tester) async {
+  testWidgets('Earn tab clicking 1v1 Battle then Find Opponent opens BattleScreen', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: RankearnUserApp(),
@@ -108,8 +131,12 @@ void main() {
     await tester.tap(find.text('Earn'));
     await tester.pumpAndSettle();
 
-    // Tap Enter 1v1 Arena button
-    final battleButton = find.text('Enter 1v1 Arena (Stake 20 Coins)');
+    // Switch to 1v1 Battle subtab
+    await tester.tap(find.text('1v1 Battle ⚔️'));
+    await tester.pumpAndSettle();
+
+    // Tap Find Random Opponent button
+    final battleButton = find.text('Find Random Opponent ⚔️');
     await tester.ensureVisible(battleButton);
     await tester.tap(battleButton);
     await tester.pumpAndSettle();

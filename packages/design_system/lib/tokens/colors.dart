@@ -12,6 +12,14 @@ class AppColors {
   static const Color brandPrimaryLight = Color(0xFFECFDF5);  // Emerald 50
   static const Color brandPrimaryMuted = Color(0xFFA7F3D0);  // Emerald 200
 
+  // Standard Aliases
+  static const Color primary = brandPrimary;
+  static const Color primaryHover = brandPrimaryHover;
+  static const Color primaryDark = brandPrimaryDark;
+  static const Color primaryLight = brandPrimaryLight;
+  static const Color primarySubtle = brandPrimaryLight;
+  static const Color canvasDark = surfaceSubtle;
+
   // --- Canvas & Surfaces ---
   static const Color background = Color(0xFFF8FAF9);         // Canvas background
   static const Color surface = Color(0xFFFFFFFF);            // Primary card white

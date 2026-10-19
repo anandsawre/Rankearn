@@ -5,12 +5,14 @@ import 'package:data_layer/data_layer.dart';
 import 'features/quiz/quiz_screen.dart';
 import 'features/spin/lucky_wheel_screen.dart';
 import 'features/battle/battle_screen.dart';
+import 'features/dashboard/dashboard_screen.dart';
+import 'features/tests/test_series_screen.dart';
+import 'features/earn/earn_screen.dart';
+import 'features/wallet/wallet_screen.dart';
+import 'features/profile/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Supabase initialization with safety fallback
-  // In production, SUPABASE_URL and SUPABASE_ANON_KEY are passed via --dart-define
   runApp(
     const ProviderScope(
       child: RankearnUserApp(),
@@ -42,19 +44,347 @@ class UserAppShell extends StatefulWidget {
 class _UserAppShellState extends State<UserAppShell> {
   UserNavTab _activeTab = UserNavTab.home;
 
+  UserProfile _profile = UserProfile(
+    id: 'usr_vikram_70',
+    name: 'Vikram Singh',
+    email: 'vikram.singh@rankearn.in',
+    phone: '+91 98765 43210',
+    coins: 1450,
+    subscriptionStatus: 'premium',
+    examPreparingFor: '70th BPSC Aspirant',
+    state: 'Bihar, India',
+    createdAt: DateTime(2026, 10, 1),
+  );
+
+  int _unreadNotifications = 2;
+
+  // Sample Mock Test for Quick Launch
+  final TestModel _defaultMockTest = const TestModel(
+    id: 'test_bpsc_01',
+    title: '70th BPSC Prelims Grand Mock 1',
+    categoryId: 'BPSC',
+    durationMinutes: 120,
+    totalQuestions: 150,
+    negativeMarking: 0.33,
+    isProOnly: false,
+    unlockPriceCoins: 0,
+  );
+
+  final List<QuestionModel> _sampleQuestions = const [
+    QuestionModel(
+      id: 'q_01',
+      testId: 'test_bpsc_01',
+      questionNumber: 1,
+      questionTextEnglish: 'When was the state of Bihar carved out from the Bengal Presidency?',
+      questionTextHindi: 'बिहार राज्य को बंगाल प्रेसीडेंसी से कब अलग किया गया था?',
+      options: [
+        QuestionOption(textEnglish: '1912', textHindi: '1912'),
+        QuestionOption(textEnglish: '1905', textHindi: '1905'),
+        QuestionOption(textEnglish: '1936', textHindi: '1936'),
+        QuestionOption(textEnglish: '1947', textHindi: '1947'),
+      ],
+      correctAnswer: 0,
+      explanationEnglish: 'Bihar was carved out of the Bengal Presidency on 22 March 1912 (celebrated as Bihar Diwas).',
+    ),
+    QuestionModel(
+      id: 'q_02',
+      testId: 'test_bpsc_01',
+      questionNumber: 2,
+      questionTextEnglish: 'Which river is historically known as the "Sorrow of Bihar"?',
+      questionTextHindi: 'किस नदी को ऐतिहासिक रूप से "बिहार का शोक" कहा जाता है?',
+      options: [
+        QuestionOption(textEnglish: 'Gandak River', textHindi: 'गंडक नदी'),
+        QuestionOption(textEnglish: 'Kosi River', textHindi: 'कोसी नदी'),
+        QuestionOption(textEnglish: 'Son River', textHindi: 'सोन नदी'),
+        QuestionOption(textEnglish: 'Ghaghara River', textHindi: 'घाघरा नदी'),
+      ],
+      correctAnswer: 1,
+      explanationEnglish: 'The Kosi river is called the Sorrow of Bihar due to its frequent course shifts and devastating floods.',
+    ),
+    QuestionModel(
+      id: 'q_03',
+      testId: 'test_bpsc_01',
+      questionNumber: 3,
+      questionTextEnglish: 'What is the minimum age required to become the Governor of an Indian state?',
+      questionTextHindi: 'भारत के किसी राज्य का राज्यपाल बनने के लिए न्यूनतम आयु क्या है?',
+      options: [
+        QuestionOption(textEnglish: '25 Years', textHindi: '25 वर्ष'),
+        QuestionOption(textEnglish: '30 Years', textHindi: '30 वर्ष'),
+        QuestionOption(textEnglish: '35 Years', textHindi: '35 वर्ष'),
+        QuestionOption(textEnglish: '40 Years', textHindi: '40 वर्ष'),
+      ],
+      correctAnswer: 2,
+      explanationEnglish: 'Under Article 157 of the Indian Constitution, the minimum age is 35 years.',
+    ),
+    QuestionModel(
+      id: 'q_04',
+      testId: 'test_bpsc_01',
+      questionNumber: 4,
+      questionTextEnglish: 'Who founded the Nalanda Mahavihara in ancient India?',
+      questionTextHindi: 'प्राचीन भारत में नालंदा महाविहार की स्थापना किसने की थी?',
+      options: [
+        QuestionOption(textEnglish: 'Harshavardhana', textHindi: 'हर्षवर्धन'),
+        QuestionOption(textEnglish: 'Kumaragupta I', textHindi: 'कुमारगुप्त प्रथम'),
+        QuestionOption(textEnglish: 'Samudragupta', textHindi: 'समुद्रगुप्त'),
+        QuestionOption(textEnglish: 'Ashoka', textHindi: 'अशोक'),
+      ],
+      correctAnswer: 1,
+      explanationEnglish: 'Nalanda was founded during the 5th century CE by Gupta Emperor Kumaragupta I.',
+    ),
+    QuestionModel(
+      id: 'q_05',
+      testId: 'test_bpsc_01',
+      questionNumber: 5,
+      questionTextEnglish: 'In the Indian Rupee coin system on Rankearn, how many coins equal ₹1.00?',
+      questionTextHindi: 'Rankearn के कॉइन सिस्टम में कितने कॉइन ₹1.00 के बराबर होते हैं?',
+      options: [
+        QuestionOption(textEnglish: '10 Coins', textHindi: '10 कॉइन'),
+        QuestionOption(textEnglish: '20 Coins', textHindi: '20 कॉइन'),
+        QuestionOption(textEnglish: '50 Coins', textHindi: '50 कॉइन'),
+        QuestionOption(textEnglish: '100 Coins', textHindi: '100 कॉइन'),
+      ],
+      correctAnswer: 1,
+      explanationEnglish: 'On Rankearn, 20 Coins equal ₹1.00 for withdrawal and test entries.',
+    ),
+  ];
+
+  void _startQuiz(TestModel test) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => QuizScreen(
+          test: test,
+          questions: _sampleQuestions,
+          onExit: () => Navigator.of(context).pop(),
+          onSubmitted: (score, accuracy) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Quiz submitted! Score: $score | Accuracy: ${accuracy.toStringAsFixed(1)}%'),
+                backgroundColor: AppColors.primary,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _startBattle([int entryFee = 20]) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BattleScreen(
+          playerName: _profile.name,
+          opponentName: 'Amit Verma (Rank #4)',
+          entryFeeCoins: entryFee,
+          onExit: () => Navigator.of(context).pop(),
+          onMatchFinished: (coinsWon) {
+            setState(() {
+              _profile = _profile.copyWith(coins: _profile.coins + coinsWon);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openNotificationsModal() {
+    setState(() => _unreadNotifications = 0);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.notifications_active, color: AppColors.primary),
+                      SizedBox(width: 8),
+                      Text('Notifications', style: AppTypography.titleLarge),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const Divider(),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySubtle,
+                    borderRadius: AppRadii.borderMd,
+                  ),
+                  child: const Icon(Icons.emoji_events, color: AppColors.primary),
+                ),
+                title: const Text('BPSC Grand League Winner!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: const Text('You won 250 Coins in the 70th BPSC Prelims Mega Contest.', style: TextStyle(fontSize: 12)),
+                trailing: const Text('2h ago', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+              ),
+              const Divider(),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: AppRadii.borderMd,
+                  ),
+                  child: const Icon(Icons.bolt, color: Color(0xFFD97706)),
+                ),
+                title: const Text('Live Battle Challenge', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: const Text('New 1v1 Arena is live with 2x coin multiplier.', style: TextStyle(fontSize: 12)),
+                trailing: const Text('5h ago', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+              ),
+              const SizedBox(height: 16),
+              AppButton(
+                label: 'Mark All as Read',
+                variant: AppButtonVariant.secondary,
+                fullWidth: true,
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _openSupportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            children: const [
+              Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+              SizedBox(width: 8),
+              Text('Support Chat', style: TextStyle(fontWeight: FontWeight.w900)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Need help with mock tests, withdrawal verification, or tournament prize distribution?',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+              SizedBox(height: 12),
+              Text('📧 Email: support@rankearn.in\n💬 Telegram: @RankearnSupport\n⏰ Hours: 9:00 AM - 9:00 PM IST', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Support ticket created. Our team will contact you shortly!')),
+                );
+              },
+              child: const Text('Submit Ticket', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _openFeedbackDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            children: const [
+              Icon(Icons.star_outline, color: Color(0xFFF59E0B)),
+              SizedBox(width: 8),
+              Text('Give Feedback', style: TextStyle(fontWeight: FontWeight.w900)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('How would you rate your mock test experience on Rankearn?'),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) => const Icon(Icons.star, color: Color(0xFFF59E0B), size: 28)),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Any suggestions or feature requests...',
+                  border: OutlineInputBorder(borderRadius: AppRadii.borderMd),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Thank you for your valuable feedback!')),
+                );
+              },
+              child: const Text('Submit', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handleLogout() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Signed out successfully. Session closed.'),
+        backgroundColor: Color(0xFFE11D48),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isPro = _profile.subscriptionStatus == 'premium';
+
     return Scaffold(
+      drawer: _buildDrawer(),
       appBar: AppHeader(
-        coins: 1450,
-        userName: 'Vikram Singh',
-        isPro: true,
-        unreadNotifications: 2,
-        onNotificationTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Notifications Drawer (2 unread alerts)')),
-          );
-        },
+        coins: _profile.coins,
+        userName: _profile.name,
+        isPro: isPro,
+        unreadNotifications: _unreadNotifications,
+        showMenuButton: true,
+        onMenuTap: () => Scaffold.of(context).openDrawer(),
+        onNotificationTap: _openNotificationsModal,
         onCoinsTap: () => setState(() => _activeTab = UserNavTab.wallet),
         onProfileTap: () => setState(() => _activeTab = UserNavTab.profile),
       ),
@@ -63,513 +393,344 @@ class _UserAppShellState extends State<UserAppShell> {
         onTabSelected: (tab) => setState(() => _activeTab = tab),
       ),
       body: switch (_activeTab) {
-        UserNavTab.home => _buildDashboardView(),
-        UserNavTab.tests => _buildTestsView(),
-        UserNavTab.earn => _buildEarnView(),
-        UserNavTab.spin => _buildSpinView(),
-        UserNavTab.wallet => _buildWalletView(),
-        UserNavTab.profile => _buildProfileView(),
+        UserNavTab.home => DashboardScreen(
+            profile: _profile,
+            onStartTest: () => _startQuiz(_defaultMockTest),
+            onExploreTests: () => setState(() => _activeTab = UserNavTab.tests),
+            onJoinContest: () => setState(() => _activeTab = UserNavTab.earn),
+            onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
+            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
+          ),
+        UserNavTab.tests => TestSeriesScreen(
+            userCoins: _profile.coins,
+            onStartTest: (test) => _startQuiz(test),
+          ),
+        UserNavTab.earn => EarnScreen(
+            userCoins: _profile.coins,
+            onOpenBattle: () => _startBattle(20),
+            onJoinContest: (title, fee) => _startBattle(fee),
+          ),
+        UserNavTab.spin => LuckyWheelScreen(
+            currentCoins: _profile.coins,
+            onBack: () => setState(() => _activeTab = UserNavTab.home),
+            onRewardClaimed: (coinsWon) {
+              setState(() {
+                _profile = _profile.copyWith(coins: _profile.coins + coinsWon);
+              });
+            },
+          ),
+        UserNavTab.wallet => WalletScreen(
+            profile: _profile,
+            onCoinsUpdated: () => setState(() {}),
+          ),
+        UserNavTab.profile => ProfileScreen(
+            profile: _profile,
+            onUpdateProfile: (updated) => setState(() => _profile = updated),
+            onLogout: _handleLogout,
+            onOpenSupport: _openSupportDialog,
+            onOpenFeedback: _openFeedbackDialog,
+          ),
       },
     );
   }
 
-  // --- 1. Dashboard View ---
-  Widget _buildDashboardView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingMobile),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Banner Carousel Simulation
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Container(
-              height: 160,
-              decoration: BoxDecoration(
-                borderRadius: AppRadii.borderLg,
-                gradient: AppColors.brandGradient,
-              ),
+  // --- Slide-out Navigation Drawer matching React App.tsx:1150-1258 ---
+  Widget _buildDrawer() {
+    return Drawer(
+      backgroundColor: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Drawer Header with Rankearn Brand
+            Container(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF059669), Color(0xFF10B981)],
+                ),
+              ),
+              child: Row(
                 children: [
-                  const AppProBadge(),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withAlpha(30), blurRadius: 8),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'R',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Rankearn',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      Text(
+                        'Learning with Earning',
+                        style: TextStyle(
+                          color: Colors.white.withAlpha(210),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Scrollable List of Navigation items
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                children: [
+                  _buildDrawerNavItem(
+                    icon: Icons.home_rounded,
+                    label: 'Home Dashboard',
+                    tab: UserNavTab.home,
+                  ),
+                  _buildDrawerNavItem(
+                    icon: Icons.menu_book_rounded,
+                    label: 'Test Series & Mocks',
+                    tab: UserNavTab.tests,
+                  ),
+                  _buildDrawerNavItem(
+                    icon: Icons.currency_rupee_rounded,
+                    label: 'Earn & Tournaments',
+                    tab: UserNavTab.earn,
+                  ),
+                  _buildDrawerNavItem(
+                    icon: Icons.rotate_right_rounded,
+                    label: 'Lucky Spin Wheel',
+                    tab: UserNavTab.spin,
+                  ),
+                  _buildDrawerNavItem(
+                    icon: Icons.account_balance_wallet_rounded,
+                    label: 'Wallet & Payouts',
+                    tab: UserNavTab.wallet,
+                  ),
+                  _buildDrawerNavItem(
+                    icon: Icons.person_rounded,
+                    label: 'Candidate Profile',
+                    tab: UserNavTab.profile,
+                  ),
+
+                  const SizedBox(height: 12),
+                  const Divider(),
+
+                  // Stats Box (Matching React App.tsx:1186-1200)
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.canvasDark,
+                      borderRadius: AppRadii.borderMd,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.bolt, color: Color(0xFFF59E0B), size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${_profile.coins} Coins',
+                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.primarySubtle,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'LEVEL 4',
+                                style: TextStyle(
+                                  color: AppColors.primaryDark,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: const LinearProgressIndicator(
+                            value: 0.68,
+                            backgroundColor: AppColors.border,
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   const SizedBox(height: 8),
                   const Text(
-                    '70th BPSC Grand Mock League 🏆',
+                    'HELP & SUPPORT',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 10,
                       fontWeight: FontWeight.w900,
+                      color: AppColors.textMuted,
+                      letterSpacing: 1.0,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Win up to 5,000 Coins in the Live Tournament',
-                    style: TextStyle(
-                      color: Colors.white.withAlpha(220),
-                      fontSize: 12,
-                    ),
+
+                  _buildDrawerActionTile(
+                    icon: Icons.chat_bubble_outline,
+                    label: 'Support Chat',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openSupportDialog();
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  AppButton(
-                    label: 'Join Tournament Now →',
-                    size: AppButtonSize.small,
-                    variant: AppButtonVariant.secondary,
-                    onPressed: () => setState(() => _activeTab = UserNavTab.earn),
+                  _buildDrawerActionTile(
+                    icon: Icons.star_outline,
+                    label: 'Give Feedback',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openFeedbackDialog();
+                    },
+                  ),
+                  _buildDrawerActionTile(
+                    icon: Icons.mail_outline,
+                    label: 'Contact Us',
+                    onTap: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Reach us at support@rankearn.in')),
+                      );
+                    },
+                  ),
+                  _buildDrawerActionTile(
+                    icon: Icons.shield_outlined,
+                    label: 'Privacy Policy',
+                    onTap: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Opening Platform Privacy Policy...')),
+                      );
+                    },
+                  ),
+                  _buildDrawerActionTile(
+                    icon: Icons.description_outlined,
+                    label: 'Terms of Use',
+                    onTap: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Opening Terms of Use...')),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
 
-          // Quick Stat Cards
-          Row(
-            children: [
-              Expanded(
-                child: AppStatCard(
-                  label: 'Wallet Balance',
-                  value: '1,450 Coins',
-                  icon: Icons.monetization_on,
-                  iconColor: AppColors.coinGold,
-                  iconBgColor: AppColors.coinGoldLight,
-                  onTap: () => setState(() => _activeTab = UserNavTab.wallet),
+            // Logout row at drawer bottom
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: ListTile(
+                shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+                leading: const Icon(Icons.logout, color: Color(0xFFE11D48)),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFE11D48),
+                    fontSize: 14,
+                  ),
                 ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleLogout();
+                },
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: AppStatCard(
-                  label: 'Tests Completed',
-                  value: '18 Attempts',
-                  icon: Icons.check_circle_outline,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Section Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Popular Test Series', style: AppTypography.titleLarge),
-              TextButton(
-                onPressed: () => setState(() => _activeTab = UserNavTab.tests),
-                child: const Text('View All →'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Test Cards
-          _buildTestCard(
-            title: 'BPSC 70th Prelims Full Mock Test 1',
-            examName: 'BPSC',
-            questions: 150,
-            durationMins: 120,
-            negativeMark: '0.25',
-          ),
-          const SizedBox(height: 12),
-          _buildTestCard(
-            title: 'SSC CGL Tier 1 Quantitative Practice',
-            examName: 'SSC CGL',
-            questions: 25,
-            durationMins: 30,
-            negativeMark: '0.50',
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- 2. Tests View ---
-  Widget _buildTestsView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingMobile),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Test Series Explorer', style: AppTypography.displayMedium),
-          const SizedBox(height: 6),
-          Text('Select from full mock tests, sectional, and previous years.', style: AppTypography.bodyMedium),
-          const SizedBox(height: 16),
-          const AppTextField(
-            hintText: 'Search mock tests by topic or exam...',
-            prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
-          ),
-          const SizedBox(height: 16),
-          _buildTestCard(
-            title: 'UPSC Prelims GS Paper 1 Mock Exam',
-            examName: 'UPSC CSE',
-            questions: 100,
-            durationMins: 120,
-            negativeMark: '0.66',
-          ),
-          const SizedBox(height: 12),
-          _buildTestCard(
-            title: 'Railway RRB NTPC General Awareness',
-            examName: 'RRB',
-            questions: 40,
-            durationMins: 45,
-            negativeMark: '0.33',
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- 3. Earn / Contests View ---
-  Widget _buildEarnView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingMobile),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Contests & Tournaments', style: AppTypography.displayMedium),
-          const SizedBox(height: 4),
-          Text('Compete in timed battles and win real coin prizes.', style: AppTypography.bodyMedium),
-          const SizedBox(height: 16),
-
-          // 1v1 Speed Battle Arena Card
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppStatusPill.active(label: 'Instant Match ⚔️'),
-                    const AppCoinPill(coins: 20),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  '1v1 Speed Battle Arena',
-                  style: AppTypography.titleLarge,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Challenge random candidates in rapid 5-question live head-to-head quizzes.',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 16),
-                AppButton(
-                  label: 'Enter 1v1 Arena (Stake 20 Coins)',
-                  variant: AppButtonVariant.secondary,
-                  width: double.infinity,
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => BattleScreen(
-                          onExit: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
             ),
-          ),
-          const SizedBox(height: 16),
-
-          // Live Tournament Card
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppStatusPill.active(label: 'Live Tournament'),
-                    const AppCoinPill(coins: 20),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Daily Current Affairs Super League ⚡',
-                  style: AppTypography.titleLarge,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Prize Pool: 1,000 Coins • 58 Participants Joined',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 16),
-                AppButton(
-                  label: 'Join Contest (20 Coins)',
-                  width: double.infinity,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Joined Contest successfully!')),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  // --- 4. Spin / Lucky Wheel View ---
-  Widget _buildSpinView() {
-    return LuckyWheelScreen(
-      currentCoins: 1450,
-      onBack: () => setState(() => _activeTab = UserNavTab.home),
-      onRewardClaimed: (coinsWon) {
-        if (coinsWon > 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('🎉 Credited $coinsWon Coins to your wallet!')),
-          );
-        }
+  Widget _buildDrawerNavItem({
+    required IconData icon,
+    required String label,
+    required UserNavTab tab,
+  }) {
+    final isSelected = _activeTab == tab;
+
+    return ListTile(
+      dense: true,
+      selected: isSelected,
+      shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+      selectedTileColor: AppColors.primarySubtle,
+      leading: Icon(
+        icon,
+        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+        size: 20,
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? AppColors.primary : AppColors.textPrimary,
+          fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+          fontSize: 13,
+        ),
+      ),
+      onTap: () {
+        Navigator.pop(context);
+        setState(() => _activeTab = tab);
       },
     );
   }
 
-  // --- 5. Wallet View ---
-  Widget _buildWalletView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingMobile),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Wallet Emerald Master Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: AppColors.brandGradient,
-              borderRadius: AppRadii.borderXl,
-              boxShadow: AppShadows.emeraldGlow,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Available Balance', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 6),
-                const Row(
-                  children: [
-                    Icon(Icons.monetization_on, color: AppColors.coinGold, size: 30),
-                    SizedBox(width: 8),
-                    Text('1,450', style: TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w900)),
-                    SizedBox(width: 8),
-                    Text('Coins', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text('Equivalent Value: ₹72.50 (20 Coins = ₹1.00)', style: TextStyle(color: Colors.white60, fontSize: 11)),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppButton(
-                        label: '+ Top-up Coins',
-                        variant: AppButtonVariant.secondary,
-                        size: AppButtonSize.small,
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('UPI QR Top-up Modal: Scan to pay and submit UTR')),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: AppButton(
-                        label: 'Withdraw (₹)',
-                        variant: AppButtonVariant.outlined,
-                        size: AppButtonSize.small,
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Withdrawal Modal: Enter UPI ID or Bank Account')),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text('Recent Transactions', style: AppTypography.titleLarge),
-          const SizedBox(height: 12),
-          _buildTransactionRow(title: 'Welcome Bonus 🎁', amount: '+10', isEarn: true, date: 'Today'),
-          _buildTransactionRow(title: 'Daily Wheel Spin', amount: '+25', isEarn: true, date: 'Yesterday'),
-          _buildTransactionRow(title: 'Tournament Join Fee', amount: '-20', isEarn: false, date: '2 days ago'),
-        ],
-      ),
-    );
-  }
-
-  // --- 6. Profile View ---
-  Widget _buildProfileView() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingMobile),
-      child: Column(
-        children: [
-          const Center(
-            child: CircleAvatar(
-              radius: 46,
-              backgroundColor: AppColors.brandPrimaryLight,
-              child: Icon(Icons.person, color: AppColors.brandPrimary, size: 48),
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text('Vikram Singh', style: AppTypography.displayMedium),
-          const SizedBox(height: 2),
-          Text('vikram@example.com', style: AppTypography.bodySmall),
-          const SizedBox(height: 6),
-          const AppProBadge(),
-          const SizedBox(height: 24),
-          const AppTextField(label: 'Full Name', hintText: 'Vikram Singh'),
-          const SizedBox(height: 12),
-          const AppTextField(label: 'Target Exam', hintText: 'BPSC 70th CCE'),
-          const SizedBox(height: 12),
-          const AppTextField(label: 'State', hintText: 'Bihar'),
-          const SizedBox(height: 24),
-          AppButton(
-            label: 'Save Profile Updates',
-            width: double.infinity,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile updated successfully!')),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTestCard({
-    required String title,
-    required String examName,
-    required int questions,
-    required int durationMins,
-    required String negativeMark,
+  Widget _buildDrawerActionTile({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
   }) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AppStatusPill(label: examName, bg: AppColors.infoBlueLight, fg: AppColors.infoBlue),
-              Text('$durationMins mins', style: AppTypography.bodySmall),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(title, style: AppTypography.titleMedium),
-          const SizedBox(height: 6),
-          Text(
-            '$questions Questions • -$negativeMark Negative Marking',
-            style: AppTypography.bodySmall,
-          ),
-          const SizedBox(height: 14),
-          AppButton(
-            label: 'Start Test Now',
-            width: double.infinity,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => QuizScreen(
-                    test: TestModel(
-                      id: 'test_demo_${examName.toLowerCase()}',
-                      title: title,
-                      categoryId: examName,
-                      durationMinutes: durationMins,
-                      totalQuestions: questions,
-                      negativeMarking: double.tryParse(negativeMark) ?? 0.25,
-                    ),
-                    questions: [
-                      const QuestionModel(
-                        id: 'q_demo_1',
-                        testId: 'test_demo_1',
-                        questionNumber: 1,
-                        questionTextEnglish: 'Which Mauryan ruler embraced Buddhism after the Kalinga War?',
-                        questionTextHindi: 'कलिंग युद्ध के बाद किस मौर्य शासक ने बौद्ध धर्म अपनाया था?',
-                        options: [
-                          QuestionOption(textEnglish: 'Chandragupta Maurya', textHindi: 'चन्द्रगुप्त मौर्य'),
-                          QuestionOption(textEnglish: 'Ashoka the Great', textHindi: 'महान अशोक'),
-                          QuestionOption(textEnglish: 'Bindusara', textHindi: 'बिन्दुसार'),
-                          QuestionOption(textEnglish: 'Brihadratha', textHindi: 'बृहद्रथ'),
-                        ],
-                        correctAnswer: 1,
-                      ),
-                      const QuestionModel(
-                        id: 'q_demo_2',
-                        testId: 'test_demo_1',
-                        questionNumber: 2,
-                        questionTextEnglish: 'What is the official currency of the Republic of India?',
-                        questionTextHindi: 'भारत गणराज्य की आधिकारिक मुद्रा क्या है?',
-                        options: [
-                          QuestionOption(textEnglish: 'United States Dollar (USD)', textHindi: 'अमेरिकी डॉलर'),
-                          QuestionOption(textEnglish: 'Indian Rupee (INR)', textHindi: 'भारतीय रुपया (INR)'),
-                          QuestionOption(textEnglish: 'Japanese Yen (JPY)', textHindi: 'जापानी येन'),
-                          QuestionOption(textEnglish: 'British Pound (GBP)', textHindi: 'ब्रिटिश पाउंड'),
-                        ],
-                        correctAnswer: 1,
-                      ),
-                    ],
-                    onExit: () => Navigator.of(context).pop(),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+    return ListTile(
+      dense: true,
+      shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+      leading: Icon(icon, color: AppColors.textSecondary, size: 18),
+      title: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
       ),
-    );
-  }
-
-  Widget _buildTransactionRow({
-    required String title,
-    required String amount,
-    required bool isEarn,
-    required String date,
-  }) {
-    final color = isEarn ? AppColors.brandPrimary : AppColors.errorRose;
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: isEarn ? AppColors.brandPrimaryLight : AppColors.errorRoseLight,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isEarn ? Icons.arrow_downward : Icons.arrow_upward,
-                  color: color,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: AppTypography.titleSmall),
-                  Text(date, style: AppTypography.bodySmall),
-                ],
-              ),
-            ],
-          ),
-          Text(
-            '$amount Coins',
-            style: AppTypography.titleMedium.copyWith(color: color, fontWeight: FontWeight.w800),
-          ),
-        ],
-      ),
+      onTap: onTap,
     );
   }
 }

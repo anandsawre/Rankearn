@@ -82,6 +82,21 @@ class AppTypography {
     fontFamilyFallback: fontFallbacks,
   );
 
+  static const TextStyle labelLarge = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textSecondary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle captionBold = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w800,
+    letterSpacing: 0.8,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
   static const TextStyle buttonText = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w800,

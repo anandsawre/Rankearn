@@ -18,6 +18,7 @@ class AppButton extends StatelessWidget {
   final Widget? leadingIcon;
   final Widget? trailingIcon;
   final double? width;
+  final bool fullWidth;
 
   const AppButton({
     super.key,
@@ -30,6 +31,7 @@ class AppButton extends StatelessWidget {
     this.leadingIcon,
     this.trailingIcon,
     this.width,
+    this.fullWidth = false,
   });
 
   @override
@@ -94,8 +96,10 @@ class AppButton extends StatelessWidget {
         break;
     }
 
+    final effectiveWidth = fullWidth ? double.infinity : width;
+
     return SizedBox(
-      width: width,
+      width: effectiveWidth,
       height: height,
       child: Material(
         color: bg,
@@ -109,7 +113,7 @@ class AppButton extends StatelessWidget {
           child: Padding(
             padding: padding,
             child: Row(
-              mainAxisSize: width == null ? MainAxisSize.min : MainAxisSize.max,
+              mainAxisSize: effectiveWidth == null ? MainAxisSize.min : MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (isLoading) ...[
