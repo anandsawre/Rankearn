@@ -1,0 +1,68 @@
+name: Flutter Monorepo & Supabase CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate-and-test:
+    name: Lint, Test & Verify Monorepo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Monorepo Node Dependencies
+        run: npm ci || npm install
+
+      - name: Install Flutter Dependencies (Packages & Apps)
+        run: |
+          cd packages/design_system && flutter pub get && cd ../..
+          cd packages/shared_core && flutter pub get && cd ../..
+          cd packages/data_layer && flutter pub get && cd ../..
+          cd apps/user_app && flutter pub get && cd ../..
+          cd apps/admin_app && flutter pub get && cd ../..
+
+      - name: Static Analysis
+        run: flutter analyze packages/design_system packages/shared_core packages/data_layer apps/user_app apps/admin_app
+
+      - name: Run Tests - Design System
+        run: cd packages/design_system && flutter test
+
+      - name: Run Tests - Shared Core
+        run: cd packages/shared_core && flutter test
+
+      - name: Run Tests - Data Layer
+        run: cd packages/data_layer && flutter test
+
+      - name: Run Tests - User Flutter App
+        run: cd apps/user_app && flutter test
+
+      - name: Run Tests - Admin Flutter App
+        run: cd apps/admin_app && flutter test
+
+      - name: Validate Firestore to Supabase Migration Dry-Run
+        run: npx tsx scripts/migration/firestore_to_supabase.ts
+
+      - name: Build Admin Web Bundle
+        run: cd apps/admin_app && flutter build web --release
+
+      - name: Build User Web Bundle
+        run: cd apps/user_app && flutter build web --release

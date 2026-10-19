@@ -1,0 +1,27 @@
+name: user_app
+description: "Rankearn Flutter User Application."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  design_system:
+    path: ../../packages/design_system
+  shared_core:
+    path: ../../packages/shared_core
+  data_layer:
+    path: ../../packages/data_layer
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
