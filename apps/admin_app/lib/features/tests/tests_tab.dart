@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class TestsTab extends StatefulWidget {
-  const TestsTab({super.key});
+  final List<Map<String, dynamic>>? initialTests;
+
+  const TestsTab({super.key, this.initialTests});
 
   @override
   State<TestsTab> createState() => _TestsTabState();
@@ -12,74 +15,50 @@ class _TestsTabState extends State<TestsTab> {
   String _selectedExamGroup = 'all';
   String _searchQuery = '';
   final Set<String> _selectedTestIds = {};
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _tests = [];
 
-  final List<Map<String, dynamic>> _tests = [
-    {
-      'id': 'test-1',
-      'title': '70th BPSC Prelims Full Mock Test 1',
-      'examGroup': '70th BPSC',
-      'category': 'General Studies',
-      'questions': 150,
-      'duration': 120,
-      'negativeMarking': 0.25,
-      'marksPerQuestion': 1.0,
-      'tier': 'PRO',
-      'isPublished': true,
-      'attempts': 3420,
-    },
-    {
-      'id': 'test-2',
-      'title': 'SSC CGL Tier 1 Quantitative Aptitude Mini Mock',
-      'examGroup': 'SSC CGL',
-      'category': 'Mathematics',
-      'questions': 25,
-      'duration': 20,
-      'negativeMarking': 0.50,
-      'marksPerQuestion': 2.0,
-      'tier': 'Free',
-      'isPublished': true,
-      'attempts': 8920,
-    },
-    {
-      'id': 'test-3',
-      'title': 'Railway NTPC CBT-2 General Awareness Sprint',
-      'examGroup': 'Railway NTPC',
-      'category': 'General Science & Current Affairs',
-      'questions': 50,
-      'duration': 40,
-      'negativeMarking': 0.33,
-      'marksPerQuestion': 1.0,
-      'tier': 'Free',
-      'isPublished': true,
-      'attempts': 5120,
-    },
-    {
-      'id': 'test-4',
-      'title': 'UPSC Prelims CSAT Reading Comprehension Booster',
-      'examGroup': 'UPSC CSE',
-      'category': 'CSAT Paper 2',
-      'questions': 40,
-      'duration': 60,
-      'negativeMarking': 0.83,
-      'marksPerQuestion': 2.5,
-      'tier': 'PRO',
-      'isPublished': false,
-      'attempts': 0,
-    },
-    {
-      'id': 'test-5',
-      'title': 'IBPS PO Prelims Reasoning Ability Speed Challenge',
-      'examGroup': 'Banking',
-      'category': 'Reasoning',
-      'questions': 35,
-      'duration': 20,
-      'negativeMarking': 0.25,
-      'marksPerQuestion': 1.0,
-      'tier': 'PRO',
-      'isPublished': true,
-      'attempts': 2490,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialTests != null) {
+      _tests = widget.initialTests!;
+      _isLoading = false;
+    } else {
+      _loadTests();
+    }
+  }
+
+  Future<void> _loadTests() async {
+    setState(() => _isLoading = true);
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+    try {
+      final res = await client.from('tests').select().order('created_at', ascending: false);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _tests = (res as List).map((row) => {
+          'id': row['id']?.toString() ?? '',
+          'title': row['title']?.toString() ?? 'Untitled Test',
+          'examGroup': row['exam_category_id']?.toString() ?? row['category_id']?.toString() ?? 'General',
+          'category': row['category_id']?.toString() ?? 'General Studies',
+          'questions': (row['total_questions'] as num?)?.toInt() ?? 0,
+          'duration': (row['duration_minutes'] as num?)?.toInt() ?? 60,
+          'negativeMarking': (row['negative_marking'] as num?)?.toDouble() ?? 0.0,
+          'marksPerQuestion': (row['marks_per_question'] as num?)?.toDouble() ?? 1.0,
+          'tier': row['is_premium'] == true ? 'PRO' : 'Free',
+          'isPublished': row['status'] == 'published',
+          'attempts': (row['total_attempts'] as num?)?.toInt() ?? (row['total_participants'] as num?)?.toInt() ?? 0,
+        }).toList();
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +84,14 @@ class _TestsTabState extends State<TestsTab> {
           const SizedBox(height: 20),
 
           // 3. Tests List
-          if (filteredTests.isEmpty)
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (filteredTests.isEmpty)
             _buildEmptyState()
           else
             Column(

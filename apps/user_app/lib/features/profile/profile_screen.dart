@@ -36,9 +36,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _currentProfile = widget.profile;
     _nameController = TextEditingController(text: _currentProfile.name);
-    _phoneController = TextEditingController(text: _currentProfile.phone ?? '+91 98765 43210');
-    _stateController = TextEditingController(text: _currentProfile.state ?? 'Bihar, India');
-    _examController = TextEditingController(text: _currentProfile.examPreparingFor ?? '70th BPSC & SSC CGL');
+    _phoneController = TextEditingController(text: _currentProfile.phone ?? '');
+    _stateController = TextEditingController(text: _currentProfile.state ?? '');
+    _examController = TextEditingController(text: _currentProfile.examPreparingFor ?? '');
   }
 
   @override
@@ -52,9 +52,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _openEditProfileDialog() {
     _nameController.text = _currentProfile.name;
-    _phoneController.text = _currentProfile.phone ?? '+91 98765 43210';
-    _stateController.text = _currentProfile.state ?? 'Bihar, India';
-    _examController.text = _currentProfile.examPreparingFor ?? '70th BPSC & SSC CGL';
+    _phoneController.text = _currentProfile.phone ?? '';
+    _stateController.text = _currentProfile.state ?? '';
+    _examController.text = _currentProfile.examPreparingFor ?? '';
 
     showModalBottomSheet(
       context: context,

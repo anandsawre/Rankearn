@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_layer/data_layer.dart';
 import 'package:user_app/main.dart';
 
 void main() {
@@ -96,7 +97,16 @@ void main() {
   testWidgets('Tests tab clicking Start Test Now opens QuizScreen', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
-        child: RankearnUserApp(),
+        child: RankearnUserApp(
+          initialTests: [
+            TestModel(
+              id: 'test_demo',
+              title: '70th BPSC Prelims Test',
+              durationMinutes: 120,
+              totalQuestions: 150,
+            ),
+          ],
+        ),
       ),
     );
 

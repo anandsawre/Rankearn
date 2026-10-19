@@ -32,6 +32,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int? _selectedPollOption;
   bool _hasVotedPoll = false;
 
+  List<TestModel> _popularTests = [];
+  bool _isLoadingTests = true;
+  TestModel? _spotlightTournament;
+  Map<String, dynamic>? _activePoll;
+
   final List<String> _categories = const [
     'All Exams',
     'BPSC',
@@ -49,6 +54,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (_contestSecondsRemaining > 0) {
         setState(() => _contestSecondsRemaining--);
       }
+    });
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    final testsRes = await TestsRepository().getTests();
+    final tourRes = await ContestsRepository().getTournaments();
+
+    Map<String, dynamic>? poll;
+    try {
+      final client = SupabaseConfig.clientSafe;
+      if (client != null) {
+        poll = await client.from('polls').select().eq('is_active', true).maybeSingle();
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+    setState(() {
+      _isLoadingTests = false;
+      if (testsRes is Success<List<TestModel>>) {
+        _popularTests = testsRes.data;
+      }
+      if (tourRes is Success<List<TestModel>> && tourRes.data.isNotEmpty) {
+        _spotlightTournament = tourRes.data.first;
+      }
+      _activePoll = poll;
     });
   }
 
@@ -100,34 +131,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 10),
 
-          _buildTestCard(
-            title: '70th BPSC Prelims Full Mock Test 1',
-            examName: 'BPSC',
-            questions: 150,
-            durationMins: 120,
-            negativeMark: '0.25',
-            isPro: false,
-          ),
-          const SizedBox(height: 12),
-
-          _buildTestCard(
-            title: 'SSC CGL Tier 1 Quantitative Practice',
-            examName: 'SSC CGL',
-            questions: 25,
-            durationMins: 30,
-            negativeMark: '0.50',
-            isPro: true,
-          ),
-          const SizedBox(height: 12),
-
-          _buildTestCard(
-            title: 'Railway RRB NTPC General Awareness',
-            examName: 'RRB',
-            questions: 40,
-            durationMins: 45,
-            negativeMark: '0.33',
-            isPro: false,
-          ),
+          if (_isLoadingTests)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_popularTests.isEmpty)
+            AppCard(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.quiz_outlined, size: 36, color: AppColors.textMuted),
+                      const SizedBox(height: 8),
+                      const Text('No tests published yet', style: AppTypography.titleSmall),
+                      const SizedBox(height: 4),
+                      Text('Check back soon for new exam series.', style: AppTypography.bodySmall),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          else
+            for (final test in _popularTests.take(3))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildTestCard(
+                  title: test.title,
+                  examName: test.categoryId ?? test.examCategoryId ?? 'General',
+                  questions: test.totalQuestions,
+                  durationMins: test.durationMinutes,
+                  negativeMark: test.negativeMarking.toStringAsFixed(2),
+                  isPro: test.isPremium,
+                ),
+              ),
           const SizedBox(height: 24),
 
           // 5. Daily Community Poll Widget (Matching React PollWidget.tsx)
@@ -221,17 +261,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 12),
 
                 // Contest Title
-                const Text(
-                  '70th BPSC Grand Mock League 🏆',
-                  style: TextStyle(
+                Text(
+                  _spotlightTournament?.title ?? 'Competitive Mock Tournaments 🏆',
+                  style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Win up to 5,000 Coins in the live timed competitive league.',
+                Text(
+                  _spotlightTournament != null
+                      ? 'Win up to ${_spotlightTournament!.prizePoolCoins} Coins in this live tournament.'
+                      : 'Join timed competitive mock leagues to compete with aspirants across India.',
                   style: AppTypography.bodySmall,
                 ),
                 const SizedBox(height: 16),
@@ -243,11 +285,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Prize Pool', style: TextStyle(fontSize: 10, color: AppColors.textMuted, fontWeight: FontWeight.bold)),
-                        const Row(
+                        Row(
                           children: [
-                            Icon(Icons.monetization_on, color: AppColors.coinGold, size: 18),
-                            SizedBox(width: 4),
-                            Text('5,000 Coins', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                            const Icon(Icons.monetization_on, color: AppColors.coinGold, size: 18),
+                            const SizedBox(width: 4),
+                            Text(
+                              _spotlightTournament != null ? '${_spotlightTournament!.prizePoolCoins} Coins' : 'Top Pool',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                            ),
                           ],
                         ),
                       ],
@@ -257,7 +302,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Entry Fee', style: TextStyle(fontSize: 10, color: AppColors.textMuted, fontWeight: FontWeight.bold)),
-                        Text('20 Coins', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.brandPrimaryDark)),
+                        Text(
+                          _spotlightTournament != null ? '${_spotlightTournament!.entryFeeCoins} Coins' : 'From 10 Coins',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.brandPrimaryDark),
+                        ),
                       ],
                     ),
                     const Spacer(),
@@ -439,12 +487,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // --- 5. Community Poll Card ---
   Widget _buildCommunityPollCard() {
-    final pollOptions = [
-      ('Ashoka the Great', '64%'),
-      ('Chandragupta Maurya', '21%'),
-      ('Bindusara', '10%'),
-      ('Brihadratha', '5%'),
-    ];
+    if (_activePoll == null) {
+      return AppCard(
+        child: Row(
+          children: const [
+            Icon(Icons.poll_outlined, color: AppColors.brandPrimary, size: 24),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Daily Exam Poll 🗳️', style: AppTypography.titleMedium),
+                  SizedBox(height: 2),
+                  Text('No active community poll today. Stay tuned!', style: AppTypography.bodySmall),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final question = _activePoll!['question'] as String? ?? 'Daily Exam Poll';
+    final rawOptions = (_activePoll!['options'] as List?) ?? [];
+    final pollOptions = rawOptions.map((opt) {
+      if (opt is Map) {
+        return (opt['text']?.toString() ?? '', '${opt['votes'] ?? 0} votes');
+      }
+      return (opt.toString(), '');
+    }).toList();
 
     return AppCard(
       child: Column(
@@ -456,13 +527,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 8),
               const Text('Daily Exam Poll 🗳️', style: AppTypography.titleMedium),
               const Spacer(),
-              const Text('1,240 votes', style: AppTypography.bodySmall),
+              Text(_activePoll!['target_segment'] as String? ?? 'All Candidates', style: AppTypography.bodySmall),
             ],
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Q: Which Mauryan ruler embraced Buddhism after the Kalinga War in 261 BCE?',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, height: 1.4),
+          Text(
+            question,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, height: 1.4),
           ),
           const SizedBox(height: 14),
 

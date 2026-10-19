@@ -52,7 +52,7 @@ void main() {
 
     // Verify Finance view is rendered
     expect(find.text('Finance Management'), findsOneWidget);
-    expect(find.text('Anjali Kumari'), findsOneWidget);
+    expect(find.text('Verify Manual UPI Candidate Top-ups'), findsOneWidget);
   });
 
   testWidgets('AdminApp navigation tab switching to AI Test Creator works', (WidgetTester tester) async {
@@ -164,7 +164,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Registered Users'), findsWidgets);
-    expect(find.text('Ananya Sharma'), findsOneWidget);
+    expect(find.text('Manage and monitor candidate community & wallet permissions'), findsOneWidget);
   });
 
   testWidgets('AdminApp navigation tab switching to Contests works', (WidgetTester tester) async {

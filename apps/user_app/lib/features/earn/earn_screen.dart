@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 enum EarnSubTab {
   contests,
@@ -26,6 +27,52 @@ class EarnScreen extends StatefulWidget {
 
 class _EarnScreenState extends State<EarnScreen> {
   EarnSubTab _activeSubTab = EarnSubTab.contests;
+  List<TestModel> _tournaments = [];
+  bool _isLoadingTournaments = true;
+  List<Map<String, dynamic>> _topRankers = [];
+  bool _isLoadingRankers = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTournaments();
+    _loadLeaderboard();
+  }
+
+  Future<void> _loadTournaments() async {
+    setState(() => _isLoadingTournaments = true);
+    final res = await ContestsRepository().getTournaments();
+    if (!mounted) return;
+    setState(() {
+      _isLoadingTournaments = false;
+      if (res is Success<List<TestModel>>) {
+        _tournaments = res.data;
+      }
+    });
+  }
+
+  Future<void> _loadLeaderboard() async {
+    setState(() => _isLoadingRankers = true);
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoadingRankers = false);
+      return;
+    }
+    try {
+      final data = await client
+          .from('profiles')
+          .select('id, name, state, coins')
+          .order('coins', ascending: false)
+          .limit(10);
+      if (!mounted) return;
+      setState(() {
+        _isLoadingRankers = false;
+        _topRankers = List<Map<String, dynamic>>.from(data);
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingRankers = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,37 +149,53 @@ class _EarnScreenState extends State<EarnScreen> {
         Text('Participate in timed tournament mocks to win real coin rewards.', style: AppTypography.bodySmall),
         const SizedBox(height: 16),
 
-        _buildContestCard(
-          title: '70th BPSC Grand Mock League 🏆',
-          status: 'LIVE NOW',
-          isLive: true,
-          prizePool: 5000,
-          entryFee: 20,
-          participants: 124,
-          endsIn: '02h 15m remaining',
-        ),
-        const SizedBox(height: 12),
-
-        _buildContestCard(
-          title: 'SSC CGL General Awareness Super League ⚡',
-          status: 'UPCOMING',
-          isLive: false,
-          prizePool: 2500,
-          entryFee: 10,
-          participants: 86,
-          endsIn: 'Starts at 04:00 PM',
-        ),
-        const SizedBox(height: 12),
-
-        _buildContestCard(
-          title: 'Railway NTPC Speed Math Championship 🚆',
-          status: 'UPCOMING',
-          isLive: false,
-          prizePool: 3000,
-          entryFee: 15,
-          participants: 62,
-          endsIn: 'Starts Tomorrow 10:00 AM',
-        ),
+        if (_isLoadingTournaments)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (_tournaments.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  const Icon(Icons.emoji_events_outlined, size: 48, color: AppColors.textMuted),
+                  const SizedBox(height: 12),
+                  const Text('No Active Tournaments', style: AppTypography.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Scheduled tournament leagues will appear here. Check back soon!',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodySmall,
+                  ),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    label: 'Refresh',
+                    variant: AppButtonVariant.secondary,
+                    size: AppButtonSize.small,
+                    onPressed: _loadTournaments,
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          for (final t in _tournaments)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: _buildContestCard(
+                title: t.title,
+                status: t.isTournamentLive ? 'LIVE NOW' : 'UPCOMING',
+                isLive: t.isTournamentLive,
+                prizePool: t.prizePoolCoins,
+                entryFee: t.entryFeeCoins,
+                participants: t.registeredParticipants,
+                endsIn: t.isTournamentLive ? 'Closing soon' : 'Starts soon',
+              ),
+            ),
       ],
     );
   }
@@ -366,14 +429,6 @@ class _EarnScreenState extends State<EarnScreen> {
 
   // --- 4. Leaderboard View ---
   Widget _buildLeaderboardView() {
-    final topRankers = [
-      ('1', 'Priya Sharma', 'Patna', '18,450 Coins', '142 Tests'),
-      ('2', 'Amit Verma', 'Gaya', '16,200 Coins', '118 Tests'),
-      ('3', 'Rohan Singh', 'Muzaffarpur', '14,800 Coins', '95 Tests'),
-      ('4', 'Vikram Singh (You)', 'Patna', '1,450 Coins', '18 Tests'),
-      ('5', 'Anjali Kumari', 'Darbhanga', '12,900 Coins', '82 Tests'),
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -382,50 +437,90 @@ class _EarnScreenState extends State<EarnScreen> {
         Text('Top performing candidates ranked by total coins and tests taken.', style: AppTypography.bodySmall),
         const SizedBox(height: 16),
 
-        for (final ranker in topRankers)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: AppCard(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
+        if (_isLoadingRankers)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (_topRankers.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
                 children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: ranker.$1 == '1'
-                          ? AppColors.coinGoldLight
-                          : (ranker.$1 == '4' ? AppColors.brandPrimaryLight : AppColors.surfaceSubtle),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '#${ranker.$1}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                        color: ranker.$1 == '1' ? AppColors.coinGold : AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(ranker.$2, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: ranker.$1 == '4' ? AppColors.brandPrimaryDark : AppColors.textPrimary)),
-                        Text('${ranker.$3} • ${ranker.$5}', style: AppTypography.bodySmall),
-                      ],
-                    ),
-                  ),
+                  const Icon(Icons.leaderboard_outlined, size: 48, color: AppColors.textMuted),
+                  const SizedBox(height: 12),
+                  const Text('No Leaderboard Data Yet', style: AppTypography.titleMedium),
+                  const SizedBox(height: 4),
                   Text(
-                    ranker.$4,
-                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.coinGold, fontSize: 13),
+                    'Candidate rankings will appear once tests and tournaments are completed.',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodySmall,
+                  ),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    label: 'Refresh',
+                    variant: AppButtonVariant.secondary,
+                    size: AppButtonSize.small,
+                    onPressed: _loadLeaderboard,
                   ),
                 ],
               ),
             ),
-          ),
+          )
+        else
+          ..._topRankers.asMap().entries.map((entry) {
+            final idx = entry.key + 1;
+            final ranker = entry.value;
+            final name = ranker['name'] as String? ?? 'Candidate';
+            final state = ranker['state'] as String? ?? 'India';
+            final coins = ranker['coins'] as int? ?? 0;
+            final isTop1 = idx == 1;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: AppCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: isTop1 ? AppColors.coinGoldLight : AppColors.surfaceSubtle,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '#$idx',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13,
+                          color: isTop1 ? AppColors.coinGold : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+                          Text(state, style: AppTypography.bodySmall),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '$coins Coins',
+                      style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.coinGold, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
       ],
     );
   }

@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class FinanceTab extends StatefulWidget {
-  const FinanceTab({super.key});
+  final List<Map<String, dynamic>>? initialTopups;
+  final List<Map<String, dynamic>>? initialWithdrawals;
+
+  const FinanceTab({
+    super.key,
+    this.initialTopups,
+    this.initialWithdrawals,
+  });
 
   @override
   State<FinanceTab> createState() => _FinanceTabState();
@@ -13,88 +21,58 @@ enum _FinanceSubTab { topups, withdrawals, settings }
 class _FinanceTabState extends State<FinanceTab> {
   _FinanceSubTab _activeSubTab = _FinanceSubTab.topups;
   String _filterType = 'pending'; // 'pending' or 'history'
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _topups = [];
+  List<Map<String, dynamic>> _withdrawals = [];
 
-  // Mock initial dataset matching React Admin
-  final List<Map<String, dynamic>> _topups = [
-    {
-      'id': 'topup-1',
-      'name': 'Anjali Kumari',
-      'email': 'anjali.k@gmail.com',
-      'amount': '₹250.00',
-      'coins': '5,000 Coins',
-      'utr': 'UTR349102847192',
-      'status': 'pending',
-      'date': 'Today, 10:45 AM',
-      'method': 'Google Pay UPI',
-    },
-    {
-      'id': 'topup-2',
-      'name': 'Manish Kumar',
-      'email': 'manish.k99@yahoo.com',
-      'amount': '₹100.00',
-      'coins': '2,000 Coins',
-      'utr': 'UTR492019385721',
-      'status': 'pending',
-      'date': 'Today, 09:12 AM',
-      'method': 'PhonePe UPI',
-    },
-    {
-      'id': 'topup-3',
-      'name': 'Suresh Patil',
-      'email': 'suresh.patil@outlook.com',
-      'amount': '₹500.00',
-      'coins': '10,000 Coins',
-      'utr': 'UTR593019284719',
-      'status': 'pending',
-      'date': 'Yesterday, 06:30 PM',
-      'method': 'Paytm UPI',
-    },
-    {
-      'id': 'topup-4',
-      'name': 'Pooja Verma',
-      'email': 'pooja.verma@gmail.com',
-      'amount': '₹1,000.00',
-      'coins': '20,000 Coins',
-      'utr': 'UTR883920192847',
-      'status': 'approved',
-      'date': 'Yesterday, 02:15 PM',
-      'method': 'BHIM UPI',
-    },
-  ];
+  Future<void> _loadFinanceData() async {
+    setState(() => _isLoading = true);
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+    try {
+      final topupData = await client
+          .from('topup_requests')
+          .select()
+          .order('created_at', ascending: false);
+      final withdrawData = await client
+          .from('withdrawal_requests')
+          .select()
+          .order('created_at', ascending: false);
 
-  final List<Map<String, dynamic>> _withdrawals = [
-    {
-      'id': 'w-1',
-      'name': 'Ramesh Chandra',
-      'email': 'ramesh.c@gmail.com',
-      'coins': '4,000 Coins',
-      'rupees': '₹200.00',
-      'upi': 'ramesh@oksbi',
-      'status': 'pending',
-      'date': 'Today, 11:15 AM',
-    },
-    {
-      'id': 'w-2',
-      'name': 'Priya Singh',
-      'email': 'priya.s@gmail.com',
-      'coins': '2,500 Coins',
-      'rupees': '₹125.00',
-      'upi': 'priyasingh@paytm',
-      'status': 'pending',
-      'date': 'Today, 08:30 AM',
-    },
-    {
-      'id': 'w-3',
-      'name': 'Vikram Rathore',
-      'email': 'vikram.r@gmail.com',
-      'coins': '10,000 Coins',
-      'rupees': '₹500.00',
-      'upi': 'rathore@ybl',
-      'status': 'paid',
-      'date': 'Yesterday, 04:20 PM',
-      'utr': 'PAYOUT-883921029',
-    },
-  ];
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _topups = (topupData as List).map((r) => {
+          'id': r['id']?.toString() ?? '',
+          'name': r['user_name']?.toString() ?? 'User',
+          'email': r['user_email']?.toString() ?? 'N/A',
+          'amount': '₹${r['amount']}',
+          'coins': '${r['coins_awarded']} Coins',
+          'utr': r['utr']?.toString() ?? '',
+          'status': r['status']?.toString() ?? 'pending',
+          'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
+          'method': 'UPI Manual',
+        }).toList();
+
+        _withdrawals = (withdrawData as List).map((r) => {
+          'id': r['id']?.toString() ?? '',
+          'name': r['user_name']?.toString() ?? 'User',
+          'email': r['user_email']?.toString() ?? 'N/A',
+          'coins': '${r['coins_deducted']} Coins',
+          'rupees': '₹${r['payout_amount']}',
+          'upi': r['upi_id']?.toString() ?? 'Bank Transfer',
+          'status': r['status']?.toString() ?? 'pending',
+          'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
+          'utr': r['payout_ref']?.toString(),
+        }).toList();
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   // Settings state
   late final TextEditingController _upiIdController;
@@ -111,6 +89,14 @@ class _FinanceTabState extends State<FinanceTab> {
     _minDepositController = TextEditingController(text: '50');
     _minWithdrawalController = TextEditingController(text: '1000');
     _dailyLimitController = TextEditingController(text: '50000');
+
+    if (widget.initialTopups != null || widget.initialWithdrawals != null) {
+      _topups = widget.initialTopups ?? [];
+      _withdrawals = widget.initialWithdrawals ?? [];
+      _isLoading = false;
+    } else {
+      _loadFinanceData();
+    }
   }
 
   @override
@@ -316,6 +302,14 @@ class _FinanceTabState extends State<FinanceTab> {
 
   // --- Top-ups View ---
   Widget _buildTopupsView() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(40),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     final filtered = _topups.where((t) {
       if (_filterType == 'pending') return t['status'] == 'pending';
       return t['status'] != 'pending';
@@ -429,6 +423,14 @@ class _FinanceTabState extends State<FinanceTab> {
 
   // --- Withdrawals View ---
   Widget _buildWithdrawalsView() {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(40),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     final filtered = _withdrawals.where((w) {
       if (_filterType == 'pending') return w['status'] == 'pending';
       return w['status'] != 'pending';

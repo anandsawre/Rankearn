@@ -6,15 +6,20 @@ import '../supabase/supabase_config.dart';
 
 /// Test Series & Question Bank Repository
 class TestsRepository {
-  final SupabaseClient _client;
+  final SupabaseClient? _explicitClient;
 
-  TestsRepository({SupabaseClient? client})
-      : _client = client ?? SupabaseConfig.client;
+  TestsRepository({SupabaseClient? client}) : _explicitClient = client;
+
+  SupabaseClient? get _client => _explicitClient ?? SupabaseConfig.clientSafe;
 
   /// Fetch All Exam Categories (SSC, BPSC, UPSC, etc.)
   Future<Result<List<Map<String, dynamic>>>> getExamCategories() async {
+    final client = _client;
+    if (client == null) {
+      return const Success([]);
+    }
     try {
-      final data = await _client
+      final data = await client
           .from('exam_categories')
           .select()
           .eq('is_published', true)
@@ -34,8 +39,12 @@ class TestsRepository {
     bool? isTournament,
     String? searchQuery,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Success([]);
+    }
     try {
-      var query = _client.from('tests').select().eq('status', 'published');
+      var query = client.from('tests').select().eq('status', 'published');
 
       if (examCategoryId != null && examCategoryId.isNotEmpty && examCategoryId != 'all') {
         query = query.eq('exam_category_id', examCategoryId);
@@ -63,8 +72,12 @@ class TestsRepository {
 
   /// Fetch Questions for a Test
   Future<Result<List<QuestionModel>>> getQuestions(String testId) async {
+    final client = _client;
+    if (client == null) {
+      return const Success([]);
+    }
     try {
-      final data = await _client
+      final data = await client
           .from('questions')
           .select()
           .eq('test_id', testId)
@@ -82,8 +95,12 @@ class TestsRepository {
     required String testId,
     required String userId,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
-      final res = await _client.rpc('unlock_test_with_coins', params: {
+      final res = await client.rpc('unlock_test_with_coins', params: {
         'p_test_id': testId,
         'p_user_id': userId,
       });

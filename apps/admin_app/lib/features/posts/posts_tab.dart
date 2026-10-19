@@ -1,43 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class PostsTab extends StatefulWidget {
-  const PostsTab({super.key});
+  final List<Map<String, dynamic>>? initialPosts;
+  const PostsTab({super.key, this.initialPosts});
 
   @override
   State<PostsTab> createState() => _PostsTabState();
 }
 
 class _PostsTabState extends State<PostsTab> {
-  final List<Map<String, dynamic>> _posts = [
-    {
-      'id': 'post-1',
-      'title': 'BPSC 70th CCE Notification Out: 1,957 Vacancies Declared',
-      'category': 'Exam Alerts',
-      'excerpt': 'Bihar Public Service Commission has officially published the 70th Combined Competitive Examination notification with key syllabus changes.',
-      'imageUrl': 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=60',
-      'isActive': true,
-      'date': 'Oct 18, 2026',
-    },
-    {
-      'id': 'post-2',
-      'title': 'Daily Current Affairs: Bihar Economic Survey & GSDP Growth',
-      'category': 'Current Affairs',
-      'excerpt': 'Comprehensive analytical breakdown of Bihar Economic Survey 2025-26 highlighting per capita income, agricultural subsidies, and industrial corridor progress.',
-      'imageUrl': 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=60',
-      'isActive': true,
-      'date': 'Oct 17, 2026',
-    },
-    {
-      'id': 'post-3',
-      'title': 'SSC CGL Tier 1 Negative Marking Strategy & Time Budgeting',
-      'category': 'Preparation Strategy',
-      'excerpt': 'Mastering section sequence: Solving General Awareness in under 7 minutes to reserve 28 minutes for Quantitative Aptitude.',
-      'imageUrl': 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=60',
-      'isActive': true,
-      'date': 'Oct 15, 2026',
-    },
-  ];
+  List<Map<String, dynamic>> _posts = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialPosts != null) {
+      _posts = List.from(widget.initialPosts!);
+      _isLoading = false;
+    } else {
+      _fetchPosts();
+    }
+  }
+
+  Future<void> _fetchPosts() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final res = await client.from('posts').select().order('created_at', ascending: false);
+      if (mounted) {
+        setState(() {
+          _posts = (res as List).map((row) {
+            return {
+              'id': row['id']?.toString() ?? '',
+              'title': row['title']?.toString() ?? '',
+              'category': row['category']?.toString() ?? 'General',
+              'excerpt': row['excerpt']?.toString() ?? '',
+              'imageUrl': row['image_url']?.toString() ?? 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=60',
+              'isActive': row['is_active'] == true,
+              'date': row['created_at'] != null ? row['created_at'].toString().split('T').first : 'Recent',
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,19 +66,67 @@ class _PostsTabState extends State<PostsTab> {
           _buildMasterHeader(),
           const SizedBox(height: 24),
 
-          // Updates Grid
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 800;
-              return Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: _posts.map((p) {
-                  final cardWidth = isWide ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth;
-                  return SizedBox(width: cardWidth, child: _buildPostCard(p));
-                }).toList(),
-              );
-            },
+          // Updates Grid or Empty State
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(48),
+                child: CircularProgressIndicator(color: AppColors.brandPrimary),
+              ),
+            )
+          else if (_posts.isEmpty)
+            _buildEmptyState()
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 800;
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: _posts.map((p) {
+                    final cardWidth = isWide ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth;
+                    return SizedBox(width: cardWidth, child: _buildPostCard(p));
+                  }).toList(),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(48),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadii.borderXl,
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.brandPrimary.withAlpha(20),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.feed_outlined, color: AppColors.brandPrimary, size: 32),
+          ),
+          const SizedBox(height: 16),
+          const Text('No Published Articles Yet', style: AppTypography.titleLarge),
+          const SizedBox(height: 8),
+          const Text(
+            'Keep your candidates informed by publishing syllabus breakdowns, exam alerts, and current affairs analysis.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 20),
+          AppButton(
+            label: '+ Create First Article',
+            onPressed: _showNewArticleDialog,
           ),
         ],
       ),
@@ -120,6 +184,8 @@ class _PostsTabState extends State<PostsTab> {
   }
 
   Widget _buildPostCard(Map<String, dynamic> post) {
+    final imageUrl = post['imageUrl']?.toString() ?? '';
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -133,13 +199,18 @@ class _PostsTabState extends State<PostsTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Banner Image
-          Container(
-            height: 140,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              image: DecorationImage(image: NetworkImage(post['imageUrl']), fit: BoxFit.cover),
+          if (imageUrl.isNotEmpty)
+            Container(
+              height: 140,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                image: DecorationImage(
+                  image: NetworkImage(imageUrl),
+                  fit: BoxFit.cover,
+                  onError: (_, _) {},
+                ),
+              ),
             ),
-          ),
           Padding(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -159,14 +230,14 @@ class _PostsTabState extends State<PostsTab> {
                         style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: AppColors.brandPrimaryDark),
                       ),
                     ),
-                    Text(post['date'], style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                    Text(post['date'].toString(), style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(post['title'], style: AppTypography.titleMedium),
+                Text(post['title'].toString(), style: AppTypography.titleMedium),
                 const SizedBox(height: 6),
                 Text(
-                  post['excerpt'],
+                  post['excerpt'].toString(),
                   style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -184,11 +255,20 @@ class _PostsTabState extends State<PostsTab> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)),
-                      onPressed: () {
+                      onPressed: () async {
+                        final postId = post['id']?.toString() ?? '';
                         setState(() => _posts.remove(post));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Deleted "${post['title']}"')),
-                        );
+                        final client = SupabaseConfig.clientSafe;
+                        if (client != null && postId.isNotEmpty) {
+                          try {
+                            await client.from('posts').delete().eq('id', postId);
+                          } catch (_) {}
+                        }
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Deleted "${post['title']}"')),
+                          );
+                        }
                       },
                     ),
                   ],
@@ -224,23 +304,47 @@ class _PostsTabState extends State<PostsTab> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           AppButton(
             label: 'Publish Live',
-            onPressed: () {
+            onPressed: () async {
               if (titleController.text.isNotEmpty) {
+                final newId = 'post-${DateTime.now().millisecondsSinceEpoch}';
+                final slug = titleController.text.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+                final newPost = {
+                  'id': newId,
+                  'title': titleController.text.trim(),
+                  'category': catController.text.trim(),
+                  'excerpt': excerptController.text.isEmpty ? 'Key updates published by Rankearn academic panel.' : excerptController.text.trim(),
+                  'imageUrl': 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=60',
+                  'isActive': true,
+                  'date': 'Today',
+                };
+
                 setState(() {
-                  _posts.insert(0, {
-                    'id': 'post-${DateTime.now().millisecondsSinceEpoch}',
-                    'title': titleController.text,
-                    'category': catController.text,
-                    'excerpt': excerptController.text.isEmpty ? 'Key updates published by Rankearn academic panel.' : excerptController.text,
-                    'imageUrl': 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=60',
-                    'isActive': true,
-                    'date': 'Today',
-                  });
+                  _posts.insert(0, newPost);
                 });
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Article published live to candidate feeds!')),
-                );
+
+                final client = SupabaseConfig.clientSafe;
+                if (client != null) {
+                  try {
+                    await client.from('posts').insert({
+                      'id': newId,
+                      'slug': slug,
+                      'title': titleController.text.trim(),
+                      'content': excerptController.text.trim(),
+                      'excerpt': excerptController.text.trim(),
+                      'category': catController.text.trim(),
+                      'author_name': 'Rankearn Academic Team',
+                      'is_active': true,
+                      'image_url': 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=60',
+                    });
+                  } catch (_) {}
+                }
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Article published live to candidate feeds!')),
+                  );
+                }
               }
             },
           ),

@@ -1,41 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class PollsTab extends StatefulWidget {
-  const PollsTab({super.key});
+  final List<Map<String, dynamic>>? initialPolls;
+  const PollsTab({super.key, this.initialPolls});
 
   @override
   State<PollsTab> createState() => _PollsTabState();
 }
 
 class _PollsTabState extends State<PollsTab> {
-  final List<Map<String, dynamic>> _polls = [
-    {
-      'id': 'poll-1',
-      'question': 'Which exam series should we prioritize next for the AI Test Intelligence generator?',
-      'targetSegment': 'All Candidates',
-      'isActive': true,
-      'createdAt': 'Oct 18, 2026',
-      'options': [
-        {'text': '70th BPSC Mains Answer Writing', 'votes': 420},
-        {'text': 'SSC CGL Tier 2 Quantitative Advance', 'votes': 310},
-        {'text': 'Railway RRB NTPC Special', 'votes': 195},
-        {'text': 'UPSC Prelims CSAT Speed Hacks', 'votes': 140},
-      ],
-    },
-    {
-      'id': 'poll-2',
-      'question': 'What is your preferred duration for daily 1v1 coin battle speed duels?',
-      'targetSegment': 'Pro Pass Candidates',
-      'isActive': true,
-      'createdAt': 'Oct 15, 2026',
-      'options': [
-        {'text': '5 Questions (60 Seconds)', 'votes': 580},
-        {'text': '10 Questions (2 Minutes)', 'votes': 220},
-        {'text': '15 Questions (Sprint Mode)', 'votes': 85},
-      ],
-    },
-  ];
+  List<Map<String, dynamic>> _polls = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialPolls != null) {
+      _polls = List.from(widget.initialPolls!);
+      _isLoading = false;
+    } else {
+      _fetchPolls();
+    }
+  }
+
+  Future<void> _fetchPolls() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final res = await client.from('polls').select().order('created_at', ascending: false);
+      if (mounted) {
+        setState(() {
+          _polls = (res as List).map((row) {
+            final opts = row['options'] ?? [];
+            final votesMap = row['votes'] ?? {};
+            final List<Map<String, dynamic>> parsedOpts = [];
+            if (opts is List) {
+              for (int i = 0; i < opts.length; i++) {
+                final o = opts[i];
+                if (o is Map) {
+                  parsedOpts.add({
+                    'text': o['text']?.toString() ?? 'Option ${i + 1}',
+                    'votes': (o['votes'] is num) ? (o['votes'] as num).toInt() : 0,
+                  });
+                } else {
+                  final text = o.toString();
+                  final votesCount = votesMap is Map ? (votesMap['$i'] ?? votesMap[text] ?? 0) : 0;
+                  parsedOpts.add({
+                    'text': text,
+                    'votes': (votesCount is num) ? votesCount.toInt() : 0,
+                  });
+                }
+              }
+            }
+            return {
+              'id': row['id']?.toString() ?? '',
+              'question': row['question']?.toString() ?? '',
+              'targetSegment': row['target_segment']?.toString() ?? 'All Candidates',
+              'isActive': row['is_active'] == true,
+              'createdAt': row['created_at'] != null ? row['created_at'].toString().split('T').first : 'Recent',
+              'options': parsedOpts,
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,9 +86,57 @@ class _PollsTabState extends State<PollsTab> {
           _buildMasterHeader(),
           const SizedBox(height: 24),
 
-          // Poll Cards Grid
-          Column(
-            children: _polls.map((p) => _buildPollCard(p)).toList(),
+          // Poll Cards or Empty State
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(48),
+                child: CircularProgressIndicator(color: AppColors.brandPrimary),
+              ),
+            )
+          else if (_polls.isEmpty)
+            _buildEmptyState()
+          else
+            Column(
+              children: _polls.map((p) => _buildPollCard(p)).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(48),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadii.borderXl,
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.brandPrimary.withAlpha(20),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.poll_outlined, color: AppColors.brandPrimary, size: 32),
+          ),
+          const SizedBox(height: 16),
+          const Text('No Community Polls Found', style: AppTypography.titleLarge),
+          const SizedBox(height: 8),
+          const Text(
+            'Create interactive polls to survey candidates on preferred exam topics, mock timings, or feedback.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 20),
+          AppButton(
+            label: '+ Create First Poll',
+            onPressed: _showCreatePollDialog,
           ),
         ],
       ),
@@ -108,8 +194,8 @@ class _PollsTabState extends State<PollsTab> {
   }
 
   Widget _buildPollCard(Map<String, dynamic> poll) {
-    final options = poll['options'] as List<dynamic>;
-    final totalVotes = options.fold<int>(0, (sum, o) => sum + (o['votes'] as int));
+    final options = (poll['options'] as List<dynamic>?) ?? [];
+    final totalVotes = options.fold<int>(0, (sum, o) => sum + ((o['votes'] as int?) ?? 0));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
@@ -144,15 +230,24 @@ class _PollsTabState extends State<PollsTab> {
               ),
               Row(
                 children: [
-                  Text(poll['createdAt'], style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                  Text(poll['createdAt'].toString(), style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
                   const SizedBox(width: 6),
                   IconButton(
                     icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)),
-                    onPressed: () {
+                    onPressed: () async {
+                      final pollId = poll['id']?.toString() ?? '';
                       setState(() => _polls.remove(poll));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Poll deleted.')),
-                      );
+                      final client = SupabaseConfig.clientSafe;
+                      if (client != null && pollId.isNotEmpty) {
+                        try {
+                          await client.from('polls').delete().eq('id', pollId);
+                        } catch (_) {}
+                      }
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Poll deleted.')),
+                        );
+                      }
                     },
                   ),
                 ],
@@ -166,7 +261,7 @@ class _PollsTabState extends State<PollsTab> {
           // Options with live progress bars
           Column(
             children: options.map((opt) {
-              final votes = opt['votes'] as int;
+              final votes = (opt['votes'] as int?) ?? 0;
               final pct = totalVotes > 0 ? (votes / totalVotes) * 100 : 0.0;
 
               return Padding(
@@ -177,7 +272,7 @@ class _PollsTabState extends State<PollsTab> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(opt['text'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                        Text(opt['text']?.toString() ?? '', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
                         Text('${pct.toStringAsFixed(1)}% ($votes votes)', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
                       ],
                     ),
@@ -226,25 +321,47 @@ class _PollsTabState extends State<PollsTab> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           AppButton(
             label: 'Publish Poll',
-            onPressed: () {
+            onPressed: () async {
               if (qController.text.isNotEmpty && opt1Controller.text.isNotEmpty) {
+                final newPollId = 'poll-${DateTime.now().millisecondsSinceEpoch}';
+                final optionsList = [
+                  {'text': opt1Controller.text.trim(), 'votes': 0},
+                  if (opt2Controller.text.trim().isNotEmpty) {'text': opt2Controller.text.trim(), 'votes': 0},
+                ];
+
+                final newPollMap = {
+                  'id': newPollId,
+                  'question': qController.text.trim(),
+                  'targetSegment': 'All Candidates',
+                  'isActive': true,
+                  'createdAt': 'Today',
+                  'options': optionsList,
+                };
+
                 setState(() {
-                  _polls.insert(0, {
-                    'id': 'poll-${DateTime.now().millisecondsSinceEpoch}',
-                    'question': qController.text,
-                    'targetSegment': 'All Candidates',
-                    'isActive': true,
-                    'createdAt': 'Today',
-                    'options': [
-                      {'text': opt1Controller.text, 'votes': 0},
-                      {'text': opt2Controller.text, 'votes': 0},
-                    ],
-                  });
+                  _polls.insert(0, newPollMap);
                 });
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Poll published live!')),
-                );
+
+                final client = SupabaseConfig.clientSafe;
+                if (client != null) {
+                  try {
+                    await client.from('polls').insert({
+                      'id': newPollId,
+                      'question': qController.text.trim(),
+                      'options': optionsList,
+                      'votes': {},
+                      'target_segment': 'all',
+                      'is_active': true,
+                    });
+                  } catch (_) {}
+                }
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Poll published live!')),
+                  );
+                }
               }
             },
           ),

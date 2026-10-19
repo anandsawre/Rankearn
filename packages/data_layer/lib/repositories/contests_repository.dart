@@ -5,15 +5,20 @@ import '../supabase/supabase_config.dart';
 
 /// Contests & Tournaments Repository
 class ContestsRepository {
-  final SupabaseClient _client;
+  final SupabaseClient? _explicitClient;
 
-  ContestsRepository({SupabaseClient? client})
-      : _client = client ?? SupabaseConfig.client;
+  ContestsRepository({SupabaseClient? client}) : _explicitClient = client;
+
+  SupabaseClient? get _client => _explicitClient ?? SupabaseConfig.clientSafe;
 
   /// Fetch Tournaments by status
   Future<Result<List<TestModel>>> getTournaments() async {
+    final client = _client;
+    if (client == null) {
+      return const Success([]);
+    }
     try {
-      final data = await _client
+      final data = await client
           .from('tests')
           .select()
           .eq('is_tournament', true)
@@ -32,8 +37,12 @@ class ContestsRepository {
     required String testId,
     required String userId,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
-      final res = await _client.rpc('join_tournament', params: {
+      final res = await client.rpc('join_tournament', params: {
         'p_test_id': testId,
         'p_user_id': userId,
       });
@@ -56,10 +65,14 @@ class ContestsRepository {
     required double accuracy,
     bool isTournament = false,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
       final attemptId = 'ATT_${DateTime.now().millisecondsSinceEpoch}';
 
-      await _client.from('attempts').insert({
+      await client.from('attempts').insert({
         'id': attemptId,
         'test_id': testId,
         'user_id': userId,

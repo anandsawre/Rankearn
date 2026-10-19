@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class SupportTab extends StatefulWidget {
-  const SupportTab({super.key});
+  final List<Map<String, dynamic>>? initialTickets;
+  const SupportTab({super.key, this.initialTickets});
 
   @override
   State<SupportTab> createState() => _SupportTabState();
@@ -11,36 +13,64 @@ class SupportTab extends StatefulWidget {
 class _SupportTabState extends State<SupportTab> {
   final _messageController = TextEditingController();
   int _selectedTicketIndex = 0;
+  List<Map<String, dynamic>> _tickets = [];
+  bool _isLoading = true;
 
-  final List<Map<String, dynamic>> _tickets = [
-    {
-      'id': 'tick-1',
-      'name': 'Rahul Verma',
-      'email': 'rahul.verma@outlook.com',
-      'status': 'open',
-      'lastTime': '11:24 AM',
-      'lastMsg': 'Sir, my UPI top-up of ₹250 has not reflected in my coin balance yet.',
-      'messages': [
-        {'isUser': true, 'text': 'Hello Admin, I completed UPI transfer 20 mins ago.', 'time': '11:15 AM'},
-        {'isUser': true, 'text': 'UTR is ICICI4920194821. Please verify and credit 5000 coins.', 'time': '11:20 AM'},
-        {'isUser': false, 'text': 'Hello Rahul! Our finance desk has reviewed your UTR. Your 5,000 Coins have been credited to your wallet.', 'time': '11:22 AM'},
-        {'isUser': true, 'text': 'Sir, my UPI top-up of ₹250 has not reflected in my coin balance yet.', 'time': '11:24 AM'},
-      ],
-    },
-    {
-      'id': 'tick-2',
-      'name': 'Sneha Patel',
-      'email': 'sneha.patel@gmail.com',
-      'status': 'resolved',
-      'lastTime': 'Yesterday',
-      'lastMsg': 'Thank you! The question discrepancy in Mock 2 has been rectified.',
-      'messages': [
-        {'isUser': true, 'text': 'Question #42 in BPSC Mock 1 had an incorrect answer key.', 'time': 'Yesterday, 03:00 PM'},
-        {'isUser': false, 'text': 'We updated the answer key and recomputed scores for all candidates.', 'time': 'Yesterday, 03:30 PM'},
-        {'isUser': true, 'text': 'Thank you! The question discrepancy in Mock 2 has been rectified.', 'time': 'Yesterday, 03:45 PM'},
-      ],
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialTickets != null) {
+      _tickets = List.from(widget.initialTickets!);
+      _isLoading = false;
+    } else {
+      _fetchTickets();
+    }
+  }
+
+  Future<void> _fetchTickets() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final res = await client.from('support_tickets').select().order('last_updated', ascending: false);
+      final List<Map<String, dynamic>> loadedTickets = [];
+
+      for (final row in (res as List)) {
+        final ticketId = row['id']?.toString() ?? '';
+        List<Map<String, dynamic>> msgs = [];
+        try {
+          final mRes = await client.from('support_messages').select().eq('ticket_id', ticketId).order('created_at', ascending: true);
+          msgs = (mRes as List).map((m) => {
+            'isUser': m['role'] == 'user',
+            'text': m['text']?.toString() ?? '',
+            'time': m['created_at'] != null ? m['created_at'].toString().split('T').last.substring(0, 5) : '',
+          }).toList();
+        } catch (_) {}
+
+        loadedTickets.add({
+          'id': ticketId,
+          'name': row['user_name']?.toString() ?? 'Candidate',
+          'email': row['user_email']?.toString() ?? '',
+          'status': row['status']?.toString() ?? 'open',
+          'lastTime': row['last_updated'] != null ? row['last_updated'].toString().split('T').first : 'Recent',
+          'lastMsg': row['last_message']?.toString() ?? 'No messages yet.',
+          'messages': msgs,
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          _tickets = loadedTickets;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -48,12 +78,14 @@ class _SupportTabState extends State<SupportTab> {
     super.dispose();
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || _tickets.isEmpty) return;
+
+    final t = _tickets[_selectedTicketIndex];
+    final ticketId = t['id']?.toString() ?? '';
 
     setState(() {
-      final t = _tickets[_selectedTicketIndex];
       (t['messages'] as List).add({
         'isUser': false,
         'text': text,
@@ -62,12 +94,79 @@ class _SupportTabState extends State<SupportTab> {
       t['lastMsg'] = text;
       _messageController.clear();
     });
+
+    final client = SupabaseConfig.clientSafe;
+    if (client != null && ticketId.isNotEmpty) {
+      try {
+        final authUser = client.auth.currentUser;
+        await client.from('support_messages').insert({
+          'id': 'msg-${DateTime.now().millisecondsSinceEpoch}',
+          'ticket_id': ticketId,
+          'sender_id': authUser?.id ?? '00000000-0000-0000-0000-000000000000',
+          'sender_name': 'Rankearn Support Admin',
+          'text': text,
+          'role': 'admin',
+        });
+        await client.from('support_tickets').update({
+          'last_message': text,
+          'last_updated': DateTime.now().toIso8601String(),
+        }).eq('id', ticketId);
+      } catch (_) {}
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final activeTicket = _tickets[_selectedTicketIndex];
-    final messages = activeTicket['messages'] as List<dynamic>;
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(48),
+          child: CircularProgressIndicator(color: AppColors.brandPrimary),
+        ),
+      );
+    }
+
+    if (_tickets.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        height: MediaQuery.of(context).size.height - 110,
+        alignment: Alignment.center,
+        child: Container(
+          padding: const EdgeInsets.all(48),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: AppRadii.borderXl,
+            border: Border.all(color: const Color(0xFFF1F5F9)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.brandPrimary.withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.support_agent, color: AppColors.brandPrimary, size: 32),
+              ),
+              const SizedBox(height: 16),
+              const Text('No Active Support Tickets', style: AppTypography.titleLarge),
+              const SizedBox(height: 8),
+              const Text(
+                'When candidates submit help requests from their mobile app, tickets and chat histories will appear in this inbox.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final safeIndex = _selectedTicketIndex < _tickets.length ? _selectedTicketIndex : 0;
+    final activeTicket = _tickets[safeIndex];
+    final messages = (activeTicket['messages'] as List<dynamic>?) ?? [];
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -107,8 +206,9 @@ class _SupportTabState extends State<SupportTab> {
                       separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFF8FAFC)),
                       itemBuilder: (context, idx) {
                         final t = _tickets[idx];
-                        final isSelected = idx == _selectedTicketIndex;
+                        final isSelected = idx == safeIndex;
                         final isOpen = t['status'] == 'open';
+                        final name = t['name']?.toString() ?? 'Candidate';
 
                         return InkWell(
                           onTap: () => setState(() => _selectedTicketIndex = idx),
@@ -121,7 +221,7 @@ class _SupportTabState extends State<SupportTab> {
                                 CircleAvatar(
                                   radius: 18,
                                   backgroundColor: const Color(0xFFF1F5F9),
-                                  child: Text(t['name'][0], style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                                  child: Text(name.isNotEmpty ? name[0] : 'U', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF334155))),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -131,13 +231,13 @@ class _SupportTabState extends State<SupportTab> {
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(t['name'], style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                                          Text(t['lastTime'], style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                                          Text(name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                                          Text(t['lastTime']?.toString() ?? '', style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
                                         ],
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        t['lastMsg'],
+                                        t['lastMsg']?.toString() ?? '',
                                         style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -189,8 +289,8 @@ class _SupportTabState extends State<SupportTab> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(activeTicket['name'], style: AppTypography.titleLarge),
-                            Text(activeTicket['email'], style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                            Text(activeTicket['name']?.toString() ?? '', style: AppTypography.titleLarge),
+                            Text(activeTicket['email']?.toString() ?? '', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                           ],
                         ),
                         Row(
@@ -199,10 +299,17 @@ class _SupportTabState extends State<SupportTab> {
                               label: activeTicket['status'] == 'open' ? 'Mark Resolved' : 'Re-open Ticket',
                               variant: activeTicket['status'] == 'open' ? AppButtonVariant.primary : AppButtonVariant.outlined,
                               size: AppButtonSize.small,
-                              onPressed: () {
+                              onPressed: () async {
+                                final newStatus = activeTicket['status'] == 'open' ? 'resolved' : 'open';
                                 setState(() {
-                                  activeTicket['status'] = activeTicket['status'] == 'open' ? 'resolved' : 'open';
+                                  activeTicket['status'] = newStatus;
                                 });
+                                final client = SupabaseConfig.clientSafe;
+                                if (client != null) {
+                                  try {
+                                    await client.from('support_tickets').update({'status': newStatus}).eq('id', activeTicket['id']);
+                                  } catch (_) {}
+                                }
                               },
                             ),
                           ],
@@ -239,7 +346,7 @@ class _SupportTabState extends State<SupportTab> {
                               crossAxisAlignment: isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  m['text'],
+                                  m['text']?.toString() ?? '',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: isUser ? const Color(0xFF1E293B) : Colors.white,
@@ -248,7 +355,7 @@ class _SupportTabState extends State<SupportTab> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  m['time'],
+                                  m['time']?.toString() ?? '',
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: isUser ? const Color(0xFF94A3B8) : Colors.white70,

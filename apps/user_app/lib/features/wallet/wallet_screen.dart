@@ -7,11 +7,13 @@ enum WalletTxFilter { all, earn, spend }
 class WalletScreen extends StatefulWidget {
   final UserProfile profile;
   final VoidCallback onCoinsUpdated;
+  final List<WalletTransactionModel>? initialTransactions;
 
   const WalletScreen({
     super.key,
     required this.profile,
     required this.onCoinsUpdated,
+    this.initialTransactions,
   });
 
   @override
@@ -31,81 +33,44 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
   int _withdrawStep = 1; // 1: amount, 2: details, 3: confirm
   int _withdrawAmount = 1000;
   String _withdrawMethod = 'upi'; // 'upi' or 'bank'
-  final TextEditingController _upiIdController = TextEditingController(text: 'vikram@okaxis');
-  final TextEditingController _upiNameController = TextEditingController(text: 'Vikram Singh');
-  final TextEditingController _bankHolderController = TextEditingController(text: 'Vikram Singh');
-  final TextEditingController _bankAccountController = TextEditingController(text: '918237465019');
-  final TextEditingController _bankIfscController = TextEditingController(text: 'SBIN0001423');
+  late final TextEditingController _upiIdController;
+  late final TextEditingController _upiNameController;
+  late final TextEditingController _bankHolderController;
+  late final TextEditingController _bankAccountController;
+  late final TextEditingController _bankIfscController;
   bool _saveForFuture = true;
 
-  late final List<WalletTransactionModel> _mockTransactions;
+  List<WalletTransactionModel> _transactions = [];
+  bool _isLoadingTransactions = true;
 
   @override
   void initState() {
     super.initState();
     _currentCoins = widget.profile.coins;
-    _mockTransactions = [
-      WalletTransactionModel(
-        id: 'tx_01',
-        userId: widget.profile.id,
-        amount: 250,
-        type: 'earn',
-        category: 'tournament_prize',
-        title: 'BPSC Grand Mock League 🏆',
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        balanceAfter: _currentCoins,
-      ),
-      WalletTransactionModel(
-        id: 'tx_02',
-        userId: widget.profile.id,
-        amount: -50,
-        type: 'spend',
-        category: 'tournament_entry',
-        title: '70th BPSC Prelims Speed Test',
-        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
-        balanceAfter: _currentCoins - 250,
-      ),
-      WalletTransactionModel(
-        id: 'tx_03',
-        userId: widget.profile.id,
-        amount: 50,
-        type: 'earn',
-        category: 'lucky_wheel_win',
-        title: 'Daily Lucky Wheel Jackpot',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        balanceAfter: _currentCoins - 200,
-      ),
-      WalletTransactionModel(
-        id: 'tx_04',
-        userId: widget.profile.id,
-        amount: 500,
-        type: 'earn',
-        category: 'top_up',
-        title: 'UPI Wallet Top-up (Ref: 429184029182)',
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        balanceAfter: _currentCoins - 250,
-      ),
-      WalletTransactionModel(
-        id: 'tx_05',
-        userId: widget.profile.id,
-        amount: 100,
-        type: 'earn',
-        category: 'referral',
-        title: 'Friend Signup Bonus: Anita K.',
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-        balanceAfter: _currentCoins - 750,
-      ),
-      WalletTransactionModel(
-        id: 'tx_06',
-        userId: widget.profile.id,
-        amount: -200,
-        type: 'spend',
-        category: 'test_purchase',
-        title: 'SSC CGL Tier-1 2024 Pro Mock Series',
-        createdAt: DateTime.now().subtract(const Duration(days: 4)),
-        balanceAfter: _currentCoins - 850,
-      ),
-    ];
+    _upiIdController = TextEditingController();
+    _upiNameController = TextEditingController(text: widget.profile.name);
+    _bankHolderController = TextEditingController(text: widget.profile.name);
+    _bankAccountController = TextEditingController();
+    _bankIfscController = TextEditingController();
+
+    if (widget.initialTransactions != null) {
+      _transactions = widget.initialTransactions!;
+      _isLoadingTransactions = false;
+    } else {
+      _loadTransactions();
+    }
+  }
+
+  Future<void> _loadTransactions() async {
+    setState(() => _isLoadingTransactions = true);
+    final res = await WalletRepository().getTransactions(userId: widget.profile.id);
+    if (!mounted) return;
+    setState(() {
+      _isLoadingTransactions = false;
+      if (res is Success<List<WalletTransactionModel>>) {
+        _transactions = res.data;
+      }
+    });
   }
 
   @override
@@ -136,7 +101,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    final filteredTxs = _mockTransactions.where((tx) {
+    final filteredTxs = _transactions.where((tx) {
       if (_activeFilter == WalletTxFilter.earn) return tx.type == 'earn';
       if (_activeFilter == WalletTxFilter.spend) return tx.type == 'spend';
       return true;
@@ -164,10 +129,10 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
 
   // --- 1. Four Gradient Stat Cards Grid ---
   Widget _buildStatCardsGrid() {
-    final lifetimeEarned = _mockTransactions
+    final lifetimeEarned = _transactions
         .where((t) => t.type == 'earn')
         .fold<int>(0, (acc, t) => acc + t.amount);
-    final lifetimeSpent = _mockTransactions
+    final lifetimeSpent = _transactions
         .where((t) => t.type == 'spend')
         .fold<int>(0, (acc, t) => acc + t.amount.abs());
     final withdrawableInRupees = (_currentCoins / 20).toStringAsFixed(0);
@@ -499,7 +464,12 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
           const Divider(height: 1, color: AppColors.border),
 
           // Transactions List Rows
-          if (txs.isEmpty)
+          if (_isLoadingTransactions)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (txs.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Column(
@@ -1126,9 +1096,18 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                   }
 
                   Navigator.pop(context);
+                  WalletRepository().submitTopUpRequest(
+                    userId: widget.profile.id,
+                    amount: _selectedTopUpAmount / 20.0,
+                    coinsAwarded: _selectedTopUpAmount,
+                    utr: _utrController.text.trim(),
+                    userName: widget.profile.name,
+                    userEmail: widget.profile.email,
+                    userPhone: widget.profile.phone,
+                  );
                   setState(() {
                     _currentCoins += _selectedTopUpAmount;
-                    _mockTransactions.insert(
+                    _transactions.insert(
                       0,
                       WalletTransactionModel(
                         id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
@@ -1700,9 +1679,23 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                 variant: AppButtonVariant.primary,
                 onPressed: () {
                   Navigator.pop(context);
+                  WalletRepository().submitWithdrawalRequest(
+                    userId: widget.profile.id,
+                    coinsDeducted: _withdrawAmount,
+                    payoutAmount: _withdrawAmount / 20.0,
+                    method: _withdrawMethod,
+                    upiId: _withdrawMethod == 'upi' ? _upiIdController.text.trim() : null,
+                    bankDetails: _withdrawMethod == 'bank'
+                        ? {
+                            'account_number': _bankAccountController.text.trim(),
+                            'ifsc': _bankIfscController.text.trim(),
+                            'holder_name': _bankHolderController.text.trim(),
+                          }
+                        : null,
+                  );
                   setState(() {
                     _currentCoins -= _withdrawAmount;
-                    _mockTransactions.insert(
+                    _transactions.insert(
                       0,
                       WalletTransactionModel(
                         id: 'tx_${DateTime.now().millisecondsSinceEpoch}',

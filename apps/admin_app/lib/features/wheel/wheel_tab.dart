@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class WheelTab extends StatefulWidget {
   const WheelTab({super.key});
@@ -26,9 +27,49 @@ class _WheelTabState extends State<WheelTab> {
 
   int get _totalProbability => _slices.fold(0, (sum, s) => sum + (s['probability'] as int));
 
+  @override
+  void initState() {
+    super.initState();
+    _loadWheelConfig();
+  }
+
+  Future<void> _loadWheelConfig() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+    try {
+      final res = await client.from('app_configs').select().eq('key', 'lucky_wheel').maybeSingle();
+      if (res != null && res['value'] is Map && mounted) {
+        final val = res['value'] as Map;
+        setState(() {
+          if (val['is_active'] != null) _isWheelActive = val['is_active'] == true;
+          if (val['spin_cost'] != null) _spinCost = (val['spin_cost'] as num).toInt();
+        });
+      }
+    } catch (_) {}
+  }
+
   void _saveConfig() async {
     setState(() => _isSaving = true);
-    await Future.delayed(const Duration(milliseconds: 600));
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      try {
+        await client.from('app_configs').upsert({
+          'key': 'lucky_wheel',
+          'value': {
+            'is_active': _isWheelActive,
+            'spin_cost': _spinCost,
+            'slices': _slices.map((s) => {
+              'label': s['label'],
+              'coins': s['coins'],
+              'probability': s['probability'],
+              'color': (s['color'] as Color).toARGB32(),
+              'isActive': s['isActive'],
+            }).toList(),
+          },
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
+    }
     if (!mounted) return;
     setState(() => _isSaving = false);
     ScaffoldMessenger.of(context).showSnackBar(

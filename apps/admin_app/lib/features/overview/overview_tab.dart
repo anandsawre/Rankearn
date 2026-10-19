@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
-class OverviewTab extends StatelessWidget {
+class OverviewTab extends StatefulWidget {
   final VoidCallback onGoToTests;
   final VoidCallback onGoToFinance;
   final VoidCallback onGoToUsers;
   final VoidCallback onGoToAiCreator;
   final VoidCallback onGoToNotifications;
+  final Map<String, String>? initialStats;
+  final List<(String, String, String, IconData, Color)>? initialActivities;
 
   const OverviewTab({
     super.key,
@@ -15,7 +18,111 @@ class OverviewTab extends StatelessWidget {
     required this.onGoToUsers,
     required this.onGoToAiCreator,
     required this.onGoToNotifications,
+    this.initialStats,
+    this.initialActivities,
   });
+
+  @override
+  State<OverviewTab> createState() => _OverviewTabState();
+}
+
+class _OverviewTabState extends State<OverviewTab> {
+  String _totalUsers = '0';
+  String _activeTests = '0';
+  String _revenue = '₹0';
+  String _avgAccuracy = '0.0%';
+  List<(String, String, String, IconData, Color)> _recentItems = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialStats != null) {
+      _totalUsers = widget.initialStats!['totalUsers'] ?? '0';
+      _activeTests = widget.initialStats!['activeTests'] ?? '0';
+      _revenue = widget.initialStats!['revenue'] ?? '₹0';
+      _avgAccuracy = widget.initialStats!['avgAccuracy'] ?? '0.0%';
+      _recentItems = widget.initialActivities ?? [];
+      _isLoading = false;
+    } else {
+      _fetchOverviewMetrics();
+    }
+  }
+
+  Future<void> _fetchOverviewMetrics() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      // 1. Fetch user count
+      final userCountRes = await client.from('profiles').select('id');
+      final usersCount = (userCountRes as List).length;
+
+      // 2. Fetch active tests count
+      final testsRes = await client.from('tests').select('id').eq('status', 'published');
+      final testsCount = (testsRes as List).length;
+
+      // 3. Fetch approved revenue
+      final topupsRes = await client.from('topup_requests').select('amount').eq('status', 'approved');
+      double totalRev = 0.0;
+      for (final row in (topupsRes as List)) {
+        final amt = row['amount'];
+        if (amt is num) totalRev += amt.toDouble();
+      }
+
+      // 4. Fetch avg accuracy from attempts
+      double calculatedAccuracy = 0.0;
+      try {
+        final attemptsRes = await client.from('attempts').select('accuracy').limit(100);
+        final attList = attemptsRes as List;
+        if (attList.isNotEmpty) {
+          double totalAcc = 0.0;
+          for (final a in attList) {
+            final acc = a['accuracy'];
+            if (acc is num) totalAcc += acc.toDouble();
+          }
+          calculatedAccuracy = totalAcc / attList.length;
+        }
+      } catch (_) {}
+
+      // 5. Fetch recent activity from wallet transactions
+      List<(String, String, String, IconData, Color)> activities = [];
+      try {
+        final txRes = await client.from('wallet_transactions').select().order('created_at', ascending: false).limit(5);
+        activities = (txRes as List).map((tx) {
+          final isEarn = tx['type'] == 'earn';
+          final title = tx['title']?.toString() ?? 'Coin Transaction';
+          final amount = tx['amount']?.toString() ?? '0';
+          final dateStr = tx['created_at'] != null ? tx['created_at'].toString().split('T').first : 'Recent';
+          final sub = '$dateStr • ${isEarn ? '+' : '-'}$amount Coins';
+
+          return (
+            title,
+            sub,
+            dateStr,
+            isEarn ? Icons.add_circle : Icons.arrow_outward,
+            isEarn ? AppColors.primary : const Color(0xFFD97706),
+          );
+        }).toList();
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _totalUsers = usersCount > 0 ? usersCount.toString() : '0';
+          _activeTests = testsCount > 0 ? testsCount.toString() : '0';
+          _revenue = totalRev > 0 ? '₹${totalRev.toInt()}' : '₹0';
+          _avgAccuracy = calculatedAccuracy > 0 ? '${calculatedAccuracy.toStringAsFixed(1)}%' : '0.0%';
+          _recentItems = activities;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,31 +155,31 @@ class OverviewTab extends StatelessWidget {
     final stats = [
       (
         'TOTAL USERS',
-        '24,850',
+        _totalUsers,
         Icons.people_outline,
         const Color(0xFF2563EB),
         const Color(0xFFEFF6FF),
-        onGoToUsers,
+        widget.onGoToUsers,
       ),
       (
         'ACTIVE TESTS',
-        '142',
+        _activeTests,
         Icons.menu_book_outlined,
         const Color(0xFF059669),
         const Color(0xFFECFDF5),
-        onGoToTests,
+        widget.onGoToTests,
       ),
       (
         'REVENUE',
-        '₹4,28,500',
+        _revenue,
         Icons.currency_rupee,
         const Color(0xFFD97706),
         const Color(0xFFFFFBEB),
-        onGoToFinance,
+        widget.onGoToFinance,
       ),
       (
         'AVG ACCURACY',
-        '68.4%',
+        _avgAccuracy,
         Icons.bar_chart_outlined,
         const Color(0xFF7C3AED),
         const Color(0xFFF5F3FF),
@@ -264,28 +371,28 @@ class OverviewTab extends StatelessWidget {
               label: 'Generate AI Mock Test',
               color: AppColors.primary,
               bg: AppColors.primarySubtle,
-              onTap: onGoToAiCreator,
+              onTap: widget.onGoToAiCreator,
             ),
             _buildActionPill(
               icon: Icons.check_circle_outline,
               label: 'Approve Payout Requests',
               color: const Color(0xFFD97706),
               bg: const Color(0xFFFFFBEB),
-              onTap: onGoToFinance,
+              onTap: widget.onGoToFinance,
             ),
             _buildActionPill(
               icon: Icons.notifications_active_outlined,
               label: 'Dispatch Push Alert',
               color: const Color(0xFF2563EB),
               bg: const Color(0xFFEFF6FF),
-              onTap: onGoToNotifications,
+              onTap: widget.onGoToNotifications,
             ),
             _buildActionPill(
               icon: Icons.add_circle_outline,
               label: 'Create New Test Series',
               color: const Color(0xFF7C3AED),
               bg: const Color(0xFFF5F3FF),
-              onTap: onGoToTests,
+              onTap: widget.onGoToTests,
             ),
           ],
         ),
@@ -331,13 +438,6 @@ class OverviewTab extends StatelessWidget {
 
   // --- 4. Recent Platform Transactions Feed ---
   Widget _buildRecentActivitySection() {
-    final recentItems = [
-      ('Deposit Top-Up Approved', 'Vikram Singh • 500 Coins (UTR: 429184029182)', '10m ago', Icons.add_circle, AppColors.primary),
-      ('Withdrawal Request Submitted', 'Pooja Kumari • ₹250 to UPI: pooja@ybl', '25m ago', Icons.arrow_outward, const Color(0xFFD97706)),
-      ('Contest Result Declared', '70th BPSC Prelims Speed Test • 84 Participants', '1h ago', Icons.emoji_events, const Color(0xFF7C3AED)),
-      ('New Student Registered', 'Anand Sawre • Target Exam: SSC CGL 2026', '2h ago', Icons.person_add, const Color(0xFF2563EB)),
-    ];
-
     return AppCard(
       padding: EdgeInsets.zero,
       child: Column(
@@ -354,28 +454,46 @@ class OverviewTab extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: recentItems.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final item = recentItems[index];
-              return ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: item.$5.withAlpha(25),
-                    borderRadius: AppRadii.borderSm,
-                  ),
-                  child: Icon(item.$4, color: item.$5, size: 18),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.brandPrimary),
+              ),
+            )
+          else if (_recentItems.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(
+                child: Text(
+                  'No platform activity logged yet. Candidate signups, tests, and transactions will stream here.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
                 ),
-                title: Text(item.$1, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                subtitle: Text(item.$2, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                trailing: Text(item.$3, style: const TextStyle(fontSize: 10, color: AppColors.textMuted, fontWeight: FontWeight.w600)),
-              );
-            },
-          ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _recentItems.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final item = _recentItems[index];
+                return ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: item.$5.withAlpha(25),
+                      borderRadius: AppRadii.borderSm,
+                    ),
+                    child: Icon(item.$4, color: item.$5, size: 18),
+                  ),
+                  title: Text(item.$1, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                  subtitle: Text(item.$2, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                  trailing: Text(item.$3, style: const TextStyle(fontSize: 10, color: AppColors.textMuted, fontWeight: FontWeight.w600)),
+                );
+              },
+            ),
         ],
       ),
     );

@@ -5,15 +5,17 @@ import '../supabase/supabase_config.dart';
 
 /// Authentication & User Profile Repository
 class AuthRepository {
-  final supa.SupabaseClient _client;
+  final supa.SupabaseClient? _explicitClient;
 
-  AuthRepository({supa.SupabaseClient? client})
-      : _client = client ?? SupabaseConfig.client;
+  AuthRepository({supa.SupabaseClient? client}) : _explicitClient = client;
 
-  supa.User? get currentUser => _client.auth.currentUser;
+  supa.SupabaseClient? get _client => _explicitClient ?? SupabaseConfig.clientSafe;
+
+  supa.User? get currentUser => _client?.auth.currentUser;
   bool get isAuthenticated => currentUser != null;
 
-  Stream<supa.AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+  Stream<supa.AuthState> get authStateChanges =>
+      _client?.auth.onAuthStateChange ?? const Stream.empty();
 
   /// Register new user with Email, Password, Name, and optional Referral Code
   Future<Result<UserProfile>> signUpWithEmail({
@@ -22,8 +24,12 @@ class AuthRepository {
     required String name,
     String? referralCode,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
-      final response = await _client.auth.signUp(
+      final response = await client.auth.signUp(
         email: email.trim(),
         password: password,
         data: {
@@ -53,8 +59,12 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
-      final response = await _client.auth.signInWithPassword(
+      final response = await client.auth.signInWithPassword(
         email: email.trim(),
         password: password,
       );
@@ -77,8 +87,12 @@ class AuthRepository {
     required String idToken,
     String? accessToken,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
-      final response = await _client.auth.signInWithIdToken(
+      final response = await client.auth.signInWithIdToken(
         provider: supa.OAuthProvider.google,
         idToken: idToken,
         accessToken: accessToken,
@@ -99,8 +113,12 @@ class AuthRepository {
 
   /// Request Password Recovery Email
   Future<Result<bool>> sendPasswordResetEmail(String email) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
-      await _client.auth.resetPasswordForEmail(
+      await client.auth.resetPasswordForEmail(
         email.trim(),
         redirectTo: 'com.rankearn.app://reset-password',
       );
@@ -114,8 +132,12 @@ class AuthRepository {
 
   /// Sign Out
   Future<Result<bool>> signOut() async {
+    final client = _client;
+    if (client == null) {
+      return const Success(true);
+    }
     try {
-      await _client.auth.signOut();
+      await client.auth.signOut();
       return const Success(true);
     } catch (e) {
       return Failure(e.toString(), e);
@@ -124,8 +146,12 @@ class AuthRepository {
 
   /// Fetch User Profile
   Future<Result<UserProfile>> getProfile(String userId) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
-      final data = await _client
+      final data = await client
           .from('profiles')
           .select()
           .eq('id', userId)
@@ -150,6 +176,10 @@ class AuthRepository {
     String? examPreparingFor,
     String? photoUrl,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
       final updates = <String, dynamic>{
         'updated_at': DateTime.now().toUtc().toIso8601String(),
@@ -162,7 +192,7 @@ class AuthRepository {
         updates['profile_photo_url'] = photoUrl;
       }
 
-      final data = await _client
+      final data = await client
           .from('profiles')
           .update(updates)
           .eq('id', userId)
@@ -177,8 +207,12 @@ class AuthRepository {
 
   /// Check Server-Enforced Admin Authorization
   Future<bool> checkIsAdmin(String userId) async {
+    final client = _client;
+    if (client == null) {
+      return false;
+    }
     try {
-      final res = await _client.rpc('is_admin');
+      final res = await client.rpc('is_admin');
       return res == true;
     } catch (_) {
       return false;

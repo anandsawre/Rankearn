@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class NotificationsTab extends StatefulWidget {
-  const NotificationsTab({super.key});
+  final List<Map<String, dynamic>>? initialHistory;
+  const NotificationsTab({super.key, this.initialHistory});
 
   @override
   State<NotificationsTab> createState() => _NotificationsTabState();
@@ -14,37 +16,51 @@ class _NotificationsTabState extends State<NotificationsTab> {
   String _notifType = 'contest'; // 'info', 'success', 'warning', 'transaction', 'contest'
   bool _showAsBanner = false;
   bool _isDispatching = false;
+  bool _isLoadingHistory = true;
 
-  final _titleController = TextEditingController(text: '70th BPSC Grand League Starts in 30 Mins! 🏆');
-  final _bodyController = TextEditingController(text: 'Join the mock championship now to test your accuracy and compete for 15,000 Coins in prizes.');
-  final _actionLabelController = TextEditingController(text: 'Join League');
+  final _titleController = TextEditingController();
+  final _bodyController = TextEditingController();
+  final _actionLabelController = TextEditingController();
 
-  final List<Map<String, dynamic>> _history = [
-    {
-      'id': 'notif-1',
-      'title': '70th BPSC Prelims Mock 1 Live Now',
-      'body': 'Join candidates across Bihar in today\'s full mock test.',
-      'segment': 'All Users',
-      'type': 'contest',
-      'date': 'Today, 09:00 AM',
-    },
-    {
-      'id': 'notif-2',
-      'title': 'Lucky Wheel Weekend Multiplier 🎡',
-      'body': 'Spin today for 2x coin drops on all slices!',
-      'segment': 'Free Users',
-      'type': 'info',
-      'date': 'Yesterday, 06:00 PM',
-    },
-    {
-      'id': 'notif-3',
-      'title': 'Payout Processed: ₹250 Credited',
-      'body': 'Your coin redemption has been settled to your UPI VPA.',
-      'segment': 'Specific User',
-      'type': 'transaction',
-      'date': 'Yesterday, 02:30 PM',
-    },
-  ];
+  List<Map<String, dynamic>> _history = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialHistory != null) {
+      _history = List.from(widget.initialHistory!);
+      _isLoadingHistory = false;
+    } else {
+      _fetchHistory();
+    }
+  }
+
+  Future<void> _fetchHistory() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoadingHistory = false);
+      return;
+    }
+
+    try {
+      final res = await client.from('notifications').select().order('created_at', ascending: false).limit(20);
+      if (mounted) {
+        setState(() {
+          _history = (res as List).map((n) => {
+            'id': n['id']?.toString() ?? '',
+            'title': n['title']?.toString() ?? '',
+            'body': n['message']?.toString() ?? '',
+            'segment': n['target_segment']?.toString() ?? 'All Users',
+            'type': n['type']?.toString() ?? 'info',
+            'date': n['created_at'] != null ? n['created_at'].toString().split('T').first : 'Recent',
+          }).toList();
+          _isLoadingHistory = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingHistory = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -55,20 +71,42 @@ class _NotificationsTabState extends State<NotificationsTab> {
   }
 
   void _dispatchNotification() async {
+    if (_titleController.text.trim().isEmpty) return;
     setState(() => _isDispatching = true);
-    await Future.delayed(const Duration(milliseconds: 1000));
-    if (!mounted) return;
 
+    final newId = 'notif-${DateTime.now().millisecondsSinceEpoch}';
+    final newItem = {
+      'id': newId,
+      'title': _titleController.text.trim(),
+      'body': _bodyController.text.trim(),
+      'segment': _targetSegment.toUpperCase(),
+      'type': _notifType,
+      'date': 'Just Now',
+    };
+
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      try {
+        await client.from('notifications').insert({
+          'id': newId,
+          'user_id': 'global',
+          'title': _titleController.text.trim(),
+          'message': _bodyController.text.trim(),
+          'type': _notifType,
+          'target_segment': _targetSegment,
+          'action_url': _targetRoute,
+          'is_read': false,
+        });
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
     setState(() {
       _isDispatching = false;
-      _history.insert(0, {
-        'id': 'notif-${DateTime.now().millisecondsSinceEpoch}',
-        'title': _titleController.text,
-        'body': _bodyController.text,
-        'segment': _targetSegment.toUpperCase(),
-        'type': _notifType,
-        'date': 'Just Now',
-      });
+      _history.insert(0, newItem);
+      _titleController.clear();
+      _bodyController.clear();
+      _actionLabelController.clear();
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -439,23 +477,50 @@ class _NotificationsTabState extends State<NotificationsTab> {
             child: Text('Recent Notification Dispatch History', style: AppTypography.titleLarge),
           ),
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          ..._history.map((item) {
-            return Material(
-              color: Colors.transparent,
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: const Color(0xFFECFDF5),
-                  child: const Icon(Icons.send_outlined, size: 16, color: AppColors.brandPrimary),
-                ),
-                title: Text(item['title'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                subtitle: Text('${item['body']} • Target: ${item['segment']} • ${item['date']}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)),
-                  onPressed: () => setState(() => _history.remove(item)),
+          if (_isLoadingHistory)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: CircularProgressIndicator(color: AppColors.brandPrimary),
+              ),
+            )
+          else if (_history.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(
+                child: Text(
+                  'No notifications have been broadcasted yet. Compose and send above.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
                 ),
               ),
-            );
-          }),
+            )
+          else
+            ..._history.map((item) {
+              return Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFECFDF5),
+                    child: Icon(Icons.send_outlined, size: 16, color: AppColors.brandPrimary),
+                  ),
+                  title: Text(item['title']?.toString() ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: Text('${item['body']} • Target: ${item['segment']} • ${item['date']}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)),
+                    onPressed: () async {
+                      final notifId = item['id']?.toString() ?? '';
+                      setState(() => _history.remove(item));
+                      final client = SupabaseConfig.clientSafe;
+                      if (client != null && notifId.isNotEmpty) {
+                        try {
+                          await client.from('notifications').delete().eq('id', notifId);
+                        } catch (_) {}
+                      }
+                    },
+                  ),
+                ),
+              );
+            }),
         ],
       ),
     );

@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class BannersTab extends StatefulWidget {
-  const BannersTab({super.key});
+  final List<Map<String, dynamic>>? initialBanners;
+  final List<Map<String, dynamic>>? initialSpotlights;
+
+  const BannersTab({
+    super.key,
+    this.initialBanners,
+    this.initialSpotlights,
+  });
 
   @override
   State<BannersTab> createState() => _BannersTabState();
@@ -10,48 +18,59 @@ class BannersTab extends StatefulWidget {
 
 class _BannersTabState extends State<BannersTab> {
   String _activeSubTab = 'all'; // 'all', 'promotional', 'spotlights'
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _promotionalBanners = [];
+  List<Map<String, dynamic>> _spotlights = [];
 
-  final List<Map<String, dynamic>> _promotionalBanners = [
-    {
-      'id': 'ban-1',
-      'title': '70th BPSC Prelims Maha Mock Series 2026',
-      'link': '/tests/bpsc-prelims-mega',
-      'priority': 1,
-      'isActive': true,
-      'imageUrl': 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&auto=format&fit=crop&q=60',
-    },
-    {
-      'id': 'ban-2',
-      'title': 'SSC CGL Tier 1 All-India Mock Championship',
-      'link': '/contests/ssc-cgl-grand',
-      'priority': 2,
-      'isActive': true,
-      'imageUrl': 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=60',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialBanners != null || widget.initialSpotlights != null) {
+      _promotionalBanners = widget.initialBanners ?? [];
+      _spotlights = widget.initialSpotlights ?? [];
+      _isLoading = false;
+    } else {
+      _loadBanners();
+    }
+  }
 
-  final List<Map<String, dynamic>> _spotlights = [
-    {
-      'id': 'spot-1',
-      'name': 'Pooja Verma',
-      'examName': '70th BPSC Prelims Mock',
-      'rank': 'AIR 1',
-      'score': '142.5 / 150',
-      'message': 'Rankearn speed tests and negative marking simulation were instrumental in my BPSC accuracy preparation!',
-      'isActive': true,
-      'priority': 1,
-    },
-    {
-      'id': 'spot-2',
-      'name': 'Aditya Sharma',
-      'examName': 'SSC CGL Tier 1 Full Mock',
-      'rank': 'AIR 3',
-      'score': '186.0 / 200',
-      'message': 'The 1v1 battle arena sharpened my quantitative shortcut calculation under intense time pressure.',
-      'isActive': true,
-      'priority': 2,
-    },
-  ];
+  Future<void> _loadBanners() async {
+    setState(() => _isLoading = true);
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+    try {
+      final bannerData = await client.from('app_banners').select().order('priority', ascending: true);
+      final spotData = await client.from('spotlights').select().order('priority', ascending: true);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _promotionalBanners = (bannerData as List).map((b) => {
+          'id': b['id']?.toString() ?? '',
+          'title': b['title']?.toString() ?? '',
+          'link': b['link']?.toString() ?? '',
+          'priority': (b['priority'] as num?)?.toInt() ?? 1,
+          'isActive': b['is_active'] == true,
+          'imageUrl': b['image_url']?.toString() ?? '',
+        }).toList();
+
+        _spotlights = (spotData as List).map((s) => {
+          'id': s['id']?.toString() ?? '',
+          'name': s['name']?.toString() ?? '',
+          'examName': s['exam_name']?.toString() ?? '',
+          'rank': s['rank']?.toString() ?? '',
+          'score': s['score']?.toString() ?? '',
+          'message': s['message']?.toString() ?? '',
+          'isActive': s['is_active'] == true,
+          'priority': (s['priority'] as num?)?.toInt() ?? 1,
+        }).toList();
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,21 +88,30 @@ class _BannersTabState extends State<BannersTab> {
           const SizedBox(height: 20),
 
           // Content Area
-          if (_activeSubTab == 'all' || _activeSubTab == 'promotional') ...[
-            _buildSectionHeader('Promotional Banners (${_promotionalBanners.length})', Icons.image_outlined),
-            const SizedBox(height: 12),
-            Column(
-              children: _promotionalBanners.map((b) => _buildBannerCard(b)).toList(),
-            ),
-            const SizedBox(height: 24),
-          ],
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(48),
+                child: CircularProgressIndicator(color: AppColors.brandPrimary),
+              ),
+            )
+          else ...[
+            if (_activeSubTab == 'all' || _activeSubTab == 'promotional') ...[
+              _buildSectionHeader('Promotional Banners (${_promotionalBanners.length})', Icons.image_outlined),
+              const SizedBox(height: 12),
+              Column(
+                children: _promotionalBanners.map((b) => _buildBannerCard(b)).toList(),
+              ),
+              const SizedBox(height: 24),
+            ],
 
-          if (_activeSubTab == 'all' || _activeSubTab == 'spotlights') ...[
-            _buildSectionHeader('Candidate Hall of Fame & Spotlight (${_spotlights.length})', Icons.star_outline),
-            const SizedBox(height: 12),
-            Column(
-              children: _spotlights.map((s) => _buildSpotlightCard(s)).toList(),
-            ),
+            if (_activeSubTab == 'all' || _activeSubTab == 'spotlights') ...[
+              _buildSectionHeader('Candidate Hall of Fame & Spotlight (${_spotlights.length})', Icons.star_outline),
+              const SizedBox(height: 12),
+              Column(
+                children: _spotlights.map((s) => _buildSpotlightCard(s)).toList(),
+              ),
+            ],
           ],
         ],
       ),

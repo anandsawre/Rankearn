@@ -27,7 +27,9 @@ void main() async {
 }
 
 class RankearnUserApp extends StatelessWidget {
-  const RankearnUserApp({super.key});
+  final List<TestModel>? initialTests;
+
+  const RankearnUserApp({super.key, this.initialTests});
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +37,15 @@ class RankearnUserApp extends StatelessWidget {
       title: 'Rankearn',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const UserAppShell(),
+      home: UserAppShell(initialTests: initialTests),
     );
   }
 }
 
 class UserAppShell extends StatefulWidget {
-  const UserAppShell({super.key});
+  final List<TestModel>? initialTests;
+
+  const UserAppShell({super.key, this.initialTests});
 
   @override
   State<UserAppShell> createState() => _UserAppShellState();
@@ -410,6 +414,7 @@ class _UserAppShellState extends State<UserAppShell> {
         UserNavTab.tests => TestSeriesScreen(
             userCoins: _profile.coins,
             onStartTest: (test) => _startQuiz(test),
+            initialTests: widget.initialTests,
           ),
         UserNavTab.earn => EarnScreen(
             userCoins: _profile.coins,

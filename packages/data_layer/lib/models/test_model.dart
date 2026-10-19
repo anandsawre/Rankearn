@@ -14,6 +14,7 @@ class TestModel {
   final String status;
   final bool isTournament;
   final int entryFeeCoins;
+  final int prizePoolCoins;
   final int totalParticipants;
   final DateTime? scheduledStartTime;
   final DateTime? scheduledEndTime;
@@ -35,12 +36,16 @@ class TestModel {
     this.status = 'published',
     this.isTournament = false,
     this.entryFeeCoins = 0,
+    this.prizePoolCoins = 0,
     this.totalParticipants = 0,
     this.scheduledStartTime,
     this.scheduledEndTime,
     this.isResultDeclared = false,
     this.syllabus,
   });
+
+  bool get isTournamentLive => isLive;
+  int get registeredParticipants => totalParticipants;
 
   bool get isLive {
     if (!isTournament) return true;
@@ -76,6 +81,7 @@ class TestModel {
       status: map['status']?.toString() ?? 'published',
       isTournament: map['is_tournament'] == true,
       entryFeeCoins: (map['entry_fee_coins'] as num?)?.toInt() ?? 0,
+      prizePoolCoins: (map['prize_pool_coins'] as num?)?.toInt() ?? 0,
       totalParticipants: (map['total_participants'] as num?)?.toInt() ?? 0,
       scheduledStartTime: map['scheduled_start_time'] != null
           ? DateTime.tryParse(map['scheduled_start_time'].toString())
@@ -104,6 +110,7 @@ class TestModel {
       'status': status,
       'is_tournament': isTournament,
       'entry_fee_coins': entryFeeCoins,
+      'prize_pool_coins': prizePoolCoins,
       'total_participants': totalParticipants,
       'scheduled_start_time': scheduledStartTime?.toIso8601String(),
       'scheduled_end_time': scheduledEndTime?.toIso8601String(),

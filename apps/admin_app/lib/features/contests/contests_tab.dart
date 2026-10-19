@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class ContestsTab extends StatefulWidget {
-  const ContestsTab({super.key});
+  final List<Map<String, dynamic>>? initialContests;
+
+  const ContestsTab({super.key, this.initialContests});
 
   @override
   State<ContestsTab> createState() => _ContestsTabState();
@@ -10,61 +13,74 @@ class ContestsTab extends StatefulWidget {
 
 class _ContestsTabState extends State<ContestsTab> {
   String _activeFilter = 'all'; // 'all', 'live', 'upcoming', 'past'
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _contests = [];
 
-  final List<Map<String, dynamic>> _contests = [
-    {
-      'testId': 'contest-1',
-      'title': 'SSC CGL Tier 1 Grand Championship 2026',
-      'examGroup': 'SSC CGL',
-      'entryFeeCoins': 20,
-      'prizePoolCoins': 5000,
-      'registeredCount': 64,
-      'duration': 60,
-      'status': 'live',
-      'startTime': 'Today, 11:00 AM',
-      'endTime': 'Today, 12:00 PM',
-      'isResultDeclared': false,
-    },
-    {
-      'testId': 'contest-2',
-      'title': '70th BPSC Prelims All-Bihar Mega Battle',
-      'examGroup': '70th BPSC',
-      'entryFeeCoins': 50,
-      'prizePoolCoins': 15000,
-      'registeredCount': 142,
-      'duration': 120,
-      'status': 'upcoming',
-      'startTime': 'Today, 03:00 PM',
-      'endTime': 'Today, 05:00 PM',
-      'isResultDeclared': false,
-    },
-    {
-      'testId': 'contest-3',
-      'title': 'Railway NTPC Fast-Track Sprint Challenge',
-      'examGroup': 'Railway NTPC',
-      'entryFeeCoins': 10,
-      'prizePoolCoins': 2500,
-      'registeredCount': 88,
-      'duration': 30,
-      'status': 'upcoming',
-      'startTime': 'Tomorrow, 10:00 AM',
-      'endTime': 'Tomorrow, 10:30 AM',
-      'isResultDeclared': false,
-    },
-    {
-      'testId': 'contest-4',
-      'title': 'UPSC CSAT Sunday Championship',
-      'examGroup': 'UPSC CSE',
-      'entryFeeCoins': 30,
-      'prizePoolCoins': 8000,
-      'registeredCount': 195,
-      'duration': 80,
-      'status': 'past',
-      'startTime': 'Yesterday, 10:00 AM',
-      'endTime': 'Yesterday, 11:20 AM',
-      'isResultDeclared': true,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialContests != null) {
+      _contests = widget.initialContests!;
+      _isLoading = false;
+    } else {
+      _loadContests();
+    }
+  }
+
+  Future<void> _loadContests() async {
+    setState(() => _isLoading = true);
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+    try {
+      final res = await client
+          .from('tests')
+          .select()
+          .eq('is_tournament', true)
+          .order('scheduled_start_time', ascending: true);
+
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _contests = (res as List).map((row) {
+          final now = DateTime.now();
+          final start = row['scheduled_start_time'] != null
+              ? DateTime.tryParse(row['scheduled_start_time'].toString())
+              : null;
+          final end = row['scheduled_end_time'] != null
+              ? DateTime.tryParse(row['scheduled_end_time'].toString())
+              : null;
+
+          String status = 'upcoming';
+          if (start != null && end != null) {
+            if (now.isAfter(start) && now.isBefore(end)) {
+              status = 'live';
+            } else if (now.isAfter(end)) {
+              status = 'past';
+            }
+          }
+
+          return {
+            'testId': row['id']?.toString() ?? '',
+            'title': row['title']?.toString() ?? 'Tournament Contest',
+            'examGroup': row['exam_category_id']?.toString() ?? row['category_id']?.toString() ?? 'General',
+            'entryFeeCoins': (row['entry_fee_coins'] as num?)?.toInt() ?? 0,
+            'prizePoolCoins': (row['prize_pool_coins'] as num?)?.toInt() ?? 0,
+            'registeredCount': (row['total_participants'] as num?)?.toInt() ?? 0,
+            'duration': (row['duration_minutes'] as num?)?.toInt() ?? 60,
+            'status': status,
+            'startTime': start != null ? start.toLocal().toString().substring(0, 16) : 'TBD',
+            'endTime': end != null ? end.toLocal().toString().substring(0, 16) : 'TBD',
+            'isResultDeclared': row['is_result_declared'] == true,
+          };
+        }).toList();
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +103,14 @@ class _ContestsTabState extends State<ContestsTab> {
           const SizedBox(height: 20),
 
           // Contests Grid
-          if (filtered.isEmpty)
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (filtered.isEmpty)
             _buildEmptyState()
           else
             Column(

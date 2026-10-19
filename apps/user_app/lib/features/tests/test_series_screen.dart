@@ -5,11 +5,13 @@ import 'package:data_layer/data_layer.dart';
 class TestSeriesScreen extends StatefulWidget {
   final int userCoins;
   final void Function(TestModel test) onStartTest;
+  final List<TestModel>? initialTests;
 
   const TestSeriesScreen({
     super.key,
     required this.userCoins,
     required this.onStartTest,
+    this.initialTests,
   });
 
   @override
@@ -21,6 +23,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   int _selectedCategoryIndex = 0;
   String _selectedMode = 'all';
   bool _onlyPurchased = false;
+  bool _isLoading = true;
+  List<TestModel> _tests = [];
 
   final List<String> _categories = const [
     'All Categories',
@@ -33,74 +37,31 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     'Defence',
   ];
 
-  final List<TestModel> _allTests = const [
-    TestModel(
-      id: 'test_bpsc_01',
-      title: '70th BPSC Prelims Full Mock Test 1',
-      categoryId: 'BPSC',
-      testMode: 'mock',
-      durationMinutes: 120,
-      totalQuestions: 150,
-      negativeMarking: 0.25,
-      isPremium: false,
-    ),
-    TestModel(
-      id: 'test_bpsc_02',
-      title: '70th BPSC History of Bihar Special Test',
-      categoryId: 'BPSC',
-      testMode: 'sectional',
-      durationMinutes: 45,
-      totalQuestions: 50,
-      negativeMarking: 0.25,
-      isPremium: true,
-      unlockPriceCoins: 50,
-    ),
-    TestModel(
-      id: 'test_ssc_01',
-      title: 'SSC CGL 2026 Tier 1 Full Practice Paper 3',
-      categoryId: 'SSC CGL',
-      testMode: 'mock',
-      durationMinutes: 60,
-      totalQuestions: 100,
-      negativeMarking: 0.50,
-      isPremium: false,
-    ),
-    TestModel(
-      id: 'test_ssc_02',
-      title: 'SSC CGL Quantitative Aptitude Speed Test',
-      categoryId: 'SSC CGL',
-      testMode: 'sectional',
-      durationMinutes: 30,
-      totalQuestions: 25,
-      negativeMarking: 0.50,
-      isPremium: true,
-      unlockPriceCoins: 30,
-    ),
-    TestModel(
-      id: 'test_rrb_01',
-      title: 'RRB NTPC CBT 1 General Awareness 2026',
-      categoryId: 'Railway RRB',
-      testMode: 'mock',
-      durationMinutes: 90,
-      totalQuestions: 100,
-      negativeMarking: 0.33,
-      isPremium: false,
-    ),
-    TestModel(
-      id: 'test_upsc_01',
-      title: 'UPSC CSE Prelims GS Paper 1 All India Mock',
-      categoryId: 'UPSC CSE',
-      testMode: 'previous-year',
-      durationMinutes: 120,
-      totalQuestions: 100,
-      negativeMarking: 0.66,
-      isPremium: true,
-      unlockPriceCoins: 100,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialTests != null) {
+      _tests = widget.initialTests!;
+      _isLoading = false;
+    } else {
+      _loadTests();
+    }
+  }
+
+  Future<void> _loadTests() async {
+    setState(() => _isLoading = true);
+    final res = await TestsRepository().getTests();
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      if (res is Success<List<TestModel>>) {
+        _tests = res.data;
+      }
+    });
+  }
 
   List<TestModel> get _filteredTests {
-    return _allTests.filter((test) {
+    return _tests.where((test) {
       if (_searchQuery.isNotEmpty &&
           !test.title.toLowerCase().contains(_searchQuery.toLowerCase())) {
         return false;
@@ -274,7 +235,14 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           const SizedBox(height: 12),
 
           // 5. Test Cards List
-          if (_filteredTests.isEmpty)
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(40.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_filteredTests.isEmpty)
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(40.0),
@@ -282,9 +250,16 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   children: [
                     const Icon(Icons.menu_book_outlined, size: 48, color: AppColors.textMuted),
                     const SizedBox(height: 12),
-                    const Text('No test series matching your filter.', style: AppTypography.titleMedium),
+                    const Text('No test series available in database.', style: AppTypography.titleMedium),
                     const SizedBox(height: 4),
-                    Text('Try selecting "All Categories" or clear the search query.', style: AppTypography.bodySmall),
+                    Text('Create new tests via Admin Panel to publish tests here.', style: AppTypography.bodySmall),
+                    const SizedBox(height: 16),
+                    AppButton(
+                      label: 'Refresh',
+                      variant: AppButtonVariant.secondary,
+                      size: AppButtonSize.small,
+                      onPressed: _loadTests,
+                    ),
                   ],
                 ),
               ),
@@ -405,13 +380,5 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         ],
       ),
     );
-  }
-}
-
-extension _IterableExtension<T> on Iterable<T> {
-  Iterable<T> filter(bool Function(T) test) sync* {
-    for (final element in this) {
-      if (test(element)) yield element;
-    }
   }
 }

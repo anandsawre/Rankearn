@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class LeaderboardTab extends StatefulWidget {
-  const LeaderboardTab({super.key});
+  final List<Map<String, dynamic>>? initialRankings;
+  const LeaderboardTab({super.key, this.initialRankings});
 
   @override
   State<LeaderboardTab> createState() => _LeaderboardTabState();
@@ -10,62 +12,73 @@ class LeaderboardTab extends StatefulWidget {
 
 class _LeaderboardTabState extends State<LeaderboardTab> {
   String _timeFilter = 'daily'; // 'daily', 'weekly', 'monthly'
+  List<Map<String, dynamic>> _rankings = [];
+  bool _isLoading = true;
 
-  final List<Map<String, dynamic>> _rankings = [
-    {
-      'rank': 1,
-      'name': 'Pooja Verma',
-      'email': 'pooja.verma@gmail.com',
-      'score': 2950,
-      'accuracy': '94.2%',
-      'tests': 42,
-      'location': 'Patna, Bihar',
-      'coinsWon': '5,000 Coins',
-    },
-    {
-      'rank': 2,
-      'name': 'Manish Kumar',
-      'email': 'manish.k99@yahoo.com',
-      'score': 2820,
-      'accuracy': '91.8%',
-      'tests': 38,
-      'location': 'Gaya, Bihar',
-      'coinsWon': '3,000 Coins',
-    },
-    {
-      'rank': 3,
-      'name': 'Anjali Kumari',
-      'email': 'anjali.k@gmail.com',
-      'score': 2740,
-      'accuracy': '89.5%',
-      'tests': 35,
-      'location': 'Muzaffarpur, Bihar',
-      'coinsWon': '1,500 Coins',
-    },
-    {
-      'rank': 4,
-      'name': 'Vikram Rathore',
-      'email': 'vikram.r@gmail.com',
-      'score': 2610,
-      'accuracy': '88.0%',
-      'tests': 31,
-      'location': 'Bhagalpur, Bihar',
-      'coinsWon': '500 Coins',
-    },
-    {
-      'rank': 5,
-      'name': 'Sneha Patel',
-      'email': 'sneha.patel@gmail.com',
-      'score': 2540,
-      'accuracy': '86.4%',
-      'tests': 29,
-      'location': 'Darbhanga, Bihar',
-      'coinsWon': '250 Coins',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialRankings != null) {
+      _rankings = List.from(widget.initialRankings!);
+      _isLoading = false;
+    } else {
+      _fetchLeaderboard();
+    }
+  }
+
+  Future<void> _fetchLeaderboard() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final res = await client
+          .from('profiles')
+          .select()
+          .order('coins', ascending: false)
+          .limit(50);
+
+      if (mounted) {
+        setState(() {
+          int currentRank = 1;
+          _rankings = (res as List).map((p) {
+            final coins = (p['coins'] is num) ? (p['coins'] as num).toInt() : 0;
+            final state = p['state']?.toString();
+            final location = (state != null && state.isNotEmpty) ? '$state, India' : 'India';
+
+            final entry = {
+              'rank': currentRank++,
+              'name': p['name']?.toString() ?? 'Candidate',
+              'email': p['email']?.toString() ?? '',
+              'score': coins,
+              'accuracy': '85%',
+              'tests': 12,
+              'location': location,
+              'coinsWon': '$coins Coins',
+            };
+            return entry;
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(48),
+          child: CircularProgressIndicator(color: AppColors.brandPrimary),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -75,12 +88,51 @@ class _LeaderboardTabState extends State<LeaderboardTab> {
           _buildMasterHeader(),
           const SizedBox(height: 24),
 
-          // Podium for Top 3 (Rank 2, Rank 1, Rank 3)
-          _buildPodiumSection(),
-          const SizedBox(height: 24),
+          if (_rankings.isEmpty)
+            _buildEmptyState()
+          else ...[
+            // Podium for Top 3 (Rank 2, Rank 1, Rank 3)
+            if (_rankings.length >= 3) ...[
+              _buildPodiumSection(),
+              const SizedBox(height: 24),
+            ],
 
-          // All Rankings Table
-          _buildRankingsTable(),
+            // All Rankings Table
+            _buildRankingsTable(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(48),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadii.borderXl,
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFBEB),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.leaderboard, color: Color(0xFFF59E0B), size: 32),
+          ),
+          const SizedBox(height: 16),
+          const Text('No Leaderboard Standings Recorded', style: AppTypography.titleLarge),
+          const SizedBox(height: 8),
+          const Text(
+            'As candidates participate in test series and tournaments, their scores and merit ranks will compute live here.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+          ),
         ],
       ),
     );
@@ -151,7 +203,10 @@ class _LeaderboardTabState extends State<LeaderboardTab> {
   Widget _buildTimePill(String label, String value) {
     final isSelected = _timeFilter == value;
     return InkWell(
-      onTap: () => setState(() => _timeFilter = value),
+      onTap: () {
+        setState(() => _timeFilter = value);
+        _fetchLeaderboard();
+      },
       borderRadius: AppRadii.borderMd,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -193,6 +248,8 @@ class _LeaderboardTabState extends State<LeaderboardTab> {
   }
 
   Widget _buildPodiumCard(Map<String, dynamic> candidate, int rank, Color color, double height) {
+    final name = candidate['name']?.toString() ?? 'Candidate';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -209,7 +266,7 @@ class _LeaderboardTabState extends State<LeaderboardTab> {
             radius: rank == 1 ? 28 : 22,
             backgroundColor: color.withAlpha(30),
             child: Text(
-              candidate['name'][0],
+              name.isNotEmpty ? name[0] : 'U',
               style: TextStyle(color: color, fontSize: rank == 1 ? 20 : 16, fontWeight: FontWeight.w900),
             ),
           ),
@@ -226,8 +283,8 @@ class _LeaderboardTabState extends State<LeaderboardTab> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(candidate['name'], style: AppTypography.titleMedium, textAlign: TextAlign.center),
-          Text(candidate['location'], style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+          Text(name, style: AppTypography.titleMedium, textAlign: TextAlign.center),
+          Text(candidate['location']?.toString() ?? '', style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
           const SizedBox(height: 10),
           Text(
             '${candidate['score']} XP',
@@ -264,6 +321,8 @@ class _LeaderboardTabState extends State<LeaderboardTab> {
             separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFF8FAFC)),
             itemBuilder: (context, idx) {
               final r = _rankings[idx];
+              final name = r['name']?.toString() ?? 'Candidate';
+
               return ListTile(
                 leading: Container(
                   width: 32,
@@ -282,14 +341,14 @@ class _LeaderboardTabState extends State<LeaderboardTab> {
                     ),
                   ),
                 ),
-                title: Text(r['name'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                title: Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                 subtitle: Text('${r['location']} • Accuracy: ${r['accuracy']} • ${r['tests']} Tests', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text('${r['score']} XP', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
-                    Text(r['coinsWon'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD97706))),
+                    Text(r['coinsWon']?.toString() ?? '', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFD97706))),
                   ],
                 ),
               );

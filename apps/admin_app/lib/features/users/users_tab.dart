@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class UsersTab extends StatefulWidget {
-  const UsersTab({super.key});
+  final List<Map<String, dynamic>>? initialUsers;
+
+  const UsersTab({super.key, this.initialUsers});
 
   @override
   State<UsersTab> createState() => _UsersTabState();
@@ -10,69 +13,49 @@ class UsersTab extends StatefulWidget {
 
 class _UsersTabState extends State<UsersTab> {
   String _searchQuery = '';
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _users = [];
 
-  final List<Map<String, dynamic>> _users = [
-    {
-      'userId': 'u-1',
-      'name': 'Vikram Singh',
-      'email': 'vikram.singh@gmail.com',
-      'phone': '+91 98765 43210',
-      'role': 'user',
-      'subscriptionStatus': 'premium',
-      'coins': 1450,
-      'createdAt': '2026-08-14',
-      'status': 'active',
-      'violationCount': 0,
-    },
-    {
-      'userId': 'u-2',
-      'name': 'Ananya Sharma',
-      'email': 'ananya.sharma@yahoo.com',
-      'phone': '+91 98112 34567',
-      'role': 'user',
-      'subscriptionStatus': 'free',
-      'coins': 320,
-      'createdAt': '2026-09-02',
-      'status': 'active',
-      'violationCount': 2, // Has cheating alerts
-    },
-    {
-      'userId': 'u-3',
-      'name': 'Anand Sawre',
-      'email': 'anand.sawre@rankearn.com',
-      'phone': '+91 99887 76655',
-      'role': 'admin',
-      'subscriptionStatus': 'premium',
-      'coins': 50000,
-      'createdAt': '2026-01-01',
-      'status': 'active',
-      'violationCount': 0,
-    },
-    {
-      'userId': 'u-4',
-      'name': 'Rahul Verma',
-      'email': 'rahul.verma@outlook.com',
-      'phone': '+91 91234 56789',
-      'role': 'user',
-      'subscriptionStatus': 'free',
-      'coins': 80,
-      'createdAt': '2026-09-18',
-      'status': 'suspended',
-      'violationCount': 5,
-    },
-    {
-      'userId': 'u-5',
-      'name': 'Sneha Patel',
-      'email': 'sneha.patel@gmail.com',
-      'phone': '+91 97654 32109',
-      'role': 'user',
-      'subscriptionStatus': 'premium',
-      'coins': 2850,
-      'createdAt': '2026-07-22',
-      'status': 'active',
-      'violationCount': 0,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialUsers != null) {
+      _users = widget.initialUsers!;
+      _isLoading = false;
+    } else {
+      _loadUsers();
+    }
+  }
+
+  Future<void> _loadUsers() async {
+    setState(() => _isLoading = true);
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+    try {
+      final res = await client.from('profiles').select().order('created_at', ascending: false);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _users = (res as List).map((row) => {
+          'userId': row['id']?.toString() ?? '',
+          'name': row['name']?.toString() ?? 'Anonymous Candidate',
+          'email': row['email']?.toString() ?? 'N/A',
+          'phone': row['phone']?.toString() ?? 'N/A',
+          'role': row['role']?.toString() ?? 'user',
+          'subscriptionStatus': row['subscription_status']?.toString() ?? 'free',
+          'coins': (row['coins'] as num?)?.toInt() ?? 0,
+          'createdAt': row['created_at'] != null ? row['created_at'].toString().split('T').first : 'N/A',
+          'status': row['status']?.toString() ?? 'active',
+          'violationCount': (row['violation_count'] as num?)?.toInt() ?? 0,
+        }).toList();
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -185,11 +168,7 @@ class _UsersTabState extends State<UsersTab> {
           IconButton(
             icon: const Icon(Icons.refresh, size: 20, color: Color(0xFF64748B)),
             tooltip: 'Refresh User Directory',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('User directory synchronized with Supabase.')),
-              );
-            },
+            onPressed: _loadUsers,
           ),
         ],
       ),
@@ -197,6 +176,13 @@ class _UsersTabState extends State<UsersTab> {
   }
 
   Widget _buildUsersTable(List<Map<String, dynamic>> users) {
+    if (_isLoading) {
+      return Container(
+        padding: const EdgeInsets.all(48),
+        alignment: Alignment.center,
+        child: const CircularProgressIndicator(),
+      );
+    }
     if (users.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(48),
@@ -205,7 +191,7 @@ class _UsersTabState extends State<UsersTab> {
           children: [
             Icon(Icons.person_off_outlined, size: 48, color: Colors.grey.shade300),
             const SizedBox(height: 12),
-            const Text('No candidates match the query.', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8))),
+            const Text('No registered users found in database.', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8))),
           ],
         ),
       );

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class ReferralsTab extends StatefulWidget {
-  const ReferralsTab({super.key});
+  final List<Map<String, dynamic>>? initialReferralLogs;
+  const ReferralsTab({super.key, this.initialReferralLogs});
 
   @override
   State<ReferralsTab> createState() => _ReferralsTabState();
@@ -11,41 +13,60 @@ class ReferralsTab extends StatefulWidget {
 class _ReferralsTabState extends State<ReferralsTab> {
   String _activeSubTab = 'history'; // 'history' or 'settings'
   String _searchCode = '';
-
-  final List<Map<String, dynamic>> _referralLogs = [
-    {
-      'id': 'ref-1',
-      'refereeName': 'Aakash Verma',
-      'refereeEmail': 'aakash.v@gmail.com',
-      'referrerName': 'Vikram Singh',
-      'code': 'VIKRAM70',
-      'bonusCoins': 50,
-      'date': 'Today, 10:14 AM',
-    },
-    {
-      'id': 'ref-2',
-      'refereeName': 'Divya Soni',
-      'refereeEmail': 'divya.soni@yahoo.com',
-      'referrerName': 'Pooja Verma',
-      'code': 'POOJA99',
-      'bonusCoins': 50,
-      'date': 'Yesterday, 04:30 PM',
-    },
-    {
-      'id': 'ref-3',
-      'refereeName': 'Kunal Kishore',
-      'refereeEmail': 'kunal.k@outlook.com',
-      'referrerName': 'Manish Kumar',
-      'code': 'MANISH20',
-      'bonusCoins': 50,
-      'date': 'Yesterday, 11:20 AM',
-    },
-  ];
+  List<Map<String, dynamic>> _referralLogs = [];
+  bool _isLoading = true;
 
   // Settings controllers
   final _referrerBonusController = TextEditingController(text: '50');
   final _refereeBonusController = TextEditingController(text: '25');
   final _maxReferralsController = TextEditingController(text: '100');
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialReferralLogs != null) {
+      _referralLogs = List.from(widget.initialReferralLogs!);
+      _isLoading = false;
+    } else {
+      _fetchReferrals();
+    }
+  }
+
+  Future<void> _fetchReferrals() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final res = await client
+          .from('wallet_transactions')
+          .select()
+          .eq('category', 'referral')
+          .order('created_at', ascending: false);
+
+      if (mounted) {
+        setState(() {
+          _referralLogs = (res as List).map((tx) {
+            final amount = (tx['amount'] is num) ? (tx['amount'] as num).toInt() : 50;
+            return {
+              'id': tx['id']?.toString() ?? '',
+              'refereeName': tx['title']?.toString() ?? 'Referred Candidate',
+              'refereeEmail': 'candidate@rankearn.com',
+              'referrerName': 'Referrer User',
+              'code': tx['reference_id']?.toString() ?? 'REF-EARN',
+              'bonusCoins': amount,
+              'date': tx['created_at'] != null ? tx['created_at'].toString().split('T').first : 'Recent',
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -57,6 +78,15 @@ class _ReferralsTabState extends State<ReferralsTab> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(48),
+          child: CircularProgressIndicator(color: AppColors.brandPrimary),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -71,12 +101,48 @@ class _ReferralsTabState extends State<ReferralsTab> {
             _buildStatsOverview(),
             const SizedBox(height: 20),
 
-            // History Log Table
-            _buildHistoryTable(),
+            // History Log Table or Empty State
+            if (_referralLogs.isEmpty)
+              _buildEmptyState()
+            else
+              _buildHistoryTable(),
           ] else ...[
             // Economics Settings
             _buildSettingsView(),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(48),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadii.borderXl,
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.brandPrimary.withAlpha(20),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.card_giftcard, color: AppColors.brandPrimary, size: 32),
+          ),
+          const SizedBox(height: 16),
+          const Text('No Referral Conversions Yet', style: AppTypography.titleLarge),
+          const SizedBox(height: 8),
+          const Text(
+            'When candidates share invite codes and successfully onboard friends, their bonus distributions will track here.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+          ),
         ],
       ),
     );
@@ -174,6 +240,9 @@ class _ReferralsTabState extends State<ReferralsTab> {
   }
 
   Widget _buildStatsOverview() {
+    final totalCount = _referralLogs.length;
+    final totalCoins = _referralLogs.fold<int>(0, (sum, r) => sum + ((r['bonusCoins'] as int?) ?? 0));
+
     return Row(
       children: [
         Expanded(
@@ -196,10 +265,10 @@ class _ReferralsTabState extends State<ReferralsTab> {
                 const SizedBox(width: 14),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('TOTAL REFERRALS LOGGED', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 0.6)),
-                    SizedBox(height: 2),
-                    Text('1,480 Candidates', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                  children: [
+                    const Text('TOTAL REFERRALS LOGGED', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 0.6)),
+                    const SizedBox(height: 2),
+                    Text('$totalCount Candidates', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
                   ],
                 ),
               ],
@@ -227,10 +296,10 @@ class _ReferralsTabState extends State<ReferralsTab> {
                 const SizedBox(width: 14),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('BONUS DISTRIBUTED', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 0.6)),
-                    SizedBox(height: 2),
-                    Text('74,000 Coins', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFD97706))),
+                  children: [
+                    const Text('BONUS DISTRIBUTED', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF94A3B8), letterSpacing: 0.6)),
+                    const SizedBox(height: 2),
+                    Text('$totalCoins Coins', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFD97706))),
                   ],
                 ),
               ],
@@ -244,7 +313,7 @@ class _ReferralsTabState extends State<ReferralsTab> {
   Widget _buildHistoryTable() {
     final filtered = _referralLogs.where((r) {
       if (_searchCode.isEmpty) return true;
-      return (r['code'] as String).toLowerCase().contains(_searchCode.toLowerCase());
+      return (r['code']?.toString() ?? '').toLowerCase().contains(_searchCode.toLowerCase());
     }).toList();
 
     return Container(
@@ -281,12 +350,14 @@ class _ReferralsTabState extends State<ReferralsTab> {
             separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFF8FAFC)),
             itemBuilder: (context, idx) {
               final r = filtered[idx];
+              final refereeName = r['refereeName']?.toString() ?? 'Candidate';
+
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor: const Color(0xFFECFDF5),
-                  child: Text(r['refereeName'][0], style: const TextStyle(color: AppColors.brandPrimary, fontWeight: FontWeight.bold)),
+                  child: Text(refereeName.isNotEmpty ? refereeName[0] : 'U', style: const TextStyle(color: AppColors.brandPrimary, fontWeight: FontWeight.bold)),
                 ),
-                title: Text('${r['refereeName']} (${r['refereeEmail']})', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                title: Text('$refereeName (${r['refereeEmail']})', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                 subtitle: Text('Referred by ${r['referrerName']} using code: ${r['code']} • ${r['date']}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                 trailing: Text('+${r['bonusCoins']} Coins', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFFD97706))),
               );
@@ -347,10 +418,26 @@ class _ReferralsTabState extends State<ReferralsTab> {
 
           AppButton(
             label: 'Save Referral Economics',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Referral reward rules updated successfully.')),
-              );
+            onPressed: () async {
+              final client = SupabaseConfig.clientSafe;
+              if (client != null) {
+                try {
+                  await client.from('app_configs').upsert({
+                    'key': 'referral_settings',
+                    'value': {
+                      'referrer_bonus': int.tryParse(_referrerBonusController.text) ?? 50,
+                      'referee_bonus': int.tryParse(_refereeBonusController.text) ?? 25,
+                      'max_referrals': int.tryParse(_maxReferralsController.text) ?? 100,
+                    },
+                    'updated_at': DateTime.now().toIso8601String(),
+                  });
+                } catch (_) {}
+              }
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Referral reward rules updated successfully.')),
+                );
+              }
             },
           ),
         ],

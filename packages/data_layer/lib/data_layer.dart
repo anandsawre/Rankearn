@@ -1,6 +1,7 @@
 // Rankearn Data Layer Package
 // Supabase Configuration, Typed Domain Models, and Repositories
 
+export 'package:shared_core/shared_core.dart';
 export 'supabase/supabase_config.dart';
 
 // Models

@@ -30,11 +30,18 @@ class SupabaseConfig {
     _initialized = true;
   }
 
-  static SupabaseClient get client {
-    if (!_initialized) {
-      // Fallback for tests or direct access
+  static bool get isInitialized => _initialized;
+
+  static SupabaseClient? get clientSafe {
+    if (!_initialized) return null;
+    try {
       return Supabase.instance.client;
+    } catch (_) {
+      return null;
     }
+  }
+
+  static SupabaseClient get client {
     return Supabase.instance.client;
   }
 

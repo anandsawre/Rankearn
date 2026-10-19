@@ -5,10 +5,11 @@ import '../supabase/supabase_config.dart';
 
 /// Wallet, Transactions, and Financial Operations Repository
 class WalletRepository {
-  final SupabaseClient _client;
+  final SupabaseClient? _explicitClient;
 
-  WalletRepository({SupabaseClient? client})
-      : _client = client ?? SupabaseConfig.client;
+  WalletRepository({SupabaseClient? client}) : _explicitClient = client;
+
+  SupabaseClient? get _client => _explicitClient ?? SupabaseConfig.clientSafe;
 
   /// Fetch User Transaction Ledger with Pagination
   Future<Result<List<WalletTransactionModel>>> getTransactions({
@@ -16,8 +17,12 @@ class WalletRepository {
     int limit = 20,
     int offset = 0,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Success([]);
+    }
     try {
-      final data = await _client
+      final data = await client
           .from('wallet_transactions')
           .select()
           .eq('user_id', userId)
@@ -41,10 +46,14 @@ class WalletRepository {
     required String userEmail,
     String? userPhone,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
       final cleanUtr = utr.trim().toUpperCase();
 
-      await _client.from('topup_requests').insert({
+      await client.from('topup_requests').insert({
         'id': 'TOPUP_${DateTime.now().millisecondsSinceEpoch}',
         'user_id': userId,
         'amount': amount,
@@ -75,8 +84,12 @@ class WalletRepository {
     String? upiId,
     Map<String, dynamic>? bankDetails,
   }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
-      await _client.from('withdrawal_requests').insert({
+      await client.from('withdrawal_requests').insert({
         'id': 'WITHDRAW_${DateTime.now().millisecondsSinceEpoch}',
         'user_id': userId,
         'coins_deducted': coinsDeducted,
@@ -96,8 +109,12 @@ class WalletRepository {
 
   /// Spin Lucky Wheel via atomic RPC
   Future<Result<Map<String, dynamic>>> spinLuckyWheel(String userId) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
     try {
-      final res = await _client.rpc('spin_lucky_wheel', params: {
+      final res = await client.rpc('spin_lucky_wheel', params: {
         'p_user_id': userId,
       });
 
@@ -109,8 +126,12 @@ class WalletRepository {
 
   /// Fetch Platform App Configuration Document
   Future<Result<Map<String, dynamic>>> getConfig(String key) async {
+    final client = _client;
+    if (client == null) {
+      return const Success({});
+    }
     try {
-      final data = await _client
+      final data = await client
           .from('app_configs')
           .select('value')
           .eq('key', key)
