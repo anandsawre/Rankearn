@@ -1,0 +1,166 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "profilePhoto": { "type": "string" },
+        "examPreparingFor": { "type": "string" },
+        "state": { "type": "string" },
+        "coins": { "type": "integer" },
+        "xp": { "type": "integer" },
+        "badges": { "type": "array", "items": { "type": "string" } },
+        "subscriptionStatus": { "type": "string", "enum": ["free", "premium"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "email"]
+    },
+    "Test": {
+      "title": "Test",
+      "description": "Test series document",
+      "type": "object",
+      "properties": {
+        "testId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "examType": { "type": "string" },
+        "duration": { "type": "integer", "description": "Duration in minutes" },
+        "totalQuestions": { "type": "integer" },
+        "negativeMarking": { "type": "number" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isPremium": { "type": "boolean" }
+      },
+      "required": ["testId", "title", "duration"]
+    },
+    "Question": {
+      "title": "Question",
+      "description": "Question document",
+      "type": "object",
+      "properties": {
+        "questionId": { "type": "string" },
+        "testId": { "type": "string" },
+        "questionTextHindi": { "type": "string" },
+        "questionTextEnglish": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "object" } },
+        "correctAnswer": { "type": "integer" },
+        "explanation": { "type": "string" },
+        "difficultyLevel": { "type": "string" },
+        "subject": { "type": "string" },
+        "topic": { "type": "string" },
+        "imageURL": { "type": "string" }
+      },
+      "required": ["questionId", "testId", "questionTextEnglish", "options", "correctAnswer"]
+    },
+    "Attempt": {
+      "title": "Attempt",
+      "description": "User test attempt",
+      "type": "object",
+      "properties": {
+        "attemptId": { "type": "string" },
+        "userId": { "type": "string" },
+        "testId": { "type": "string" },
+        "answers": { "type": "object" },
+        "startTime": { "type": "string", "format": "date-time" },
+        "endTime": { "type": "string", "format": "date-time" },
+        "score": { "type": "number" },
+        "accuracy": { "type": "number" },
+        "rank": { "type": "integer" },
+        "timeTaken": { "type": "integer", "description": "Time in seconds" }
+      },
+      "required": ["attemptId", "userId", "testId"]
+    },
+    "Leaderboard": {
+      "title": "Leaderboard",
+      "description": "Leaderboard entry",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "profilePhoto": { "type": "string" },
+        "score": { "type": "number" },
+        "rank": { "type": "integer" },
+        "type": { "type": "string", "enum": ["daily", "weekly", "test-wise"] },
+        "testId": { "type": "string" }
+      }
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Payment record",
+      "type": "object",
+      "properties": {
+        "paymentId": { "type": "string" },
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string" },
+        "planName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "DailyQuiz": {
+      "title": "DailyQuiz",
+      "description": "Daily quiz schedule",
+      "type": "object",
+      "properties": {
+        "quizId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "questions": { "type": "array", "items": { "type": "string" } },
+        "rewardCoins": { "type": "integer" }
+      }
+    },
+    "AIAnalysis": {
+      "title": "AIAnalysis",
+      "description": "AI generated performance analysis",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "attemptId": { "type": "string" },
+        "weakTopics": { "type": "array", "items": { "type": "string" } },
+        "strongTopics": { "type": "array", "items": { "type": "string" } },
+        "recommendations": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ExamPattern": {
+      "title": "ExamPattern",
+      "description": "Definition of an exam structure for AI test generation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "examName": { "type": "string" },
+        "category": { "type": "string" },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "subject": { "type": "string" },
+              "questionCount": { "type": "integer" },
+              "topics": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "totalDuration": { "type": "integer" },
+        "negativeMarking": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["examName", "category", "sections"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/tests/{testId}": { "schema": "Test", "description": "Test series" },
+    "/tests/{testId}/questions/{questionId}": { "schema": "Question", "description": "Questions for a test" },
+    "/attempts/{attemptId}": { "schema": "Attempt", "description": "User test attempts" },
+    "/leaderboard/{entryId}": { "schema": "Leaderboard", "description": "Leaderboard entries" },
+    "/payments/{paymentId}": { "schema": "Payment", "description": "Payment records" },
+    "/daily_quiz/{quizId}": { "schema": "DailyQuiz", "description": "Daily quizzes" },
+    "/ai_analysis/{analysisId}": { "schema": "AIAnalysis", "description": "AI performance analysis" },
+    "/examPatterns/{patternId}": { "schema": "ExamPattern", "description": "Exam patterns for AI generation" }
+  }
+}

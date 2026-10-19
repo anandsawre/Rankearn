@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rankearn</string>
+    <string name="title_activity_main">Rankearn</string>
+    <string name="package_name">com.rankearn.app</string>
+    <string name="custom_url_scheme">com.rankearn.app</string>
+    <string name="server_client_id">884271494365-eodg00bvq4qhaj8h9nv05qdcd176nbfl.apps.googleusercontent.com</string>
+</resources>

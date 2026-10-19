@@ -1,0 +1,21 @@
+{
+  "name": "rankearn-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:user": "npm run dev --workspace=apps/user",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "build:user": "npm run build --workspace=apps/user",
+    "build:admin": "npm run build --workspace=apps/admin",
+    "build:all": "npm run build --workspaces",
+    "clean": "rm -rf dist apps/user/dist apps/admin/dist"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.2"
+  }
+}

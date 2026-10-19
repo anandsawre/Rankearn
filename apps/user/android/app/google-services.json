@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "884271494365",
+    "project_id": "rankearn",
+    "storage_bucket": "rankearn.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:884271494365:android:49bb93593e07314ba11734",
+        "android_client_info": {
+          "package_name": "com.rankearn.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "884271494365-d634b2qvi7biu507todtj0o5m07q81co.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rankearn.app",
+            "certificate_hash": "653f8e2a6e1202aa338e0afe2f1c514b5b67ad8e"
+          }
+        },
+        {
+          "client_id": "884271494365-eodg00bvq4qhaj8h9nv05qdcd176nbfl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_Z5m1DwNSIXO0CsIienzILWXJ7a8R718"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "884271494365-eodg00bvq4qhaj8h9nv05qdcd176nbfl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

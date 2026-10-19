@@ -1,0 +1,10 @@
+{
+  "projectId": "rankearn",
+  "appId": "1:884271494365:web:0c858e3ab9a15c1fa11734",
+  "apiKey": "AIzaSyBOLayRcEJupp7EoSJMLMyT69bFyWvPWuY",
+  "authDomain": "rankearn.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "rankearn.firebasestorage.app",
+  "messagingSenderId": "884271494365",
+  "measurementId": "G-35JC945KSH"
+}

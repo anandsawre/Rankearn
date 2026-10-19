@@ -1,0 +1,350 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ================================================================
+    // Data Model
+    // ================================================================
+    //
+    // users/{userId}          – profile + wallet balance (coins)
+    // tests/{testId}          – test metadata
+    //   /questions/{qId}      – questions sub-collection
+    //   /participants/{uid}   – tournament participant sub-collection
+    // attempts/{attemptId}    – quiz/test attempt records
+    // leaderboard/{entryId}   – leaderboard snapshot entries
+    // categories/{catId}      – subjects (Maths, History, …)
+    // examCategories/{ecId}   – root exam groups (SSC, UPSC, …)
+    // examPatterns/{patId}    – complex exam patterns & syllabi
+    // transactions/{txId}     – coin ledger (immutable after write)
+    //   categories allowed:
+    //     top_up           – user wallet top-up
+    //     tournament_entry – coins paid on tournament join
+    //     tournament_prize – prize payout after tournament
+    //     reward           – quiz-completion / daily-task reward
+    //     admin_credit     – admin manually credits coins (NEW)
+    // notes/{noteId}          – admin Smart Notes library
+    // currentAffairs/{id}     – daily current affairs posts
+    // configs/{configId}      – app config (CF Worker URL, etc.)
+    // payments/{paymentId}    – payment records
+    // daily_quiz/{quizId}     – daily quiz records
+    // ai_analysis/{id}        – AI analysis results
+    //
+    // ================================================================
+
+    // ----------------------------------------------------------------
+    // Helper functions
+    // ----------------------------------------------------------------
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Admin = custom Firebase Auth claim set via Admin SDK / Cloud Functions
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['userId', 'name', 'email']) &&
+             data.userId is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string &&
+             data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidExamPattern(data) {
+      return data.keys().hasAll(['examName', 'category', 'sections']) &&
+             data.examName is string && data.examName.size() > 0 && data.examName.size() < 100 &&
+             data.category is string &&
+             data.sections is list &&
+             data.totalDuration is int &&
+             data.negativeMarking is number;
+    }
+
+
+
+
+
+
+
+    function isValidIsoTimestamp(value) {
+      return value is string &&
+             value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$');
+    }
+
+    function isValidAttemptCreate(data) {
+      return data.keys().hasOnly(['userId', 'testId', 'answers', 'startTime', 'endTime', 'timeTaken', 'score', 'accuracy']) &&
+             data.keys().hasAll(['userId', 'testId', 'answers', 'startTime', 'endTime', 'timeTaken', 'score', 'accuracy']) &&
+             data.userId == request.auth.uid &&
+             data.testId is string && data.testId.size() > 0 &&
+             data.answers is map && data.answers.keys().size() <= 500 &&
+             isValidIsoTimestamp(data.startTime) &&
+             isValidIsoTimestamp(data.endTime) &&
+             data.startTime <= data.endTime &&
+             data.timeTaken is int && data.timeTaken >= 0 && data.timeTaken <= 28800 &&
+             data.score is number &&
+             data.accuracy is number &&
+             isValidTournamentAttempt(data.testId, request.auth.uid);
+    }
+
+    function isValidTournamentAttempt(testId, userId) {
+      // Use get() directly in the condition since 'let' is not allowed in functions
+      return (get(/databases/$(database)/documents/tests/$(testId)) == null ||
+              !get(/databases/$(database)/documents/tests/$(testId)).data.keys().hasAny(['isTournament']) ||
+              get(/databases/$(database)/documents/tests/$(testId)).data.isTournament == false)
+        ? true
+        : exists(/databases/$(database)/documents/tests/$(testId)/participants/$(userId));
+    }
+
+
+
+    // ================================================================
+    // Collection Rules
+    // ================================================================
+
+    // --- Users -------------------------------------------------------
+    match /users/{userId} {
+      allow read:   if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && (
+                      isAdmin() || 
+                      isOwner(userId)
+                    );
+
+      match /unlockedTests/{testId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && isOwner(userId);
+      }
+    }
+
+    // --- Tests -------------------------------------------------------
+    match /tests/{testId} {
+      allow read:   if isAuthenticated();
+      allow write:  if isAdmin();
+      allow update: if isAuthenticated() && (
+                       isAdmin() || 
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalParticipants'])
+                    );
+
+      match /questions/{questionId} {
+        allow read:  if isAuthenticated();
+        allow write: if isAdmin();
+      }
+
+      match /participants/{userId} {
+        allow read:   if isAuthenticated();
+        allow write:  if isAuthenticated() && request.auth.uid == userId;
+      }
+    }
+
+    // --- Attempts ----------------------------------------------------
+    match /attempts/{attemptId} {
+      allow read:   if isAuthenticated();
+      allow create: if isAuthenticated() && isValidAttemptCreate(request.resource.data);
+      allow update: if isAdmin();
+    }
+
+    // --- Leaderboard -------------------------------------------------
+    match /leaderboard/{entryId} {
+      allow read:  if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // --- Categories (Subjects & Topics) ------------------------------
+    match /categories/{categoryId} {
+      allow read:  if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // --- Exam Categories (SSC, UPSC, Banking …) ----------------------
+    match /examCategories/{examCategoryId} {
+      allow read:  if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // --- Exam Patterns -----------------------------------------------
+    match /examPatterns/{patternId} {
+      allow read:   if isAuthenticated();
+      allow create: if isAdmin() && isValidExamPattern(request.resource.data);
+      allow update: if isAdmin() && isValidExamPattern(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // --- Transactions (Coin Ledger) ----------------------------------
+    match /transactions/{txId} {
+      allow read: if isAuthenticated() &&
+                     (resource.data.userId == request.auth.uid || isAdmin());
+
+      allow create: if isAuthenticated() && (
+                       isAdmin() ||
+                       request.resource.data.userId == request.auth.uid ||
+                       request.resource.data.category == 'referral'
+                    );
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // --- Smart Notes (Admin-managed Global Library) ------------------
+    match /notes/{noteId} {
+      allow read:   if isAuthenticated() &&
+                       (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() &&
+                       (isAdmin() || request.resource.data.userId == request.auth.uid);
+      allow update: if isAuthenticated() &&
+                       (isAdmin() ||
+                        (resource.data.userId == request.auth.uid &&
+                         request.resource.data.userId == request.auth.uid));
+      allow delete: if isAuthenticated() &&
+                       (isAdmin() || resource.data.userId == request.auth.uid);
+    }
+
+    // --- Current Affairs ---------------------------------------------
+    match /currentAffairs/{affairId} {
+      allow read:  if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // --- Official Posts (Updates) ------------------------------------
+    match /posts/{postId} {
+      allow read:  if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // --- App Configs (CF Worker URL, feature flags …) ----------------
+    match /configs/{configId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Payments ----------------------------------------------------
+    match /payments/{paymentId} {
+      allow read:   if isAuthenticated() &&
+                       (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // --- Daily Quiz --------------------------------------------------
+    match /daily_quiz/{quizId} {
+      allow read:  if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // --- AI Analysis Results -----------------------------------------
+    match /ai_analysis/{analysisId} {
+      allow read:   if isAuthenticated() &&
+                       (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // --- Top-up Requests (Direct UPI verification) ------------------
+    match /topup_requests/{requestId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.status == 'pending' &&
+                       request.resource.data.amount is number && 
+                       request.resource.data.amount > 0 &&
+                       request.resource.data.utr is string &&
+                       request.resource.data.utr.size() >= 10;
+      allow update, delete: if isAdmin();
+    }
+
+    // --- Withdrawal Requests ----------------------------------------
+    match /withdrawal_requests/{requestId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.status == 'pending' &&
+                       request.resource.data.amount is number && 
+                       request.resource.data.amount > 0;
+      allow update, delete: if isAdmin();
+    }
+
+    // --- UTR Lock (Prevention of duplicates) ------------------------
+    match /submitted_utrs/{utr} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // --- App Banners (Promotional Content) --------------------------
+    match /app_banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Support Tickets ---------------------------------------------
+    match /support_tickets/{ticketId} {
+      allow read: if isAuthenticated() && (isAdmin() || ticketId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || (isAuthenticated() && ticketId == request.auth.uid);
+
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated() && (isAdmin() || ticketId == request.auth.uid);
+      }
+    }
+
+    // --- Feedbacks ---------------------------------------------------
+    match /feedbacks/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // --- Notifications ----------------------------------------------
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || 
+                      resource.data.userId == 'global' ||
+                      isAdmin());
+      allow create: if isAdmin() || (isAuthenticated() && (request.resource.data.userId == request.auth.uid || request.resource.data.type == 'referral'));
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow update: if isAuthenticated() && 
+                       (isAdmin() || 
+                        (resource.data.userId == request.auth.uid &&                          request.resource.data.read == true));
+    }
+
+    // --- Battle Questions --------------------------------------------
+    match /battle_questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // --- Battle Bots -------------------------------------------------
+    match /battle_bots/{botId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // --- Matchmaking -------------------------------------------------
+    match /matchmaking/{mmId} {
+      allow read, write, delete: if isAuthenticated();
+    }
+
+    // --- Battles -----------------------------------------------------
+    match /battles/{battleId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // --- Community Polls ---------------------------------------------
+    match /polls/{pollId} {
+      allow read:  if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (
+        isAuthenticated() && 
+        !(request.auth.uid in resource.data.voters) &&
+        request.resource.data.voters.hasAll([request.auth.uid]) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['voters', 'votes'])
+      );
+      allow delete: if isAdmin();
+    }
+
+  }
+}

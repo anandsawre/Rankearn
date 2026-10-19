@@ -1,0 +1,24 @@
+{
+  "name": "Rankearn Test Series",
+  "gcm_sender_id": "103953800507",
+  "short_name": "Rankearn",
+  "description": "Rankearn - Competitive exam preparation platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#10b981",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

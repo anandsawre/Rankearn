@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.rankearn.app",
+      "sha256_cert_fingerprints": [
+        "71:E5:2C:E1:54:E5:3E:82:FA:69:6E:1D:12:D8:27:C3:9C:39:1E:CF:D2:C1:6E:B7:70:51:56:32:00:60:CD:67"
+      ]
+    }
+  }
+]
