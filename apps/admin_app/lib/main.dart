@@ -2,6 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:design_system/design_system.dart';
 
+import 'features/overview/overview_tab.dart';
+import 'features/finance/finance_tab.dart';
+import 'features/tests/tests_tab.dart';
+import 'features/users/users_tab.dart';
+import 'features/patterns/patterns_tab.dart';
+import 'features/ai_creator/ai_creator_tab.dart';
+import 'features/contests/contests_tab.dart';
+import 'features/banners/banners_tab.dart';
+import 'features/notifications/notifications_tab.dart';
+import 'features/wheel/wheel_tab.dart';
+import 'features/leaderboard/leaderboard_tab.dart';
+import 'features/referrals/referrals_tab.dart';
+import 'features/posts/posts_tab.dart';
+import 'features/support/support_tab.dart';
+import 'features/feedback/feedback_tab.dart';
+import 'features/battle_qs/battle_qs_tab.dart';
+import 'features/polls/polls_tab.dart';
+import 'features/settings/settings_tab.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -18,7 +37,7 @@ class RankearnAdminApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Rankearn Admin',
+      title: 'Rankearn Admin Portal',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: const AdminAppShell(),
@@ -37,77 +56,83 @@ class _AdminAppShellState extends State<AdminAppShell> {
   AdminNavTab _activeTab = AdminNavTab.overview;
   bool _isLoggedIn = true;
 
+  void _navigateToTab(AdminNavTab tab) {
+    setState(() {
+      _activeTab = tab;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_isLoggedIn) {
       return _buildAdminLoginScreen();
     }
 
+    final isNarrow = MediaQuery.of(context).size.width < 960;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: AppRadii.borderMd,
+      backgroundColor: const Color(0xFFF8FAF9),
+      // Mobile Drawer if screen is narrow
+      drawer: isNarrow
+          ? Drawer(
+              child: SafeArea(
+                child: AdminSidebar(
+                  currentTab: _activeTab,
+                  onTabSelected: _navigateToTab,
+                  onLogout: () => setState(() => _isLoggedIn = false),
+                ),
               ),
-              alignment: Alignment.center,
-              child: const Text('R', style: TextStyle(color: AppColors.brandPrimary, fontWeight: FontWeight.w900, fontSize: 20)),
-            ),
-            const SizedBox(width: 10),
-            const Text('Rankearn Admin Portal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17)),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(50),
-                borderRadius: AppRadii.borderPill,
-              ),
-              child: Text(
-                _getTabTitle(_activeTab).toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-          const CircleAvatar(
-            radius: 16,
-            backgroundColor: Colors.white24,
-            child: Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
-      body: Row(
+            )
+          : null,
+      body: Column(
         children: [
-          AdminSidebar(
-            currentTab: _activeTab,
-            onTabSelected: (tab) => setState(() => _activeTab = tab),
-            onLogout: () => setState(() => _isLoggedIn = false),
-          ),
+          // 1. Fixed Top Header Bar matching App.tsx:242-303
+          _buildTopHeaderBar(context, isNarrow),
+
+          // 2. Main Content Area + Desktop Sidebar
           Expanded(
-            child: Container(
-              color: AppColors.background,
-              child: switch (_activeTab) {
-                AdminNavTab.overview => _buildOverviewTab(),
-                AdminNavTab.finance => _buildFinanceTab(),
-                AdminNavTab.tests => _buildTestsTab(),
-                AdminNavTab.users => _buildUsersTab(),
-                AdminNavTab.contests => _buildContestsTab(),
-                AdminNavTab.aiCreator => _buildAiCreatorTab(),
-                AdminNavTab.wheel => _buildWheelConfigTab(),
-                AdminNavTab.notifications => _buildNotificationsTab(),
-                _ => _buildPlaceholderTab(_getTabTitle(_activeTab)),
-              },
+            child: Row(
+              children: [
+                if (!isNarrow)
+                  AdminSidebar(
+                    currentTab: _activeTab,
+                    onTabSelected: _navigateToTab,
+                    onLogout: () => setState(() => _isLoggedIn = false),
+                  ),
+                Expanded(
+                  child: Container(
+                    color: const Color(0xFFF8FAF9),
+                    child: switch (_activeTab) {
+                      AdminNavTab.overview => OverviewTab(
+                          onGoToTests: () => setState(() => _activeTab = AdminNavTab.tests),
+                          onGoToFinance: () => setState(() => _activeTab = AdminNavTab.finance),
+                          onGoToUsers: () => setState(() => _activeTab = AdminNavTab.users),
+                          onGoToAiCreator: () => setState(() => _activeTab = AdminNavTab.aiCreator),
+                          onGoToNotifications: () => setState(() => _activeTab = AdminNavTab.notifications),
+                        ),
+                      AdminNavTab.tests => const TestsTab(),
+                      AdminNavTab.users => const UsersTab(),
+                      AdminNavTab.patterns => const PatternsTab(),
+                      AdminNavTab.aiCreator => AiCreatorTab(
+                          onSavedToTests: () => setState(() => _activeTab = AdminNavTab.tests),
+                        ),
+                      AdminNavTab.finance => const FinanceTab(),
+                      AdminNavTab.contests => const ContestsTab(),
+                      AdminNavTab.banners => const BannersTab(),
+                      AdminNavTab.notifications => const NotificationsTab(),
+                      AdminNavTab.wheel => const WheelTab(),
+                      AdminNavTab.leaderboard => const LeaderboardTab(),
+                      AdminNavTab.referrals => const ReferralsTab(),
+                      AdminNavTab.posts => const PostsTab(),
+                      AdminNavTab.support => const SupportTab(),
+                      AdminNavTab.feedback => const FeedbackTab(),
+                      AdminNavTab.battleQs => const BattleQsTab(),
+                      AdminNavTab.polls => const PollsTab(),
+                      AdminNavTab.settings => const SettingsTab(),
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -115,10 +140,172 @@ class _AdminAppShellState extends State<AdminAppShell> {
     );
   }
 
-  // --- Admin Login Screen ---
+  // --- Fixed 64px Top Header matching App.tsx:242-303 ---
+  Widget _buildTopHeaderBar(BuildContext context, bool isNarrow) {
+    return Container(
+      height: 64,
+      width: double.infinity,
+      color: const Color(0xFF10B981),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Left: Logo + Brand + Divider + Active Tab Title
+            Row(
+            children: [
+              if (isNarrow) ...[
+                Builder(
+                  builder: (ctx) => IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.white),
+                    onPressed: () => Scaffold.of(ctx).openDrawer(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF065F46).withAlpha(120),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white.withAlpha(50)),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'R',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Rankearn',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, height: 1.1),
+                  ),
+                  Text(
+                    'Learning with Earning',
+                    style: TextStyle(color: Color(0xFFD1FAE5), fontSize: 10, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 20),
+              Container(
+                height: 28,
+                width: 1,
+                color: Colors.white.withAlpha(60),
+              ),
+              const SizedBox(width: 20),
+              Text(
+                _getTabTitle(_activeTab),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
+              ),
+            ],
+          ),
+
+          // Right: Notifications + Divider + ADMIN badge + Name + Avatar
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none, color: Color(0xFFD1FAE5)),
+                tooltip: 'System Alerts',
+                onPressed: () {
+                  setState(() => _activeTab = AdminNavTab.notifications);
+                },
+              ),
+              const SizedBox(width: 8),
+              Container(
+                height: 28,
+                width: 1,
+                color: Colors.white.withAlpha(60),
+              ),
+              const SizedBox(width: 16),
+              if (!isNarrow) ...[
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'ADMIN',
+                            style: TextStyle(
+                              color: Color(0xFF065F46),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Anand Sawre',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 1),
+                    const Text(
+                      'Super Admin • PRO Member',
+                      style: TextStyle(color: Color(0xFFD1FAE5), fontSize: 10, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+              ],
+              InkWell(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Admin Session'),
+                      content: const Text('Logged in as Anand Sawre (anand.sawre@rankearn.com).'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                        AppButton(
+                          label: 'Sign Out',
+                          variant: AppButtonVariant.destructive,
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            setState(() => _isLoggedIn = false);
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: const CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.white24,
+                  child: Text(
+                    'AS',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+  }
+
+  // --- Login Screen ---
   Widget _buildAdminLoginScreen() {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF8FAF9),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -142,7 +329,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   const SizedBox(height: 16),
                   const Text('Rankearn Admin', style: AppTypography.displayMedium),
                   const SizedBox(height: 4),
-                  Text('Management Portal Access', style: AppTypography.bodySmall),
+                  const Text('Management Portal Access', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
                   const SizedBox(height: 24),
                   const AppTextField(
                     label: 'Admin Email',
@@ -167,463 +354,6 @@ class _AdminAppShellState extends State<AdminAppShell> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  // --- 1. Overview Tab ---
-  Widget _buildOverviewTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingDesktop),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Dashboard Overview', style: AppTypography.displayMedium),
-          const SizedBox(height: 4),
-          Text('Key performance indicators across all users, tests, and financial activity.', style: AppTypography.bodyMedium),
-          const SizedBox(height: 24),
-
-          // Stat Cards Grid
-          Row(
-            children: [
-              Expanded(
-                child: AppStatCard(
-                  label: 'Registered Users',
-                  value: '12,480',
-                  icon: Icons.people_outline,
-                  iconColor: AppColors.infoBlue,
-                  iconBgColor: AppColors.infoBlueLight,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AppStatCard(
-                  label: 'Published Tests',
-                  value: '184 Series',
-                  icon: Icons.menu_book_outlined,
-                  iconColor: AppColors.brandPrimary,
-                  iconBgColor: AppColors.brandPrimaryLight,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AppStatCard(
-                  label: 'Pending Top-ups',
-                  value: '8 Requests',
-                  icon: Icons.currency_rupee,
-                  iconColor: AppColors.coinGold,
-                  iconBgColor: AppColors.coinGoldLight,
-                  onTap: () => setState(() => _activeTab = AdminNavTab.finance),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Quick Action Cards
-          const Text('Administrative Actions', style: AppTypography.titleLarge),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              AppButton(
-                label: '+ Create New Test Series',
-                onPressed: () => setState(() => _activeTab = AdminNavTab.tests),
-              ),
-              AppButton(
-                label: '⚡ Review Pending UTRs',
-                variant: AppButtonVariant.secondary,
-                onPressed: () => setState(() => _activeTab = AdminNavTab.finance),
-              ),
-              AppButton(
-                label: '📢 Broadcast Push Alert',
-                variant: AppButtonVariant.outlined,
-                onPressed: () => setState(() => _activeTab = AdminNavTab.notifications),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- 2. Finance Tab ---
-  Widget _buildFinanceTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingDesktop),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Finance & UPI Verification', style: AppTypography.displayMedium),
-          const SizedBox(height: 4),
-          Text('Review manual UPI payment top-ups and coin withdrawal requests.', style: AppTypography.bodyMedium),
-          const SizedBox(height: 24),
-
-          const Text('Pending Top-Up Verification Queue', style: AppTypography.titleLarge),
-          const SizedBox(height: 12),
-          _buildTopupRow('Anjali Kumari', 'anjali@test.com', '₹250.00', '5,000 Coins', 'UTR: 349102847192'),
-          _buildTopupRow('Manish Kumar', 'manish@test.com', '₹100.00', '2,000 Coins', 'UTR: 492019385721'),
-          _buildTopupRow('Suresh Patil', 'suresh@test.com', '₹500.00', '10,000 Coins', 'UTR: 593019284719'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopupRow(String name, String email, String rupee, String coins, String utr) {
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(name, style: AppTypography.titleMedium),
-                  const SizedBox(width: 8),
-                  AppStatusPill.pending(),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text('$email • $utr', style: AppTypography.bodySmall),
-            ],
-          ),
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(rupee, style: AppTypography.titleLarge.copyWith(color: AppColors.brandPrimaryDark)),
-                  Text(coins, style: AppTypography.bodySmall.copyWith(color: AppColors.coinGold)),
-                ],
-              ),
-              const SizedBox(width: 20),
-              AppButton(
-                label: 'Approve',
-                size: AppButtonSize.small,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Approved $utr! Credited $coins.')),
-                  );
-                },
-              ),
-              const SizedBox(width: 8),
-              AppButton(
-                label: 'Reject',
-                variant: AppButtonVariant.destructive,
-                size: AppButtonSize.small,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Rejected $utr.')),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-      ),
-    );
-  }
-
-  // --- 3. Tests Tab ---
-  Widget _buildTestsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingDesktop),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Test Series Catalog', style: AppTypography.displayMedium),
-              AppButton(label: '+ Create Test', onPressed: () {}),
-            ],
-          ),
-          const SizedBox(height: 16),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('70th BPSC Prelims Mock 1', style: AppTypography.titleLarge),
-                const SizedBox(height: 4),
-                Text('150 Questions • 120 Minutes • Negative Marking: 0.25', style: AppTypography.bodySmall),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    AppStatusPill.active(label: 'Published'),
-                    const Spacer(),
-                    AppButton(label: 'Edit Questions (150)', variant: AppButtonVariant.outlined, size: AppButtonSize.small, onPressed: () {}),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- 4. Users Tab ---
-  Widget _buildUsersTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingDesktop),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('User Directory & Roles', style: AppTypography.displayMedium),
-          const SizedBox(height: 16),
-          const AppTextField(
-            hintText: 'Search user by name, email, or phone...',
-            prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
-          ),
-          const SizedBox(height: 16),
-          AppCard(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Vikram Singh (vikram@example.com)', style: AppTypography.titleMedium),
-                    SizedBox(height: 2),
-                    Text('Role: User • Balance: 1,450 Coins • Status: Active', style: AppTypography.bodySmall),
-                  ],
-                ),
-                Row(
-                  children: [
-                    AppButton(label: 'Adjust Coins', variant: AppButtonVariant.secondary, size: AppButtonSize.small, onPressed: () {}),
-                    const SizedBox(width: 8),
-                    AppButton(label: 'Suspend', variant: AppButtonVariant.destructive, size: AppButtonSize.small, onPressed: () {}),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- 5. Contests Tab ---
-  Widget _buildContestsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingDesktop),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Tournaments & Contest Scheduler', style: AppTypography.displayMedium),
-          const SizedBox(height: 16),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('SSC CGL Grand Championship 2026', style: AppTypography.titleLarge),
-                const SizedBox(height: 4),
-                Text('Scheduled: 10:00 AM - 11:00 AM • Entry Fee: 20 Coins • Prize Pool: 5,000 Coins', style: AppTypography.bodySmall),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    AppStatusPill.active(label: 'Live Now (48 Participants)'),
-                    const Spacer(),
-                    AppButton(label: 'Declare Results & Payout', size: AppButtonSize.small, onPressed: () {}),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- 6. AI Test Creator Tab ---
-  Widget _buildAiCreatorTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingDesktop),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('AI Test & Question Generator 🤖', style: AppTypography.displayMedium),
-          const SizedBox(height: 4),
-          Text('Automate syllabus-aligned question generation using Gemini 1.5 Flash.', style: AppTypography.bodyMedium),
-          const SizedBox(height: 20),
-
-          AppCard(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Generate New Test Paper', style: AppTypography.titleLarge),
-                const SizedBox(height: 16),
-                const AppTextField(
-                  label: 'Target Examination',
-                  hintText: 'e.g. 70th BPSC Prelims, SSC CGL Tier 1',
-                ),
-                const SizedBox(height: 14),
-                const AppTextField(
-                  label: 'Subject / Syllabus Focus',
-                  hintText: 'e.g. Ancient & Medieval History of Bihar',
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    const Expanded(
-                      child: AppTextField(
-                        label: 'Number of Questions',
-                        hintText: '25',
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    const Expanded(
-                      child: AppTextField(
-                        label: 'Difficulty Level',
-                        hintText: 'Moderate (Standard PSC Pattern)',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                AppButton(
-                  label: '✨ Generate Paper with Gemini AI',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Dispatched AI generation request to Edge Function...')),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- 7. Lucky Wheel Config Tab ---
-  Widget _buildWheelConfigTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingDesktop),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Lucky Wheel Reward Configuration 🎡', style: AppTypography.displayMedium),
-          const SizedBox(height: 4),
-          Text('Configure coin payout slices, free spin limits, and drop probability weights.', style: AppTypography.bodyMedium),
-          const SizedBox(height: 20),
-
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Active Wheel Slices (8 Sectors)', style: AppTypography.titleLarge),
-                const SizedBox(height: 12),
-                _buildSliceRow('Sector 1: 50 Coins', 'Probability: 25%', 'Reward: 50 Coins', true),
-                _buildSliceRow('Sector 2: Try Again', 'Probability: 30%', 'Reward: 0 Coins', true),
-                _buildSliceRow('Sector 3: 100 Coins', 'Probability: 15%', 'Reward: 100 Coins', true),
-                _buildSliceRow('Sector 4: 250 Coins (Jackpot)', 'Probability: 5%', 'Reward: 250 Coins', true),
-                const SizedBox(height: 16),
-                AppButton(
-                  label: 'Save Configuration',
-                  size: AppButtonSize.small,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Updated Lucky Wheel Configuration.')),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSliceRow(String name, String prob, String reward, bool enabled) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(name, style: AppTypography.titleSmall),
-              Text(prob, style: AppTypography.bodySmall),
-            ],
-          ),
-          Text(reward, style: const TextStyle(color: AppColors.brandPrimary, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  // --- 8. Push Notifications Tab ---
-  Widget _buildNotificationsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingDesktop),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Push Notification Broadcast Console 📢', style: AppTypography.displayMedium),
-          const SizedBox(height: 4),
-          Text('Send targeted native device notifications via FCM to all or segmented candidate audiences.', style: AppTypography.bodyMedium),
-          const SizedBox(height: 20),
-
-          AppCard(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Broadcast Notification', style: AppTypography.titleLarge),
-                const SizedBox(height: 16),
-                const AppTextField(
-                  label: 'Notification Title',
-                  hintText: 'e.g. 70th BPSC Grand League starts in 30 mins! 🏆',
-                ),
-                const SizedBox(height: 14),
-                const AppTextField(
-                  label: 'Message Body',
-                  hintText: 'Join the contest now to claim your share of the 5,000 Coin prize pool.',
-                ),
-                const SizedBox(height: 14),
-                const AppTextField(
-                  label: 'Audience Topic / Segment',
-                  hintText: 'all_users (or topic: exam_bpsc)',
-                ),
-                const SizedBox(height: 24),
-                AppButton(
-                  label: '🚀 Dispatch Broadcast via FCM',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Push broadcast successfully dispatched via Edge Function!')),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlaceholderTab(String title) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.construction_rounded, size: 48, color: AppColors.brandPrimary.withAlpha(128)),
-          const SizedBox(height: 16),
-          Text(title, style: AppTypography.titleLarge),
-          const SizedBox(height: 6),
-          Text('Admin workspace ready for $title configuration.', style: AppTypography.bodySmall),
-        ],
       ),
     );
   }
