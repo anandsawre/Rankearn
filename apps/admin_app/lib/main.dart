@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+// Hot reload: Matched Dashboard full width padding & removed duplicate left checkbox (2026-10-20)
 
 import 'features/overview/overview_tab.dart';
+import 'features/overview/banner_image_data.dart';
 import 'features/finance/finance_tab.dart';
 import 'features/tests/tests_tab.dart';
 import 'features/users/users_tab.dart';
-import 'features/patterns/patterns_tab.dart';
+import 'features/categories/categories_tab.dart';
 import 'features/ai_creator/ai_creator_tab.dart';
 import 'features/contests/contests_tab.dart';
 import 'features/banners/banners_tab.dart';
@@ -18,9 +20,10 @@ import 'features/referrals/referrals_tab.dart';
 import 'features/posts/posts_tab.dart';
 import 'features/support/support_tab.dart';
 import 'features/feedback/feedback_tab.dart';
-import 'features/battle_qs/battle_qs_tab.dart';
+import 'features/questions/questions_tab.dart';
 import 'features/polls/polls_tab.dart';
 import 'features/settings/settings_tab.dart';
+import 'features/auth/admin_login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,35 +35,59 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: RankearnAdminApp(),
+      // Launch Admin Login Screen with single-viewport responsive fit (no scrolling)
+      child: RankearnAdminApp(startLoggedIn: false),
     ),
   );
 }
 
 class RankearnAdminApp extends StatelessWidget {
-  const RankearnAdminApp({super.key});
+  final bool startLoggedIn;
+  final AdminNavTab initialTab;
+
+  const RankearnAdminApp({
+    super.key,
+    this.startLoggedIn = true,
+    this.initialTab = AdminNavTab.overview,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Rankearn Admin Portal',
+      title: 'Rankearn Admin Panel',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const AdminAppShell(),
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        fontFamily: 'Inter',
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF5636F5),
+          primary: const Color(0xFF5636F5),
+          surface: Colors.white,
+        ),
+      ),
+      home: AdminAppShell(startLoggedIn: startLoggedIn, initialTab: initialTab),
     );
   }
 }
 
 class AdminAppShell extends StatefulWidget {
-  const AdminAppShell({super.key});
+  final bool startLoggedIn;
+  final AdminNavTab initialTab;
+
+  const AdminAppShell({
+    super.key,
+    this.startLoggedIn = true,
+    this.initialTab = AdminNavTab.overview,
+  });
 
   @override
   State<AdminAppShell> createState() => _AdminAppShellState();
 }
 
 class _AdminAppShellState extends State<AdminAppShell> {
-  AdminNavTab _activeTab = AdminNavTab.overview;
-  bool _isLoggedIn = true;
+  late AdminNavTab _activeTab = widget.initialTab;
+  late bool _isLoggedIn = widget.startLoggedIn;
 
   void _navigateToTab(AdminNavTab tab) {
     setState(() {
@@ -74,71 +101,54 @@ class _AdminAppShellState extends State<AdminAppShell> {
       return _buildAdminLoginScreen();
     }
 
-    final isNarrow = MediaQuery.of(context).size.width < 960;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrow = screenWidth < 1000;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF9),
-      // Mobile Drawer if screen is narrow
-      drawer: isNarrow
-          ? Drawer(
-              child: SafeArea(
-                child: AdminSidebar(
-                  currentTab: _activeTab,
-                  onTabSelected: _navigateToTab,
-                  onLogout: () => setState(() => _isLoggedIn = false),
-                ),
-              ),
-            )
-          : null,
+      backgroundColor: const Color(0xFFF8FAFC),
+      drawer: isNarrow ? _buildAdminDrawer(context) : null,
+      bottomNavigationBar: isNarrow ? _buildMobileBottomNav(context) : null,
       body: Column(
         children: [
-          // 1. Fixed Top Header Bar matching App.tsx:242-303
-          _buildTopHeaderBar(context, isNarrow),
+          // 1. Pixel-perfect Top Navigation Bar
+          _buildPixelPerfectHeaderBar(context, isNarrow),
 
-          // 2. Main Content Area + Desktop Sidebar
+          // 2. Main Page Content (Full Width)
           Expanded(
-            child: Row(
-              children: [
-                if (!isNarrow)
-                  AdminSidebar(
-                    currentTab: _activeTab,
-                    onTabSelected: _navigateToTab,
-                    onLogout: () => setState(() => _isLoggedIn = false),
+            child: Container(
+              color: const Color(0xFFF8FAFC),
+              width: double.infinity,
+              child: switch (_activeTab) {
+                AdminNavTab.overview => OverviewTab(
+                    onGoToTests: () => setState(() => _activeTab = AdminNavTab.tests),
+                    onGoToFinance: () => setState(() => _activeTab = AdminNavTab.finance),
+                    onGoToUsers: () => setState(() => _activeTab = AdminNavTab.users),
+                    onGoToAiCreator: () => setState(() => _activeTab = AdminNavTab.aiCreator),
+                    onGoToNotifications: () => setState(() => _activeTab = AdminNavTab.notifications),
+                    onGoToCategories: () => setState(() => _activeTab = AdminNavTab.patterns),
+                    onGoToLiveQuiz: () => setState(() => _activeTab = AdminNavTab.contests),
+                    onGoToTournaments: () => setState(() => _activeTab = AdminNavTab.leaderboard),
                   ),
-                Expanded(
-                  child: Container(
-                    color: const Color(0xFFF8FAF9),
-                    child: switch (_activeTab) {
-                      AdminNavTab.overview => OverviewTab(
-                          onGoToTests: () => setState(() => _activeTab = AdminNavTab.tests),
-                          onGoToFinance: () => setState(() => _activeTab = AdminNavTab.finance),
-                          onGoToUsers: () => setState(() => _activeTab = AdminNavTab.users),
-                          onGoToAiCreator: () => setState(() => _activeTab = AdminNavTab.aiCreator),
-                          onGoToNotifications: () => setState(() => _activeTab = AdminNavTab.notifications),
-                        ),
-                      AdminNavTab.tests => const TestsTab(),
-                      AdminNavTab.users => const UsersTab(),
-                      AdminNavTab.patterns => const PatternsTab(),
-                      AdminNavTab.aiCreator => AiCreatorTab(
-                          onSavedToTests: () => setState(() => _activeTab = AdminNavTab.tests),
-                        ),
-                      AdminNavTab.finance => const FinanceTab(),
-                      AdminNavTab.contests => const ContestsTab(),
-                      AdminNavTab.banners => const BannersTab(),
-                      AdminNavTab.notifications => const NotificationsTab(),
-                      AdminNavTab.wheel => const WheelTab(),
-                      AdminNavTab.leaderboard => const LeaderboardTab(),
-                      AdminNavTab.referrals => const ReferralsTab(),
-                      AdminNavTab.posts => const PostsTab(),
-                      AdminNavTab.support => const SupportTab(),
-                      AdminNavTab.feedback => const FeedbackTab(),
-                      AdminNavTab.battleQs => const BattleQsTab(),
-                      AdminNavTab.polls => const PollsTab(),
-                      AdminNavTab.settings => const SettingsTab(),
-                    },
+                AdminNavTab.tests => const TestsTab(),
+                AdminNavTab.users => const UsersTab(),
+                AdminNavTab.patterns => const CategoriesTab(),
+                AdminNavTab.aiCreator => AiCreatorTab(
+                    onSavedToTests: () => setState(() => _activeTab = AdminNavTab.tests),
                   ),
-                ),
-              ],
+                AdminNavTab.finance => const FinanceTab(),
+                AdminNavTab.contests => const ContestsTab(),
+                AdminNavTab.banners => const BannersTab(),
+                AdminNavTab.notifications => const NotificationsTab(),
+                AdminNavTab.wheel => const WheelTab(),
+                AdminNavTab.leaderboard => const LeaderboardTab(),
+                AdminNavTab.referrals => const ReferralsTab(),
+                AdminNavTab.posts => const PostsTab(),
+                AdminNavTab.support => const SupportTab(),
+                AdminNavTab.feedback => const FeedbackTab(),
+                AdminNavTab.battleQs => const QuestionsTab(),
+                AdminNavTab.polls => const PollsTab(),
+                AdminNavTab.settings => const SettingsTab(),
+              },
             ),
           ),
         ],
@@ -146,157 +156,281 @@ class _AdminAppShellState extends State<AdminAppShell> {
     );
   }
 
-  // --- Fixed 64px Top Header matching App.tsx:242-303 ---
-  Widget _buildTopHeaderBar(BuildContext context, bool isNarrow) {
+  // ==========================================
+  // TOP NAVBAR MATCHING SCREENSHOT EXACTLY
+  // ==========================================
+  Widget _buildPixelPerfectHeaderBar(BuildContext context, bool isNarrow) {
     return Container(
-      height: 64,
+      height: 70,
       width: double.infinity,
-      color: const Color(0xFF10B981),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x04000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Left: Logo + Brand + Divider + Active Tab Title
-            Row(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // LEFT: (Hamburger menu if narrow) + Brand Trophy + Rankearn & Admin Panel
+          Row(
             children: [
               if (isNarrow) ...[
                 Builder(
                   builder: (ctx) => IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.white),
+                    icon: const Icon(
+                      Icons.menu_rounded,
+                      color: Color(0xFF101A3A),
+                      size: 26,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                     onPressed: () => Scaffold.of(ctx).openDrawer(),
+                    tooltip: 'Open Menu',
                   ),
                 ),
                 const SizedBox(width: 8),
+              ] else ...[
+                const Icon(
+                  Icons.emoji_events_rounded,
+                  color: Color(0xFFF59E0B),
+                  size: 28,
+                ),
+                const SizedBox(width: 10),
               ],
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF065F46).withAlpha(120),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white.withAlpha(50)),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'R',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20),
-                ),
-              ),
-              const SizedBox(width: 12),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Rankearn',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, height: 1.1),
+                children: [
+                  Text.rich(
+                    const TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Rank',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF101A3A),
+                            letterSpacing: -0.4,
+                            height: 1.15,
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'earn',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF5636F5),
+                            letterSpacing: -0.4,
+                            height: 1.15,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  Text(
-                    'Learning with Earning',
-                    style: TextStyle(color: Color(0xFFD1FAE5), fontSize: 10, fontWeight: FontWeight.w500),
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF0FF),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: const Color(0xFFE0E7FF), width: 0.8),
+                    ),
+                    child: const Text(
+                      'Admin Panel',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF5636F5),
+                        letterSpacing: 0.3,
+                        height: 1.1,
+                      ),
+                    ),
                   ),
                 ],
-              ),
-              const SizedBox(width: 20),
-              Container(
-                height: 28,
-                width: 1,
-                color: Colors.white.withAlpha(60),
-              ),
-              const SizedBox(width: 20),
-              Text(
-                _getTabTitle(_activeTab),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
               ),
             ],
           ),
 
-          // Right: Notifications + Divider + ADMIN badge + Name + Avatar
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_none, color: Color(0xFFD1FAE5)),
-                tooltip: 'System Alerts',
-                onPressed: () {
-                  setState(() => _activeTab = AdminNavTab.notifications);
-                },
-              ),
-              const SizedBox(width: 8),
-              Container(
-                height: 28,
-                width: 1,
-                color: Colors.white.withAlpha(60),
-              ),
-              const SizedBox(width: 16),
-              if (!isNarrow) ...[
-                Column(
+
+          // MIDDLE: Horizontal Navigation Pills
+          if (!isNarrow)
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'ADMIN',
-                            style: TextStyle(
-                              color: Color(0xFF065F46),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Anand Sawre',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                      ],
+                    _buildNavPill(
+                      tab: AdminNavTab.overview,
+                      label: 'Dashboard',
+                      icon: Icons.dashboard_rounded,
+                      isActive: _activeTab == AdminNavTab.overview,
                     ),
-                    const SizedBox(height: 1),
-                    const Text(
-                      'Super Admin • PRO Member',
-                      style: TextStyle(color: Color(0xFFD1FAE5), fontSize: 10, fontWeight: FontWeight.w500),
+                    _buildNavPill(
+                      tab: AdminNavTab.tests,
+                      label: 'Test Series',
+                      icon: Icons.menu_book_outlined,
+                      isActive: _activeTab == AdminNavTab.tests,
                     ),
+                    _buildNavPill(
+                      tab: AdminNavTab.battleQs,
+                      label: 'Questions',
+                      icon: Icons.help_outline_rounded,
+                      isActive: _activeTab == AdminNavTab.battleQs,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.patterns,
+                      label: 'Categories',
+                      icon: Icons.folder_outlined,
+                      isActive: _activeTab == AdminNavTab.patterns,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.users,
+                      label: 'Users',
+                      icon: Icons.people_outline_rounded,
+                      isActive: _activeTab == AdminNavTab.users,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.contests,
+                      label: 'Live Quiz',
+                      icon: Icons.podcasts_rounded,
+                      isActive: _activeTab == AdminNavTab.contests,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.leaderboard,
+                      label: 'Tournaments',
+                      icon: Icons.emoji_events_outlined,
+                      isActive: _activeTab == AdminNavTab.leaderboard,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.finance,
+                      label: 'Payments',
+                      icon: Icons.credit_card_outlined,
+                      isActive: _activeTab == AdminNavTab.finance,
+                    ),
+                    const SizedBox(width: 4),
+                    _buildMoreNavButton(),
                   ],
                 ),
-                const SizedBox(width: 12),
-              ],
+              ),
+            ),
+
+          // RIGHT: Notifications Bell + User Profile Avatar
+          Row(
+            children: [
+              // Notification Bell with Red Badge "3"
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: Color(0xFF64748B),
+                      size: 23,
+                    ),
+                    onPressed: () => setState(() => _activeTab = AdminNavTab.notifications),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        '3',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 8),
+
+              // User Profile Avatar & Title
               InkWell(
                 onTap: () {
                   showDialog(
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: const Text('Admin Session'),
-                      content: const Text('Logged in as Anand Sawre (anand.sawre@rankearn.com).'),
+                      content: const Text('Logged in as Admin User (admin@quizmaster.com)'),
                       actions: [
-                        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                        AppButton(
-                          label: 'Sign Out',
-                          variant: AppButtonVariant.destructive,
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Close'),
+                        ),
+                        TextButton(
                           onPressed: () {
                             Navigator.pop(ctx);
                             setState(() => _isLoggedIn = false);
                           },
+                          child: const Text('Sign Out', style: TextStyle(color: Colors.red)),
                         ),
                       ],
                     ),
                   );
                 },
-                borderRadius: BorderRadius.circular(20),
-                child: const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Colors.white24,
-                  child: Text(
-                    'AS',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.memory(
+                          kAdminAvatarBytes,
+                          width: 38,
+                          height: 38,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      if (!isNarrow) ...[
+                        const SizedBox(width: 10),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Admin User',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1E293B),
+                                height: 1.15,
+                              ),
+                            ),
+                            SizedBox(height: 1),
+                            Text(
+                              'Super Admin',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF94A3B8),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
@@ -304,104 +438,612 @@ class _AdminAppShellState extends State<AdminAppShell> {
           ),
         ],
       ),
-    ),
-  );
+    );
   }
 
-  // --- Login Screen ---
-  Widget _buildAdminLoginScreen() {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF9),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: AppCard(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.brandPrimary,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Text('R', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900)),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Rankearn Admin', style: AppTypography.displayMedium),
-                  const SizedBox(height: 4),
-                  const Text('Management Portal Access', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-                  const SizedBox(height: 24),
-                  const AppTextField(
-                    label: 'Admin Email',
-                    hintText: 'admin@rankearn.com',
-                    prefixIcon: Icon(Icons.email_outlined, color: AppColors.textMuted),
-                  ),
-                  const SizedBox(height: 14),
-                  const AppTextField(
-                    label: 'Password',
-                    hintText: '••••••••',
-                    isPassword: true,
-                    prefixIcon: Icon(Icons.lock_outline, color: AppColors.textMuted),
-                  ),
-                  const SizedBox(height: 24),
-                  AppButton(
-                    label: 'Sign In to Portal',
-                    width: double.infinity,
-                    onPressed: () => setState(() => _isLoggedIn = true),
-                  ),
-                ],
+  // ==========================================
+  // NAVIGATION PILL WIDGET
+  // ==========================================
+  Widget _buildNavPill({
+    required AdminNavTab tab,
+    required String label,
+    required IconData icon,
+    required bool isActive,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      child: InkWell(
+        onTap: () => _navigateToTab(tab),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          decoration: BoxDecoration(
+            color: isActive ? const Color(0xFF5636F5) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: isActive ? Colors.white : const Color(0xFF475569),
               ),
-            ),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: isActive ? Colors.white : const Color(0xFF334155),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  String _getTabTitle(AdminNavTab tab) {
-    switch (tab) {
-      case AdminNavTab.overview:
-        return 'Overview';
-      case AdminNavTab.tests:
-        return 'Test Series';
-      case AdminNavTab.users:
-        return 'Users';
-      case AdminNavTab.patterns:
-        return 'Exam Patterns';
-      case AdminNavTab.aiCreator:
-        return 'AI Test Creator';
-      case AdminNavTab.finance:
-        return 'Finance';
-      case AdminNavTab.contests:
-        return 'Contests';
-      case AdminNavTab.banners:
-        return 'Banners';
-      case AdminNavTab.notifications:
-        return 'Notifications';
-      case AdminNavTab.wheel:
-        return 'Lucky Wheel';
-      case AdminNavTab.leaderboard:
-        return 'Leaderboard';
-      case AdminNavTab.referrals:
-        return 'Referrals';
-      case AdminNavTab.posts:
-        return 'Updates';
-      case AdminNavTab.support:
-        return 'Support Chat';
-      case AdminNavTab.feedback:
-        return 'Give Feedback';
-      case AdminNavTab.battleQs:
-        return 'Battle Questions';
-      case AdminNavTab.polls:
-        return 'Community Polls';
-      case AdminNavTab.settings:
-        return 'Settings';
-    }
+  // ==========================================
+  // MORE BUTTON WITH ALL 18 SIDEBAR TABS
+  // ==========================================
+  Widget _buildMoreNavButton() {
+    final directTabs = [
+      AdminNavTab.overview,
+      AdminNavTab.tests,
+      AdminNavTab.battleQs,
+      AdminNavTab.patterns,
+      AdminNavTab.users,
+      AdminNavTab.contests,
+      AdminNavTab.leaderboard,
+      AdminNavTab.finance,
+    ];
+    final isMoreActive = !directTabs.contains(_activeTab);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      child: PopupMenuButton<AdminNavTab>(
+        tooltip: 'All Navigation Modules',
+        offset: const Offset(0, 44),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        color: Colors.white,
+        constraints: const BoxConstraints(maxHeight: 520, minWidth: 260, maxWidth: 300),
+        onSelected: _navigateToTab,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isMoreActive ? const Color(0xFF4F46E5) : const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isMoreActive ? const Color(0xFF4338CA) : const Color(0xFFE2E8F0),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.grid_view_rounded,
+                size: 15,
+                color: isMoreActive ? Colors.white : const Color(0xFF475569),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'More',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isMoreActive ? FontWeight.w700 : FontWeight.w600,
+                  color: isMoreActive ? Colors.white : const Color(0xFF334155),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 17,
+                color: isMoreActive ? Colors.white : const Color(0xFF64748B),
+              ),
+            ],
+          ),
+        ),
+        itemBuilder: (context) => [
+          _buildPopupSectionTitle('CORE MODULES'),
+          _buildPopupItem(AdminNavTab.overview, 'Dashboard', Icons.dashboard_rounded),
+          _buildPopupItem(AdminNavTab.tests, 'Test Series', Icons.menu_book_outlined),
+          _buildPopupItem(AdminNavTab.users, 'Users Management', Icons.people_outline_rounded),
+          _buildPopupItem(AdminNavTab.patterns, 'Exam Patterns', Icons.layers_outlined),
+          _buildPopupItem(
+            AdminNavTab.aiCreator,
+            'AI Test Creator',
+            Icons.psychology_outlined,
+            badgeText: 'AI',
+            badgeColor: const Color(0xFF6366F1),
+          ),
+
+          const PopupMenuDivider(height: 12),
+          _buildPopupSectionTitle('LIVE & COMMUNITY'),
+          _buildPopupItem(
+            AdminNavTab.contests,
+            'Contests & Battles',
+            Icons.sports_esports_outlined,
+            badgeText: 'LIVE',
+            badgeColor: const Color(0xFFEF4444),
+          ),
+          _buildPopupItem(AdminNavTab.leaderboard, 'Leaderboard', Icons.leaderboard_outlined),
+          _buildPopupItem(AdminNavTab.posts, 'Community Posts', Icons.chat_bubble_outline_rounded),
+          _buildPopupItem(
+            AdminNavTab.wheel,
+            'Lucky Wheel',
+            Icons.stars_rounded,
+            badgeText: 'NEW',
+            badgeColor: const Color(0xFF10B981),
+          ),
+          _buildPopupItem(AdminNavTab.battleQs, 'Questions Management', Icons.help_outline_rounded),
+          _buildPopupItem(AdminNavTab.polls, 'Live Polls', Icons.poll_outlined),
+
+          const PopupMenuDivider(height: 12),
+          _buildPopupSectionTitle('FINANCE & GROWTH'),
+          _buildPopupItem(AdminNavTab.finance, 'Finance & Wallet', Icons.account_balance_wallet_outlined),
+          _buildPopupItem(AdminNavTab.referrals, 'Referrals & Earnings', Icons.share_outlined),
+          _buildPopupItem(AdminNavTab.banners, 'Promo Banners', Icons.image_outlined),
+          _buildPopupItem(AdminNavTab.notifications, 'Notifications', Icons.notifications_active_outlined),
+
+          const PopupMenuDivider(height: 12),
+          _buildPopupSectionTitle('SYSTEM & SUPPORT'),
+          _buildPopupItem(AdminNavTab.support, 'Support Tickets', Icons.confirmation_number_outlined),
+          _buildPopupItem(AdminNavTab.feedback, 'User Feedback', Icons.rate_review_outlined),
+          _buildPopupItem(AdminNavTab.settings, 'Platform Settings', Icons.settings_outlined),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuEntry<AdminNavTab> _buildPopupSectionTitle(String title) {
+    return PopupMenuItem<AdminNavTab>(
+      enabled: false,
+      height: 26,
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF94A3B8),
+          letterSpacing: 1.0,
+        ),
+      ),
+    );
+  }
+
+  PopupMenuEntry<AdminNavTab> _buildPopupItem(
+    AdminNavTab tab,
+    String title,
+    IconData icon, {
+    String? badgeText,
+    Color? badgeColor,
+  }) {
+    final isSelected = _activeTab == tab;
+
+    return PopupMenuItem<AdminNavTab>(
+      value: tab,
+      height: 38,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFEEF2FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 17,
+              color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            if (badgeText != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: (badgeColor ?? const Color(0xFF4F46E5)).withAlpha(25),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  badgeText,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: badgeColor ?? const Color(0xFF4F46E5),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // MOBILE BOTTOM NAVIGATION BAR
+  // ==========================================
+  Widget _buildMobileBottomNav(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 8,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildBottomNavItem(
+                  icon: Icons.dashboard_rounded,
+                  label: 'Dashboard',
+                  isSelected: _activeTab == AdminNavTab.overview,
+                  onTap: () => _navigateToTab(AdminNavTab.overview),
+                ),
+              ),
+              Expanded(
+                child: _buildBottomNavItem(
+                  icon: Icons.menu_book_rounded,
+                  label: 'Test Series',
+                  isSelected: _activeTab == AdminNavTab.tests,
+                  onTap: () => _navigateToTab(AdminNavTab.tests),
+                ),
+              ),
+              Expanded(
+                child: _buildBottomNavItem(
+                  icon: Icons.help_outline_rounded,
+                  label: 'Questions',
+                  isSelected: _activeTab == AdminNavTab.battleQs,
+                  onTap: () => _navigateToTab(AdminNavTab.battleQs),
+                ),
+              ),
+              Expanded(
+                child: _buildBottomNavItem(
+                  icon: Icons.people_outline_rounded,
+                  label: 'Users',
+                  isSelected: _activeTab == AdminNavTab.users,
+                  onTap: () => _navigateToTab(AdminNavTab.users),
+                ),
+              ),
+              Expanded(
+                child: Builder(
+                  builder: (ctx) => _buildBottomNavItem(
+                    icon: Icons.menu_rounded,
+                    label: 'Menu',
+                    isSelected: ![
+                      AdminNavTab.overview,
+                      AdminNavTab.tests,
+                      AdminNavTab.battleQs,
+                      AdminNavTab.users,
+                    ].contains(_activeTab),
+                    onTap: () => Scaffold.of(ctx).openDrawer(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavItem({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final color = isSelected ? const Color(0xFF5636F5) : const Color(0xFF64748B);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 21, color: color),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // MOBILE / TABLET SIDE NAVIGATION DRAWER
+  // ==========================================
+  Widget _buildAdminDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // 1. Drawer Header (Brand + User Profile)
+            Container(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF8FAFC),
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.emoji_events_rounded,
+                        color: Color(0xFFF59E0B),
+                        size: 26,
+                      ),
+                      const SizedBox(width: 8),
+                      Text.rich(
+                        const TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Rank',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF101A3A),
+                                letterSpacing: -0.4,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'earn',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF5636F5),
+                                letterSpacing: -0.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.memory(
+                          kAdminAvatarBytes,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Admin User',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                            SizedBox(height: 1),
+                            Text(
+                              'Super Admin',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF5636F5),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // 2. Navigation Modules List
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                children: [
+                  _buildDrawerSectionHeader('CORE MODULES'),
+                  _buildDrawerItem(AdminNavTab.overview, 'Dashboard', Icons.dashboard_rounded),
+                  _buildDrawerItem(AdminNavTab.tests, 'Test Series', Icons.menu_book_rounded),
+                  _buildDrawerItem(AdminNavTab.battleQs, 'Questions Management', Icons.help_outline_rounded),
+                  _buildDrawerItem(AdminNavTab.patterns, 'Categories & Patterns', Icons.folder_outlined),
+                  _buildDrawerItem(AdminNavTab.users, 'Users & Students', Icons.people_outline_rounded),
+                  _buildDrawerItem(AdminNavTab.aiCreator, 'AI Generator', Icons.auto_awesome_rounded),
+
+                  const SizedBox(height: 10),
+                  _buildDrawerSectionHeader('LIVE & GAMIFICATION'),
+                  _buildDrawerItem(AdminNavTab.contests, 'Live Quiz', Icons.podcasts_rounded),
+                  _buildDrawerItem(AdminNavTab.leaderboard, 'Tournaments & Leaderboard', Icons.emoji_events_outlined),
+                  _buildDrawerItem(AdminNavTab.wheel, 'Lucky Spin Wheel', Icons.adjust_rounded),
+                  _buildDrawerItem(AdminNavTab.polls, 'Live Polls', Icons.poll_outlined),
+                  _buildDrawerItem(AdminNavTab.posts, 'Community Posts', Icons.article_outlined),
+
+                  const SizedBox(height: 10),
+                  _buildDrawerSectionHeader('FINANCE & MARKETING'),
+                  _buildDrawerItem(AdminNavTab.finance, 'Payments & Revenue', Icons.credit_card_outlined),
+                  _buildDrawerItem(AdminNavTab.banners, 'Promotional Banners', Icons.view_carousel_outlined),
+                  _buildDrawerItem(AdminNavTab.referrals, 'Referral Program', Icons.share_outlined),
+                  _buildDrawerItem(AdminNavTab.notifications, 'Push Notifications', Icons.notifications_none_rounded),
+
+                  const SizedBox(height: 10),
+                  _buildDrawerSectionHeader('SYSTEM & SUPPORT'),
+                  _buildDrawerItem(AdminNavTab.support, 'Help Desk & Tickets', Icons.headset_mic_outlined),
+                  _buildDrawerItem(AdminNavTab.feedback, 'User Feedback', Icons.feedback_outlined),
+                  _buildDrawerItem(AdminNavTab.settings, 'Settings & Configuration', Icons.settings_outlined),
+                ],
+              ),
+            ),
+
+            // 3. Drawer Footer: Sign Out
+            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: InkWell(
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _isLoggedIn = false);
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 20),
+                      SizedBox(width: 10),
+                      Text(
+                        'Sign Out',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFEF4444),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF94A3B8),
+          letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(AdminNavTab tab, String title, IconData icon) {
+    final isSelected = _activeTab == tab;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1.5),
+      child: InkWell(
+        onTap: () {
+          Navigator.pop(context);
+          _navigateToTab(tab);
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFEEF0FF) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 19,
+                color: isSelected ? const Color(0xFF5636F5) : const Color(0xFF64748B),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? const Color(0xFF5636F5) : const Color(0xFF334155),
+                  ),
+                ),
+              ),
+              if (isSelected)
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF5636F5),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // LOGIN SCREEN
+  // ==========================================
+  Widget _buildAdminLoginScreen() {
+    return AdminLoginScreen(
+      onLoginSuccess: () {
+        setState(() => _isLoggedIn = true);
+      },
+      onBackToWebsite: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Redirecting to Rankearn main site...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
+    );
   }
 }
