@@ -920,6 +920,95 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('All Tournament Registrations'), findsNothing);
   });
+
+  testWidgets('Payments Management tab renders hero, quick actions, 5 metric cards, table, and analytics', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1440, 1024);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: RankearnAdminApp(
+          startLoggedIn: true,
+          initialTab: AdminNavTab.finance,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 1. Verify Active Tab
+    expect(find.text('Payments'), findsWidgets);
+
+    // 2. Verify Hero Banner
+    expect(find.text('Payments '), findsOneWidget);
+    expect(find.text('Management'), findsWidgets);
+    expect(find.text('Track and manage all platform payments, transactions and revenue.'), findsOneWidget);
+
+    // 3. Verify 6 Quick Actions
+    expect(find.text('View\nTransactions'), findsOneWidget);
+    expect(find.text('Process\nRefund'), findsOneWidget);
+    expect(find.text('Subscription\nManagement'), findsOneWidget);
+    expect(find.text('Payout\nReports'), findsOneWidget);
+    expect(find.text('Export\nPayments'), findsOneWidget);
+    expect(find.text('Payment\nSettings'), findsOneWidget);
+
+    // 4. Verify 5 Metric Cards
+    expect(find.text('Total Revenue'), findsOneWidget);
+    expect(find.text('Total Transactions'), findsOneWidget);
+    expect(find.text('Successful Payments'), findsOneWidget);
+    expect(find.text('Failed Payments'), findsOneWidget);
+    expect(find.text('Pending Payments'), findsOneWidget);
+
+    // 5. Verify Table Card & Content
+    expect(find.textContaining('Payments List'), findsOneWidget);
+    expect(find.text('Rahul Sharma'), findsOneWidget);
+    expect(find.text('Priya Verma'), findsOneWidget);
+    expect(find.text('Amit Kumar'), findsOneWidget);
+    expect(find.text('Neha Singh'), findsOneWidget);
+    expect(find.text('Vikash Yadav'), findsOneWidget);
+
+    // 6. Verify Right Column Analytics Cards
+    expect(find.text('Payment Method Distribution'), findsOneWidget);
+    expect(find.text('Revenue Trend (Last 7 Days)'), findsOneWidget);
+    expect(find.text('Recent Activity'), findsOneWidget);
+
+    // 7. Test Process Refund dialog
+    await tester.tap(find.text('Process\nRefund'));
+    await tester.pumpAndSettle();
+    expect(find.text('Process Refund'), findsWidgets);
+    expect(find.text('Full Refund'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Full Refund'), findsNothing);
+
+    // 8. Test Subscription Management dialog
+    await tester.tap(find.text('Subscription\nManagement'));
+    await tester.pumpAndSettle();
+    expect(find.text('Subscription Management'), findsWidgets);
+    expect(find.text('Monthly MRR'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Monthly MRR'), findsNothing);
+
+    // 9. Test Payout Reports dialog
+    await tester.tap(find.text('Payout\nReports'));
+    await tester.pumpAndSettle();
+    expect(find.text('Payout & Settlement Reports'), findsOneWidget);
+    expect(find.text('Gross Transaction Volume'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Gross Transaction Volume'), findsNothing);
+
+    // 10. Test Payment Settings dialog
+    await tester.tap(find.text('Payment\nSettings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Payment Settings'), findsWidgets);
+    expect(find.text('Razorpay Public Key ID'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Razorpay Public Key ID'), findsNothing);
+  });
 }
 
 

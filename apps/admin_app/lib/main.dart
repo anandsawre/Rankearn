@@ -6,7 +6,6 @@ import 'package:data_layer/data_layer.dart';
 
 import 'features/overview/overview_tab.dart';
 import 'features/overview/banner_image_data.dart';
-import 'features/finance/finance_tab.dart';
 import 'features/tests/tests_tab.dart';
 import 'features/users/users_tab.dart';
 import 'features/categories/categories_tab.dart';
@@ -16,6 +15,7 @@ import 'features/banners/banners_tab.dart';
 import 'features/notifications/notifications_tab.dart';
 import 'features/wheel/wheel_tab.dart';
 import 'features/tournaments/tournaments_tab.dart';
+import 'features/payments/payments_tab.dart';
 import 'features/referrals/referrals_tab.dart';
 import 'features/posts/posts_tab.dart';
 import 'features/support/support_tab.dart';
@@ -135,7 +135,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                 AdminNavTab.aiCreator => AiCreatorTab(
                     onSavedToTests: () => setState(() => _activeTab = AdminNavTab.tests),
                   ),
-                AdminNavTab.finance => const FinanceTab(),
+                AdminNavTab.finance => const PaymentsTab(),
                 AdminNavTab.contests => const ContestsTab(),
                 AdminNavTab.banners => const BannersTab(),
                 AdminNavTab.notifications => const NotificationsTab(),
