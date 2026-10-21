@@ -233,16 +233,19 @@ class _UsersTableCardState extends State<UsersTableCard> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    TextField(
-                      controller: _searchCtrl,
-                      decoration: _searchDecoration(),
-                      onChanged: widget.onSearchChanged,
-                    ),
-                    const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
+                        SizedBox(
+                          width: 240,
+                          height: 36,
+                          child: TextField(
+                            controller: _searchCtrl,
+                            decoration: _searchDecoration(),
+                            onChanged: widget.onSearchChanged,
+                          ),
+                        ),
                         _buildRoleDropdown(),
                         _buildStatusDropdown(),
                         _buildRegistrationDropdown(),
@@ -254,48 +257,56 @@ class _UsersTableCardState extends State<UsersTableCard> {
                 );
               }
 
-              return Row(
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0084FF),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.description_rounded, color: Colors.white, size: 14),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Users List (${_formatNumber(widget.totalCount)})',
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF101A3A),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: SizedBox(
-                      height: 36,
-                      child: TextField(
-                        controller: _searchCtrl,
-                        decoration: _searchDecoration(),
-                        onChanged: widget.onSearchChanged,
+                  Row(
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0084FF),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.description_rounded, color: Colors.white, size: 14),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Users List (${_formatNumber(widget.totalCount)})',
+                        style: const TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF101A3A),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _buildRoleDropdown(),
-                  const SizedBox(width: 8),
-                  _buildStatusDropdown(),
-                  const SizedBox(width: 8),
-                  _buildRegistrationDropdown(),
-                  const SizedBox(width: 8),
-                  _buildViewToggles(),
-                  const SizedBox(width: 8),
-                  _buildFilterButton(hasActiveFilter),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 280,
+                        height: 36,
+                        child: TextField(
+                          controller: _searchCtrl,
+                          decoration: _searchDecoration(),
+                          onChanged: widget.onSearchChanged,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildRoleDropdown(),
+                      const SizedBox(width: 8),
+                      _buildStatusDropdown(),
+                      const SizedBox(width: 8),
+                      _buildRegistrationDropdown(),
+                      const SizedBox(width: 8),
+                      _buildViewToggles(),
+                      const SizedBox(width: 8),
+                      _buildFilterButton(hasActiveFilter),
+                    ],
+                  ),
                 ],
               );
             },
@@ -538,6 +549,7 @@ class _UsersTableCardState extends State<UsersTableCard> {
           child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: math.max(constraints.maxWidth, 960)),
             child: DataTable(
+              onSelectAll: _toggleSelectAll,
               headingRowHeight: 40,
               dataRowMinHeight: 52,
               dataRowMaxHeight: 58,
@@ -545,13 +557,6 @@ class _UsersTableCardState extends State<UsersTableCard> {
               columnSpacing: 16,
               headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
               columns: [
-                DataColumn(
-                  label: Checkbox(
-                    value: allSelected,
-                    activeColor: const Color(0xFF5636F5),
-                    onChanged: _toggleSelectAll,
-                  ),
-                ),
                 const DataColumn(label: Text('#', style: _colHeaderStyle)),
                 const DataColumn(label: Text('User Details', style: _colHeaderStyle)),
                 const DataColumn(
@@ -592,21 +597,6 @@ class _UsersTableCardState extends State<UsersTableCard> {
                     widget.onSelectionChanged(newSet);
                   },
                   cells: [
-                    DataCell(
-                      Checkbox(
-                        value: isSelected,
-                        activeColor: const Color(0xFF5636F5),
-                        onChanged: (v) {
-                          final newSet = Set<String>.from(widget.selectedIds);
-                          if (v == true) {
-                            newSet.add(user.id);
-                          } else {
-                            newSet.remove(user.id);
-                          }
-                          widget.onSelectionChanged(newSet);
-                        },
-                      ),
-                    ),
                     DataCell(Text(user.rowNumber.toString(), style: _cellStyle)),
                     DataCell(
                       Row(

@@ -410,28 +410,26 @@ class _CategoriesTabState extends State<CategoriesTab> {
             // ROW 1: HERO CARD + QUICK ACTIONS PANEL
             // ==========================================
             if (isDesktop)
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Expanded(
-                      flex: 63,
-                      child: CategoriesHeroCard(),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Expanded(
+                    flex: 63,
+                    child: CategoriesHeroCard(),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    flex: 37,
+                    child: CategoriesQuickActions(
+                      onAddCategory: () => _openCreateDialog(),
+                      onImportCategories: _openImportDialog,
+                      onManageSubcategories: () => _openManageSubcategoriesDialog(),
+                      onReorderCategories: _openReorderDialog,
+                      onDuplicateCategory: () => _openDuplicateDialog(),
+                      onBulkActions: _openBulkActionsDialog,
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      flex: 37,
-                      child: CategoriesQuickActions(
-                        onAddCategory: () => _openCreateDialog(),
-                        onImportCategories: _openImportDialog,
-                        onManageSubcategories: () => _openManageSubcategoriesDialog(),
-                        onReorderCategories: _openReorderDialog,
-                        onDuplicateCategory: () => _openDuplicateDialog(),
-                        onBulkActions: _openBulkActionsDialog,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               )
             else
               Column(

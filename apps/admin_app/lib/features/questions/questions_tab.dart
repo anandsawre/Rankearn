@@ -438,18 +438,17 @@ class _QuestionsTabState extends State<QuestionsTab> {
             // ROW 1: HERO CARD + QUICK ACTIONS PANEL
             // ==========================================
             if (isDesktop)
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Expanded(
-                      flex: 63,
-                      child: QuestionsHeroCard(),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      flex: 37,
-                      child: QuestionsQuickActions(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Expanded(
+                    flex: 63,
+                    child: QuestionsHeroCard(),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    flex: 37,
+                    child: QuestionsQuickActions(
                         onAddQuestion: () => _openCreateDialog(),
                         onImportQuestions: _openImportDialog,
                         onAiGenerateQuestions: _openAiGenerateDialog,
@@ -471,8 +470,7 @@ class _QuestionsTabState extends State<QuestionsTab> {
                       ),
                     ),
                   ],
-                ),
-              )
+                )
             else
               Column(
                 children: [

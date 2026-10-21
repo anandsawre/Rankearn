@@ -8,7 +8,7 @@ class UsersHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 128,
+      height: 124,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
@@ -133,7 +133,7 @@ class UsersHeroCard extends StatelessWidget {
                   kUsersHeroIllustrationBytes,
                   fit: BoxFit.contain,
                   alignment: Alignment.centerRight,
-                  height: 128,
+                  height: 124,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       width: 140,

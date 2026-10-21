@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
+import 'package:design_system/design_system.dart';
 import 'overview_charts.dart';
 import 'banner_image_data.dart';
 
@@ -97,7 +98,7 @@ class _OverviewTabState extends State<OverviewTab> {
                       flex: 57,
                       child: _buildWelcomeBanner(),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 16),
                     Expanded(
                       flex: 43,
                       child: _buildQuickActionsCard(),
@@ -228,11 +229,11 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 1: WELCOME BANNER
   // ==========================================
   Widget _buildWelcomeBanner() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isSmall = constraints.maxWidth < 450;
+    return Builder(
+      builder: (context) {
+        final isSmall = MediaQuery.sizeOf(context).width < 1100;
         return Container(
-          height: 190,
+          height: 124,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
@@ -258,7 +259,7 @@ class _OverviewTabState extends State<OverviewTab> {
             children: [
               // Content Left
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -267,9 +268,9 @@ class _OverviewTabState extends State<OverviewTab> {
                       const TextSpan(
                         children: [
                           TextSpan(
-                            text: 'Welcome Back,\n',
+                            text: 'Welcome Back, ',
                             style: TextStyle(
-                              fontSize: 23,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                               color: Color(0xFF0F172A),
                               height: 1.15,
@@ -278,7 +279,7 @@ class _OverviewTabState extends State<OverviewTab> {
                           TextSpan(
                             text: 'Admin! 👋',
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                               color: Color(0xFF0F172A),
                               height: 1.15,
@@ -287,17 +288,19 @@ class _OverviewTabState extends State<OverviewTab> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     SizedBox(
-                      width: isSmall ? 210 : 300,
+                      width: isSmall ? 210 : 320,
                       child: const Text(
                         'Manage quizzes, users, content and track platform performance all in one place.',
                         style: TextStyle(
                           fontSize: 12,
                           color: Color(0xFF64748B),
-                          height: 1.35,
+                          height: 1.3,
                           fontWeight: FontWeight.w400,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -317,7 +320,7 @@ class _OverviewTabState extends State<OverviewTab> {
                     ),
                     child: Image.memory(
                       kBannerCharacterBytes,
-                      height: 190,
+                      height: 124,
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -335,6 +338,7 @@ class _OverviewTabState extends State<OverviewTab> {
       'label': 'Create Quiz',
       'icon': Icons.add_circle_outline_rounded,
       'color': const Color(0xFF6366F1),
+      'cardColor': const Color(0xFFEEF2FF),
       'enabled': true,
     },
     {
@@ -342,6 +346,7 @@ class _OverviewTabState extends State<OverviewTab> {
       'label': 'Add Question',
       'icon': Icons.description_outlined,
       'color': const Color(0xFF0EA5E9),
+      'cardColor': const Color(0xFFE0F2FE),
       'enabled': true,
     },
     {
@@ -349,6 +354,7 @@ class _OverviewTabState extends State<OverviewTab> {
       'label': 'Manage Categories',
       'icon': Icons.folder_outlined,
       'color': const Color(0xFF10B981),
+      'cardColor': const Color(0xFFD1FAE5),
       'enabled': true,
     },
     {
@@ -356,6 +362,7 @@ class _OverviewTabState extends State<OverviewTab> {
       'label': 'Start Live Quiz',
       'icon': Icons.cell_tower_rounded,
       'color': const Color(0xFFEF4444),
+      'cardColor': const Color(0xFFFEE2E2),
       'enabled': true,
     },
     {
@@ -363,6 +370,7 @@ class _OverviewTabState extends State<OverviewTab> {
       'label': 'Create Tournament',
       'icon': Icons.emoji_events_outlined,
       'color': const Color(0xFFF59E0B),
+      'cardColor': const Color(0xFFFEF3C7),
       'enabled': true,
     },
     {
@@ -370,6 +378,7 @@ class _OverviewTabState extends State<OverviewTab> {
       'label': 'Invite Users',
       'icon': Icons.person_add_alt_1_outlined,
       'color': const Color(0xFFEC4899),
+      'cardColor': const Color(0xFFFCE7F3),
       'enabled': true,
     },
   ];
@@ -550,130 +559,27 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 1: QUICK ACTIONS
   // ==========================================
   Widget _buildQuickActionsCard() {
-    return Container(
-      height: 190,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Quick Actions
-          Row(
-            children: const [
-              Icon(
-                Icons.bolt_rounded,
-                size: 20,
-                color: Color(0xFFEC4899),
-              ),
-              SizedBox(width: 8),
-              Text(
-                'Quick Actions',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
+    final activeActions = _quickActions
+        .where((a) => a['enabled'] == true)
+        .map((a) {
+          final id = a['id'] as String;
+          final color = a['color'] as Color;
+          final cardColor = a['cardColor'] as Color? ?? color.withValues(alpha: 0.12);
+          return QuickActionItemData(
+            label: a['label'] as String,
+            icon: a['icon'] as IconData,
+            iconColor: color,
+            cardColor: cardColor,
+            onTap: _getActionCallback(id),
+          );
+        })
+        .toList();
 
-          // Quick Action Icons Row: Actions + Customize button to the right of Invite Users
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final actionWidgets = [
-                ..._quickActions
-                    .where((a) => a['enabled'] == true)
-                    .map((a) => _buildQuickActionButton(
-                          icon: a['icon'] as IconData,
-                          label: a['label'] as String,
-                          color: a['color'] as Color,
-                          onTap: _getActionCallback(a['id'] as String),
-                        )),
-                _buildQuickActionButton(
-                  icon: Icons.settings_outlined,
-                  label: 'Customize',
-                  color: const Color(0xFF64748B),
-                  onTap: _showCustomizeQuickActionsDialog,
-                ),
-              ];
-
-              if (constraints.maxWidth < 460) {
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: actionWidgets
-                        .map((w) => Padding(
-                              padding: const EdgeInsets.only(right: 14),
-                              child: w,
-                            ))
-                        .toList(),
-                  ),
-                );
-              }
-
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: actionWidgets,
-              );
-            },
-          ),
-          const SizedBox(height: 4),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: 56,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: Colors.white, size: 24),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF334155),
-                height: 1.15,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
+    return QuickActionsCard(
+      height: 124,
+      compact: true,
+      onCustomize: _showCustomizeQuickActionsDialog,
+      actions: activeActions,
     );
   }
 

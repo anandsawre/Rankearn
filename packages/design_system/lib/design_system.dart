@@ -15,6 +15,7 @@ export 'theme/app_theme.dart';
 // Components
 export 'components/buttons/app_button.dart';
 export 'components/cards/app_card.dart';
+export 'components/cards/quick_actions_card.dart';
 export 'components/inputs/app_text_field.dart';
 export 'components/inputs/app_dropdown.dart';
 export 'components/display/badge_pill.dart';

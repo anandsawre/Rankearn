@@ -352,28 +352,26 @@ class _UsersTabState extends State<UsersTab> {
             // ROW 1: HERO CARD + QUICK ACTIONS PANEL
             // ==========================================
             if (isDesktop)
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Expanded(
-                      flex: 63,
-                      child: UsersHeroCard(),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Expanded(
+                    flex: 63,
+                    child: UsersHeroCard(),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    flex: 37,
+                    child: UsersQuickActions(
+                      onAddUser: () => _openAddUserDialog(),
+                      onImportUsers: _openImportDialog,
+                      onManageRoles: _openManageRolesDialog,
+                      onSendNotification: () => _openSendNotificationDialog(),
+                      onExportUsers: _openExportDialog,
+                      onBulkActions: _openBulkActionsDialog,
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      flex: 37,
-                      child: UsersQuickActions(
-                        onAddUser: () => _openAddUserDialog(),
-                        onImportUsers: _openImportDialog,
-                        onManageRoles: _openManageRolesDialog,
-                        onSendNotification: () => _openSendNotificationDialog(),
-                        onExportUsers: _openExportDialog,
-                        onBulkActions: _openBulkActionsDialog,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               )
             else
               Column(
