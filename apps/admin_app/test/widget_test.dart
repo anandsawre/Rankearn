@@ -91,7 +91,7 @@ void main() {
     expect(find.text('LIVE & COMMUNITY'), findsOneWidget);
     expect(find.text('Users Management'), findsOneWidget);
     expect(find.text('AI Test Creator'), findsAtLeastNWidgets(1));
-    expect(find.text('Lucky Wheel'), findsOneWidget);
+    expect(find.text('Lucky Wheel'), findsAtLeastNWidgets(1));
   });
 
   testWidgets('Platform status shows operational checks', (WidgetTester tester) async {
@@ -1097,6 +1097,86 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(find.text('Export AI Test'), findsNothing);
+  });
+
+  testWidgets('Lucky Wheel Management renders hero, 6 quick actions, 5 metrics, table, and analytics', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: RankearnAdminApp(
+          initialTab: AdminNavTab.wheel,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 1. Verify Top Navigation Lucky Wheel Pill is active
+    expect(find.text('Lucky Wheel'), findsAtLeastNWidgets(1));
+
+    // 2. Verify Hero Banner
+    expect(find.textContaining('Lucky Wheel'), findsWidgets);
+    expect(find.text('Create and manage lucky wheel campaigns for your platform.'), findsOneWidget);
+    expect(find.text('Set rewards, spin rules, track participation and boost user engagement.'), findsOneWidget);
+
+    // 3. Verify 6 Quick Actions
+    expect(find.text('Create\nLucky Wheel'), findsOneWidget);
+    expect(find.text('Set\nRewards'), findsOneWidget);
+    expect(find.text('Manage\nCampaigns'), findsOneWidget);
+    expect(find.text('Spin\nHistory'), findsOneWidget);
+    expect(find.text('Send\nNotification'), findsOneWidget);
+    expect(find.text('Export\nReports'), findsOneWidget);
+
+    // 4. Verify 5 Metric Cards
+    expect(find.text('Total Campaigns'), findsOneWidget);
+    expect(find.text('Total Participants'), findsOneWidget);
+    expect(find.text('Total Rewards Given'), findsOneWidget);
+    expect(find.text('Active Campaigns'), findsOneWidget);
+    expect(find.text('Total Spins'), findsWidgets);
+
+    // 5. Verify Table Card & Primary 7 Campaigns
+    expect(find.textContaining('Lucky Wheel Campaigns (18)'), findsOneWidget);
+    expect(find.text('Daily Spin Rewards'), findsOneWidget);
+    expect(find.text('Festive Mega Spin'), findsOneWidget);
+    expect(find.text('New User Bonus Spin'), findsOneWidget);
+    expect(find.text('Weekend Lucky Draw'), findsOneWidget);
+    expect(find.text('Exam Prep Spin'), findsOneWidget);
+    expect(find.text('Mega Reward Spin'), findsOneWidget);
+    expect(find.text('Referral Spin'), findsOneWidget);
+
+    // 6. Verify Right Column Analytics Cards
+    expect(find.text('Reward Type Distribution'), findsOneWidget);
+    expect(find.text('Spins Trend (Last 7 Days)'), findsOneWidget);
+    expect(find.text('Recent Activity'), findsOneWidget);
+
+    // 7. Test Create Lucky Wheel Dialog
+    await tester.tap(find.text('Create\nLucky Wheel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Create Lucky Wheel Campaign'), findsOneWidget);
+    expect(find.text('Campaign Name *'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Create Lucky Wheel Campaign'), findsNothing);
+
+    // 8. Test Set Rewards Dialog
+    await tester.tap(find.text('Set\nRewards'));
+    await tester.pumpAndSettle();
+    expect(find.text('Set Wheel Rewards & Probabilities'), findsOneWidget);
+    expect(find.textContaining('Total Probability: 100%'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Set Wheel Rewards & Probabilities'), findsNothing);
+
+    // 9. Test Spin History Dialog
+    await tester.tap(find.text('Spin\nHistory'));
+    await tester.pumpAndSettle();
+    expect(find.text('Authoritative Spin & Reward Ledger'), findsOneWidget);
+    expect(find.text('Rahul Sharma'), findsOneWidget);
+    await tester.tap(find.text('Close Ledger'));
+    await tester.pumpAndSettle();
+    expect(find.text('Authoritative Spin & Reward Ledger'), findsNothing);
   });
 }
 

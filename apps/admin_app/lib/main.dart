@@ -13,7 +13,8 @@ import 'features/ai_creator/ai_creator_tab.dart';
 import 'features/contests/contests_tab.dart';
 import 'features/banners/banners_tab.dart';
 import 'features/notifications/notifications_tab.dart';
-import 'features/wheel/wheel_tab.dart';
+import 'features/lucky_wheel/lucky_wheel_tab.dart';
+import 'features/lucky_wheel/widgets/lucky_wheel_icon.dart';
 import 'features/tournaments/tournaments_tab.dart';
 import 'features/payments/payments_tab.dart';
 import 'features/referrals/referrals_tab.dart';
@@ -139,7 +140,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                 AdminNavTab.contests => const ContestsTab(),
                 AdminNavTab.banners => const BannersTab(),
                 AdminNavTab.notifications => const NotificationsTab(),
-                AdminNavTab.wheel => const WheelTab(),
+                AdminNavTab.wheel => const LuckyWheelTab(),
                 AdminNavTab.leaderboard => const TournamentsTab(),
                 AdminNavTab.referrals => const ReferralsTab(),
                 AdminNavTab.posts => const PostsTab(),
@@ -319,6 +320,18 @@ class _AdminAppShellState extends State<AdminAppShell> {
                       isActive: _activeTab == AdminNavTab.finance,
                     ),
                     _buildNavPill(
+                      tab: AdminNavTab.wheel,
+                      label: 'Lucky Wheel',
+                      icon: Icons.donut_large_rounded,
+                      customIcon: LuckyWheelIcon(
+                        size: 16,
+                        color: _activeTab == AdminNavTab.wheel
+                            ? Colors.white
+                            : const Color(0xFF475569),
+                      ),
+                      isActive: _activeTab == AdminNavTab.wheel,
+                    ),
+                    _buildNavPill(
                       tab: AdminNavTab.aiCreator,
                       label: 'AI Test Creator',
                       icon: Icons.auto_awesome_rounded,
@@ -454,6 +467,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
     required AdminNavTab tab,
     required String label,
     required IconData icon,
+    Widget? customIcon,
     required bool isActive,
   }) {
     return Padding(
@@ -470,18 +484,23 @@ class _AdminAppShellState extends State<AdminAppShell> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 16,
-                color: isActive ? Colors.white : const Color(0xFF475569),
-              ),
+              customIcon ??
+                  Icon(
+                    icon,
+                    size: 16,
+                    color: isActive ? Colors.white : const Color(0xFF475569),
+                  ),
               const SizedBox(width: 7),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                  color: isActive ? Colors.white : const Color(0xFF334155),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                    color: isActive ? Colors.white : const Color(0xFF334155),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -504,6 +523,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
       AdminNavTab.contests,
       AdminNavTab.leaderboard,
       AdminNavTab.finance,
+      AdminNavTab.wheel,
       AdminNavTab.aiCreator,
     ];
     final isMoreActive = !directTabs.contains(_activeTab);
@@ -522,21 +542,17 @@ class _AdminAppShellState extends State<AdminAppShell> {
         constraints: const BoxConstraints(maxHeight: 520, minWidth: 260, maxWidth: 300),
         onSelected: _navigateToTab,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
           decoration: BoxDecoration(
-            color: isMoreActive ? const Color(0xFF4F46E5) : const Color(0xFFF1F5F9),
+            color: isMoreActive ? const Color(0xFF5636F5) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isMoreActive ? const Color(0xFF4338CA) : const Color(0xFFE2E8F0),
-              width: 1,
-            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.grid_view_rounded,
-                size: 15,
+                Icons.more_horiz_rounded,
+                size: 16,
                 color: isMoreActive ? Colors.white : const Color(0xFF475569),
               ),
               const SizedBox(width: 6),
@@ -544,14 +560,14 @@ class _AdminAppShellState extends State<AdminAppShell> {
                 'More',
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight: isMoreActive ? FontWeight.w700 : FontWeight.w600,
+                  fontWeight: isMoreActive ? FontWeight.w700 : FontWeight.w500,
                   color: isMoreActive ? Colors.white : const Color(0xFF334155),
                 ),
               ),
               const SizedBox(width: 4),
               Icon(
                 Icons.keyboard_arrow_down_rounded,
-                size: 17,
+                size: 16,
                 color: isMoreActive ? Colors.white : const Color(0xFF64748B),
               ),
             ],
@@ -585,7 +601,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
           _buildPopupItem(
             AdminNavTab.wheel,
             'Lucky Wheel',
-            Icons.stars_rounded,
+            Icons.donut_large_rounded,
             badgeText: 'NEW',
             badgeColor: const Color(0xFF10B981),
           ),
