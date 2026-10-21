@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
+import 'models/ai_test_item.dart';
+import 'widgets/ai_test_creator_hero_card.dart';
+import 'widgets/ai_test_creator_quick_actions.dart';
+import 'widgets/ai_test_creator_metrics_row.dart';
+import 'widgets/ai_test_creator_table_card.dart';
+import 'widgets/ai_subject_donut_card.dart';
+import 'widgets/ai_difficulty_donut_card.dart';
+import 'widgets/ai_test_recent_activity_card.dart';
+import 'dialogs/generate_test_dialog.dart';
+import 'dialogs/custom_prompt_dialog.dart';
+import 'dialogs/manage_templates_dialog.dart';
+import 'dialogs/saved_tests_dialog.dart';
+import 'dialogs/test_preview_dialog.dart';
+import 'dialogs/export_test_dialog.dart';
 
 class AiCreatorTab extends StatefulWidget {
-  final VoidCallback onSavedToTests;
+  final VoidCallback? onSavedToTests;
+  final VoidCallback? onGoToQuestionBank;
 
   const AiCreatorTab({
     super.key,
-    required this.onSavedToTests,
+    this.onSavedToTests,
+    this.onGoToQuestionBank,
   });
 
   @override
@@ -14,539 +30,364 @@ class AiCreatorTab extends StatefulWidget {
 }
 
 class _AiCreatorTabState extends State<AiCreatorTab> {
-  final _titleController = TextEditingController(text: 'Modern History of Bihar Sprint');
-  final _promptController = TextEditingController(text: 'Focus on 1857 Revolt in Bihar, Kunwar Singh leadership, Champaran Satyagraha, and Quit India movement events.');
-  String _selectedExam = '70th BPSC';
-  String _selectedSubject = 'History & Culture';
-  String _selectedKnowledgeSource = 'topic'; // 'topic', 'youtube', 'file'
-  String _languageMode = 'bilingual'; // 'english', 'hindi', 'bilingual'
-  int _questionCount = 10;
-  String _difficulty = 'moderate';
-  bool _isGenerating = false;
-  List<Map<String, dynamic>>? _generatedQuestions;
+  List<AiGeneratedTestItem> _allTests = List.from(kDefaultAiGeneratedTests);
+  String _searchQuery = '';
+  String _selectedSubject = 'All Subjects';
+  String _selectedDifficulty = 'All Difficulty';
+  String _selectedStatus = 'All Status';
+  DateTimeRange? _selectedDateRange;
+  int _currentPage = 1;
+  int _rowsPerPage = 10;
 
   @override
-  void dispose() {
-    _titleController.dispose();
-    _promptController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _fetchSupabaseTests();
   }
 
-  void _generateQuestions() async {
-    setState(() => _isGenerating = true);
-    await Future.delayed(const Duration(milliseconds: 1400));
-    if (!mounted) return;
+  Future<void> _fetchSupabaseTests() async {
+    try {
+      final client = SupabaseConfig.clientSafe;
+      if (client == null) return;
+      final response = await client
+          .from('ai_generated_tests')
+          .select()
+          .order('created_at', ascending: false)
+          .limit(50);
 
-    setState(() {
-      _isGenerating = false;
-      _generatedQuestions = [
-        {
-          'qEn': 'Who was the primary leader of the 1857 Sepoy Mutiny in Jagdishpur, Bihar?',
-          'qHi': 'बिहार के जगदीशपुर में 1857 के सिपाही विद्रोह के मुख्य नेता कौन थे?',
-          'options': [
-            {'text': 'Veer Kunwar Singh (वीर कुंवर सिंह)', 'isCorrect': true},
-            {'text': 'Amar Singh (अमर सिंह)', 'isCorrect': false},
-            {'text': 'Pir Ali Khan (पीर अली खान)', 'isCorrect': false},
-            {'text': 'Hare Krishna Singh (हरे कृष्ण सिंह)', 'isCorrect': false},
-          ],
-          'explanation': 'Veer Kunwar Singh of Jagdishpur was an 80-year-old landlord who led the armed struggle against the British East India Company in Bihar during the 1857 rebellion.',
-        },
-        {
-          'qEn': 'At whose invitation did Mahatma Gandhi visit Champaran in 1917?',
-          'qHi': '1917 में किसके निमंत्रण पर महात्मा गांधी चंपारण पहुंचे थे?',
-          'options': [
-            {'text': 'Raj Kumar Shukla (राजकुमार शुक्ल)', 'isCorrect': true},
-            {'text': 'Dr. Rajendra Prasad (डॉ. राजेंद्र प्रसाद)', 'isCorrect': false},
-            {'text': 'J.B. Kripalani (जे.बी. कृपलानी)', 'isCorrect': false},
-            {'text': 'Brajkishore Prasad (ब्रजकिशोर प्रसाद)', 'isCorrect': false},
-          ],
-          'explanation': 'Raj Kumar Shukla was an indigo farmer who relentlessly pursued Gandhi at the Lucknow Congress session in 1916 to investigate the Tinkathia system.',
-        },
-        {
-          'qEn': 'During the Quit India Movement (1942), who established the underground resistance "Azad Dasta" in the forests of Nepal?',
-          'qHi': 'भारत छोड़ो आंदोलन (1942) के दौरान नेपाल के जंगलों में भूमिगत प्रतिरोध "आजाद दस्ता" का गठन किसने किया था?',
-          'options': [
-            {'text': 'Jayaprakash Narayan (जयप्रकाश नारायण)', 'isCorrect': true},
-            {'text': 'Ram Manohar Lohia (राम मनोहर लोहिया)', 'isCorrect': false},
-            {'text': 'Aruna Asaf Ali (अरुणा आसफ अली)', 'isCorrect': false},
-            {'text': 'Yogendra Shukla (योगेंद्र शुक्ल)', 'isCorrect': false},
-          ],
-          'explanation': 'Jayaprakash Narayan escaped from Hazaribagh Jail on Diwali night in 1942 and founded the guerrilla training network Azad Dasta in the Terai region of Nepal.',
-        },
-      ];
-    });
+      if (response.isNotEmpty && mounted) {
+        final List<AiGeneratedTestItem> loaded = [];
+        for (int i = 0; i < response.length; i++) {
+          loaded.add(AiGeneratedTestItem.fromJson(response[i], i));
+        }
+        setState(() {
+          _allTests = loaded;
+        });
+      }
+    } catch (e) {
+      debugPrint('Supabase fetch notice (using robust local dataset): $e');
+    }
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✨ Gemini AI generation completed! Review questions below.')),
+  List<AiGeneratedTestItem> get _filteredItems {
+    return _allTests.where((item) {
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final match = item.title.toLowerCase().contains(q) ||
+            item.subtitle.toLowerCase().contains(q) ||
+            item.subject.label.toLowerCase().contains(q);
+        if (!match) return false;
+      }
+      if (_selectedSubject != 'All Subjects' &&
+          item.subject.label.toLowerCase() != _selectedSubject.toLowerCase()) {
+        return false;
+      }
+      if (_selectedDifficulty != 'All Difficulty' &&
+          item.difficulty.label.toLowerCase() != _selectedDifficulty.toLowerCase()) {
+        return false;
+      }
+      if (_selectedStatus != 'All Status' &&
+          item.status.label.toLowerCase() != _selectedStatus.toLowerCase()) {
+        return false;
+      }
+      if (_selectedDateRange != null) {
+        if (item.createdOn.isBefore(_selectedDateRange!.start) ||
+            item.createdOn.isAfter(_selectedDateRange!.end.add(const Duration(days: 1)))) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+  }
+
+  void _openGenerateDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => GenerateTestDialog(
+        onTestGenerated: (newTest) {
+          setState(() {
+            _allTests.insert(0, newTest);
+          });
+        },
+      ),
+    );
+  }
+
+  void _openCustomPromptDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => CustomPromptDialog(
+        onOpenGenerate: _openGenerateDialog,
+      ),
+    );
+  }
+
+  void _openManageTemplatesDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => ManageTemplatesDialog(
+        onUseTemplate: (tpl) {
+          _openGenerateDialog();
+        },
+      ),
+    );
+  }
+
+  void _openSavedTestsDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => SavedTestsDialog(
+        tests: _allTests,
+        onResumeTest: (t) => _openPreviewDialog(t),
+      ),
+    );
+  }
+
+  void _openExportDialog([AiGeneratedTestItem? item]) {
+    showDialog(
+      context: context,
+      builder: (ctx) => ExportTestDialog(
+        initialTest: item,
+        allTests: _allTests,
+      ),
+    );
+  }
+
+  void _openPreviewDialog(AiGeneratedTestItem item) {
+    showDialog(
+      context: context,
+      builder: (ctx) => TestPreviewDialog(
+        test: item,
+        onPublish: (publishedTest) {
+          setState(() {
+            final idx = _allTests.indexWhere((t) => t.id == publishedTest.id);
+            if (idx != -1) {
+              _allTests[idx] = AiGeneratedTestItem(
+                id: publishedTest.id,
+                rowNumber: publishedTest.rowNumber,
+                title: publishedTest.title,
+                subtitle: publishedTest.subtitle,
+                subject: publishedTest.subject,
+                difficulty: publishedTest.difficulty,
+                questionCount: publishedTest.questionCount,
+                durationMinutes: publishedTest.durationMinutes,
+                status: AiTestStatus.published,
+                createdOn: publishedTest.createdOn,
+                createdBy: publishedTest.createdBy,
+                icon: publishedTest.icon,
+                iconBgColor: publishedTest.iconBgColor,
+                iconColor: publishedTest.iconColor,
+                questions: publishedTest.questions,
+              );
+            }
+          });
+        },
+        onExport: () {
+          Navigator.of(context).pop();
+          _openExportDialog(item);
+        },
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Unified Master Header
-          _buildMasterHeader(),
-          const SizedBox(height: 24),
+    final filtered = _filteredItems;
 
-          // 2. Step 1: Test Architecture
-          _buildStep1Architecture(),
-          const SizedBox(height: 24),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final isDesktop = screenWidth >= 1050;
 
-          // 3. Step 2: Knowledge Source & Generation Prompt
-          _buildStep2KnowledgeSource(),
-          const SizedBox(height: 24),
-
-          // 4. Output Preview (if generated)
-          if (_generatedQuestions != null) ...[
-            _buildGeneratedQuestionsPreview(),
-            const SizedBox(height: 24),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMasterHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.brandPrimary,
-                  borderRadius: AppRadii.borderLg,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.brandPrimary.withAlpha(60),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: const Icon(Icons.auto_awesome, color: Colors.white, size: 22),
-              ),
-              const SizedBox(width: 14),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('AI Test Intelligence', style: AppTypography.displayMedium),
-                  SizedBox(height: 2),
-                  Text('Neural Content Generation Engine Powered by Gemini 1.5 Flash', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8))),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep1Architecture() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 26,
-                height: 26,
-                decoration: const BoxDecoration(color: Color(0xFFECFDF5), shape: BoxShape.circle),
-                alignment: Alignment.center,
-                child: const Text('01', style: TextStyle(color: AppColors.brandPrimary, fontSize: 11, fontWeight: FontWeight.w900)),
-              ),
-              const SizedBox(width: 10),
-              const Text('TEST ARCHITECTURE & TARGET BLUEPRINT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF334155), letterSpacing: 0.8)),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          Wrap(
-            spacing: 20,
-            runSpacing: 16,
-            children: [
-              SizedBox(
-                width: 320,
-                child: AppTextField(
-                  controller: _titleController,
-                  label: 'Test Series Title',
-                  hintText: 'e.g. Modern History of Bihar Sprint',
-                ),
-              ),
-              SizedBox(
-                width: 200,
-                child: Column(
+              // 1. Top Section: Hero Banner + Quick Actions
+              if (isDesktop) ...[
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Target Exam', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: AppRadii.borderMd,
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedExam,
-                          isExpanded: true,
-                          items: ['70th BPSC', 'SSC CGL', 'Railway NTPC', 'UPSC CSE'].map((e) {
-                            return DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)));
-                          }).toList(),
-                          onChanged: (val) => setState(() => _selectedExam = val!),
-                        ),
+                    const Expanded(
+                      flex: 7,
+                      child: AiTestCreatorHeroCard(),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      flex: 5,
+                      child: AiTestCreatorQuickActions(
+                        onGenerateTest: _openGenerateDialog,
+                        onCustomPrompt: _openCustomPromptDialog,
+                        onManageTemplates: _openManageTemplatesDialog,
+                        onSavedTests: _openSavedTestsDialog,
+                        onQuestionBank: () {
+                          if (widget.onGoToQuestionBank != null) {
+                            widget.onGoToQuestionBank!();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Navigating to Questions Bank module...')),
+                            );
+                          }
+                        },
+                        onExportTest: () => _openExportDialog(),
                       ),
                     ),
                   ],
                 ),
-              ),
-              SizedBox(
-                width: 200,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Syllabus Subject', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: AppRadii.borderMd,
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedSubject,
-                          isExpanded: true,
-                          items: ['History & Culture', 'General Science', 'Indian Polity', 'Current Affairs'].map((e) {
-                            return DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)));
-                          }).toList(),
-                          onChanged: (val) => setState(() => _selectedSubject = val!),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep2KnowledgeSource() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 26,
-                height: 26,
-                decoration: const BoxDecoration(color: Color(0xFFECFDF5), shape: BoxShape.circle),
-                alignment: Alignment.center,
-                child: const Text('02', style: TextStyle(color: AppColors.brandPrimary, fontSize: 11, fontWeight: FontWeight.w900)),
-              ),
-              const SizedBox(width: 10),
-              const Text('KNOWLEDGE SOURCE & GENERATION PARAMETERS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF334155), letterSpacing: 0.8)),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // 3 Source Selector Cards
-          Row(
-            children: [
-              _buildSourceCard('Prompt / Context', Icons.description_outlined, 'Generate from topics or notes', 'topic'),
-              const SizedBox(width: 14),
-              _buildSourceCard('YouTube Video', Icons.smart_display_outlined, 'Transcribe and quiz video', 'youtube'),
-              const SizedBox(width: 14),
-              _buildSourceCard('Document / PDF', Icons.upload_file_outlined, 'Scan textbook or notes file', 'file'),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Prompt or URL input
-          AppTextField(
-            controller: _promptController,
-            label: _selectedKnowledgeSource == 'youtube' ? 'YouTube Video URL' : 'Topic Prompt / Syllabus Notes',
-            hintText: _selectedKnowledgeSource == 'youtube' ? 'https://youtube.com/watch?v=...' : 'Enter syllabus topics, subtopics, or specific historical periods...',
-            maxLines: 3,
-          ),
-          const SizedBox(height: 20),
-
-          // Language, Count, Difficulty selectors
-          Wrap(
-            spacing: 24,
-            runSpacing: 16,
-            crossAxisAlignment: WrapCrossAlignment.start,
-            children: [
-              // Language
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Language Output', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      _buildLangPill('Bilingual (Hindi + En)', 'bilingual'),
-                      _buildLangPill('English Only', 'english'),
-                      _buildLangPill('Hindi Only', 'hindi'),
-                    ],
-                  ),
-                ],
-              ),
-
-              // Question count
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Question Count', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [10, 25, 50].map((c) {
-                      final isSelected = _questionCount == c;
-                      return ChoiceChip(
-                        label: Text('$c Qs', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: isSelected ? Colors.white : const Color(0xFF64748B))),
-                        selected: isSelected,
-                        selectedColor: AppColors.brandPrimary,
-                        backgroundColor: const Color(0xFFF8FAFC),
-                        onSelected: (_) => setState(() => _questionCount = c),
+              ] else ...[
+                const AiTestCreatorHeroCard(),
+                const SizedBox(height: 12),
+                AiTestCreatorQuickActions(
+                  onGenerateTest: _openGenerateDialog,
+                  onCustomPrompt: _openCustomPromptDialog,
+                  onManageTemplates: _openManageTemplatesDialog,
+                  onSavedTests: _openSavedTestsDialog,
+                  onQuestionBank: () {
+                    if (widget.onGoToQuestionBank != null) {
+                      widget.onGoToQuestionBank!();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Navigating to Questions Bank module...')),
                       );
-                    }).toList(),
-                  ),
-                ],
+                    }
+                  },
+                  onExportTest: () => _openExportDialog(),
+                ),
+              ],
+              const SizedBox(height: 14),
+
+              // 2. Metrics KPI Row (5 Cards)
+              const AiTestCreatorMetricsRow(
+                testsGenerated: 124,
+                questionsCreated: 12580,
+                savedTests: 68,
+                timesUsed: 3245,
+                avgCreationTime: '34 sec',
               ),
+              const SizedBox(height: 14),
 
-              // Difficulty level
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Difficulty Level', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: ['easy', 'moderate', 'hard'].map((d) {
-                      final isSelected = _difficulty == d;
-                      return ChoiceChip(
-                        label: Text(d.toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: isSelected ? Colors.white : const Color(0xFF64748B))),
-                        selected: isSelected,
-                        selectedColor: AppColors.brandPrimary,
-                        backgroundColor: const Color(0xFFF8FAFC),
-                        onSelected: (_) => setState(() => _difficulty = d),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
-
-          // Generate Action Button
-          AppButton(
-            label: _isGenerating ? 'Synthesizing with Gemini 1.5 Flash...' : '✨ Generate Test Paper with Gemini AI',
-            isLoading: _isGenerating,
-            onPressed: _isGenerating ? null : _generateQuestions,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSourceCard(String title, IconData icon, String subtitle, String type) {
-    final isSelected = _selectedKnowledgeSource == type;
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => _selectedKnowledgeSource = type),
-        borderRadius: AppRadii.borderLg,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFECFDF5) : Colors.white,
-            borderRadius: AppRadii.borderLg,
-            border: Border.all(color: isSelected ? AppColors.brandPrimary : const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 24, color: isSelected ? AppColors.brandPrimary : const Color(0xFF64748B)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
+              // 3. Main Body Section: Table (Left) + Analytics (Right)
+              if (isDesktop) ...[
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: isSelected ? AppColors.brandPrimaryDark : const Color(0xFF0F172A)), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8)), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLangPill(String label, String code) {
-    final isSelected = _languageMode == code;
-    return InkWell(
-      onTap: () => setState(() => _languageMode = code),
-      borderRadius: AppRadii.borderSm,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.brandPrimary : const Color(0xFFF1F5F9),
-          borderRadius: AppRadii.borderSm,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGeneratedQuestionsPreview() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.check_circle, color: AppColors.brandPrimary, size: 22),
-                  const SizedBox(width: 10),
-                  Text('Generated Questions (${_generatedQuestions!.length} Verified MCQs)', style: AppTypography.titleLarge),
-                ],
-              ),
-              AppButton(
-                label: '💾 Commit to Test Repository',
-                size: AppButtonSize.small,
-                onPressed: () {
-                  widget.onSavedToTests();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Committed test paper to Test Repository!')),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          Column(
-            children: _generatedQuestions!.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final q = entry.value;
-              final options = q['options'] as List<dynamic>;
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: AppRadii.borderLg,
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Q${idx + 1}. ${q['qEn']}', style: AppTypography.titleMedium),
-                    const SizedBox(height: 2),
-                    Text(q['qHi'], style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-                    const SizedBox(height: 10),
-
-                    // Options
-                    ...options.map((opt) {
-                      final isCorrect = opt['isCorrect'] == true;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Row(
-                          children: [
-                            Icon(isCorrect ? Icons.check_circle : Icons.circle_outlined, size: 14, color: isCorrect ? AppColors.brandPrimary : const Color(0xFF94A3B8)),
-                            const SizedBox(width: 8),
-                            Text(
-                              opt['text'],
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: isCorrect ? FontWeight.w800 : FontWeight.normal,
-                                color: isCorrect ? AppColors.brandPrimaryDark : const Color(0xFF334155),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: AppRadii.borderSm,
+                    // Left Column: Table
+                    Expanded(
+                      child: AiTestCreatorTableCard(
+                        items: filtered,
+                        totalCount: 124,
+                        currentPage: _currentPage,
+                        rowsPerPage: _rowsPerPage,
+                        searchQuery: _searchQuery,
+                        selectedSubject: _selectedSubject,
+                        selectedDifficulty: _selectedDifficulty,
+                        selectedStatus: _selectedStatus,
+                        dateRange: _selectedDateRange,
+                        onSearchChanged: (q) => setState(() => _searchQuery = q),
+                        onSubjectChanged: (s) => setState(() => _selectedSubject = s),
+                        onDifficultyChanged: (d) => setState(() => _selectedDifficulty = d),
+                        onStatusChanged: (st) => setState(() => _selectedStatus = st),
+                        onDateRangeChanged: (r) => setState(() => _selectedDateRange = r),
+                        onPageChanged: (p) => setState(() => _currentPage = p),
+                        onRowsPerPageChanged: (r) => setState(() => _rowsPerPage = r),
+                        onViewTest: (item) => _openPreviewDialog(item),
+                        onAnalyticsTest: (item) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Analytics for "${item.title}": 100% completion rate')),
+                          );
+                        },
+                        onEditTest: (item) => _openPreviewDialog(item),
+                        onDeleteTest: (item) {
+                          setState(() {
+                            _allTests.removeWhere((t) => t.id == item.id);
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Test "${item.title}" deleted')),
+                          );
+                        },
+                        onFiltersTap: () {
+                          setState(() {
+                            _searchQuery = '';
+                            _selectedSubject = 'All Subjects';
+                            _selectedDifficulty = 'All Difficulty';
+                            _selectedStatus = 'All Status';
+                            _selectedDateRange = null;
+                          });
+                        },
                       ),
-                      child: Text(
-                        '💡 Explanation: ${q['explanation']}',
-                        style: const TextStyle(fontSize: 11, color: Color(0xFF475569), fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Right Column: Analytics (Subject Donut, Difficulty Donut, Recent Activity)
+                    SizedBox(
+                      width: 295,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AiSubjectDonutCard(
+                            totalCount: 124,
+                            onViewAll: () {},
+                          ),
+                          const SizedBox(height: 12),
+                          AiDifficultyDonutCard(
+                            totalCount: 124,
+                            onViewAll: () {},
+                          ),
+                          const SizedBox(height: 12),
+                          AiTestRecentActivityCard(
+                            onViewAll: () {},
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              );
-            }).toList(),
+              ] else ...[
+                // Tablet/Mobile: Stacked layout
+                AiTestCreatorTableCard(
+                  items: filtered,
+                  totalCount: 124,
+                  currentPage: _currentPage,
+                  rowsPerPage: _rowsPerPage,
+                  searchQuery: _searchQuery,
+                  selectedSubject: _selectedSubject,
+                  selectedDifficulty: _selectedDifficulty,
+                  selectedStatus: _selectedStatus,
+                  dateRange: _selectedDateRange,
+                  onSearchChanged: (q) => setState(() => _searchQuery = q),
+                  onSubjectChanged: (s) => setState(() => _selectedSubject = s),
+                  onDifficultyChanged: (d) => setState(() => _selectedDifficulty = d),
+                  onStatusChanged: (st) => setState(() => _selectedStatus = st),
+                  onDateRangeChanged: (r) => setState(() => _selectedDateRange = r),
+                  onPageChanged: (p) => setState(() => _currentPage = p),
+                  onRowsPerPageChanged: (r) => setState(() => _rowsPerPage = r),
+                  onViewTest: (item) => _openPreviewDialog(item),
+                  onAnalyticsTest: (item) {},
+                  onEditTest: (item) => _openPreviewDialog(item),
+                  onDeleteTest: (item) {
+                    setState(() => _allTests.removeWhere((t) => t.id == item.id));
+                  },
+                ),
+                const SizedBox(height: 14),
+                AiSubjectDonutCard(
+                  totalCount: 124,
+                  onViewAll: () {},
+                ),
+                const SizedBox(height: 12),
+                AiDifficultyDonutCard(
+                  totalCount: 124,
+                  onViewAll: () {},
+                ),
+                const SizedBox(height: 12),
+                AiTestRecentActivityCard(
+                  onViewAll: () {},
+                ),
+              ],
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

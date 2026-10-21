@@ -318,6 +318,12 @@ class _AdminAppShellState extends State<AdminAppShell> {
                       icon: Icons.credit_card_outlined,
                       isActive: _activeTab == AdminNavTab.finance,
                     ),
+                    _buildNavPill(
+                      tab: AdminNavTab.aiCreator,
+                      label: 'AI Test Creator',
+                      icon: Icons.auto_awesome_rounded,
+                      isActive: _activeTab == AdminNavTab.aiCreator,
+                    ),
                     const SizedBox(width: 4),
                     _buildMoreNavButton(),
                   ],
@@ -498,6 +504,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
       AdminNavTab.contests,
       AdminNavTab.leaderboard,
       AdminNavTab.finance,
+      AdminNavTab.aiCreator,
     ];
     final isMoreActive = !directTabs.contains(_activeTab);
 

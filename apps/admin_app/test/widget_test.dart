@@ -90,7 +90,7 @@ void main() {
     expect(find.text('CORE MODULES'), findsOneWidget);
     expect(find.text('LIVE & COMMUNITY'), findsOneWidget);
     expect(find.text('Users Management'), findsOneWidget);
-    expect(find.text('AI Test Creator'), findsOneWidget);
+    expect(find.text('AI Test Creator'), findsAtLeastNWidgets(1));
     expect(find.text('Lucky Wheel'), findsOneWidget);
   });
 
@@ -1008,6 +1008,95 @@ void main() {
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(find.text('Razorpay Public Key ID'), findsNothing);
+  });
+
+  testWidgets('AI Test Creator tab renders hero, quick actions, 5 metric cards, table, and analytics', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: RankearnAdminApp(
+          startLoggedIn: true,
+          initialTab: AdminNavTab.aiCreator,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 1. Verify Active Tab
+    expect(find.text('AI Test Creator'), findsWidgets);
+
+    // 2. Verify Hero Banner
+    expect(find.text('AI Test '), findsOneWidget);
+    expect(find.text('Creator'), findsWidgets);
+    expect(find.text('Generate high-quality tests instantly using AI.'), findsOneWidget);
+
+    // 3. Verify 6 Quick Actions
+    expect(find.text('Generate\nTest'), findsOneWidget);
+    expect(find.text('Custom\nPrompt'), findsOneWidget);
+    expect(find.text('Manage\nTemplates'), findsOneWidget);
+    expect(find.text('Saved\nTests'), findsOneWidget);
+    expect(find.text('Question\nBank'), findsOneWidget);
+    expect(find.text('Export\nTest'), findsOneWidget);
+
+    // 4. Verify 5 Metric Cards
+    expect(find.text('Tests Generated'), findsOneWidget);
+    expect(find.text('Questions Created'), findsOneWidget);
+    expect(find.text('Saved Tests'), findsWidgets);
+    expect(find.text('Times Used'), findsOneWidget);
+    expect(find.text('Avg. Creation Time (AI Speed)'), findsOneWidget);
+
+    // 5. Verify Table Card & Content
+    expect(find.textContaining('AI Generated Tests'), findsOneWidget);
+    expect(find.text('RRB Technician Mock Test'), findsOneWidget);
+    expect(find.text('Railway Maths Practice Test'), findsOneWidget);
+    expect(find.text('Reasoning Speed Test'), findsOneWidget);
+    expect(find.text('Current Affairs Weekly Test'), findsOneWidget);
+    expect(find.text('Chemistry Chapter Test'), findsOneWidget);
+    expect(find.text('Biology NEET Practice Test'), findsOneWidget);
+    expect(find.text('Full Syllabus Combined Test'), findsOneWidget);
+
+    // 6. Verify Right Column Analytics Cards
+    expect(find.text('Subject Wise Test Distribution'), findsOneWidget);
+    expect(find.text('Test Difficulty Distribution'), findsOneWidget);
+    expect(find.text('Recent Activity'), findsOneWidget);
+
+    // 7. Test Custom Prompt dialog
+    await tester.tap(find.text('Custom\nPrompt'));
+    await tester.pumpAndSettle();
+    expect(find.text('Custom Prompt & Model Config'), findsOneWidget);
+    expect(find.text('AI System Prompt (Role Definition)'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('AI System Prompt (Role Definition)'), findsNothing);
+
+    // 8. Test Manage Templates dialog
+    await tester.tap(find.text('Manage\nTemplates'));
+    await tester.pumpAndSettle();
+    expect(find.text('Manage Test Templates'), findsOneWidget);
+    expect(find.text('RRB Technician Full Mock'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Manage Test Templates'), findsNothing);
+
+    // 9. Test Saved Tests dialog
+    await tester.tap(find.text('Saved\nTests'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Saved AI Tests'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Inspect, review or resume publishing drafted tests'), findsNothing);
+
+    // 10. Test Export Test dialog
+    await tester.tap(find.text('Export\nTest'));
+    await tester.pumpAndSettle();
+    expect(find.text('Export AI Test'), findsOneWidget);
+    expect(find.text('Select Test to Export'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Export AI Test'), findsNothing);
   });
 }
 
