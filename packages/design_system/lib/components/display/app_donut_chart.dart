@@ -207,6 +207,9 @@ class AppDonutChartCard extends StatelessWidget {
   final double? strokeWidth;
   final StrokeCap strokeCap;
   final Widget? trailingHeader;
+  final BorderRadius? iconRadius;
+  final BoxShape iconShape;
+  final EdgeInsetsGeometry? padding;
 
   const AppDonutChartCard({
     super.key,
@@ -222,6 +225,9 @@ class AppDonutChartCard extends StatelessWidget {
     this.strokeWidth,
     this.strokeCap = StrokeCap.round,
     this.trailingHeader,
+    this.iconRadius,
+    this.iconShape = BoxShape.circle,
+    this.padding,
   });
 
   @override
@@ -230,7 +236,7 @@ class AppDonutChartCard extends StatelessWidget {
 
     return Container(
       height: height,
-      padding: const EdgeInsets.all(12),
+      padding: padding ?? const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.borderLg,
@@ -241,21 +247,22 @@ class AppDonutChartCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: isExpandedMode ? MainAxisSize.max : MainAxisSize.min,
         children: [
-          // Header Row with Circular Badge Icon
+          // Header Row with Badge Icon
           Row(
             children: [
               Container(
-                width: 22,
-                height: 22,
+                width: 24,
+                height: 24,
                 decoration: BoxDecoration(
                   color: iconBg,
-                  shape: BoxShape.circle,
+                  shape: iconRadius != null ? BoxShape.rectangle : iconShape,
+                  borderRadius: iconRadius,
                 ),
                 alignment: Alignment.center,
                 child: Icon(
                   icon,
                   color: Colors.white,
-                  size: 13,
+                  size: 14,
                 ),
               ),
               const SizedBox(width: 8),
@@ -272,6 +279,7 @@ class AppDonutChartCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // ignore: use_null_aware_elements
               if (trailingHeader != null) trailingHeader!,
             ],
           ),

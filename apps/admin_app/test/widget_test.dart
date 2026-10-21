@@ -762,7 +762,166 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Done'), findsNothing);
   });
+
+  testWidgets('Live Quiz Management tab renders hero, quick actions, 5 metric cards, table, and analytics', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: RankearnAdminApp(
+          startLoggedIn: true,
+          initialTab: AdminNavTab.contests,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 1. Verify Top Navigation Pill active state
+    expect(find.widgetWithText(InkWell, 'Live Quiz'), findsOneWidget);
+
+    // 2. Verify Hero Banner
+    expect(find.text('Live Quiz '), findsOneWidget);
+    expect(find.text('Management'), findsWidgets);
+    expect(find.text('Create, manage and conduct live quiz sessions for your platform.'), findsOneWidget);
+    expect(find.text('LIVE'), findsOneWidget);
+
+    // 3. Verify Quick Actions
+    expect(find.text('Create\nLive Quiz'), findsOneWidget);
+    expect(find.text('Schedule\nQuiz'), findsOneWidget);
+    expect(find.text('Manage\nQuestions'), findsOneWidget);
+    expect(find.text('Live Now\nDashboard'), findsOneWidget);
+    expect(find.text('Send\nNotification'), findsOneWidget);
+    expect(find.text('Export\nReports'), findsOneWidget);
+
+    // 4. Verify 5 Metric Cards
+    expect(find.text('Total Live Quiz'), findsOneWidget);
+    expect(find.text('Total Participants'), findsOneWidget);
+    expect(find.text('Completed Quiz'), findsOneWidget);
+    expect(find.text('Ongoing Quiz'), findsOneWidget);
+    expect(find.text('Total Rewards Given'), findsOneWidget);
+
+    // 5. Verify Table Card & Content
+    expect(find.textContaining('Live Quiz List'), findsOneWidget);
+    expect(find.text('RRB Technician Mega Quiz'), findsOneWidget);
+    expect(find.text('General Science Live Quiz'), findsOneWidget);
+    expect(find.text('Maths Challenge Live'), findsOneWidget);
+    expect(find.text('Current Affairs Live Quiz'), findsOneWidget);
+    expect(find.text('Live Now'), findsOneWidget);
+
+    // 6. Verify Right Column Analytics Cards
+    expect(find.text('Quiz Category Distribution'), findsOneWidget);
+    expect(find.text('Participants Trend (Last 7 Days)'), findsOneWidget);
+    expect(find.text('Recent Activity'), findsOneWidget);
+    expect(find.text('128'), findsWidgets);
+
+    // 7. Test Create Live Quiz dialog
+    await tester.tap(find.text('Create\nLive Quiz'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quiz Title'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quiz Title'), findsNothing);
+
+    // 8. Test Schedule Quiz dialog
+    await tester.tap(find.text('Schedule\nQuiz'));
+    await tester.pumpAndSettle();
+    expect(find.text('Schedule Live Quiz'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Schedule Live Quiz'), findsNothing);
+
+    // 9. Test Live Now Dashboard dialog
+    await tester.tap(find.text('Live Now\nDashboard'));
+    await tester.pumpAndSettle();
+    expect(find.text('LIVE NOW'), findsOneWidget);
+    expect(find.text('Connected Users'), findsOneWidget);
+    expect(find.text('Serving Question'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.close_rounded).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Serving Question'), findsNothing);
+  });
+
+  testWidgets('Tournaments Management tab renders hero, quick actions, 5 metric cards, table, and analytics', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: RankearnAdminApp(
+          startLoggedIn: true,
+          initialTab: AdminNavTab.leaderboard,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 1. Verify Active Tab
+    expect(find.text('Tournaments'), findsWidgets);
+
+    // 2. Verify Hero Banner
+    expect(find.text('Tournaments '), findsOneWidget);
+    expect(find.text('Management'), findsWidgets);
+    expect(find.text('Create and manage quiz tournaments for your platform.'), findsOneWidget);
+
+    // 3. Verify 6 Quick Actions
+    expect(find.text('Create\nTournament'), findsOneWidget);
+    expect(find.text('Schedule\nTournament'), findsOneWidget);
+    expect(find.text('Manage\nRewards'), findsOneWidget);
+    expect(find.text('View\nRegistrations'), findsOneWidget);
+    expect(find.text('Send\nNotification'), findsOneWidget);
+    expect(find.text('Export\nReport'), findsOneWidget);
+
+    // 4. Verify 5 Metric Cards
+    expect(find.text('Total Tournaments'), findsOneWidget);
+    expect(find.text('Total Participants'), findsOneWidget);
+    expect(find.text('Completed'), findsWidgets);
+    expect(find.text('Ongoing'), findsWidgets);
+    expect(find.text('Upcoming'), findsWidgets);
+
+    // 5. Verify Table Card & Content
+    expect(find.textContaining('Tournaments List'), findsOneWidget);
+    expect(find.text('RRB Technician Grand Quiz'), findsOneWidget);
+    expect(find.text('General Science Champion'), findsOneWidget);
+    expect(find.text('Maths Master Tournament'), findsOneWidget);
+    expect(find.text('Current Affairs Cup'), findsOneWidget);
+    expect(find.text('Bihar State Mega Quiz'), findsOneWidget);
+
+    // 6. Verify Right Column Analytics Cards
+    expect(find.text('Tournament Category Distribution'), findsOneWidget);
+    expect(find.text('Participants Trend (Last 7 Days)'), findsOneWidget);
+    expect(find.text('Recent Activity'), findsOneWidget);
+
+    // 7. Test Create Tournament dialog
+    await tester.tap(find.text('Create\nTournament'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tournament Title *'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tournament Title *'), findsNothing);
+
+    // 8. Test Manage Rewards dialog
+    await tester.tap(find.text('Manage\nRewards'));
+    await tester.pumpAndSettle();
+    expect(find.text('Prize Pool & Rewards'), findsOneWidget);
+    expect(find.text('Rank 1'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Prize Pool & Rewards'), findsNothing);
+
+    // 9. Test View Registrations dialog
+    await tester.tap(find.text('View\nRegistrations'));
+    await tester.pumpAndSettle();
+    expect(find.text('All Tournament Registrations'), findsOneWidget);
+    expect(find.text('Rahul Sharma'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('All Tournament Registrations'), findsNothing);
+  });
 }
+
 
 
 

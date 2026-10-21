@@ -312,13 +312,13 @@ class _QuestionsTableCardState extends State<QuestionsTableCard> {
                   : math.max(680.0, screenWidth - 48);
 
               // Expand details column to fill available card width
-              final double detailsWidth = (availableWidth * 0.26).clamp(200.0, 420.0);
+              final double detailsWidth = (availableWidth * 0.20).clamp(160.0, 320.0);
               const double fixedColumnsWidth =
-                  24 + 22 + 100 + 120 + 64 + 75 + 68 + 75 + 75 + 85 + 115 + 32;
-              final double remainingSpace = availableWidth - (fixedColumnsWidth + detailsWidth);
-              final double dynamicColumnSpacing = (remainingSpace / 11).clamp(12.0, 48.0);
-              final double tableMinWidth = math.max(
-                  availableWidth, fixedColumnsWidth + detailsWidth + (dynamicColumnSpacing * 11));
+                  24.0 + 22.0 + 85.0 + 100.0 + 55.0 + 65.0 + 60.0 + 65.0 + 65.0 + 75.0 + 110.0 + 32.0;
+              final double totalNeededWidth = fixedColumnsWidth + detailsWidth;
+              final double remainingSpace = availableWidth - totalNeededWidth;
+              final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 11).clamp(6.0, 40.0) : 6.0;
+              final double tableMinWidth = availableWidth >= 880.0 ? availableWidth : 880.0;
 
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,

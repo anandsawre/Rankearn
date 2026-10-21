@@ -15,7 +15,7 @@ import 'features/contests/contests_tab.dart';
 import 'features/banners/banners_tab.dart';
 import 'features/notifications/notifications_tab.dart';
 import 'features/wheel/wheel_tab.dart';
-import 'features/leaderboard/leaderboard_tab.dart';
+import 'features/tournaments/tournaments_tab.dart';
 import 'features/referrals/referrals_tab.dart';
 import 'features/posts/posts_tab.dart';
 import 'features/support/support_tab.dart';
@@ -140,7 +140,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                 AdminNavTab.banners => const BannersTab(),
                 AdminNavTab.notifications => const NotificationsTab(),
                 AdminNavTab.wheel => const WheelTab(),
-                AdminNavTab.leaderboard => const LeaderboardTab(),
+                AdminNavTab.leaderboard => const TournamentsTab(),
                 AdminNavTab.referrals => const ReferralsTab(),
                 AdminNavTab.posts => const PostsTab(),
                 AdminNavTab.support => const SupportTab(),

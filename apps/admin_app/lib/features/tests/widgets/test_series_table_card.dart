@@ -253,16 +253,15 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
                   ? math.max(650.0, screenWidth - 48 - 16 - 295 - 2)
                   : math.max(650.0, screenWidth - 48);
 
-              // Expand details column to fill available card width (from 240px up to 480px on wide screens)
-              final double detailsWidth = (availableWidth * 0.28).clamp(240.0, 480.0);
+              final double detailsWidth = (availableWidth * 0.22).clamp(180.0, 360.0);
               // Base content widths of all other columns + margins:
-              // Checkbox(24) + #(22) + Subject(100) + Tests(68) + Questions(85) + Price(58) + Enrollments(82) + Status(82) + Created(88) + Actions(120) = 729
-              // Horizontal margins = 16 * 2 = 32
-              const double fixedColumnsWidth = 24 + 22 + 100 + 68 + 85 + 58 + 82 + 82 + 88 + 120 + 32;
-              final double remainingSpace = availableWidth - (fixedColumnsWidth + detailsWidth);
-              // Distribute remaining width across the 10 column gaps (clamp between 16 and 60)
-              final double dynamicColumnSpacing = (remainingSpace / 10).clamp(16.0, 60.0);
-              final double tableMinWidth = math.max(availableWidth, fixedColumnsWidth + detailsWidth + (dynamicColumnSpacing * 10));
+              // Checkbox(24) + #(22) + Subject(85) + Tests(60) + Questions(75) + Price(55) + Enrollments(75) + Status(75) + Created(80) + Actions(110) + Margins(32) = 638
+              const double fixedColumnsWidth = 24.0 + 22.0 + 85.0 + 60.0 + 75.0 + 55.0 + 75.0 + 75.0 + 80.0 + 110.0 + 32.0;
+              final double totalNeededWidth = fixedColumnsWidth + detailsWidth;
+              final double remainingSpace = availableWidth - totalNeededWidth;
+              // Distribute remaining width across the 10 column gaps
+              final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 10).clamp(6.0, 48.0) : 6.0;
+              final double tableMinWidth = availableWidth >= 860.0 ? availableWidth : 860.0;
 
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
