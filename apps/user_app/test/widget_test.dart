@@ -79,7 +79,7 @@ void main() {
     // Tap on Battle tab in AppBottomNav
     await tester.tap(find.descendant(of: bottomNav, matching: find.text('Battle')));
     await tester.pumpAndSettle();
-    expect(find.text('1v1 Live Arena ⚔️'), findsOneWidget);
+    expect(find.text('Choose Battle Type'), findsOneWidget);
 
     // Tap on Rewards tab in AppBottomNav
     await tester.tap(find.descendant(of: bottomNav, matching: find.text('Rewards')));

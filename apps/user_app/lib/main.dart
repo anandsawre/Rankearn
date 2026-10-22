@@ -5,6 +5,7 @@ import 'package:data_layer/data_layer.dart';
 import 'features/quiz/quiz_screen.dart';
 import 'features/spin/lucky_wheel_screen.dart';
 import 'features/battle/battle_screen.dart';
+import 'features/battle/battle_hub_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/tests/test_series_screen.dart';
 import 'features/live/live_tests_screen.dart';
@@ -441,16 +442,15 @@ class _UserAppShellState extends State<UserAppShell> {
             onOpenBattle: () => _startBattle(20),
             onJoinContest: (title, fee) => _startBattle(fee),
           ),
-        UserNavTab.battle => BattleScreen(
-            playerName: _profile.name,
-            opponentName: 'Amit Verma (Rank #4)',
-            entryFeeCoins: 20,
-            onExit: () => setState(() => _activeTab = UserNavTab.home),
-            onMatchFinished: (coinsWon) {
+        UserNavTab.battle => BattleHubScreen(
+            userCoins: _profile.coins,
+            profile: _profile,
+            onCoinUpdate: (delta) {
               setState(() {
-                _profile = _profile.copyWith(coins: _profile.coins + coinsWon);
+                _profile = _profile.copyWith(coins: _profile.coins + delta);
               });
             },
+            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
           ),
         UserNavTab.rewards || UserNavTab.spin => LuckyWheelScreen(
             currentCoins: _profile.coins,

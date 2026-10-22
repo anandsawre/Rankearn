@@ -249,6 +249,137 @@ class AppHeroBanner extends StatelessWidget {
     );
   }
 
+  /// Factory preset for the 1v1 Quiz Battle Tab Hero Banner
+  factory AppHeroBanner.battle({
+    String? imageAssetPath = 'assets/images/battle_hero_mascot.jpg',
+    VoidCallback? onStartBattle,
+    VoidCallback? onBannerTap,
+    BorderRadius? borderRadius,
+  }) {
+    return AppHeroBanner(
+      titleWidget: RichText(
+        text: const TextSpan(
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.6,
+            height: 1.05,
+            fontFamily: 'Inter',
+          ),
+          children: [
+            TextSpan(text: '1v1\n', style: TextStyle(color: Color(0xFFFFD633))),
+            TextSpan(text: 'Quiz Battle', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+      ),
+      subtitle: 'Challenge real players,\nshow your skills and\nwin exciting rewards!',
+      ctaLabel: 'Start Battle',
+      onCtaPressed: onStartBattle ?? onBannerTap,
+      imageAssetPath: imageAssetPath,
+      borderRadius: borderRadius,
+      gradient: const LinearGradient(
+        colors: [
+          Color(0xFF0F0728), // Deep stage navy
+          Color(0xFF26105A), // Electric purple
+          Color(0xFF3B1578), // Magenta purple ambient
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x3326105A),
+          blurRadius: 20,
+          offset: Offset(0, 8),
+        ),
+      ],
+      ambientGlows: [
+        Positioned(
+          top: -30,
+          right: -20,
+          child: Container(
+            width: 160,
+            height: 160,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFFF3978).withAlpha(40),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: -30,
+          left: 60,
+          child: Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF38BDF8).withAlpha(35),
+            ),
+          ),
+        ),
+      ],
+      floatingMascotBadge: Positioned(
+        top: 6,
+        right: 8,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: const Color(0xCC1A0C42),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 0.8),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x22000000),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: const [
+              Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD633), size: 16),
+              SizedBox(height: 2),
+              Text(
+                'Play\nCompete\nEarn',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w900,
+                  height: 1.15,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      features: [
+        _buildHighlightTag(
+          icon: Icons.people_rounded,
+          iconColor: const Color(0xFFFF3978),
+          label: 'Real Players\nOnline',
+        ),
+        _buildHighlightTag(
+          icon: Icons.bolt_rounded,
+          iconColor: const Color(0xFF38BDF8),
+          label: 'Instant\nMatch',
+        ),
+        _buildHighlightTag(
+          icon: Icons.monetization_on_rounded,
+          iconColor: const Color(0xFFFFD633),
+          label: 'Win\nCoins',
+        ),
+      ],
+      fallbackIllustration: _buildFallbackIconIllustration(
+        Icons.sports_esports_rounded,
+        const Color(0xFFFFD633),
+      ),
+    );
+  }
+
   /// Factory preset for the Home Dashboard Hero Banner
   factory AppHeroBanner.home({
     String? imageAssetPath = 'assets/images/hero_mascot.jpg',
