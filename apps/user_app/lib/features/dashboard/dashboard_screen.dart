@@ -82,6 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       HeroPromoBanner(
                         onStartLearning: widget.onStartTest,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       const SizedBox(height: 20),
                       _buildUserStatsSection(),
@@ -141,6 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               HeroPromoBanner(
                 onStartLearning: widget.onStartTest,
+                borderRadius: BorderRadius.circular(12),
               ),
               const SizedBox(height: 18),
               _buildUserStatsSection(),
@@ -164,81 +166,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // --- 2. User Statistics Cards ---
   Widget _buildUserStatsSection() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardWidth = (constraints.maxWidth - 24) / 4;
-
-        final statItems = [
-          (
-            icon: const Icon(Icons.monetization_on_rounded, color: Color(0xFFF59E0B), size: 22),
-            label: 'My Coins',
-            value: _formatNumber(widget.profile.coins),
-            bg: const Color(0xFFFFFDF0),
-            onTap: widget.onOpenWallet,
-          ),
-          (
-            icon: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFF97316), size: 22),
-            label: 'Daily Streak',
-            value: '7 Days',
-            bg: const Color(0xFFFFF5F5),
-            onTap: widget.onDailyStreakTap ?? () => _showStreakInfo(context),
-          ),
-          (
-            icon: const Icon(Icons.track_changes_rounded, color: Color(0xFF2587F8), size: 22),
-            label: 'Tests Attempted',
-            value: '28',
-            bg: const Color(0xFFF0F7FF),
-            onTap: widget.onExploreTests,
-          ),
-          (
-            icon: const Icon(Icons.military_tech_rounded, color: Color(0xFFEAB308), size: 22),
-            label: 'My Rank',
-            value: '#1256',
-            bg: const Color(0xFFFCFBF0),
-            onTap: widget.onLeaderboardTap ?? () => _showRankInfo(context),
-          ),
-        ];
-
-        return constraints.maxWidth > 500
-            ? Row(
-                children: statItems.map((item) {
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: MetricCard(
-                        icon: item.icon,
-                        label: item.label,
-                        value: item.value,
-                        backgroundColor: item.bg,
-                        onTap: item.onTap,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              )
-            : SizedBox(
-                height: 66,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: statItems.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final item = statItems[index];
-                    return SizedBox(
-                      width: cardWidth < 120 ? 130 : cardWidth,
-                      child: MetricCard(
-                        icon: item.icon,
-                        label: item.label,
-                        value: item.value,
-                        backgroundColor: item.bg,
-                        onTap: item.onTap,
-                      ),
-                    );
-                  },
-                ),
-              );
-      },
+    return AppMetricsRow(
+      breakpoint: 640,
+      spacing: 8,
+      cards: [
+        TestMetricCard(
+          icon: Icons.monetization_on_rounded,
+          label: 'My Coins',
+          value: _formatNumber(widget.profile.coins),
+          accentColor: const Color(0xFFF59E0B),
+          backgroundColor: const Color(0xFFFFFBEB),
+          onTap: widget.onOpenWallet,
+        ),
+        TestMetricCard(
+          icon: Icons.local_fire_department_rounded,
+          label: 'Daily Streak',
+          value: '7 Days',
+          accentColor: const Color(0xFFF97316),
+          backgroundColor: const Color(0xFFFFF7ED),
+          onTap: widget.onDailyStreakTap ?? () => _showStreakInfo(context),
+        ),
+        TestMetricCard(
+          icon: Icons.track_changes_rounded,
+          label: 'Tests Attempted',
+          value: '28',
+          accentColor: const Color(0xFF2587F8),
+          backgroundColor: const Color(0xFFEFF6FF),
+          onTap: widget.onExploreTests,
+        ),
+        TestMetricCard(
+          icon: Icons.military_tech_rounded,
+          label: 'My Rank',
+          value: '#1256',
+          accentColor: const Color(0xFFEAB308),
+          backgroundColor: const Color(0xFFFEFCE8),
+          onTap: widget.onLeaderboardTap ?? () => _showRankInfo(context),
+        ),
+      ],
     );
   }
 

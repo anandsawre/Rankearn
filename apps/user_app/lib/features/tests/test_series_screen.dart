@@ -678,6 +678,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                         children: [
                           // 1. Tests Hero Banner
                           TestsHeroBanner(
+                            borderRadius: BorderRadius.circular(12),
                             onStartPracticing: () {
                               if (_filteredTests.isNotEmpty) {
                                 widget.onStartTest(_filteredTests.first);
@@ -762,6 +763,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             children: [
               // 1. Tests Hero Banner
               TestsHeroBanner(
+                borderRadius: BorderRadius.circular(12),
                 onStartPracticing: () {
                   if (_filteredTests.isNotEmpty) {
                     widget.onStartTest(_filteredTests.first);
@@ -856,101 +858,19 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       ),
     ];
 
-    if (isDesktop) {
-      return Row(
-        children: [
-          for (int i = 0; i < metrics.length; i++) ...[
-            if (i > 0) const SizedBox(width: 12),
-            Expanded(
-              child: TestMetricCard(
-                icon: metrics[i].icon,
-                label: metrics[i].label,
-                value: metrics[i].value,
-                accentColor: metrics[i].color,
-                backgroundColor: metrics[i].bg,
-              ),
-            ),
-          ],
-        ],
-      );
-    }
-
-    // Mobile / Tablet 4-item horizontal or 2x2 grid
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 600) {
-          // 2x2 Grid for compact mobile
-          return Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: TestMetricCard(
-                      icon: metrics[0].icon,
-                      label: metrics[0].label,
-                      value: metrics[0].value,
-                      accentColor: metrics[0].color,
-                      backgroundColor: metrics[0].bg,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TestMetricCard(
-                      icon: metrics[1].icon,
-                      label: metrics[1].label,
-                      value: metrics[1].value,
-                      accentColor: metrics[1].color,
-                      backgroundColor: metrics[1].bg,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TestMetricCard(
-                      icon: metrics[2].icon,
-                      label: metrics[2].label,
-                      value: metrics[2].value,
-                      accentColor: metrics[2].color,
-                      backgroundColor: metrics[2].bg,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TestMetricCard(
-                      icon: metrics[3].icon,
-                      label: metrics[3].label,
-                      value: metrics[3].value,
-                      accentColor: metrics[3].color,
-                      backgroundColor: metrics[3].bg,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        }
-
-        // Standard mobile / tablet: 4 columns in Row
-        return Row(
-          children: [
-            for (int i = 0; i < metrics.length; i++) ...[
-              if (i > 0) const SizedBox(width: 8),
-              Expanded(
-                child: TestMetricCard(
-                  icon: metrics[i].icon,
-                  label: metrics[i].label,
-                  value: metrics[i].value,
-                  accentColor: metrics[i].color,
-                  backgroundColor: metrics[i].bg,
-                ),
-              ),
-            ],
-          ],
-        );
-      },
+    return AppMetricsRow(
+      breakpoint: isDesktop ? 600 : 640,
+      spacing: isDesktop ? 12 : 8,
+      cards: [
+        for (final m in metrics)
+          TestMetricCard(
+            icon: m.icon,
+            label: m.label,
+            value: m.value,
+            accentColor: m.color,
+            backgroundColor: m.bg,
+          ),
+      ],
     );
   }
 
@@ -1156,25 +1076,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
   // --- Right Sidebar: 1. Today's Goal ---
   Widget _buildTodaysGoalSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: const [
-            Icon(Icons.flag_rounded, color: Color(0xFF2587F8), size: 20),
-            SizedBox(width: 8),
-            Text(
-              "Today's Goal",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
+    return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -1266,9 +1168,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               ),
             ],
           ),
-        ),
-      ],
-    );
+        );
   }
 
   Widget _buildDartboardTarget() {

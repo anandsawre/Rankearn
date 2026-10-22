@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
+import 'app_metric_card.dart';
 
-/// TestMetricCard matching the 4 statistics cards in the Tests screen
+/// TestMetricCard matching the 4 statistics cards in the Tests screen.
+/// Powered by the unified [AppMetricCard] core engine.
 class TestMetricCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -24,100 +26,37 @@ class TestMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: accentColor.withAlpha(45),
-          width: 1,
+    return AppMetricCard(
+      icon: icon,
+      iconColor: Colors.white,
+      iconBgColor: accentColor,
+      iconBorderRadius: BorderRadius.circular(12),
+      iconShadow: [
+        BoxShadow(
+          color: accentColor.withAlpha(70),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x05000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+      ],
+      label: label,
+      value: value,
+      backgroundColor: backgroundColor,
+      borderColor: accentColor.withAlpha(45),
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      showChevron: showChevron,
+      maxLabelLines: 2,
+      labelStyle: const TextStyle(
+        fontSize: 10.5,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textSecondary,
+        height: 1.15,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-            child: Row(
-              children: [
-                // Squircle Icon
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: accentColor.withAlpha(70),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Icon(
-                      icon,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // Label and Value Column
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        label,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                          height: 1.15,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        value,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (showChevron) ...[
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    size: 16,
-                    color: AppColors.textMuted,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
+      valueStyle: const TextStyle(
+        fontSize: 15.5,
+        fontWeight: FontWeight.w900,
+        color: AppColors.textPrimary,
+        letterSpacing: -0.3,
       ),
     );
   }

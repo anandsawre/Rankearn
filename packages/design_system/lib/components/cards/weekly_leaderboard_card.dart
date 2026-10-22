@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../tokens/colors.dart';
-import '../../tokens/radii.dart';
 
-/// Individual leaderboard entry row
+/// Individual leaderboard entry row matching the Top Performers reference design
 class LeaderboardRow extends StatelessWidget {
   final int rank;
   final String name;
   final int coins;
   final String? avatarUrl;
+  final Color? avatarColor;
+  final String? initial;
   final bool isCurrentUser;
   final VoidCallback? onTap;
 
@@ -17,6 +17,8 @@ class LeaderboardRow extends StatelessWidget {
     required this.name,
     required this.coins,
     this.avatarUrl,
+    this.avatarColor,
+    this.initial,
     this.isCurrentUser = false,
     this.onTap,
   });
@@ -28,262 +30,341 @@ class LeaderboardRow extends StatelessWidget {
 
     switch (rank) {
       case 1:
-        rankBg = const Color(0xFFFEF3C7);
-        rankTextColor = const Color(0xFFD97706);
+        rankBg = const Color(0xFFFEF3C7); // Soft Gold
+        rankTextColor = const Color(0xFFB45309);
         break;
       case 2:
-        rankBg = const Color(0xFFF1F5F9);
+        rankBg = const Color(0xFFF1F5F9); // Soft Silver
         rankTextColor = const Color(0xFF64748B);
         break;
       case 3:
-        rankBg = const Color(0xFFFFEDD5);
-        rankTextColor = const Color(0xFFEA580C);
+        rankBg = const Color(0xFFFFEDD5); // Soft Bronze
+        rankTextColor = const Color(0xFFC2410C);
         break;
       default:
-        rankBg = const Color(0xFFF8FAFC);
-        rankTextColor = const Color(0xFF94A3B8);
+        rankBg = const Color(0xFFF1F5F9); // Soft Grey
+        rankTextColor = const Color(0xFF64748B);
     }
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
-        child: Row(
-          children: [
-            // Rank Badge Circle
-            Container(
-              width: 25,
-              height: 25,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: rankBg,
-              ),
-              child: Center(
-                child: Text(
-                  '$rank',
-                  style: TextStyle(
-                    fontSize: rank >= 10 ? 10.5 : 12,
-                    fontWeight: FontWeight.w900,
-                    color: rankTextColor,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
+    final letter = initial ?? (name.isNotEmpty ? name.trim()[0].toUpperCase() : '?');
 
-            // User Avatar
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFEDE9FE),
-                border: Border.all(
-                  color: isCurrentUser ? AppColors.brandGreen : const Color(0xFFE2E8F0),
-                  width: 1.2,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 14),
+          child: Row(
+            children: [
+              // 1. Rank Circle Badge
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: rankBg,
                 ),
-              ),
-              child: ClipOval(
                 child: Center(
-                  child: Icon(
-                    Icons.person_rounded,
-                    color: const Color(0xFF6366F1),
-                    size: 20,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-
-            // User Name
-            Expanded(
-              child: Text(
-                name,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isCurrentUser ? FontWeight.w900 : FontWeight.w700,
-                  color: isCurrentUser ? AppColors.brandGreen : AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-
-            // Coin Indicator + Value
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFFEF3C7),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.monetization_on_rounded,
-                      color: Color(0xFFF59E0B),
-                      size: 14,
+                  child: Text(
+                    '$rank',
+                    style: TextStyle(
+                      fontSize: rank >= 10 ? 11 : 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: rankTextColor,
                     ),
                   ),
                 ),
-                const SizedBox(width: 5),
-                Text(
-                  _formatCoins(coins),
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+              ),
+              const SizedBox(width: 12),
+
+              // 2. Initial Avatar Circle
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: avatarColor ?? _getAvatarColor(rank),
+                ),
+                child: Center(
+                  child: Text(
+                    letter,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(width: 12),
+
+              // 3. User Name
+              Expanded(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+
+              // 4. Coin Icon + Coin Amount
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.monetization_on_rounded,
+                    color: Color(0xFFF59E0B),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    _formatCoins(coins),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Color _getAvatarColor(int r) {
+    const colors = [
+      Color(0xFF3B82F6), // Blue
+      Color(0xFFEC4899), // Pink
+      Color(0xFF10B981), // Emerald
+      Color(0xFF8B5CF6), // Purple
+      Color(0xFFF97316), // Orange
+      Color(0xFF06B6D4), // Cyan
+      Color(0xFF6366F1), // Indigo
+      Color(0xFFEF4444), // Red
+      Color(0xFF14B8A6), // Teal
+      Color(0xFF84CC16), // Lime
+    ];
+    return colors[(r - 1) % colors.length];
+  }
+
   String _formatCoins(int count) {
-    if (count >= 1000) {
-      final whole = count ~/ 1000;
-      final remainder = (count % 1000) ~/ 100;
-      if (remainder == 0) {
-        return '$whole,000';
-      }
-      return count.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
-    }
-    return '$count';
+    return count.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+        );
   }
 }
 
-/// Weekly Leaderboard Sidebar Card
+/// Top Performers / Weekly Leaderboard Sidebar Card
 class WeeklyLeaderboardCard extends StatelessWidget {
+  final String title;
   final List<Map<String, dynamic>> topUsers;
   final VoidCallback? onViewAll;
   final Function(Map<String, dynamic>)? onUserTap;
 
+  static const List<Map<String, dynamic>> defaultTopUsers = [
+    {
+      'rank': 1,
+      'name': 'Aarav Sharma',
+      'coins': 3420,
+      'avatarColor': Color(0xFF3B82F6),
+      'initial': 'A',
+    },
+    {
+      'rank': 2,
+      'name': 'Priya Patel',
+      'coins': 2980,
+      'avatarColor': Color(0xFFEC4899),
+      'initial': 'P',
+    },
+    {
+      'rank': 3,
+      'name': 'Vikram Singh (You)',
+      'coins': 1450,
+      'avatarColor': Color(0xFF10B981),
+      'initial': 'V',
+      'isCurrentUser': true,
+    },
+    {
+      'rank': 4,
+      'name': 'Ananya Mishra',
+      'coins': 1320,
+      'avatarColor': Color(0xFF8B5CF6),
+      'initial': 'A',
+    },
+    {
+      'rank': 5,
+      'name': 'Rohan Verma',
+      'coins': 1190,
+      'avatarColor': Color(0xFFF97316),
+      'initial': 'R',
+    },
+    {
+      'rank': 6,
+      'name': 'Sneha Reddy',
+      'coins': 1050,
+      'avatarColor': Color(0xFF06B6D4),
+      'initial': 'S',
+    },
+    {
+      'rank': 7,
+      'name': 'Rahul Kumar',
+      'coins': 980,
+      'avatarColor': Color(0xFF6366F1),
+      'initial': 'R',
+    },
+    {
+      'rank': 8,
+      'name': 'Pooja Gupta',
+      'coins': 890,
+      'avatarColor': Color(0xFFEF4444),
+      'initial': 'P',
+    },
+    {
+      'rank': 9,
+      'name': 'Amit Deshmukh',
+      'coins': 810,
+      'avatarColor': Color(0xFF14B8A6),
+      'initial': 'A',
+    },
+    {
+      'rank': 10,
+      'name': 'Neha Joshi',
+      'coins': 750,
+      'avatarColor': Color(0xFF84CC16),
+      'initial': 'N',
+    },
+  ];
+
   const WeeklyLeaderboardCard({
     super.key,
-    this.topUsers = const [
-      {'rank': 1, 'name': 'Aarav Sharma', 'coins': 3420},
-      {'rank': 2, 'name': 'Priya Patel', 'coins': 2980},
-      {'rank': 3, 'name': 'Vikram Singh', 'coins': 1450},
-      {'rank': 4, 'name': 'Rohit Rai', 'coins': 1320},
-      {'rank': 5, 'name': 'Sneha Verma', 'coins': 1210},
-      {'rank': 6, 'name': 'Amit Kumar', 'coins': 1150},
-      {'rank': 7, 'name': 'Ananya Gupta', 'coins': 980},
-      {'rank': 8, 'name': 'Rahul Mishra', 'coins': 890},
-      {'rank': 9, 'name': 'Pooja Yadav', 'coins': 760},
-      {'rank': 10, 'name': 'Karan Mehta', 'coins': 650},
-    ],
+    this.title = 'Weekly Leaderboard',
+    this.topUsers = defaultTopUsers,
     this.onViewAll,
     this.onUserTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderLg,
-        border: Border.all(
-          color: const Color(0xFFE3EAF7),
-          width: 1.1,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06101A3A),
-            blurRadius: 10,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(
-                      Icons.bar_chart_rounded,
-                      color: Color(0xFF2587F8),
-                      size: 20,
-                    ),
-                    SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Weekly Leaderboard',
-                        style: TextStyle(
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.2,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 1. Header Row (Outside the card matching reference design)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.emoji_events_rounded,
+                    color: Color(0xFFF59E0B),
+                    size: 22,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.2,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              if (onViewAll != null)
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: onViewAll,
-                    borderRadius: BorderRadius.circular(6),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      child: Row(
-                        children: const [
-                          Text(
-                            'View All',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF6366F1),
-                            ),
+            ),
+            if (onViewAll != null)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onViewAll,
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Text(
+                          'View All',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2587F8),
                           ),
-                          SizedBox(width: 3),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 13,
-                            color: Color(0xFF6366F1),
-                          ),
-                        ],
-                      ),
+                        ),
+                        SizedBox(width: 3),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14,
+                          color: Color(0xFF2587F8),
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // 2. White Card Container with 10 Rank Rows & Dividers
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFFE2E8F0),
+              width: 1.2,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x06000000),
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-
-          // User list
-          Column(
-            children: topUsers.map((user) {
-              return LeaderboardRow(
-                rank: user['rank'] as int,
-                name: user['name'] as String,
-                coins: user['coins'] as int,
-                avatarUrl: user['avatarUrl'] as String?,
-                isCurrentUser: user['isCurrentUser'] as bool? ?? false,
-                onTap: () => onUserTap?.call(user),
-              );
-            }).toList(),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (int i = 0; i < topUsers.length; i++) ...[
+                LeaderboardRow(
+                  rank: topUsers[i]['rank'] as int,
+                  name: topUsers[i]['name'] as String,
+                  coins: topUsers[i]['coins'] as int,
+                  avatarUrl: topUsers[i]['avatarUrl'] as String?,
+                  avatarColor: topUsers[i]['avatarColor'] as Color?,
+                  initial: topUsers[i]['initial'] as String?,
+                  isCurrentUser: topUsers[i]['isCurrentUser'] as bool? ?? false,
+                  onTap: () => onUserTap?.call(topUsers[i]),
+                ),
+                if (i < topUsers.length - 1)
+                  const Divider(
+                    height: 1,
+                    thickness: 0.8,
+                    color: Color(0xFFF1F5F9),
+                  ),
+              ],
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

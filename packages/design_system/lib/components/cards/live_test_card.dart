@@ -116,6 +116,7 @@ class LiveTestCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // LIVE pill badge
                           Container(
@@ -141,34 +142,34 @@ class LiveTestCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
 
-                          // Participants badge
+                          // Participants badge on Right Top Corner
                           Flexible(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.people_alt_rounded, color: Color(0xFF64748B), size: 10),
-                                  const SizedBox(width: 3),
-                                  Flexible(
-                                    child: Text(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerRight,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.people_alt_rounded, color: Color(0xFF64748B), size: 10),
+                                    const SizedBox(width: 3),
+                                    Text(
                                       participants,
                                       style: const TextStyle(
                                         color: Color(0xFF475569),
                                         fontSize: 9.5,
                                         fontWeight: FontWeight.w800,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

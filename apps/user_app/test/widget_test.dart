@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 import 'package:user_app/main.dart';
+import 'package:user_app/features/live/live_tests_screen.dart';
 
 void main() {
   testWidgets('RankearnUserApp renders reference top bar, header tagline, and all 6 navigation tabs', (WidgetTester tester) async {
@@ -73,7 +74,7 @@ void main() {
     // Tap on Live tab in AppBottomNav
     await tester.tap(find.descendant(of: bottomNav, matching: find.text('Live')));
     await tester.pumpAndSettle();
-    expect(find.text('Contests 🏆'), findsOneWidget);
+    expect(find.byType(LiveTestsScreen), findsOneWidget);
 
     // Tap on Battle tab in AppBottomNav
     await tester.tap(find.descendant(of: bottomNav, matching: find.text('Battle')));

@@ -300,6 +300,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
           children: [
             // 1. Live Tests Hero Banner
             LiveTestsHeroBanner(
+              borderRadius: BorderRadius.circular(12),
               imageAssetPath: 'assets/images/live_tests_hero_mascot.jpg',
               onJoinLiveTest: () => _handleJoinTest('RRB Technician Special Live Test', 60),
             ),
@@ -612,43 +613,18 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
   }
 
   Widget _buildTodaysGoalSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: const [
-            Icon(
-              Icons.navigation_rounded,
-              color: Color(0xFF2587F8),
-              size: 18,
-            ),
-            SizedBox(width: 8),
-            Text(
-              "Today's Goal",
-              style: TextStyle(
-                fontSize: 15.5,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.2,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        TodayGoalCard(
-          completed: 3,
-          target: 5,
-          subtitle: 'Complete 5 tests today to earn 50 coins!',
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Today\'s Goal: Complete 2 more live tests to claim 50 bonus coins!'),
-                backgroundColor: AppColors.brandGreen,
-              ),
-            );
-          },
-        ),
-      ],
+    return TodayGoalCard(
+      completed: 3,
+      target: 5,
+      subtitle: 'Complete 5 tests today to earn 50 coins!',
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Today\'s Goal: Complete 2 more live tests to claim 50 bonus coins!'),
+            backgroundColor: AppColors.brandGreen,
+          ),
+        );
+      },
     );
   }
 

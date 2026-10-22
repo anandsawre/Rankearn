@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../tokens/colors.dart';
+import 'app_segmented_filter_nav.dart';
 
-/// TestTypeNavigation for switching test filters in the Tests Tab
+/// TestTypeNavigation for switching test filters in the Tests Tab.
+/// Powered by the unified [AppSegmentedFilterNav] core engine.
 class TestTypeNavigation extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
@@ -23,81 +24,18 @@ class TestTypeNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE3EAF7), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+    return AppSegmentedFilterNav<int>(
+      selectedValue: selectedIndex,
+      onSelect: onSelect,
+      style: AppFilterNavStyle.segmentedTrack,
+      items: [
+        for (int i = 0; i < items.length; i++)
+          AppFilterNavItem<int>(
+            value: i,
+            label: items[i].label,
+            icon: items[i].icon,
           ),
-        ],
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Row(
-          children: [
-            for (int i = 0; i < items.length; i++) ...[
-              if (i > 0) const SizedBox(width: 4),
-              _buildTabItem(i),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabItem(int index) {
-    final isSelected = selectedIndex == index;
-    final item = items[index];
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => onSelect(index),
-        borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF10B981) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF10B981).withAlpha(80),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                item.icon,
-                size: 17,
-                color: isSelected ? Colors.white : AppColors.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                item.label,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? Colors.white : AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

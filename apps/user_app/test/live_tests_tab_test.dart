@@ -84,7 +84,7 @@ void main() {
       expect(find.text('Weekly Leaderboard'), findsOneWidget);
       expect(find.text('Aarav Sharma'), findsOneWidget);
       expect(find.text('Priya Patel'), findsOneWidget);
-      expect(find.text('Karan Mehta'), findsOneWidget);
+      expect(find.text('Neha Joshi'), findsOneWidget);
       expect(find.byType(TopRewardsCard), findsOneWidget);
       expect(find.text('Top Rewards'), findsOneWidget);
       expect(find.text('Rank Badges'), findsOneWidget);
