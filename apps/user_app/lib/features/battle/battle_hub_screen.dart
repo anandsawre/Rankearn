@@ -621,36 +621,31 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
             horizontal: isDesktop ? 24 : 16,
             vertical: 14,
           ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1340),
-              child: isDesktop
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Main Column (~70%)
-                        Expanded(
-                          flex: 70,
-                          child: mainContent,
-                        ),
-                        const SizedBox(width: 22),
-                        // Right Sidebar (~30%)
-                        Expanded(
-                          flex: 30,
-                          child: rightSidebar,
-                        ),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        mainContent,
-                        const SizedBox(height: 24),
-                        rightSidebar,
-                      ],
+          child: isDesktop
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Main Column (~70%)
+                    Expanded(
+                      flex: 70,
+                      child: mainContent,
                     ),
-            ),
-          ),
+                    const SizedBox(width: 22),
+                    // Right Sidebar (~30%)
+                    Expanded(
+                      flex: 30,
+                      child: rightSidebar,
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    mainContent,
+                    const SizedBox(height: 24),
+                    rightSidebar,
+                  ],
+                ),
         );
       },
     );
