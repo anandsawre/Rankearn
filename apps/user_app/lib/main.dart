@@ -423,6 +423,10 @@ class _UserAppShellState extends State<UserAppShell> {
             userCoins: _profile.coins,
             onStartTest: (test) => _startQuiz(test),
             initialTests: widget.initialTests,
+            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
+            onSpinWheel: () => setState(() => _activeTab = UserNavTab.rewards),
+            onOpenLive: () => setState(() => _activeTab = UserNavTab.live),
+            onOpenLeaderboard: () => setState(() => _activeTab = UserNavTab.home),
           ),
         UserNavTab.live || UserNavTab.earn => EarnScreen(
             userCoins: _profile.coins,

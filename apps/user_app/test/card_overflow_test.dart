@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:design_system/design_system.dart';
-import 'package:user_app/features/dashboard/dashboard_screen.dart';
-import 'package:data_layer/data_layer.dart';
 
 void main() {
   testWidgets('Test individual cards and sections for bottom overflows', (WidgetTester tester) async {
@@ -73,6 +71,7 @@ void main() {
     }
 
     FlutterError.onError = oldHandler;
+    // ignore: avoid_print
     print('SECTION CARD TEST ERRORS: $errors');
   });
 }

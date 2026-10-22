@@ -51,4 +51,7 @@ class AppIcons {
   static const IconData error = Icons.error_outline_rounded;
   static const IconData info = Icons.info_outline_rounded;
   static const IconData share = Icons.share_rounded;
+  static const IconData calendar = Icons.calendar_month_outlined;
+  static const IconData trendingUp = Icons.trending_up_rounded;
+  static const IconData participants = Icons.people_outline_rounded;
 }

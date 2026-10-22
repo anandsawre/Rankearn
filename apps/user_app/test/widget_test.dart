@@ -68,7 +68,7 @@ void main() {
     // Tap on Tests tab in AppBottomNav
     await tester.tap(find.descendant(of: bottomNav, matching: find.text('Tests')));
     await tester.pumpAndSettle();
-    expect(find.text('All Categories'), findsOneWidget);
+    expect(find.text('Test Categories'), findsOneWidget);
 
     // Tap on Live tab in AppBottomNav
     await tester.tap(find.descendant(of: bottomNav, matching: find.text('Live')));
@@ -97,7 +97,7 @@ void main() {
     expect(find.text('Start Learning'), findsOneWidget);
   });
 
-  testWidgets('Tests tab clicking Start Test Now opens QuizScreen', (WidgetTester tester) async {
+  testWidgets('Tests tab clicking Start Test opens QuizScreen', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: RankearnUserApp(
@@ -120,8 +120,8 @@ void main() {
     await tester.tap(find.descendant(of: bottomNav, matching: find.text('Tests')));
     await tester.pumpAndSettle();
 
-    // Click Start Test Now on the first available test
-    final startButton = find.text('Start Test Now').first;
+    // Click Start Test on the first available test
+    final startButton = find.text('Start Test').first;
     await tester.ensureVisible(startButton);
     await tester.tap(startButton);
     await tester.pumpAndSettle();

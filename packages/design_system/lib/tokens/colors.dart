@@ -37,6 +37,13 @@ class AppColors {
   static const Color brandOrange = Color(0xFFFF9F0A);
   static const Color brandOrangeLight = Color(0xFFFFF7ED);
 
+  // --- Brand Red & Live Contest Tokens ---
+  static const Color liveRed = Color(0xFFE5252A);
+  static const Color liveRedDark = Color(0xFFC91E23);
+  static const Color liveRedLight = Color(0xFFFFF1F2);
+  static const Color liveRedBorder = Color(0xFFFFE4E6);
+  static const Color liveRedSubtle = Color(0xFFFEE2E2);
+
   // --- Backward Compatibility & Standard Aliases ---
   static const Color brandPrimary = brandGreen;
   static const Color brandPrimaryHover = brandGreenDark;
@@ -79,6 +86,7 @@ class AppColors {
   static const Color info = Color(0xFF2587F8);
   static const Color infoBlue = Color(0xFF2587F8);
   static const Color infoBlueLight = Color(0xFFEFF6FF);
+  static const Color infoBlueBorder = Color(0xFFDBEAFE);
   static const Color disabled = Color(0xFFCBD5E1);
 
   // --- Gradients ---

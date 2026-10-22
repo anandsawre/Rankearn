@@ -53,8 +53,10 @@ void main() {
     FlutterError.onError = originalOnError;
 
     if (overflowErrors.isNotEmpty) {
+      // ignore: avoid_print
       print('FOUND OVERFLOWS:');
       for (final err in overflowErrors) {
+        // ignore: avoid_print
         print('--- $err');
       }
     }

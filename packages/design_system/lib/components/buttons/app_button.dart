@@ -7,7 +7,8 @@ enum AppButtonVariant { primary, secondary, outlined, destructive, ghost }
 
 enum AppButtonSize { small, medium, large }
 
-/// Rankearn Reusable Button Component with variant, loading, and icon support
+/// Rankearn Reusable Button Component with variant, loading, and icon support.
+/// Centrally bound to design system tokens with sleek, modern proportions.
 class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -18,7 +19,15 @@ class AppButton extends StatelessWidget {
   final Widget? leadingIcon;
   final Widget? trailingIcon;
   final double? width;
+  final double? height;
   final bool fullWidth;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
+  final Color? borderColor;
+  final BorderRadius? borderRadius;
+  final TextStyle? customTextStyle;
+  final Gradient? gradient;
+  final List<BoxShadow>? boxShadow;
 
   const AppButton({
     super.key,
@@ -31,7 +40,15 @@ class AppButton extends StatelessWidget {
     this.leadingIcon,
     this.trailingIcon,
     this.width,
+    this.height,
     this.fullWidth = false,
+    this.backgroundColor,
+    this.foregroundColor,
+    this.borderColor,
+    this.borderRadius,
+    this.customTextStyle,
+    this.gradient,
+    this.boxShadow,
   });
 
   @override
@@ -48,13 +65,14 @@ class AppButton extends StatelessWidget {
         fg = AppColors.textOnPrimary;
         break;
       case AppButtonVariant.secondary:
-        bg = AppColors.surfaceSubtle;
+        bg = AppColors.surface;
         fg = AppColors.textPrimary;
+        border = const BorderSide(color: AppColors.border, width: 1.2);
         break;
       case AppButtonVariant.outlined:
         bg = Colors.transparent;
         fg = AppColors.brandPrimary;
-        border = const BorderSide(color: AppColors.brandPrimary, width: 1.5);
+        border = const BorderSide(color: AppColors.brandPrimary, width: 1.2);
         break;
       case AppButtonVariant.destructive:
         bg = AppColors.errorRose;
@@ -66,6 +84,12 @@ class AppButton extends StatelessWidget {
         break;
     }
 
+    if (effectiveEnabled) {
+      if (backgroundColor != null) bg = backgroundColor!;
+      if (foregroundColor != null) fg = foregroundColor!;
+      if (borderColor != null) border = BorderSide(color: borderColor!, width: 1.2);
+    }
+
     if (!effectiveEnabled && !isLoading) {
       bg = bg == Colors.transparent ? Colors.transparent : AppColors.surfaceSubtle;
       fg = AppColors.textMuted;
@@ -75,41 +99,62 @@ class AppButton extends StatelessWidget {
     }
 
     EdgeInsets padding;
-    double height;
+    double defaultHeight;
     TextStyle textStyle;
 
     switch (size) {
       case AppButtonSize.small:
-        padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 8);
-        height = 36;
-        textStyle = AppTypography.buttonText.copyWith(fontSize: 12);
+        padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 6);
+        defaultHeight = 32;
+        textStyle = AppTypography.buttonText.copyWith(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        );
         break;
       case AppButtonSize.medium:
-        padding = const EdgeInsets.symmetric(horizontal: 18, vertical: 12);
-        height = 46;
-        textStyle = AppTypography.buttonText;
+        padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 8);
+        defaultHeight = 38;
+        textStyle = AppTypography.buttonText.copyWith(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.4,
+        );
         break;
       case AppButtonSize.large:
-        padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 16);
-        height = 54;
-        textStyle = AppTypography.buttonText.copyWith(fontSize: 15);
+        padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 12);
+        defaultHeight = 48;
+        textStyle = AppTypography.buttonText.copyWith(
+          fontSize: 14.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+        );
         break;
     }
 
-    final effectiveWidth = fullWidth ? double.infinity : width;
+    if (customTextStyle != null) {
+      textStyle = customTextStyle!;
+    }
 
-    return SizedBox(
+    final effectiveRadius = borderRadius ?? AppRadii.borderMd;
+    final effectiveWidth = fullWidth ? double.infinity : width;
+    final effectiveHeight = height ?? defaultHeight;
+
+    return Container(
       width: effectiveWidth,
-      height: height,
+      height: effectiveHeight,
+      decoration: BoxDecoration(
+        color: gradient == null ? bg : null,
+        gradient: gradient,
+        borderRadius: effectiveRadius,
+        border: border != null ? Border.fromBorderSide(border) : null,
+        boxShadow: effectiveEnabled ? boxShadow : null,
+      ),
       child: Material(
-        color: bg,
-        shape: RoundedRectangleBorder(
-          borderRadius: AppRadii.borderMd,
-          side: border ?? BorderSide.none,
-        ),
+        color: Colors.transparent,
         child: InkWell(
           onTap: effectiveEnabled ? onPressed : null,
-          borderRadius: AppRadii.borderMd,
+          borderRadius: effectiveRadius,
           child: Padding(
             padding: padding,
             child: Row(
@@ -118,25 +163,30 @@ class AppButton extends StatelessWidget {
               children: [
                 if (isLoading) ...[
                   SizedBox(
-                    width: 18,
-                    height: 18,
+                    width: 16,
+                    height: 16,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
+                      strokeWidth: 2.0,
                       valueColor: AlwaysStoppedAnimation<Color>(fg),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                 ] else if (leadingIcon != null) ...[
                   leadingIcon!,
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                 ],
-                Text(
-                  label,
-                  style: textStyle.copyWith(color: fg),
-                  overflow: TextOverflow.ellipsis,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      style: textStyle.copyWith(color: fg),
+                      maxLines: 1,
+                    ),
+                  ),
                 ),
                 if (!isLoading && trailingIcon != null) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   trailingIcon!,
                 ],
               ],
