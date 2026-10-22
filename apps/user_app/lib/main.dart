@@ -7,6 +7,7 @@ import 'features/spin/lucky_wheel_screen.dart';
 import 'features/battle/battle_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/tests/test_series_screen.dart';
+import 'features/live/live_tests_screen.dart';
 import 'features/earn/earn_screen.dart';
 import 'features/wallet/wallet_screen.dart';
 import 'features/profile/profile_screen.dart';
@@ -428,7 +429,14 @@ class _UserAppShellState extends State<UserAppShell> {
             onOpenLive: () => setState(() => _activeTab = UserNavTab.live),
             onOpenLeaderboard: () => setState(() => _activeTab = UserNavTab.home),
           ),
-        UserNavTab.live || UserNavTab.earn => EarnScreen(
+        UserNavTab.live => LiveTestsScreen(
+            userCoins: _profile.coins,
+            onStartTest: (test) => _startQuiz(test),
+            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
+            onOpenLeaderboard: () => setState(() => _activeTab = UserNavTab.home),
+            onExploreSeries: () => setState(() => _activeTab = UserNavTab.tests),
+          ),
+        UserNavTab.earn => EarnScreen(
             userCoins: _profile.coins,
             onOpenBattle: () => _startBattle(20),
             onJoinContest: (title, fee) => _startBattle(fee),
