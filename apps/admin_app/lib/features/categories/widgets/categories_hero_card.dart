@@ -8,7 +8,7 @@ class CategoriesHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 124,
+      constraints: const BoxConstraints(minHeight: 124),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [

@@ -1,61 +1,119 @@
 import 'package:flutter/material.dart';
 
-/// Rankearn Visual Design System - Brand Color Palette
-/// Grounded strictly in existing React UI tokens (Emerald #10b981, Canvas #F8FAF9).
+/// Rankearn Visual Design System - Centralized Brand Color Palette
+/// Grounded strictly in the Rankearn Home Dashboard reference specifications.
 class AppColors {
   AppColors._();
 
-  // --- Brand Emerald Scale ---
-  static const Color brandPrimary = Color(0xFF10B981);       // Emerald 500
-  static const Color brandPrimaryHover = Color(0xFF059669);  // Emerald 600
-  static const Color brandPrimaryDark = Color(0xFF047857);   // Emerald 700
-  static const Color brandPrimaryLight = Color(0xFFECFDF5);  // Emerald 50
-  static const Color brandPrimaryMuted = Color(0xFFA7F3D0);  // Emerald 200
+  // --- Brand Purple Tokens (Primary Navigation & Accents) ---
+  static const Color brandPurple = Color(0xFF5636F5);
+  static const Color brandPurpleDark = Color(0xFF3920C9);
+  static const Color brandPurpleLight = Color(0xFFEEE9FF);
 
-  // Standard Aliases
-  static const Color primary = brandPrimary;
-  static const Color primaryHover = brandPrimaryHover;
-  static const Color primaryDark = brandPrimaryDark;
-  static const Color primaryLight = brandPrimaryLight;
-  static const Color primarySubtle = brandPrimaryLight;
+  // --- Brand Green / Emerald Tokens (Earnings & Success) ---
+  static const Color brandGreen = Color(0xFF10B981);
+  static const Color brandGreenDark = Color(0xFF07884F);
+  static const Color brandGreenLight = Color(0xFFECFDF5);
+  static const Color brandGreenMuted = Color(0xFFA7F3D0);
+
+  // --- Brand Yellow / Gold Tokens (Coins, Rewards, Trophies) ---
+  static const Color brandYellow = Color(0xFFFFD633);
+  static const Color brandYellowLight = Color(0xFFFFF9DB);
+  static const Color coinGold = Color(0xFFFFB800);
+  static const Color coinGoldLight = Color(0xFFFEF3C7);
+  static const Color coinBadgeBackground = Color(0xFFFFF6D8);
+
+  // --- Brand Blue & Sky Tokens (Informational & Tests) ---
+  static const Color brandBlue = Color(0xFF2587F8);
+  static const Color brandBlueDark = Color(0xFF1B6BD8);
+  static const Color brandBlueLight = Color(0xFFEFF6FF);
+
+  // --- Brand Pink & Magenta Tokens ---
+  static const Color brandPink = Color(0xFFF04483);
+  static const Color brandPinkDark = Color(0xFFD8286A);
+  static const Color brandPinkLight = Color(0xFFFDF2F8);
+
+  // --- Brand Orange & Amber Tokens ---
+  static const Color brandOrange = Color(0xFFFF9F0A);
+  static const Color brandOrangeLight = Color(0xFFFFF7ED);
+
+  // --- Backward Compatibility & Standard Aliases ---
+  static const Color brandPrimary = brandGreen;
+  static const Color brandPrimaryHover = brandGreenDark;
+  static const Color brandPrimaryDark = brandGreenDark;
+  static const Color brandPrimaryLight = brandGreenLight;
+  static const Color brandPrimaryMuted = brandGreenMuted;
+  static const Color primary = brandPurple;
+  static const Color primaryHover = brandPurpleDark;
+  static const Color primaryDark = brandPurpleDark;
+  static const Color primaryLight = brandPurpleLight;
+  static const Color primarySubtle = brandPurpleLight;
   static const Color canvasDark = surfaceSubtle;
 
   // --- Canvas & Surfaces ---
-  static const Color background = Color(0xFFF8FAF9);         // Canvas background
-  static const Color surface = Color(0xFFFFFFFF);            // Primary card white
-  static const Color surfaceSubtle = Color(0xFFF1F5F9);      // Slate 100
-  static const Color surfaceDark = Color(0xFF0F172A);        // Slate 900
-  static const Color surfaceDarkCard = Color(0xFF1E293B);    // Slate 800
+  static const Color background = Color(0xFFF4F7FF);         // Crisp pale blue/lavender canvas
+  static const Color surface = Color(0xFFFFFFFF);            // Primary card surface
+  static const Color surfaceSubtle = Color(0xFFF8FAFF);      // Soft secondary surface
+  static const Color surfaceMuted = Color(0xFFEEF2F9);
+  static const Color surfaceDark = Color(0xFF0F172A);
+  static const Color surfaceDarkCard = Color(0xFF1E293B);
 
-  // --- Typography & Text ---
-  static const Color textPrimary = Color(0xFF0F172A);        // Slate 900
-  static const Color textSecondary = Color(0xFF475569);      // Slate 600
-  static const Color textMuted = Color(0xFF94A3B8);          // Slate 400
-  static const Color textOnPrimary = Color(0xFFFFFFFF);      // White on Brand
+  // --- Typography & Neutral Text ---
+  static const Color textPrimary = Color(0xFF101A3A);        // Deep navy
+  static const Color textSecondary = Color(0xFF536789);      // Muted slate
+  static const Color textMuted = Color(0xFF8290AA);          // Subtle text
+  static const Color textOnPrimary = Color(0xFFFFFFFF);      // White on brand colors
 
   // --- Borders & Dividers ---
-  static const Color border = Color(0xFFE2E8F0);
-  static const Color borderSubtle = Color(0xFFE2E8F0);       // Slate 200
-  static const Color borderStrong = Color(0xFFCBD5E1);       // Slate 300
-  static const Color borderFocus = Color(0xFF10B981);        // Emerald 500
+  static const Color border = Color(0xFFE3EAF7);
+  static const Color borderSubtle = Color(0xFFE9EEF8);
+  static const Color borderStrong = Color(0xFFCBD5E1);
+  static const Color borderFocus = brandPurple;
 
-  // --- Accent & Semantic Status ---
-  static const Color coinGold = Color(0xFFF59E0B);           // Amber 500
-  static const Color coinGoldLight = Color(0xFFFEF3C7);      // Amber 100
-  static const Color errorRose = Color(0xFFF43F5E);          // Rose 500
-  static const Color errorRoseLight = Color(0xFFFFF1F2);     // Rose 50
-  static const Color infoBlue = Color(0xFF3B82F6);           // Blue 500
-  static const Color infoBlueLight = Color(0xFFEFF6FF);      // Blue 50
+  // --- Semantic & Status Colors ---
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color error = Color(0xFFEF4444);
+  static const Color errorRose = Color(0xFFF43F5E);
+  static const Color errorRoseLight = Color(0xFFFFF1F2);
+  static const Color info = Color(0xFF2587F8);
+  static const Color infoBlue = Color(0xFF2587F8);
+  static const Color infoBlueLight = Color(0xFFEFF6FF);
+  static const Color disabled = Color(0xFFCBD5E1);
 
   // --- Gradients ---
+  static const LinearGradient heroGradient = LinearGradient(
+    colors: [Color(0xFF2A1594), Color(0xFF4C27D5), Color(0xFF673BF6)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient dailyChallengeGradient = LinearGradient(
+    colors: [Color(0xFF421E9C), Color(0xFF5D2DC2)],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
+  static const LinearGradient fortuneWheelGradient = LinearGradient(
+    colors: [Color(0xFF0A6352), Color(0xFF108770)],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
   static const LinearGradient brandGradient = LinearGradient(
+    colors: [brandPurpleDark, brandPurple],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient emeraldGradient = LinearGradient(
     colors: [Color(0xFF059669), Color(0xFF10B981)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient goldGradient = LinearGradient(
-    colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
+    colors: [Color(0xFFFFD633), Color(0xFFFFB800)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

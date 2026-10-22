@@ -82,21 +82,52 @@ class _EarnScreenState extends State<EarnScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 1. Earn Section Sub-Tab Navigation Bar
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: AppRadii.borderPill,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                _buildTabButton(EarnSubTab.contests, 'Contests 🏆'),
-                _buildTabButton(EarnSubTab.battle, '1v1 Battle ⚔️'),
-                _buildTabButton(EarnSubTab.refer, 'Refer 🎁'),
-                _buildTabButton(EarnSubTab.leaderboard, 'Ranks 🥇'),
-              ],
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 380;
+              if (isNarrow) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: AppRadii.borderPill,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildTabButton(EarnSubTab.contests, 'Contests 🏆', expand: false),
+                        const SizedBox(width: 4),
+                        _buildTabButton(EarnSubTab.battle, '1v1 Battle ⚔️', expand: false),
+                        const SizedBox(width: 4),
+                        _buildTabButton(EarnSubTab.refer, 'Refer 🎁', expand: false),
+                        const SizedBox(width: 4),
+                        _buildTabButton(EarnSubTab.leaderboard, 'Ranks 🥇', expand: false),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: AppRadii.borderPill,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    _buildTabButton(EarnSubTab.contests, 'Contests 🏆'),
+                    _buildTabButton(EarnSubTab.battle, '1v1 Battle ⚔️'),
+                    _buildTabButton(EarnSubTab.refer, 'Refer 🎁'),
+                    _buildTabButton(EarnSubTab.leaderboard, 'Ranks 🥇'),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(height: 20),
 
@@ -112,31 +143,34 @@ class _EarnScreenState extends State<EarnScreen> {
     );
   }
 
-  Widget _buildTabButton(EarnSubTab tab, String title) {
+  Widget _buildTabButton(EarnSubTab tab, String title, {bool expand = true}) {
     final isSelected = _activeSubTab == tab;
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => _activeSubTab = tab),
-        borderRadius: AppRadii.borderPill,
-        child: AnimatedContainer(
-          duration: AppMotion.shortDuration,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.brandPrimary : Colors.transparent,
-            borderRadius: AppRadii.borderPill,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            title,
-            style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            ),
+    final button = InkWell(
+      onTap: () => setState(() => _activeSubTab = tab),
+      borderRadius: AppRadii.borderPill,
+      child: AnimatedContainer(
+        duration: AppMotion.shortDuration,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.brandPrimary : Colors.transparent,
+          borderRadius: AppRadii.borderPill,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
           ),
         ),
       ),
     );
+
+    if (expand) {
+      return Expanded(child: button);
+    }
+    return button;
   }
 
   // --- 1. Contests & Tournaments View ---

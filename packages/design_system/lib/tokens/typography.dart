@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'colors.dart';
 
 /// Rankearn Visual Design System - Typography Tokens
-/// Grounded strictly in existing React typography with Devanagari (Hindi) support.
+/// Grounded strictly in the Rankearn Home Dashboard reference specifications.
 class AppTypography {
   AppTypography._();
 
@@ -13,18 +13,51 @@ class AppTypography {
     'sans-serif',
   ];
 
-  static const TextStyle displayLarge = TextStyle(
-    fontSize: 28,
+  // --- Display & Hero ---
+  static const TextStyle displayHero = TextStyle(
+    fontSize: 34,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.8,
     color: AppColors.textPrimary,
     fontFamilyFallback: fontFallbacks,
   );
 
+  static const TextStyle displayLarge = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.6,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
   static const TextStyle displayMedium = TextStyle(
     fontSize: 22,
-    fontWeight: FontWeight.w900,
+    fontWeight: FontWeight.w800,
     letterSpacing: -0.5,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  // --- Headings ---
+  static const TextStyle pageHeading = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.4,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle sectionHeading = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.2,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle cardHeading = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     fontFamilyFallback: fontFallbacks,
   );
@@ -51,6 +84,7 @@ class AppTypography {
     fontFamilyFallback: fontFallbacks,
   );
 
+  // --- Body & Supporting ---
   static const TextStyle bodyLarge = TextStyle(
     fontSize: 15,
     fontWeight: FontWeight.w400,
@@ -68,17 +102,49 @@ class AppTypography {
   );
 
   static const TextStyle bodySmall = TextStyle(
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: FontWeight.w400,
     color: AppColors.textMuted,
     fontFamilyFallback: fontFallbacks,
   );
 
+  static const TextStyle supporting = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  // --- Numeric Highlights & Metrics ---
+  static const TextStyle numericHighlight = TextStyle(
+    fontSize: 26,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.5,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle metricValue = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.2,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle metricLabel = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  // --- Tags, Badges & Buttons ---
   static const TextStyle microTag = TextStyle(
     fontSize: 10,
     fontWeight: FontWeight.w900,
     letterSpacing: 0.8,
-    color: AppColors.brandPrimary,
+    color: AppColors.brandPurple,
     fontFamilyFallback: fontFallbacks,
   );
 
@@ -90,9 +156,9 @@ class AppTypography {
   );
 
   static const TextStyle captionBold = TextStyle(
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: FontWeight.w800,
-    letterSpacing: 0.8,
+    letterSpacing: 0.4,
     color: AppColors.textPrimary,
     fontFamilyFallback: fontFallbacks,
   );

@@ -35,4 +35,20 @@ class AppShadows {
       offset: Offset(0, 8),
     ),
   ];
+
+  static const List<BoxShadow> purpleGlow = [
+    BoxShadow(
+      color: Color(0x335636F5), // 20% purple
+      blurRadius: 20,
+      offset: Offset(0, 8),
+    ),
+  ];
+
+  static const List<BoxShadow> goldGlow = [
+    BoxShadow(
+      color: Color(0x33FFB800), // 20% gold
+      blurRadius: 16,
+      offset: Offset(0, 6),
+    ),
+  ];
 }

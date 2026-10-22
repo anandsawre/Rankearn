@@ -52,6 +52,7 @@ class UserAppShell extends StatefulWidget {
 }
 
 class _UserAppShellState extends State<UserAppShell> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   UserNavTab _activeTab = UserNavTab.home;
 
   UserProfile _profile = UserProfile(
@@ -384,44 +385,62 @@ class _UserAppShellState extends State<UserAppShell> {
   @override
   Widget build(BuildContext context) {
     final isPro = _profile.subscriptionStatus == 'premium';
+    final isDesktop = MediaQuery.of(context).size.width >= 850;
 
     return Scaffold(
-      drawer: _buildDrawer(),
+      key: _scaffoldKey,
+      drawer: isDesktop ? null : _buildDrawer(),
       appBar: AppHeader(
         coins: _profile.coins,
         userName: _profile.name,
         isPro: isPro,
         unreadNotifications: _unreadNotifications,
-        showMenuButton: true,
-        onMenuTap: () => Scaffold.of(context).openDrawer(),
+        showMenuButton: !isDesktop,
+        currentTab: _activeTab,
+        onTabSelected: (tab) => setState(() => _activeTab = tab),
+        onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         onNotificationTap: _openNotificationsModal,
         onCoinsTap: () => setState(() => _activeTab = UserNavTab.wallet),
         onProfileTap: () => setState(() => _activeTab = UserNavTab.profile),
       ),
-      bottomNavigationBar: AppBottomNav(
-        currentTab: _activeTab,
-        onTabSelected: (tab) => setState(() => _activeTab = tab),
-      ),
+      bottomNavigationBar: isDesktop
+          ? null
+          : AppBottomNav(
+              currentTab: _activeTab,
+              onTabSelected: (tab) => setState(() => _activeTab = tab),
+            ),
       body: switch (_activeTab) {
         UserNavTab.home => DashboardScreen(
             profile: _profile,
             onStartTest: () => _startQuiz(_defaultMockTest),
             onExploreTests: () => setState(() => _activeTab = UserNavTab.tests),
-            onJoinContest: () => setState(() => _activeTab = UserNavTab.earn),
-            onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
+            onJoinContest: () => setState(() => _activeTab = UserNavTab.live),
+            onSpinWheel: () => setState(() => _activeTab = UserNavTab.rewards),
             onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
+            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
           ),
         UserNavTab.tests => TestSeriesScreen(
             userCoins: _profile.coins,
             onStartTest: (test) => _startQuiz(test),
             initialTests: widget.initialTests,
           ),
-        UserNavTab.earn => EarnScreen(
+        UserNavTab.live || UserNavTab.earn => EarnScreen(
             userCoins: _profile.coins,
             onOpenBattle: () => _startBattle(20),
             onJoinContest: (title, fee) => _startBattle(fee),
           ),
-        UserNavTab.spin => LuckyWheelScreen(
+        UserNavTab.battle => BattleScreen(
+            playerName: _profile.name,
+            opponentName: 'Amit Verma (Rank #4)',
+            entryFeeCoins: 20,
+            onExit: () => setState(() => _activeTab = UserNavTab.home),
+            onMatchFinished: (coinsWon) {
+              setState(() {
+                _profile = _profile.copyWith(coins: _profile.coins + coinsWon);
+              });
+            },
+          ),
+        UserNavTab.rewards || UserNavTab.spin => LuckyWheelScreen(
             currentCoins: _profile.coins,
             onBack: () => setState(() => _activeTab = UserNavTab.home),
             onRewardClaimed: (coinsWon) {
@@ -521,27 +540,32 @@ class _UserAppShellState extends State<UserAppShell> {
                     tab: UserNavTab.home,
                   ),
                   _buildDrawerNavItem(
-                    icon: Icons.menu_book_rounded,
+                    icon: Icons.feed_outlined,
                     label: 'Test Series & Mocks',
                     tab: UserNavTab.tests,
                   ),
                   _buildDrawerNavItem(
-                    icon: Icons.currency_rupee_rounded,
-                    label: 'Earn & Tournaments',
-                    tab: UserNavTab.earn,
+                    icon: Icons.sensors_rounded,
+                    label: 'Live Tests & Contests',
+                    tab: UserNavTab.live,
                   ),
                   _buildDrawerNavItem(
-                    icon: Icons.rotate_right_rounded,
-                    label: 'Lucky Spin Wheel',
-                    tab: UserNavTab.spin,
+                    icon: Icons.sports_kabaddi_rounded,
+                    label: '1v1 Quiz Battle',
+                    tab: UserNavTab.battle,
+                  ),
+                  _buildDrawerNavItem(
+                    icon: Icons.card_giftcard_rounded,
+                    label: 'Fortune Wheel & Rewards',
+                    tab: UserNavTab.rewards,
                   ),
                   _buildDrawerNavItem(
                     icon: Icons.account_balance_wallet_rounded,
-                    label: 'Wallet & Payouts',
+                    label: 'Wallet & Coins',
                     tab: UserNavTab.wallet,
                   ),
                   _buildDrawerNavItem(
-                    icon: Icons.person_rounded,
+                    icon: Icons.person_outline_rounded,
                     label: 'Candidate Profile',
                     tab: UserNavTab.profile,
                   ),

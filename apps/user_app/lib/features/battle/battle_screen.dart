@@ -166,7 +166,8 @@ class _BattleScreenState extends State<BattleScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(AppSpacing.cardPadding),
           child: Column(
             children: [
@@ -254,7 +255,14 @@ class _BattleScreenState extends State<BattleScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Round ${_currentQuestionIndex + 1} of ${_questions.length}', style: AppTypography.bodySmall),
+                  Flexible(
+                    child: Text(
+                      'Round ${_currentQuestionIndex + 1} of ${_questions.length}',
+                      style: AppTypography.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Text('Stake: ${widget.entryFeeCoins} Coins', style: const TextStyle(color: AppColors.coinGold, fontWeight: FontWeight.bold, fontSize: 12)),
                 ],
               ),
@@ -279,10 +287,11 @@ class _BattleScreenState extends State<BattleScreen> {
               const SizedBox(height: 20),
 
               // Fast-action options
-              Expanded(
-                child: ListView.builder(
-                  itemCount: q.options.length,
-                  itemBuilder: (context, index) {
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: q.options.length,
+                itemBuilder: (context, index) {
                     final isSelected = _selectedOption == index;
                     final isCorrect = q.correctAnswer == index;
 
@@ -346,13 +355,12 @@ class _BattleScreenState extends State<BattleScreen> {
                     );
                   },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
   Widget _buildVictoryScreen() {
     final isWin = _playerScore > _opponentScore;
@@ -361,7 +369,8 @@ class _BattleScreenState extends State<BattleScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

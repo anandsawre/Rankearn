@@ -3,49 +3,112 @@ import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 import '../../tokens/typography.dart';
 
-/// Rankearn Coin Display Pill (Header & Wallet)
+/// Rankearn Coin Display Pill (Header & Wallet) matching reference image
 class AppCoinPill extends StatelessWidget {
   final int coins;
   final VoidCallback? onTap;
+  final VoidCallback? onAddTap;
+  final bool compact;
 
   const AppCoinPill({
     super.key,
     required this.coins,
     this.onTap,
+    this.onAddTap,
+    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.coinGoldLight,
-      borderRadius: AppRadii.borderPill,
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7DC),
         borderRadius: AppRadii.borderPill,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            borderRadius: AppRadii.borderPill,
-            border: Border.all(color: AppColors.coinGold.withAlpha(100), width: 1),
+        border: Border.all(color: const Color(0xFFFFE082), width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.monetization_on, color: AppColors.coinGold, size: 16),
-              const SizedBox(width: 5),
-              Text(
-                '$coins',
-                style: AppTypography.titleSmall.copyWith(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFFB45309), // Amber 700
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.horizontal(
+              left: const Radius.circular(999),
+              right: compact ? const Radius.circular(999) : Radius.zero,
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: compact ? 3 : 4,
+                top: compact ? 2 : 3,
+                bottom: compact ? 2 : 3,
+                right: compact ? 6 : 6,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: compact ? 18 : 22,
+                    height: compact ? 18 : 22,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFFFD54F), Color(0xFFFFA000)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(Icons.monetization_on, color: Colors.white, size: compact ? 13 : 16),
+                    ),
+                  ),
+                  SizedBox(width: compact ? 4 : 6),
+                  Text(
+                    _formatCoins(coins),
+                    style: TextStyle(
+                      fontSize: compact ? 11 : 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (!compact)
+            InkWell(
+              onTap: onAddTap ?? onTap,
+              borderRadius: AppRadii.borderPill,
+              child: Container(
+                margin: const EdgeInsets.only(right: 3, left: 2),
+                width: 20,
+                height: 20,
+                decoration: const BoxDecoration(
+                  color: AppColors.brandGreen,
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Icon(Icons.add, color: Colors.white, size: 14),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
     );
+  }
+
+  String _formatCoins(int amount) {
+    if (amount >= 1000) {
+      final str = amount.toString();
+      final regex = RegExp(r'(\d+?)(?=(\d{3})+$)');
+      return str.replaceAllMapped(regex, (match) => '${match[1]},');
+    }
+    return '$amount';
   }
 }
 

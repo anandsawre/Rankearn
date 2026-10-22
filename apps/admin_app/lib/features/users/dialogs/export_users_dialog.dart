@@ -92,12 +92,12 @@ class _ExportUsersDialogState extends State<ExportUsersDialog> {
               // Export Format
               const Text('File Format:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
               const SizedBox(height: 8),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _buildFormatChip('CSV (.csv)', 'csv'),
-                  const SizedBox(width: 8),
                   _buildFormatChip('JSON (.json)', 'json'),
-                  const SizedBox(width: 8),
                   _buildFormatChip('Excel (.xlsx)', 'xlsx'),
                 ],
               ),
@@ -170,8 +170,10 @@ class _ExportUsersDialogState extends State<ExportUsersDialog> {
               const SizedBox(height: 22),
 
               // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),

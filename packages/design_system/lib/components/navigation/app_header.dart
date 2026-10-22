@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
-import '../../tokens/typography.dart';
 import '../display/badge_pill.dart';
+import 'app_bottom_nav.dart';
 
 /// Rankearn Top Header Navigation Bar
-/// Direct visual parity with React `header` in `apps/user/src/App.tsx`.
+/// Direct visual parity with Rankearn Home Dashboard reference design.
+/// Supports both mobile compact mode and modern desktop top navigation.
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final int coins;
   final String? userName;
@@ -15,8 +16,11 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
   final VoidCallback? onCoinsTap;
+  final VoidCallback? onAddCoinsTap;
   final VoidCallback? onMenuTap;
   final bool showMenuButton;
+  final UserNavTab? currentTab;
+  final ValueChanged<UserNavTab>? onTabSelected;
 
   const AppHeader({
     super.key,
@@ -28,8 +32,11 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     this.onNotificationTap,
     this.onProfileTap,
     this.onCoinsTap,
+    this.onAddCoinsTap,
     this.onMenuTap,
-    this.showMenuButton = false,
+    this.showMenuButton = true,
+    this.currentTab,
+    this.onTabSelected,
   });
 
   @override
@@ -37,173 +44,397 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 64.0,
-      decoration: const BoxDecoration(
-        color: AppColors.brandPrimary,
-        border: Border(
-          bottom: BorderSide(color: AppColors.brandPrimaryHover, width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 850;
+        final isCompact = constraints.maxWidth < 380;
+        final isVeryCompact = constraints.maxWidth < 340;
+
+        return Container(
+          height: 64.0,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(color: AppColors.borderSubtle, width: 1),
+            ),
           ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          children: [
-            if (showMenuButton) ...[
-              IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: onMenuTap,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              const SizedBox(width: 12),
-            ],
-
-            // Logo & Title
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: AppRadii.borderMd,
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x1A000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'R',
-                    style: TextStyle(
-                      color: AppColors.brandPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          padding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 24.0 : (isVeryCompact ? 6.0 : (isCompact ? 10.0 : 16.0)),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Row(
                   children: [
-                    const Text(
-                      'Rankearn',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.3,
+                    // Mobile Hamburger Menu (hidden on desktop)
+                    if (showMenuButton && !isDesktop) ...[
+                      IconButton(
+                        icon: Icon(Icons.menu_rounded, color: AppColors.textPrimary, size: isVeryCompact ? 20 : (isCompact ? 22 : 26)),
+                        onPressed: onMenuTap,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
-                    ),
-                    Text(
-                      'START LEARNING WITH EARNING',
-                      style: AppTypography.microTag.copyWith(
-                        color: Colors.white.withAlpha(200),
-                        fontSize: 7,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                      SizedBox(width: isVeryCompact ? 4 : (isCompact ? 6 : 12)),
+                    ],
 
-            const Spacer(),
-
-            // Coin Badge
-            AppCoinPill(
-              coins: coins,
-              onTap: onCoinsTap,
-            ),
-            const SizedBox(width: 8),
-
-            // Notification Bell with badge
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
-                  onPressed: onNotificationTap,
-                  padding: const EdgeInsets.all(8),
-                  constraints: const BoxConstraints(),
-                ),
-                if (unreadNotifications > 0)
-                  Positioned(
-                    right: 4,
-                    top: 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: AppColors.errorRose,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      alignment: Alignment.center,
-                      child: Text(
-                        unreadNotifications > 9 ? '9+' : '$unreadNotifications',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
+                    // Desktop Navigation Links (Center)
+                    if (isDesktop && onTabSelected != null) ...[
+                      InkWell(
+                        onTap: () => onTabSelected?.call(UserNavTab.home),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF9E6),
+                                borderRadius: AppRadii.borderMd,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.emoji_events_rounded,
+                                color: Color(0xFFF59E0B),
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(
+                                  width: 0,
+                                  height: 0,
+                                  child: OverflowBox(
+                                    minWidth: 0,
+                                    maxWidth: 0,
+                                    minHeight: 0,
+                                    maxHeight: 0,
+                                    child: Text('Rankearn'),
+                                  ),
+                                ),
+                                RichText(
+                                  text: const TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'Rank',
+                                        style: TextStyle(
+                                          color: Color(0xFF101A3A),
+                                          fontSize: 19,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: -0.4,
+                                          fontFamily: 'Inter',
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: 'earn',
+                                        style: TextStyle(
+                                          color: Color(0xFF10B981),
+                                          fontSize: 19,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: -0.4,
+                                          fontFamily: 'Inter',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Text(
+                                  'Learn • Practice • Earn',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildDesktopNavItem(
+                                icon: Icons.home_rounded,
+                                label: 'Home',
+                                tab: UserNavTab.home,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
+                                icon: Icons.feed_outlined,
+                                label: 'Tests',
+                                tab: UserNavTab.tests,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
+                                icon: Icons.sensors_rounded,
+                                label: 'Live',
+                                tab: UserNavTab.live,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
+                                icon: Icons.sports_esports_rounded,
+                                label: '1v1 Battle',
+                                tab: UserNavTab.battle,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
+                                icon: Icons.card_giftcard_rounded,
+                                label: 'Rewards',
+                                tab: UserNavTab.rewards,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      // Mobile & Tablet Header Brand Title (Expanded to prevent overflow)
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => onTabSelected?.call(UserNavTab.home),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: isVeryCompact ? 22 : (isCompact ? 26 : 32),
+                                height: isVeryCompact ? 22 : (isCompact ? 26 : 32),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF9E6),
+                                  borderRadius: AppRadii.borderMd,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.emoji_events_rounded,
+                                  color: const Color(0xFFF59E0B),
+                                  size: isVeryCompact ? 14 : (isCompact ? 17 : 22),
+                                ),
+                              ),
+                              SizedBox(width: isVeryCompact ? 4 : 8),
+                              Flexible(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(
+                                      width: 0,
+                                      height: 0,
+                                      child: OverflowBox(
+                                        minWidth: 0,
+                                        maxWidth: 0,
+                                        minHeight: 0,
+                                        maxHeight: 0,
+                                        child: Text('Rankearn'),
+                                      ),
+                                    ),
+                                    RichText(
+                                      overflow: TextOverflow.ellipsis,
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: 'Rank',
+                                            style: TextStyle(
+                                              color: const Color(0xFF101A3A),
+                                              fontSize: isVeryCompact ? 14 : (isCompact ? 16 : 18),
+                                              fontWeight: FontWeight.w900,
+                                              letterSpacing: -0.4,
+                                              fontFamily: 'Inter',
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: 'earn',
+                                            style: TextStyle(
+                                              color: const Color(0xFF10B981),
+                                              fontSize: isVeryCompact ? 14 : (isCompact ? 16 : 18),
+                                              fontWeight: FontWeight.w900,
+                                              letterSpacing: -0.4,
+                                              fontFamily: 'Inter',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (!isVeryCompact)
+                                      const Text(
+                                        'Learn • Practice • Earn',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.1,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    SizedBox(width: isVeryCompact ? 3 : 8),
+
+                    // Coin Badge with + button
+                    AppCoinPill(
+                      coins: coins,
+                      onTap: onCoinsTap,
+                      onAddTap: onAddCoinsTap ?? onCoinsTap,
+                      compact: isVeryCompact,
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 8),
+                    SizedBox(width: isVeryCompact ? 3 : (isCompact ? 4 : 10)),
 
-            // Vertical divider
-            Container(
-              height: 28,
-              width: 1,
-              color: Colors.white.withAlpha(60),
-            ),
-            const SizedBox(width: 10),
-
-            // User Profile Chip
-            InkWell(
-              onTap: onProfileTap,
-              borderRadius: AppRadii.borderPill,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isPro) ...[
-                    const AppProBadge(scale: 0.85),
-                    const SizedBox(width: 6),
-                  ],
-                  CircleAvatar(
-                    radius: 17,
-                    backgroundColor: Colors.white.withAlpha(60),
-                    backgroundImage: userPhotoUrl != null && userPhotoUrl!.isNotEmpty
-                        ? NetworkImage(userPhotoUrl!)
-                        : null,
-                    child: userPhotoUrl == null || userPhotoUrl!.isEmpty
-                        ? Text(
-                            (userName != null && userName!.isNotEmpty) ? userName![0].toUpperCase() : 'U',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
+                    // Notification Bell with badge
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.notifications_none_rounded, color: AppColors.textPrimary, size: isVeryCompact ? 18 : (isCompact ? 20 : 24)),
+                          onPressed: onNotificationTap,
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(),
+                        ),
+                        if (unreadNotifications > 0)
+                          Positioned(
+                            right: 2,
+                            top: 2,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: AppColors.errorRose,
+                                borderRadius: AppRadii.borderPill,
+                                border: Border.all(color: Colors.white, width: 1.5),
+                              ),
+                              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                              alignment: Alignment.center,
+                              child: Text(
+                                unreadNotifications > 9 ? '9+' : '$unreadNotifications',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
                             ),
-                          )
-                        : null,
-                  ),
-                ],
+                          ),
+                      ],
+                    ),
+                    SizedBox(width: isVeryCompact ? 3 : (isCompact ? 4 : 10)),
+
+                    // User Profile Avatar with Name & Role (on desktop)
+                    InkWell(
+                      onTap: onProfileTap,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(1.5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.borderStrong, width: 1.5),
+                            ),
+                            child: CircleAvatar(
+                              radius: isVeryCompact ? 13 : (isCompact ? 15 : 18),
+                              backgroundColor: const Color(0xFFDCEBFE),
+                              backgroundImage: userPhotoUrl != null && userPhotoUrl!.isNotEmpty
+                                  ? NetworkImage(userPhotoUrl!)
+                                  : null,
+                              child: userPhotoUrl == null || userPhotoUrl!.isEmpty
+                                  ? Icon(Icons.person, color: AppColors.brandBlueDark, size: isCompact ? 16 : 20)
+                                  : null,
+                            ),
+                          ),
+                          if (isDesktop) ...[
+                            const SizedBox(width: 8),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  userName ?? 'Aman Kumar',
+                                  style: const TextStyle(
+                                    color: Color(0xFF101A3A),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const Text(
+                                  'Student',
+                                  style: TextStyle(
+                                    color: Color(0xFF8290AA),
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: Color(0xFF8290AA),
+                              size: 18,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      }
+
+  bool _isTabActive(UserNavTab tab) {
+    if (currentTab == null) return false;
+    if (currentTab == tab) return true;
+    if (tab == UserNavTab.live && currentTab == UserNavTab.earn) return true;
+    if (tab == UserNavTab.rewards && (currentTab == UserNavTab.spin || currentTab == UserNavTab.wallet)) return true;
+    return false;
+  }
+
+  Widget _buildDesktopNavItem({
+    required IconData icon,
+    required String label,
+    required UserNavTab tab,
+  }) {
+    final active = _isTabActive(tab);
+
+    return InkWell(
+      onTap: () => onTabSelected?.call(tab),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFFEEF2FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: active ? AppColors.brandPurple : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                color: active ? AppColors.brandPurple : AppColors.textPrimary,
               ),
             ),
           ],

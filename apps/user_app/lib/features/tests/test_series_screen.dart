@@ -195,16 +195,20 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           const SizedBox(height: 12),
 
           // 3. Mode Filter Pills (Full Mock, Sectional, Previous Year)
-          Row(
-            children: [
-              _buildModeChip('all', 'All Modes'),
-              const SizedBox(width: 8),
-              _buildModeChip('mock', 'Full Mocks'),
-              const SizedBox(width: 8),
-              _buildModeChip('sectional', 'Sectional'),
-              const SizedBox(width: 8),
-              _buildModeChip('previous-year', 'PYQ Papers'),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                _buildModeChip('all', 'All Modes'),
+                const SizedBox(width: 8),
+                _buildModeChip('mock', 'Full Mocks'),
+                const SizedBox(width: 8),
+                _buildModeChip('sectional', 'Sectional'),
+                const SizedBox(width: 8),
+                _buildModeChip('previous-year', 'PYQ Papers'),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
 
@@ -212,10 +216,14 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Available Tests (${_filteredTests.length})',
-                style: AppTypography.titleLarge,
+              Expanded(
+                child: Text(
+                  'Available Tests (${_filteredTests.length})',
+                  style: AppTypography.titleLarge,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: () => setState(() => _onlyPurchased = !_onlyPurchased),
                 child: Row(
@@ -356,14 +364,18 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                test.isPremium ? 'Unlock with ${test.unlockPriceCoins} Coins' : '100% Free Access',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: test.isPremium ? AppColors.coinGold : AppColors.brandPrimaryDark,
+              Expanded(
+                child: Text(
+                  test.isPremium ? 'Unlock with ${test.unlockPriceCoins} Coins' : '100% Free Access',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: test.isPremium ? AppColors.coinGold : AppColors.brandPrimaryDark,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               AppButton(
                 label: test.isPremium ? 'Unlock Test' : 'Start Test Now',
                 size: AppButtonSize.small,

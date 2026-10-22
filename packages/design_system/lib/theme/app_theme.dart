@@ -11,13 +11,13 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      primaryColor: AppColors.brandPrimary,
+      primaryColor: AppColors.brandPurple,
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
-        primary: AppColors.brandPrimary,
+        primary: AppColors.brandPurple,
         onPrimary: AppColors.textOnPrimary,
-        secondary: AppColors.brandPrimaryHover,
+        secondary: AppColors.brandGreen,
         onSecondary: AppColors.textOnPrimary,
         error: AppColors.errorRose,
         onError: Colors.white,
@@ -25,18 +25,19 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.brandPrimary,
-        foregroundColor: AppColors.textOnPrimary,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: AppTypography.titleLarge,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: AppRadii.borderLg,
-          side: const BorderSide(color: AppColors.borderSubtle, width: 1),
+          side: const BorderSide(color: AppColors.border, width: 1),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

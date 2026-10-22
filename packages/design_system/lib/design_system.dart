@@ -8,6 +8,7 @@ export 'tokens/spacing.dart';
 export 'tokens/radii.dart';
 export 'tokens/shadows.dart';
 export 'tokens/motion.dart';
+export 'tokens/icons.dart';
 
 // Theme
 export 'theme/app_theme.dart';
@@ -16,11 +17,20 @@ export 'theme/app_theme.dart';
 export 'components/buttons/app_button.dart';
 export 'components/cards/app_card.dart';
 export 'components/cards/quick_actions_card.dart';
+export 'components/cards/metric_card.dart';
+export 'components/cards/feature_shortcut_card.dart';
+export 'components/cards/continue_learning_card.dart';
+export 'components/cards/today_goal_card.dart';
+export 'components/cards/daily_streak_card.dart';
+export 'components/cards/subject_card.dart';
+export 'components/cards/promo_banner_card.dart';
+export 'components/cards/live_event_card.dart';
 export 'components/inputs/app_text_field.dart';
 export 'components/inputs/app_dropdown.dart';
 export 'components/display/badge_pill.dart';
 export 'components/display/app_icon_box.dart';
 export 'components/display/app_donut_chart.dart';
+export 'components/display/hero_promo_banner.dart';
 export 'components/feedback/app_loading.dart';
 export 'components/navigation/app_header.dart';
 export 'components/navigation/app_bottom_nav.dart';
