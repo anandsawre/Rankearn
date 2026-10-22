@@ -134,13 +134,11 @@ class BattleTopRewardsCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
 
-          // 4 Reward Tiles: Coins, Rank Badges, Exciting Prizes, Certificates
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isNarrow = constraints.maxWidth < 420;
-
-              final tiles = [
-                _BattleRewardTile(
+          // 4 Reward Tiles: Coins, Rank Badges, Exciting Prizes, Certificates in a single horizontal row
+          Row(
+            children: [
+              Expanded(
+                child: _BattleRewardTile(
                   title: 'Coins',
                   subtitle: 'Instant Rewards',
                   icon: Icons.monetization_on_rounded,
@@ -149,7 +147,10 @@ class BattleTopRewardsCard extends StatelessWidget {
                   borderColor: const Color(0xFFFDE68A),
                   onTap: () => onRewardTap?.call('Coins'),
                 ),
-                _BattleRewardTile(
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: _BattleRewardTile(
                   title: 'Rank Badges',
                   subtitle: 'Climb the Rank',
                   icon: Icons.emoji_events_rounded,
@@ -158,7 +159,10 @@ class BattleTopRewardsCard extends StatelessWidget {
                   borderColor: const Color(0xFFFEF08A),
                   onTap: () => onRewardTap?.call('Rank Badges'),
                 ),
-                _BattleRewardTile(
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: _BattleRewardTile(
                   title: 'Exciting Prizes',
                   subtitle: 'Special Gifts',
                   icon: Icons.card_giftcard_rounded,
@@ -167,7 +171,10 @@ class BattleTopRewardsCard extends StatelessWidget {
                   borderColor: const Color(0xFFDDD6FE),
                   onTap: () => onRewardTap?.call('Exciting Prizes'),
                 ),
-                _BattleRewardTile(
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: _BattleRewardTile(
                   title: 'Certificates',
                   subtitle: 'Show Your Skills',
                   icon: Icons.workspace_premium_rounded,
@@ -176,39 +183,8 @@ class BattleTopRewardsCard extends StatelessWidget {
                   borderColor: const Color(0xFFBFDBFE),
                   onTap: () => onRewardTap?.call('Certificates'),
                 ),
-              ];
-
-              if (isNarrow) {
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(child: tiles[0]),
-                        const SizedBox(width: 8),
-                        Expanded(child: tiles[1]),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(child: tiles[2]),
-                        const SizedBox(width: 8),
-                        Expanded(child: tiles[3]),
-                      ],
-                    ),
-                  ],
-                );
-              }
-
-              return Row(
-                children: [
-                  for (int i = 0; i < tiles.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 6),
-                    Expanded(child: tiles[i]),
-                  ],
-                ],
-              );
-            },
+              ),
+            ],
           ),
         ],
       ),
@@ -249,7 +225,7 @@ class _BattleRewardTile extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
