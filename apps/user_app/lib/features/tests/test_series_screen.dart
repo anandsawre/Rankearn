@@ -1549,80 +1549,83 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
   // --- Right Sidebar: 4. Top Performers ---
   Widget _buildTopPerformersSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Row(
-                children: const [
-                  Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 20),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Top Performers',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            InkWell(
-              onTap: () {
-                if (widget.onOpenLeaderboard != null) {
-                  widget.onOpenLeaderboard!();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Viewing All-India Leaderboard...')),
-                  );
-                }
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF2587F8),
-                    ),
-                  ),
-                  SizedBox(width: 2),
-                  Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF2587F8)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE3EAF7), width: 1.2),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x06101A3A),
-                blurRadius: 10,
-                offset: Offset(0, 3),
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE3EAF7), width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06101A3A),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
-          child: Column(
-            children: [
-              _buildLeaderboardRow(
-                rank: 1,
-                name: 'Aarav Sharma',
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: const [
+                      Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 20),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Top Performers',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () {
+                    if (widget.onOpenLeaderboard != null) {
+                      widget.onOpenLeaderboard!();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Viewing All-India Leaderboard...')),
+                      );
+                    }
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text(
+                        'View All',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2587F8),
+                        ),
+                      ),
+                      SizedBox(width: 2),
+                      Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF2587F8)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Column(
+              children: [
+                _buildLeaderboardRow(
+                  rank: 1,
+                  name: 'Aarav Sharma',
                 coins: '3,420',
                 rankBgColor: const Color(0xFFFEF3C7),
                 rankTextColor: const Color(0xFFD97706),
@@ -1723,8 +1726,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildLeaderboardRow({
     required int rank,

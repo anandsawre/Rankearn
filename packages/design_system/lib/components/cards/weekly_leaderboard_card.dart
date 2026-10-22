@@ -255,116 +255,119 @@ class WeeklyLeaderboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 1. Header Row (Outside the card matching reference design)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.emoji_events_rounded,
-                    color: Color(0xFFF59E0B),
-                    size: 22,
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F172A),
-                        letterSpacing: -0.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (onViewAll != null)
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onViewAll,
-                  borderRadius: BorderRadius.circular(6),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Text(
-                          'View All',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF2587F8),
-                          ),
-                        ),
-                        SizedBox(width: 3),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 14,
-                          color: Color(0xFF2587F8),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE2E8F0),
+          width: 1.2,
         ),
-        const SizedBox(height: 12),
-
-        // 2. White Card Container with 10 Rank Rows & Dividers
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: const Color(0xFFE2E8F0),
-              width: 1.2,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x06000000),
-                blurRadius: 10,
-                offset: Offset(0, 3),
-              ),
-            ],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              for (int i = 0; i < topUsers.length; i++) ...[
-                LeaderboardRow(
-                  rank: topUsers[i]['rank'] as int,
-                  name: topUsers[i]['name'] as String,
-                  coins: topUsers[i]['coins'] as int,
-                  avatarUrl: topUsers[i]['avatarUrl'] as String?,
-                  avatarColor: topUsers[i]['avatarColor'] as Color?,
-                  initial: topUsers[i]['initial'] as String?,
-                  isCurrentUser: topUsers[i]['isCurrentUser'] as bool? ?? false,
-                  onTap: () => onUserTap?.call(topUsers[i]),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header Row Inside the Card
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.emoji_events_rounded,
+                        color: Color(0xFFF59E0B),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF0F172A),
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                if (i < topUsers.length - 1)
-                  const Divider(
-                    height: 1,
-                    thickness: 0.8,
-                    color: Color(0xFFF1F5F9),
+                if (onViewAll != null)
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onViewAll,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Text(
+                              'View All',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF2587F8),
+                              ),
+                            ),
+                            SizedBox(width: 3),
+                            Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 14,
+                              color: Color(0xFF2587F8),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
               ],
-            ],
+            ),
           ),
-        ),
-      ],
+          const Divider(
+            height: 1,
+            thickness: 0.8,
+            color: Color(0xFFF1F5F9),
+          ),
+
+          // User list rows & dividers
+          for (int i = 0; i < topUsers.length; i++) ...[
+            LeaderboardRow(
+              rank: topUsers[i]['rank'] as int,
+              name: topUsers[i]['name'] as String,
+              coins: topUsers[i]['coins'] as int,
+              avatarUrl: topUsers[i]['avatarUrl'] as String?,
+              avatarColor: topUsers[i]['avatarColor'] as Color?,
+              initial: topUsers[i]['initial'] as String?,
+              isCurrentUser: topUsers[i]['isCurrentUser'] as bool? ?? false,
+              onTap: () => onUserTap?.call(topUsers[i]),
+            ),
+            if (i < topUsers.length - 1)
+              const Divider(
+                height: 1,
+                thickness: 0.8,
+                color: Color(0xFFF1F5F9),
+              ),
+          ],
+        ],
+      ),
     );
   }
 }
