@@ -56,6 +56,7 @@ export 'components/cards/battle_mission_card.dart';
 export 'components/cards/battle_metrics_row.dart';
 export 'components/navigation/battle_navigation.dart';
 export 'components/cards/top_rewards_card.dart';
+export 'components/cards/battle_top_rewards_card.dart';
 export 'components/cards/weekly_leaderboard_card.dart';
 export 'components/feedback/app_loading.dart';
 export 'components/navigation/app_header.dart';

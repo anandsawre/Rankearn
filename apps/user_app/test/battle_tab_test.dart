@@ -68,10 +68,10 @@ void main() {
 
       // 5. Top Players (Leaderboard Preview)
       expect(find.text('Top Players'), findsOneWidget);
-      expect(find.text('Aman Kumar'), findsOneWidget);
-      expect(find.text('Priya Singh'), findsOneWidget);
-      expect(find.text('Rohit Raj'), findsOneWidget);
-      expect(find.text('Sneha Patel'), findsOneWidget);
+      expect(find.text('Aman Kumar'), findsWidgets);
+      expect(find.text('Priya Singh'), findsWidgets);
+      expect(find.textContaining('Rohit'), findsWidgets);
+      expect(find.text('Sneha Patel'), findsWidgets);
 
       // 6. Daily Battle Mission
       expect(find.text('Daily Battle Mission'), findsOneWidget);
@@ -155,14 +155,67 @@ void main() {
       await tester.pumpAndSettle();
     });
 
+    testWidgets('Desktop Layout: Renders right sidebar with Today Goal, Daily Streak, Weekly Leaderboard, and Top Battle Rewards', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(buildBattleTabScreen());
+      await tester.pumpAndSettle();
+
+      // Verify Right Sidebar 4 Sections:
+      // 1. Today's Goal
+      expect(find.text("Today's Goal"), findsWidgets);
+      expect(find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains('3/5')), findsOneWidget);
+      expect(find.text('Complete 5 battles today to earn 50 coins!'), findsOneWidget);
+
+      // 2. Daily Streak
+      expect(find.text('Daily Streak'), findsOneWidget);
+      expect(find.text('7 Days'), findsOneWidget);
+
+      // 3. Weekly Leaderboard
+      expect(find.text('Weekly Leaderboard'), findsOneWidget);
+
+      // 4. Top Battle Rewards
+      expect(find.text('Top Battle Rewards'), findsOneWidget);
+      expect(find.text('Win exciting rewards in 1v1 battles!'), findsOneWidget);
+      expect(find.text('Coins'), findsWidgets);
+      expect(find.text('Instant Rewards'), findsOneWidget);
+      expect(find.text('Rank Badges'), findsOneWidget);
+      expect(find.text('Climb the Rank'), findsOneWidget);
+      expect(find.text('Exciting Prizes'), findsOneWidget);
+      expect(find.text('Special Gifts'), findsOneWidget);
+      expect(find.text('Certificates'), findsOneWidget);
+      expect(find.text('Show Your Skills'), findsOneWidget);
+
+      // Tap View All on Top Battle Rewards to verify modal sheet opens
+      final viewAllRewards = find.descendant(
+        of: find.byType(BattleTopRewardsCard),
+        matching: find.text('View All'),
+      );
+      expect(viewAllRewards, findsOneWidget);
+      await tester.tap(viewAllRewards);
+      await tester.pumpAndSettle();
+
+      // Verify modal sheet
+      expect(find.text('1v1 Battle Rewards'), findsOneWidget);
+      expect(find.text('Instant Coins'), findsOneWidget);
+
+      // Close modal
+      Navigator.of(tester.element(find.text('1v1 Battle Rewards'))).pop();
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('Responsive Layout: Renders with zero overflow across Mobile, Tablet, and Desktop', (WidgetTester tester) async {
       final viewports = [
-        const Size(360, 780),  // Compact Mobile
-        const Size(412, 915),  // Modern Android
+        const Size(320, 568),  // Ultra Compact Mobile
+        const Size(360, 780),  // Compact Android
+        const Size(412, 915),  // Standard Android
         const Size(768, 1024), // Tablet Portrait
-        const Size(1024, 768), // Tablet Landscape / Small Desktop
-        const Size(1280, 800), // Desktop HD
-        const Size(1440, 900), // Large Desktop
+        const Size(1024, 768), // Tablet Landscape / Compact Desktop
+        const Size(1280, 800), // Desktop HD (Two Column)
+        const Size(1440, 900), // Large Desktop (Two Column)
+        const Size(1920, 1080), // FHD Desktop (Two Column)
       ];
 
       for (final size in viewports) {

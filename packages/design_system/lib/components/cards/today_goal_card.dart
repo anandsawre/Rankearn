@@ -7,6 +7,7 @@ class TodayGoalCard extends StatelessWidget {
   final int completed;
   final int target;
   final String? subtitle;
+  final String unitLabel;
   final VoidCallback onTap;
 
   const TodayGoalCard({
@@ -14,6 +15,7 @@ class TodayGoalCard extends StatelessWidget {
     required this.completed,
     required this.target,
     this.subtitle,
+    this.unitLabel = 'Tests',
     required this.onTap,
   });
 
@@ -159,9 +161,9 @@ class TodayGoalCard extends StatelessWidget {
                         ),
                         children: [
                           TextSpan(text: '$completed/$target '),
-                          const TextSpan(
-                            text: 'Tests',
-                            style: TextStyle(
+                          TextSpan(
+                            text: unitLabel,
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textSecondary,

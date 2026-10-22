@@ -363,12 +363,257 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
     }
   }
 
+  void _openRewardsModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.military_tech_rounded, color: Color(0xFFF59E0B)),
+                      SizedBox(width: 8),
+                      Text('1v1 Battle Rewards', style: AppTypography.titleLarge),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const Divider(),
+              const ListTile(
+                leading: Icon(Icons.monetization_on_rounded, color: Color(0xFFF59E0B)),
+                title: Text('Instant Coins', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Earn 50 to 100+ coins on each 1v1 battle victory!'),
+              ),
+              const ListTile(
+                leading: Icon(Icons.emoji_events_rounded, color: Color(0xFFEAB308)),
+                title: Text('Rank Badges', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Climb divisions from Bronze up to Grandmaster.'),
+              ),
+              const ListTile(
+                leading: Icon(Icons.card_giftcard_rounded, color: Color(0xFF8B5CF6)),
+                title: Text('Exciting Prizes & Passes', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Top performers receive special gifts and tournament entries.'),
+              ),
+              const ListTile(
+                leading: Icon(Icons.workspace_premium_rounded, color: Color(0xFF2587F8)),
+                title: Text('Verified Certificates', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Showcase verified Rankearn academic competition skill.'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRightSidebar() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Today's Goal
+        const AppSectionHeader(
+          title: "Today's Goal",
+          icon: Icons.flag_rounded,
+          iconColor: Color(0xFF2587F8),
+        ),
+        const SizedBox(height: 10),
+        TodayGoalCard(
+          completed: 3,
+          target: 5,
+          unitLabel: 'Battles',
+          subtitle: 'Complete 5 battles today to earn 50 coins!',
+          onTap: () => _startMatchmaking(battleType: 'Quick Battle', entryFee: 50),
+        ),
+        const SizedBox(height: 18),
+
+        // 2. Daily Streak
+        DailyStreakCard(
+          streakDays: 7,
+          completedDays: 5,
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('7-Day Streak Active! Keep battling daily for bonus rewards.'),
+                backgroundColor: Color(0xFFF97316),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 18),
+
+        // 3. Weekly Leaderboard
+        WeeklyLeaderboardCard(
+          title: 'Weekly Leaderboard',
+          topUsers: const [
+            {
+              'rank': 1,
+              'name': 'Aman Kumar',
+              'coins': 12540,
+              'avatarColor': Color(0xFF3B82F6),
+              'initial': 'A',
+            },
+            {
+              'rank': 2,
+              'name': 'Priya Singh',
+              'coins': 11230,
+              'avatarColor': Color(0xFFEC4899),
+              'initial': 'P',
+            },
+            {
+              'rank': 3,
+              'name': 'Rohit Rai',
+              'coins': 10980,
+              'avatarColor': Color(0xFFF59E0B),
+              'initial': 'R',
+            },
+            {
+              'rank': 4,
+              'name': 'Sneha Patel',
+              'coins': 9650,
+              'avatarColor': Color(0xFF10B981),
+              'initial': 'S',
+            },
+            {
+              'rank': 5,
+              'name': 'Vikram Singh',
+              'coins': 8420,
+              'avatarColor': Color(0xFF8B5CF6),
+              'initial': 'V',
+            },
+          ],
+          onViewAll: _openLeaderboardModal,
+          onUserTap: (user) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${user['name']} • Rank #${user['rank']} with ${user['coins']} coins'),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 18),
+
+        // 4. Top Battle Rewards
+        BattleTopRewardsCard(
+          onViewAll: _openRewardsModal,
+          onRewardTap: (rewardType) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$rewardType: Win exciting rewards in 1v1 battles!'),
+                backgroundColor: const Color(0xFFF43F5E),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 990;
+        final isWideDesktop = constraints.maxWidth >= 1150;
         final isTablet = constraints.maxWidth >= 640 && constraints.maxWidth < 990;
+
+        final mainContent = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Loading Indicator if refreshing
+            if (_isLoading) ...[
+              const LinearProgressIndicator(
+                color: AppColors.primary,
+                backgroundColor: Colors.transparent,
+                minHeight: 2,
+              ),
+              const SizedBox(height: 8),
+            ],
+
+            // 1. Hero Banner
+            BattleHeroBanner(
+              borderRadius: BorderRadius.circular(12),
+              onStartBattle: () => _startMatchmaking(battleType: 'Quick Battle', entryFee: 50),
+            ),
+            const SizedBox(height: 18),
+
+            // 2. Battle Statistics (4 Cards)
+            BattleMetricsRow(
+              playersOnline: '${_stats.playersOnline}',
+              battlesPlayed: '${_stats.battlesPlayed}',
+              yourWins: '${_stats.yourWins}',
+              winRate: '${_stats.winRatePercent}%',
+            ),
+            const SizedBox(height: 18),
+
+            // 3. Battle Navigation Tabs
+            BattleNavigationTabs(
+              selectedTab: _selectedTab,
+              onTabSelected: (tab) {
+                setState(() => _selectedTab = tab);
+                if (tab == BattleNavTab.customRoom) {
+                  _openCustomRoomDialog();
+                }
+              },
+            ),
+            const SizedBox(height: 20),
+
+            // 4. Tab Content: If History is selected, show History; else show Choose Battle Type
+            if (_selectedTab == BattleNavTab.history) ...[
+              _buildHistorySection(),
+            ] else ...[
+              // A. Choose Battle Type Section
+              const AppSectionHeader(
+                title: 'Choose Battle Type',
+                icon: Icons.bolt_rounded,
+                iconColor: Color(0xFF2587F8),
+              ),
+              const SizedBox(height: 12),
+              _buildBattleTypeCards(isDesktop, isTablet),
+              const SizedBox(height: 24),
+
+              // B. Top Players Section
+              AppSectionHeader(
+                title: 'Top Players',
+                icon: Icons.emoji_events_rounded,
+                iconColor: const Color(0xFFF59E0B),
+                onAction: _openLeaderboardModal,
+              ),
+              const SizedBox(height: 12),
+              _buildTopPlayersGrid(isWideDesktop, isTablet),
+              const SizedBox(height: 24),
+
+              // C. Daily Battle Mission Section
+              AppSectionHeader(
+                title: 'Daily Battle Mission',
+                icon: Icons.track_changes_rounded,
+                iconColor: const Color(0xFF2587F8),
+                onAction: _openMissionsModal,
+              ),
+              const SizedBox(height: 12),
+              _buildDailyMissionsGrid(isWideDesktop, isTablet),
+            ],
+            const SizedBox(height: 24),
+          ],
+        );
+
+        final rightSidebar = _buildRightSidebar();
 
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -378,86 +623,32 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
           ),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1240),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Loading Indicator if refreshing
-                  if (_isLoading) ...[
-                    const LinearProgressIndicator(
-                      color: AppColors.primary,
-                      backgroundColor: Colors.transparent,
-                      minHeight: 2,
+              constraints: const BoxConstraints(maxWidth: 1340),
+              child: isDesktop
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Main Column (~70%)
+                        Expanded(
+                          flex: 70,
+                          child: mainContent,
+                        ),
+                        const SizedBox(width: 22),
+                        // Right Sidebar (~30%)
+                        Expanded(
+                          flex: 30,
+                          child: rightSidebar,
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        mainContent,
+                        const SizedBox(height: 24),
+                        rightSidebar,
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                  ],
-
-                  // 1. Hero Banner
-                  BattleHeroBanner(
-                    borderRadius: BorderRadius.circular(12),
-                    onStartBattle: () => _startMatchmaking(battleType: 'Quick Battle', entryFee: 50),
-                  ),
-                  const SizedBox(height: 18),
-
-                  // 2. Battle Statistics (4 Cards)
-                  BattleMetricsRow(
-                    playersOnline: '${_stats.playersOnline}',
-                    battlesPlayed: '${_stats.battlesPlayed}',
-                    yourWins: '${_stats.yourWins}',
-                    winRate: '${_stats.winRatePercent}%',
-                  ),
-                  const SizedBox(height: 18),
-
-                  // 3. Battle Navigation Tabs
-                  BattleNavigationTabs(
-                    selectedTab: _selectedTab,
-                    onTabSelected: (tab) {
-                      setState(() => _selectedTab = tab);
-                      if (tab == BattleNavTab.customRoom) {
-                        _openCustomRoomDialog();
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // 4. Tab Content: If History is selected, show History; else show Choose Battle Type
-                  if (_selectedTab == BattleNavTab.history) ...[
-                    _buildHistorySection(),
-                  ] else ...[
-                    // A. Choose Battle Type Section
-                    const AppSectionHeader(
-                      title: 'Choose Battle Type',
-                      icon: Icons.bolt_rounded,
-                      iconColor: Color(0xFF2587F8),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildBattleTypeCards(isDesktop, isTablet),
-                    const SizedBox(height: 24),
-
-                    // B. Top Players Section
-                    AppSectionHeader(
-                      title: 'Top Players',
-                      icon: Icons.emoji_events_rounded,
-                      iconColor: const Color(0xFFF59E0B),
-                      onAction: _openLeaderboardModal,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTopPlayersGrid(isDesktop, isTablet),
-                    const SizedBox(height: 24),
-
-                    // C. Daily Battle Mission Section
-                    AppSectionHeader(
-                      title: 'Daily Battle Mission',
-                      icon: Icons.track_changes_rounded,
-                      iconColor: const Color(0xFF2587F8),
-                      onAction: _openMissionsModal,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildDailyMissionsGrid(isDesktop, isTablet),
-                  ],
-                  const SizedBox(height: 32),
-                ],
-              ),
             ),
           ),
         );

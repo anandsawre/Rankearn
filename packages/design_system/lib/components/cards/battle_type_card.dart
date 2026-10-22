@@ -61,7 +61,7 @@ class BattleTypeCard extends StatelessWidget {
         ),
         child: const Center(
           child: Icon(
-            Icons.school_rounded,
+            Icons.rocket_launch_rounded,
             size: 34,
             color: Color(0xFF047857),
           ),
@@ -135,7 +135,7 @@ class BattleTypeCard extends StatelessWidget {
         ),
         child: const Center(
           child: Icon(
-            Icons.groups_rounded,
+            Icons.group_add_rounded,
             size: 34,
             color: Color(0xFFEA580C),
           ),
