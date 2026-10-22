@@ -4,11 +4,15 @@ import '../../tokens/radii.dart';
 
 /// Top Battle Rewards Card matching the 1v1 Quiz Battle desktop reference design
 class BattleTopRewardsCard extends StatelessWidget {
+  final String title;
+  final String? subtitle;
   final VoidCallback? onViewAll;
   final Function(String rewardType)? onRewardTap;
 
   const BattleTopRewardsCard({
     super.key,
+    this.title = 'Top Battle Rewards',
+    this.subtitle = 'Win exciting rewards in 1v1 battles!',
     this.onViewAll,
     this.onRewardTap,
   });
@@ -67,11 +71,11 @@ class BattleTopRewardsCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: const [
+                      children: [
                         Flexible(
                           child: Text(
-                            'Top Battle Rewards',
-                            style: TextStyle(
+                            title,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
                               color: AppColors.textPrimary,
@@ -81,25 +85,27 @@ class BattleTopRewardsCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        SizedBox(width: 4),
-                        Icon(
+                        const SizedBox(width: 4),
+                        const Icon(
                           Icons.military_tech_rounded,
                           color: Color(0xFFF59E0B),
                           size: 16,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 1),
-                    const Text(
-                      'Win exciting rewards in 1v1 battles!',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 1),
+                      Text(
+                        subtitle!,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    ],
                   ],
                 ),
               ),

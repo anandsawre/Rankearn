@@ -4,6 +4,7 @@ import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 import 'package:user_app/main.dart';
 import 'package:user_app/features/live/live_tests_screen.dart';
+import 'package:user_app/features/rewards/rewards_hub_screen.dart';
 
 void main() {
   testWidgets('RankearnUserApp renders reference top bar, header tagline, and all 6 navigation tabs', (WidgetTester tester) async {
@@ -84,7 +85,8 @@ void main() {
     // Tap on Rewards tab in AppBottomNav
     await tester.tap(find.descendant(of: bottomNav, matching: find.text('Rewards')));
     await tester.pumpAndSettle();
-    expect(find.text('Daily Lucky Wheel 🎡'), findsOneWidget);
+    expect(find.byType(RewardsHubScreen), findsOneWidget);
+    expect(find.text('How to Earn?'), findsOneWidget);
 
     // Tap on Profile tab in AppBottomNav
     await tester.tap(find.descendant(of: bottomNav, matching: find.text('Profile')));

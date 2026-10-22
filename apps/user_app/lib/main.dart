@@ -12,6 +12,7 @@ import 'features/live/live_tests_screen.dart';
 import 'features/earn/earn_screen.dart';
 import 'features/wallet/wallet_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/rewards/rewards_hub_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -452,9 +453,22 @@ class _UserAppShellState extends State<UserAppShell> {
             },
             onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
           ),
-        UserNavTab.rewards || UserNavTab.spin => LuckyWheelScreen(
+        UserNavTab.rewards => RewardsHubScreen(
+            userCoins: _profile.coins,
+            profile: _profile,
+            onCoinUpdate: (delta) {
+              setState(() {
+                _profile = _profile.copyWith(coins: _profile.coins + delta);
+              });
+            },
+            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
+            onOpenTests: () => setState(() => _activeTab = UserNavTab.tests),
+            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
+            onOpenSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
+          ),
+        UserNavTab.spin => LuckyWheelScreen(
             currentCoins: _profile.coins,
-            onBack: () => setState(() => _activeTab = UserNavTab.home),
+            onBack: () => setState(() => _activeTab = UserNavTab.rewards),
             onRewardClaimed: (coinsWon) {
               setState(() {
                 _profile = _profile.copyWith(coins: _profile.coins + coinsWon);

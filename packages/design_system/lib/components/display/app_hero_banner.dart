@@ -249,6 +249,117 @@ class AppHeroBanner extends StatelessWidget {
     );
   }
 
+  /// Factory preset for the Rewards Tab Hero Banner matching reference design
+  factory AppHeroBanner.rewards({
+    String? imageAssetPath = 'assets/images/rewards_hero_mascot.jpg',
+    VoidCallback? onHowToEarn,
+    VoidCallback? onBannerTap,
+    BorderRadius? borderRadius,
+  }) {
+    return AppHeroBanner(
+      titleWidget: RichText(
+        text: const TextSpan(
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.6,
+            height: 1.05,
+            fontFamily: 'Inter',
+          ),
+          children: [
+            TextSpan(text: 'Earn\n', style: TextStyle(color: Colors.white)),
+            TextSpan(text: 'More Rewards', style: TextStyle(color: Color(0xFFFFD633))),
+          ],
+        ),
+      ),
+      subtitle: 'Complete tasks, play tests and\nrefer friends to earn coins.',
+      ctaLabel: 'How to Earn?',
+      onCtaPressed: onHowToEarn ?? onBannerTap,
+      imageAssetPath: imageAssetPath,
+      borderRadius: borderRadius,
+      gradient: const LinearGradient(
+        colors: [
+          Color(0xFF0F0728), // Deep cosmic navy
+          Color(0xFF26105A), // Electric purple
+          Color(0xFF381475), // Magenta purple
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x3326105A),
+          blurRadius: 20,
+          offset: Offset(0, 8),
+        ),
+      ],
+      ambientGlows: [
+        Positioned(
+          top: -30,
+          right: -20,
+          child: Container(
+            width: 160,
+            height: 160,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFFF3978).withAlpha(40),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: -30,
+          left: 60,
+          child: Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF38BDF8).withAlpha(35),
+            ),
+          ),
+        ),
+      ],
+      floatingMascotBadge: Positioned(
+        top: 6,
+        right: 8,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: const Color(0xCC1A0C42),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 0.8),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x22000000),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: const [
+              Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFD633), size: 16),
+              SizedBox(height: 2),
+              Text(
+                'Learn\nPractice\nPlay\nEarn',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w800,
+                  height: 1.15,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Factory preset for the 1v1 Quiz Battle Tab Hero Banner
   factory AppHeroBanner.battle({
     String? imageAssetPath = 'assets/images/battle_hero_mascot.jpg',
