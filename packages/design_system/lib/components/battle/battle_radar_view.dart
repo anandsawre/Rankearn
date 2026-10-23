@@ -118,7 +118,7 @@ class _MatchmakingRadarState extends State<MatchmakingRadar>
   }
 
   Widget _buildAvatarOrbiter(int index) {
-    // Unique color palette and 3D avatars for the demo search orbiters
+    // Unique color palette and icons for the 6 demo search avatars
     final avatarColors = [
       const Color(0xFF3B82F6),
       const Color(0xFFF59E0B),
@@ -128,9 +128,6 @@ class _MatchmakingRadarState extends State<MatchmakingRadar>
       const Color(0xFF6366F1),
     ];
     final color = avatarColors[index % avatarColors.length];
-    final assetPath = (index % 2 == 0)
-        ? 'assets/images/battle_player_green.png'
-        : 'assets/images/battle_player_red.png';
 
     return Container(
       width: 44,
@@ -148,18 +145,12 @@ class _MatchmakingRadarState extends State<MatchmakingRadar>
         ],
       ),
       padding: const EdgeInsets.all(2),
-      child: ClipOval(
-        child: Image.asset(
-          assetPath,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => CircleAvatar(
-            backgroundColor: color.withAlpha(40),
-            child: Icon(
-              index % 2 == 0 ? Icons.face_rounded : Icons.face_3_rounded,
-              color: color,
-              size: 26,
-            ),
-          ),
+      child: CircleAvatar(
+        backgroundColor: color.withAlpha(40),
+        child: Icon(
+          index % 2 == 0 ? Icons.face_rounded : Icons.face_3_rounded,
+          color: color,
+          size: 26,
         ),
       ),
     );

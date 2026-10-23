@@ -33,8 +33,8 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
   int _currentRound = 4; // Starts on Round 4 of 5 for direct parity with Reference Image 1
   int _playerScore = 10;
   int _opponentScore = 0;
-  final List<bool?> _playerRounds = [true, true, true, null, null];
-  final List<bool?> _opponentRounds = [false, null, null, null, null];
+  final List<bool?> _playerRounds = [true, false, true, null, null];
+  final List<bool?> _opponentRounds = [false, false, false, null, null];
 
   int? _selectedOption = 2; // Option C (Skin) pre-selected matching reference image
   bool _isAnswerLocked = false;
@@ -233,7 +233,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                           opponentRounds: _opponentRounds,
                           isOpponentLeading: _opponentScore > _playerScore,
                           remainingSeconds: _turnSeconds,
-                          totalTurnSeconds: 12,
+                          totalTurnSeconds: 15,
                         ),
                         const SizedBox(height: 16),
 
