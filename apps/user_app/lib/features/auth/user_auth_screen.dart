@@ -715,15 +715,18 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 children: [
                   // Feature items bullet list
                   Expanded(
-                    flex: 10,
+                    flex: 9,
                     child: _buildFeaturesList(),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
 
-                  // Cropped high-resolution Mascot Artwork
+                  // Zoomed high-resolution Mascot Artwork
                   Expanded(
-                    flex: 11,
-                    child: _buildMascotArtwork(maxHeight: 200),
+                    flex: 12,
+                    child: _buildMascotArtwork(
+                      maxHeight: isDesktop ? 285 : 220,
+                      scale: isDesktop ? 1.16 : 1.05,
+                    ),
                   ),
                 ],
               );
@@ -733,7 +736,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: _buildMascotArtwork(maxHeight: 220)),
+                Center(child: _buildMascotArtwork(maxHeight: 220, scale: 1.05)),
                 const SizedBox(height: 14),
                 _buildFeaturesList(),
               ],
@@ -791,15 +794,16 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     );
   }
 
-  Widget _buildMascotArtwork({double maxHeight = 250}) {
+  Widget _buildMascotArtwork({double maxHeight = 285, double scale = 1.0}) {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+        child: Transform.scale(
+          scale: scale,
           child: Image.asset(
             'assets/images/user_auth_mascot.png',
             fit: BoxFit.contain,
+            alignment: Alignment.center,
             errorBuilder: (context, error, stackTrace) => Container(
               height: 240,
               width: 220,
