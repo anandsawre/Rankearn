@@ -31,32 +31,36 @@ void main() {
       await tester.pumpAndSettle();
 
       // 2. Hero Headings & Subtitles
+      expect(find.text('LEARNING  •  PRACTICE  •  COMPETE  •  GROW'), findsOneWidget);
       expect(
-        find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains('Learning Journey')),
+        find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains('Smarter Learning')),
         findsWidgets,
       );
-      expect(find.text('Practice Tests • Compete Live • Earn Coins'), findsOneWidget);
-      expect(find.text('Same account. More learning. Bigger rewards.'), findsOneWidget);
+      expect(find.text('Manage test series, questions, users, live quizzes, tournaments and track platform performance — all in one place.'), findsOneWidget);
 
-      // 3. 5 Hero Feature Items
-      expect(find.text('Mock Tests & PYQs'), findsOneWidget);
-      expect(find.text('Practice with real exam pattern'), findsOneWidget);
-      expect(find.text('Live Tests'), findsOneWidget);
-      expect(find.text('Compete with students across India'), findsOneWidget);
-      expect(find.text('1v1 Quiz Battle'), findsOneWidget);
-      expect(find.text('Challenge real players'), findsOneWidget);
-      expect(find.text('Earn Coins'), findsOneWidget);
-      expect(find.text('Complete tests, tasks and more'), findsOneWidget);
-      expect(find.text('Win Exciting Rewards'), findsOneWidget);
-      expect(find.text('Redeem coins and get rewards'), findsOneWidget);
+      // 3. 6 Hero Feature Tiles
+      expect(find.text('Test Series'), findsOneWidget);
+      expect(find.text('Create & manage test series'), findsOneWidget);
+      expect(find.text('Question Bank'), findsOneWidget);
+      expect(find.text('Add, edit and organize questions'), findsOneWidget);
+      expect(find.text('User Management'), findsOneWidget);
+      expect(find.text('Manage users and enrollments'), findsOneWidget);
+      expect(find.text('Live Quiz & Tournaments'), findsOneWidget);
+      expect(find.text('Schedule and manage events'), findsOneWidget);
+      expect(find.text('Analytics'), findsOneWidget);
+      expect(find.text('Track performance and growth'), findsOneWidget);
+      expect(find.text('Platform Settings'), findsOneWidget);
+      expect(find.text('Configure and customize your platform'), findsOneWidget);
 
       // 4. Hero Statistics
-      expect(find.text('1L+'), findsOneWidget);
-      expect(find.text('Active Learners'), findsOneWidget);
-      expect(find.text('10,000+'), findsOneWidget);
-      expect(find.text('Practice Questions'), findsOneWidget);
-      expect(find.text('4.8'), findsOneWidget);
-      expect(find.text('User Rating'), findsOneWidget);
+      expect(find.text('12,458'), findsOneWidget);
+      expect(find.text('Total Users'), findsOneWidget);
+      expect(find.text('386'), findsOneWidget);
+      expect(find.text('Total Quizzes'), findsOneWidget);
+      expect(find.text('28,731'), findsOneWidget);
+      expect(find.text('Total Attempts'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('Live Quiz'), findsOneWidget);
 
       // 5. Auth Card Header & Speech Bubble Badge
       expect(find.text('Welcome Back!'), findsWidgets);
@@ -177,10 +181,9 @@ void main() {
 
       // 1. Hero Title for Sign Up
       expect(
-        find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains('Earn Rewards')),
+        find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains('Smarter Learning')),
         findsWidgets,
       );
-      expect(find.text('Take tests, improve your skills and earn real coins with Rankearn.'), findsOneWidget);
 
       // 2. Auth Card Header & Badge
       expect(find.text('Create Your Account'), findsOneWidget);

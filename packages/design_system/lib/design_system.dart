@@ -73,8 +73,13 @@ export 'components/display/google_logo.dart';
 export 'components/navigation/auth_role_selector.dart';
 export 'components/buttons/social_auth_button.dart';
 export 'components/display/auth_feature_item.dart';
+export 'components/display/auth_feature_tile.dart';
+export 'components/display/sparkline_painter.dart';
 export 'components/cards/auth_stats_card.dart';
+export 'components/cards/hero_stats_card.dart';
+export 'components/display/auth_security_notice.dart';
 export 'components/display/wave_background.dart';
+export 'components/display/auth_background_waves.dart';
 
 // Showcase
 export 'showcase/design_system_showcase.dart';
