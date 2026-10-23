@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
@@ -492,24 +493,30 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                         minHeight: (constraints.maxHeight - (isDesktop ? 40 : 24)).clamp(0.0, double.infinity),
                       ),
                       child: isDesktop
-                          ? Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // Left Hero & Educational Feature Column (Spacious Full Width)
-                                Expanded(
-                                  flex: 12,
-                                  child: _buildHeroColumn(isDesktop: true),
-                                ),
-                                SizedBox(width: constraints.maxWidth > 1400 ? 56 : 36),
-
-                                // Right Authentication Card Column (Well-proportioned, expansive)
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: (constraints.maxWidth * 0.44).clamp(460.0, 560.0),
+                          ? SizedBox(
+                              height: math.max(
+                                (constraints.maxHeight - (constraints.maxWidth > 1400 ? 40 : 40)).clamp(0.0, double.infinity),
+                                _mode == AuthScreenMode.login ? 660.0 : 720.0,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // Left Hero & Educational Feature Column (Spacious Full Width)
+                                  Expanded(
+                                    flex: 12,
+                                    child: _buildHeroColumn(isDesktop: true),
                                   ),
-                                  child: _buildAuthCard(),
-                                ),
-                              ],
+                                  SizedBox(width: constraints.maxWidth > 1400 ? 56 : 36),
+
+                                  // Right Authentication Card Column (Well-proportioned, expansive)
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: (constraints.maxWidth * 0.44).clamp(460.0, 560.0),
+                                    ),
+                                    child: _buildAuthCard(fillHeight: true),
+                                  ),
+                                ],
+                              ),
                             )
                           : Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -523,7 +530,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                                   ),
                                 ),
                                 // Auth Card First or Top with compact hero
-                                _buildAuthCard(),
+                                _buildAuthCard(fillHeight: false),
                                 const SizedBox(height: 20),
                                 _buildHeroColumn(isDesktop: false),
                               ],
@@ -604,7 +611,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: isDesktop ? MainAxisSize.max : MainAxisSize.min,
       children: [
         // 0. Clean Brand Logo (Desktop)
         if (isDesktop) ...[
@@ -700,7 +707,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         // 4. Feature List & Mascot Layout
         LayoutBuilder(
           builder: (context, constraints) {
-            final isWideHero = constraints.maxWidth >= 500;
+            final isWideHero = isDesktop || constraints.maxWidth >= 380;
 
             if (isWideHero) {
               return Row(
@@ -736,6 +743,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         const SizedBox(height: 14),
 
         // 5. Bottom 3-Metric Statistics Card
+        if (isDesktop) const Spacer(),
         const AuthStatsCard(),
       ],
     );
@@ -826,10 +834,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   // =========================================================================
   // RIGHT COLUMN: AUTHENTICATION CARD (LOGIN & SIGN UP)
   // =========================================================================
-  Widget _buildAuthCard() {
+  Widget _buildAuthCard({bool fillHeight = false}) {
     final isLogin = _mode == AuthScreenMode.login;
+    final isDesktop = MediaQuery.of(context).size.width >= 990;
 
     return Container(
+      height: fillHeight ? double.infinity : null,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -846,14 +856,14 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         ],
       ),
       padding: EdgeInsets.symmetric(
-        horizontal: MediaQuery.of(context).size.width < 360 ? 14 : 20,
-        vertical: 16,
+        horizontal: isDesktop ? 26 : (MediaQuery.of(context).size.width < 360 ? 14 : 20),
+        vertical: isDesktop ? 22 : 16,
       ),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
           children: [
             // Header Row: Card Title & Reference Badge
             Wrap(
@@ -1287,7 +1297,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             SocialAuthButton.phone(
               onPressed: _handlePhoneLogin,
             ),
-            const SizedBox(height: 14),
+            if (fillHeight)
+              const Spacer()
+            else
+              const SizedBox(height: 14),
 
             // Mode Switcher Footer
             Center(
