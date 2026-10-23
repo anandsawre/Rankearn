@@ -205,7 +205,7 @@ void main() {
       expect(find.textContaining('Privacy Policy'), findsOneWidget);
 
       // 6. Action Button
-      expect(find.text('Sign Up'), findsWidgets);
+      expect(find.text('Register'), findsOneWidget);
     });
 
     testWidgets('Login Mode allows switching between Email and Mobile Login', (WidgetTester tester) async {

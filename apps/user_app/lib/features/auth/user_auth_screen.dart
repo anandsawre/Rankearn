@@ -1213,7 +1213,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            isLogin ? 'Login' : 'Sign Up',
+                            isLogin ? 'Login' : 'Register',
                             style: const TextStyle(
                               fontSize: 14.5,
                               fontWeight: FontWeight.w800,
