@@ -234,6 +234,7 @@ class AppDropdown<T> extends StatefulWidget {
 
 class _AppDropdownState<T> extends State<AppDropdown<T>>
     with SingleTickerProviderStateMixin {
+  final GlobalKey _fieldKey = GlobalKey();
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   bool _isOpen = false;
@@ -282,7 +283,8 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
     if (_isOpen || !widget.enabled) return;
 
     final overlay = Overlay.of(context, rootOverlay: true);
-    final renderBox = context.findRenderObject() as RenderBox?;
+    final renderBox = _fieldKey.currentContext?.findRenderObject() as RenderBox? ??
+        context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
     final size = renderBox.size;
@@ -312,15 +314,15 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                 onTap: _closeDropdown,
               ),
             ),
-            // Positioned Anchored Dropdown Menu
+            // Positioned Anchored Dropdown Menu directly flush beneath the input box
             Positioned(
               width: size.width,
               child: CompositedTransformFollower(
                 link: _layerLink,
                 showWhenUnlinked: false,
                 offset: openUpward
-                    ? Offset(0, -(widget.menuMaxHeight ?? 240) - 6)
-                    : Offset(0, size.height + 6),
+                    ? Offset(0, -(widget.menuMaxHeight ?? 240) - 1)
+                    : Offset(0, size.height + 1),
                 child: Material(
                   color: Colors.transparent,
                   child: FadeTransition(
@@ -481,6 +483,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
           const SizedBox(height: 4),
         ],
         CompositedTransformTarget(
+          key: _fieldKey,
           link: _layerLink,
           child: MouseRegion(
             cursor: widget.enabled
@@ -714,6 +717,7 @@ class AppDropdownFilter<T> extends StatefulWidget {
 
 class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
     with SingleTickerProviderStateMixin {
+  final GlobalKey _fieldKey = GlobalKey();
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   bool _isOpen = false;
@@ -757,7 +761,8 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
     if (_isOpen) return;
 
     final overlay = Overlay.of(context, rootOverlay: true);
-    final renderBox = context.findRenderObject() as RenderBox?;
+    final renderBox = _fieldKey.currentContext?.findRenderObject() as RenderBox? ??
+        context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
     final size = renderBox.size;
@@ -785,7 +790,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
               child: CompositedTransformFollower(
                 link: _layerLink,
                 showWhenUnlinked: false,
-                offset: Offset(0, size.height + 4),
+                offset: Offset(0, size.height + 1),
                 child: Material(
                   color: Colors.transparent,
                   child: FadeTransition(
@@ -919,6 +924,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
         : widget.hint;
 
     return CompositedTransformTarget(
+      key: _fieldKey,
       link: _layerLink,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
