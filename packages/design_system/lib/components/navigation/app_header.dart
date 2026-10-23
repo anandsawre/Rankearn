@@ -95,7 +95,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                     ],
 
                     // Desktop Navigation Links (Center)
-                    if (isDesktop && onTabSelected != null) ...[
+                    if (isDesktop) ...[
                       InkWell(
                         onTap: () => onTabSelected?.call(UserNavTab.home),
                         borderRadius: BorderRadius.circular(8),

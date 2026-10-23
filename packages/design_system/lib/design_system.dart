@@ -92,6 +92,10 @@ export 'components/battle/battle_button.dart';
 export 'components/battle/battle_victory_banner.dart';
 export 'components/battle/battle_reward_card.dart';
 export 'components/battle/battle_leave_dialog.dart';
+export 'components/battle/stadium_versus_banner.dart';
+export 'components/battle/question_palette_card.dart';
+export 'components/battle/battle_sidebar_cards.dart';
+export 'components/battle/matchmaking_desktop_panel.dart';
 
 // Showcase
 export 'showcase/design_system_showcase.dart';
