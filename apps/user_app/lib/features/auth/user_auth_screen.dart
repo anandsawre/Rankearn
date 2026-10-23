@@ -840,48 +840,52 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-            // 1. Centered Trophy Circle
-            Container(
-              width: 38,
-              height: 38,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFFBEB),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.emoji_events_rounded,
-                color: Color(0xFFF59E0B),
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: 4),
-
-            // 2. Centered Rankearn Wordmark
-            Text.rich(
-              const TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Rank',
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF101A3A),
-                      letterSpacing: -0.4,
-                    ),
+            // 1. Centered Brand Logo (Cup icon on left of Rankearn)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFFBEB),
+                    shape: BoxShape.circle,
                   ),
-                  TextSpan(
-                    text: 'earn',
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF00B96B),
-                      letterSpacing: -0.4,
-                    ),
+                  child: const Icon(
+                    Icons.emoji_events_rounded,
+                    color: Color(0xFFF59E0B),
+                    size: 21,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Text.rich(
+                  const TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Rank',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF101A3A),
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'earn',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF00B96B),
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
 
             // 3. Centered Pill Badge
             Container(
