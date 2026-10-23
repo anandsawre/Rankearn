@@ -55,15 +55,21 @@ class BattleResultScreen extends StatelessWidget {
               final isDesktop = constraints.maxWidth >= 960;
               final isTablet = constraints.maxWidth >= 650 && !isDesktop;
 
+              if (isDesktop) {
+                // Desktop: Fits completely within viewport with zero vertical scroll
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: _buildDesktopTwoColumn(context),
+                );
+              }
+
               return SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? 32 : (isTablet ? 20 : 14),
-                  vertical: isDesktop ? 24 : 14,
+                  horizontal: isTablet ? 20 : 14,
+                  vertical: 14,
                 ),
-                child: isDesktop
-                    ? _buildDesktopTwoColumn(context)
-                    : _buildMobileStacked(context),
+                child: _buildMobileStacked(context),
               );
             },
           ),
@@ -72,14 +78,14 @@ class BattleResultScreen extends StatelessWidget {
     );
   }
 
-  /// Desktop Two-Column Dashboard (Image 1)
+  /// Desktop Two-Column Dashboard (Reference Image 1)
   Widget _buildDesktopTwoColumn(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Main Column: Victory Artwork, Announcement, Comparison, Reward, Action Buttons
         Expanded(
-          flex: 65,
+          flex: 66,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -88,76 +94,74 @@ class BattleResultScreen extends StatelessWidget {
                 isVictory: result.isVictory,
                 isDraw: result.isDraw,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
 
               // 2. Result Announcement Card
               BattleResultAnnouncementCard(
                 text: result.message,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
               // 3. Player Comparison Card (Side by side with VS)
               BattleResultComparisonCard(
-                winnerName: result.isVictory ? result.playerName : result.opponentName,
-                winnerScore: result.isVictory ? result.playerScore : result.opponentScore,
-                loserName: result.isVictory ? result.opponentName : result.playerName,
-                loserScore: result.isVictory ? result.opponentScore : result.playerScore,
-                isWinnerCurrentUser: result.isVictory,
+                winnerName: result.playerName,
+                winnerScore: result.playerScore,
+                loserName: result.opponentName,
+                loserScore: result.opponentScore,
+                isWinnerCurrentUser: result.isVictory || result.isDraw,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
               // 4. Reward Summary Card (+100 Coins with Coin Stacks)
               BattleRewardSummaryCard(
                 coinsWon: result.coinsWon,
                 isVictory: result.isVictory,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
-              // 5. Horizontal Action Buttons (Return to Hub & Play Again)
-              Wrap(
-                spacing: 16,
-                runSpacing: 12,
+              // 5. Horizontal Action Buttons (Return to Hub & Play Again) matching Reference Image 1
+              Row(
                 children: [
-                  SizedBox(
-                    width: 220,
+                  Expanded(
                     child: BattlePrimaryButton(
                       label: 'Return to Hub',
                       icon: Icons.home_rounded,
+                      height: 46,
                       onPressed: () => _returnToHub(context),
                     ),
                   ),
-                  SizedBox(
-                    width: 220,
+                  const SizedBox(width: 14),
+                  Expanded(
                     child: BattleSecondaryButton(
                       label: 'Play Again',
                       icon: Icons.refresh_rounded,
+                      height: 46,
                       onPressed: () => _playAgain(context),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
             ],
           ),
         ),
-        const SizedBox(width: 24),
+        const SizedBox(width: 20),
 
         // Right Column: Battle Summary, Rank Impact, Keep Going Card
         Expanded(
-          flex: 35,
+          flex: 34,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 1. Battle Summary Card
-              const BattleSummaryCard(
+              BattleSummaryCard(
                 subject: 'General Science',
                 totalQuestions: 5,
-                yourCorrect: 4,
-                opponentCorrect: 0,
+                yourCorrect: result.isVictory ? 4 : (result.isDraw ? 3 : 1),
+                opponentCorrect: result.isVictory ? 0 : (result.isDraw ? 3 : 4),
                 timeTaken: '1 min 12 sec',
-                result: 'You Won',
+                result: result.isVictory ? 'You Won' : (result.isDraw ? 'Match Tied' : 'Opponent Won'),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 8),
 
               // 2. Rank Impact Card
               const RankImpactCard(
@@ -167,7 +171,7 @@ class BattleResultScreen extends StatelessWidget {
                 winningStreak: '3 Wins',
                 totalBattles: 12,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 8),
 
               // 3. Keep Going Card
               const KeepGoingCard(),

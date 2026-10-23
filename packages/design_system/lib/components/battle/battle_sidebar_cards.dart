@@ -517,16 +517,16 @@ class BattleSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A10194F),
-            blurRadius: 14,
-            offset: Offset(0, 4),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -535,12 +535,12 @@ class BattleSummaryCard extends StatelessWidget {
         children: [
           Row(
             children: const [
-              Icon(Icons.bar_chart_rounded, color: Color(0xFF00B96B), size: 20),
+              Icon(Icons.bar_chart_rounded, color: Color(0xFF00B96B), size: 18),
               SizedBox(width: 8),
               Text(
                 'Battle Summary',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.w900,
                   color: AppColors.battleNavy,
                   fontFamily: 'Inter',
@@ -548,17 +548,17 @@ class BattleSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           _buildRow('Subject', subject, isChip: true, chipColor: const Color(0xFFE6FAF0), textColor: const Color(0xFF008C52)),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow('Total Questions', '$totalQuestions'),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow('Your Correct Answers', '$yourCorrect', valueColor: const Color(0xFF00B96B)),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow('Opponent Correct Answers', '$opponentCorrect', valueColor: const Color(0xFFFF385C)),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow('Time Taken', timeTaken, isChip: true, chipColor: const Color(0xFFEFF6FF), textColor: const Color(0xFF2587F8)),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow('Result', result, isChip: true, chipColor: const Color(0xFFD6F6E5), textColor: const Color(0xFF008C52)),
         ],
       ),
@@ -642,16 +642,16 @@ class RankImpactCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A10194F),
-            blurRadius: 14,
-            offset: Offset(0, 4),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -660,12 +660,12 @@ class RankImpactCard extends StatelessWidget {
         children: [
           Row(
             children: const [
-              Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFB800), size: 20),
+              Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFB800), size: 18),
               SizedBox(width: 8),
               Text(
                 'Rank Impact',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.w900,
                   color: AppColors.battleNavy,
                   fontFamily: 'Inter',
@@ -673,7 +673,7 @@ class RankImpactCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -681,7 +681,7 @@ class RankImpactCard extends StatelessWidget {
                 child: Text(
                   'Your Rank',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF475569),
                     fontFamily: 'Inter',
@@ -695,7 +695,7 @@ class RankImpactCard extends StatelessWidget {
                   Text(
                     '$yourRank → ',
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF64748B),
                       fontFamily: 'Inter',
@@ -704,7 +704,7 @@ class RankImpactCard extends StatelessWidget {
                   Text(
                     '$newRank ▲',
                     style: const TextStyle(
-                      fontSize: 13.5,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w900,
                       color: Color(0xFF00B96B),
                       fontFamily: 'Inter',
@@ -714,11 +714,11 @@ class RankImpactCard extends StatelessWidget {
               ),
             ],
           ),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow('Rank Change', rankChange, valueColor: const Color(0xFF00B96B)),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow('Current Winning Streak', winningStreak, valueColor: const Color(0xFFF59E0B)),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow('Total Battles Played', '$totalBattles'),
         ],
       ),
@@ -764,10 +764,10 @@ class KeepGoingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDF8),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFD1FAE5), width: 1.2),
         boxShadow: const [
           BoxShadow(
@@ -782,15 +782,16 @@ class KeepGoingCard extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: const [
                 Row(
                   children: [
-                    Icon(Icons.track_changes_rounded, color: Color(0xFF00B96B), size: 18),
+                    Icon(Icons.track_changes_rounded, color: Color(0xFF00B96B), size: 16),
                     SizedBox(width: 6),
                     Text(
                       'Keep Going!',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w900,
                         color: AppColors.battleNavy,
                         fontFamily: 'Inter',
@@ -798,34 +799,36 @@ class KeepGoingCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 6),
+                SizedBox(height: 3),
                 Text(
                   'Win more battles to earn coins, improve your rank and challenge top players across India!',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF475569),
-                    height: 1.35,
+                    color: Color(0xFF047857),
+                    height: 1.3,
                     fontFamily: 'Inter',
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEF3C7),
+            width: 42,
+            height: 42,
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              boxShadow: const [
-                BoxShadow(color: Color(0x33F59E0B), blurRadius: 8),
-              ],
+              color: Color(0xFFFEF3C7),
             ),
-            child: const Icon(
-              Icons.emoji_events_rounded,
-              color: Color(0xFFF59E0B),
-              size: 32,
+            child: const Center(
+              child: Icon(
+                Icons.emoji_events_rounded,
+                color: Color(0xFFF59E0B),
+                size: 24,
+              ),
             ),
           ),
         ],

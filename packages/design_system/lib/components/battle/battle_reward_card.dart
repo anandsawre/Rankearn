@@ -16,29 +16,43 @@ class BattleResultAnnouncementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDF6),
-        borderRadius: AppRadii.borderLg,
-        border: Border.all(color: const Color(0xFFD1FAE5), width: 1.2),
+        borderRadius: AppRadii.borderPill,
+        border: Border.all(color: const Color(0xFFBBF7D0), width: 1.2),
         boxShadow: AppShadows.subtle,
       ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
-          color: AppColors.battleNavy,
-          height: 1.35,
-          fontFamily: 'Inter',
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 18),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+                color: AppColors.battleNavy,
+                fontFamily: 'Inter',
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 /// Final Player Comparison Card on Victory Screen
+/// Direct visual parity with Reference Image 1:
+/// - Left: Vikram Singh (User) with crown, 10 pts green badge, 5 round status indicators
+/// - Center: 3D electric lightning bolt VS emblem
+/// - Right: Amit Verma (Rank #4) with red avatar ring, score badge, 5 round status indicators
 class BattleResultComparisonCard extends StatelessWidget {
   final String winnerName;
   final int winnerScore;
@@ -61,8 +75,14 @@ class BattleResultComparisonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Current user is always on the left, opponent on the right
+    final leftName = isWinnerCurrentUser ? winnerName : loserName;
+    final leftScore = isWinnerCurrentUser ? winnerScore : loserScore;
+    final rightName = isWinnerCurrentUser ? loserName : winnerName;
+    final rightScore = isWinnerCurrentUser ? loserScore : winnerScore;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadii.borderXl,
@@ -70,174 +90,223 @@ class BattleResultComparisonCard extends StatelessWidget {
         boxShadow: AppShadows.subtle,
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left Player (Winner)
+          // Left Player: Current User (Vikram Singh)
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Stack(
                   clipBehavior: Clip.none,
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      width: 58,
-                      height: 58,
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: const Color(0xFF34D399).withAlpha(50),
-                        border: Border.all(color: const Color(0xFFFFC107), width: 2.5),
+                        color: const Color(0xFFD1FAE5),
+                        border: Border.all(color: const Color(0xFF10B981), width: 2.5),
                       ),
                       child: const Center(
-                        child: Icon(Icons.face_rounded, size: 38, color: Color(0xFF059669)),
+                        child: Icon(Icons.face_rounded, size: 34, color: Color(0xFF059669)),
                       ),
                     ),
-                    Positioned(
-                      top: -10,
-                      left: -4,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFFC107),
-                          shape: BoxShape.circle,
+                    if (isWinnerCurrentUser)
+                      Positioned(
+                        top: -6,
+                        left: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(2.5),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFFB800),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.star_rounded, size: 12, color: Colors.white),
                         ),
-                        child: const Text('👑', style: TextStyle(fontSize: 13)),
                       ),
-                    ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  winnerName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.battleNavy,
-                    fontFamily: 'Inter',
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD1FAE5),
-                      borderRadius: AppRadii.borderPill,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.star_rounded, color: Color(0xFF059669), size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$winnerScore pts',
-                          style: const TextStyle(
-                            color: Color(0xFF065F46),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
-                            fontFamily: 'Inter',
-                          ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        leftName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.battleNavy,
+                          fontFamily: 'Inter',
                         ),
-                      ],
-                    ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD1FAE5),
+                          borderRadius: AppRadii.borderPill,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star_rounded, color: Color(0xFF059669), size: 13),
+                            const SizedBox(width: 3),
+                            Text(
+                              '$leftScore pts',
+                              style: const TextStyle(
+                                color: Color(0xFF065F46),
+                                fontWeight: FontWeight.w900,
+                                fontSize: 11.5,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      // 5 Question status dots
+                      Row(
+                        children: const [
+                          _Dot(color: Color(0xFF10B981)),
+                          SizedBox(width: 4),
+                          _Dot(color: Color(0xFF10B981)),
+                          SizedBox(width: 4),
+                          _Dot(color: Color(0xFF10B981)),
+                          SizedBox(width: 4),
+                          _Dot(color: Color(0xFFCBD5E1)),
+                          SizedBox(width: 4),
+                          _Dot(color: Color(0xFFCBD5E1)),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
 
-          // Center 3D VS
+          // Center 3D Electric VS Badge
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFFA000), Color(0xFFFF6F00)],
+                  colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: AppRadii.borderPill,
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
-                    color: const Color(0xFFFF6F00).withAlpha(80),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                    color: Color(0x33EA580C),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
                   ),
                 ],
               ),
-              child: const Text(
-                '⚡ VS ⚡',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 11,
-                  letterSpacing: 0.5,
-                  fontFamily: 'Inter',
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.bolt_rounded, color: Colors.white, size: 14),
+                  Text(
+                    'VS',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      letterSpacing: 0.5,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  Icon(Icons.bolt_rounded, color: Colors.white, size: 14),
+                ],
               ),
             ),
           ),
 
-          // Right Player (Loser / Opponent)
+          // Right Player: Opponent (Amit Verma)
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        rightName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.battleNavy,
+                          fontFamily: 'Inter',
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFE4E6),
+                          borderRadius: AppRadii.borderPill,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star_rounded, color: Color(0xFFE11D48), size: 13),
+                            const SizedBox(width: 3),
+                            Text(
+                              '$rightScore pts',
+                              style: const TextStyle(
+                                color: Color(0xFF9F1239),
+                                fontWeight: FontWeight.w900,
+                                fontSize: 11.5,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      // 5 Question status dots
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: const [
+                          _Dot(color: Color(0xFFEF4444)),
+                          SizedBox(width: 4),
+                          _Dot(color: Color(0xFFCBD5E1)),
+                          SizedBox(width: 4),
+                          _Dot(color: Color(0xFFCBD5E1)),
+                          SizedBox(width: 4),
+                          _Dot(color: Color(0xFFCBD5E1)),
+                          SizedBox(width: 4),
+                          _Dot(color: Color(0xFFCBD5E1)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Container(
-                  width: 58,
-                  height: 58,
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFF87171).withAlpha(50),
-                    border: Border.all(color: const Color(0xFFF87171), width: 2.0),
+                    color: const Color(0xFFFFE4E6),
+                    border: Border.all(color: const Color(0xFFF43F5E), width: 2.0),
                   ),
                   child: const Center(
-                    child: Icon(Icons.face_5_rounded, size: 38, color: Color(0xFFDC2626)),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  loserName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.battleNavy,
-                    fontFamily: 'Inter',
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFE4E6),
-                      borderRadius: AppRadii.borderPill,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.star_rounded, color: Color(0xFFE11D48), size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$loserScore pts',
-                          style: const TextStyle(
-                            color: Color(0xFF9F1239),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: Icon(Icons.face_5_rounded, size: 34, color: Color(0xFFE11D48)),
                   ),
                 ),
               ],
@@ -249,7 +318,27 @@ class BattleResultComparisonCard extends StatelessWidget {
   }
 }
 
+class _Dot extends StatelessWidget {
+  final Color color;
+  const _Dot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+}
+
 /// Reward Summary Card: Coin Stack + "+100 Coins"
+/// Direct visual parity with Reference Image 1:
+/// - Left: 3D Golden coin stack with sparkles
+/// - Right: "You won", "+100 Coins" and encouragement pill
 class BattleRewardSummaryCard extends StatelessWidget {
   final int coinsWon;
   final bool isVictory;
@@ -263,7 +352,7 @@ class BattleRewardSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadii.borderXl,
@@ -272,30 +361,30 @@ class BattleRewardSummaryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 3D Coin Stack with sparkles
+          // 3D Coin Stack Medallion
           Container(
-            width: 64,
-            height: 64,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFFBEB),
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFDE047), Color(0xFFCA8A04)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               shape: BoxShape.circle,
-            ),
-            child: const Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Text('✨', style: TextStyle(fontSize: 13)),
-                ),
-                Positioned(
-                  bottom: 10,
-                  child: Text('🪙', style: TextStyle(fontSize: 38)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33CA8A04),
+                  blurRadius: 8,
+                  offset: Offset(0, 3),
                 ),
               ],
             ),
+            child: const Center(
+              child: Icon(Icons.monetization_on_rounded, color: Colors.white, size: 34),
+            ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
 
           // Win Text & Encouragement
           Expanded(
@@ -306,54 +395,50 @@ class BattleRewardSummaryCard extends StatelessWidget {
                 Text(
                   isVictory ? 'You won' : (coinsWon == 0 ? 'Match Tied' : 'Entry Lost'),
                   style: const TextStyle(
-                    fontSize: 13.5,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.battleSecondaryText,
                     fontFamily: 'Inter',
                   ),
                 ),
                 const SizedBox(height: 2),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('🪙', style: TextStyle(fontSize: 18)),
-                      const SizedBox(width: 5),
-                      Text(
-                        isVictory ? '+$coinsWon Coins' : (coinsWon == 0 ? '0 Coins' : '-$coinsWon Coins'),
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: isVictory ? const Color(0xFF00A859) : const Color(0xFFEF4444),
-                          letterSpacing: -0.3,
-                          fontFamily: 'Inter',
+                Row(
+                  children: [
+                    Text(
+                      isVictory ? '+$coinsWon Coins' : (coinsWon == 0 ? '0 Coins' : '-$coinsWon Coins'),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: isVictory
+                            ? const Color(0xFF008C52)
+                            : (coinsWon == 0 ? const Color(0xFF2563EB) : const Color(0xFFDC2626)),
+                        fontFamily: 'Inter',
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: AppRadii.borderPill,
+                          border: Border.all(color: const Color(0xFFBBF7D0)),
+                        ),
+                        child: Text(
+                          isVictory ? 'Great job! Keep playing to climb the ranks.' : 'Review answers and challenge another player.',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF15803D),
+                            fontFamily: 'Inter',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8FBF2),
-                    borderRadius: AppRadii.borderPill,
-                  ),
-                  child: Text(
-                    isVictory
-                        ? 'Great job! Keep playing to climb the ranks.'
-                        : 'Review answers and challenge another player.',
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF047857),
-                      fontFamily: 'Inter',
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
                 ),
               ],
             ),

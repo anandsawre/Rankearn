@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../tokens/radii.dart';
 import '../buttons/app_button.dart';
 
 /// Primary Battle Action Button
@@ -11,6 +12,7 @@ class BattlePrimaryButton extends StatelessWidget {
   final bool isEnabled;
   final double? width;
   final double? height;
+  final BorderRadius? borderRadius;
 
   const BattlePrimaryButton({
     super.key,
@@ -20,7 +22,8 @@ class BattlePrimaryButton extends StatelessWidget {
     this.isLoading = false,
     this.isEnabled = true,
     this.width,
-    this.height,
+    this.height = 46.0,
+    this.borderRadius = AppRadii.borderPill,
   });
 
   @override
@@ -35,8 +38,9 @@ class BattlePrimaryButton extends StatelessWidget {
       fullWidth: width == null,
       width: width,
       height: height,
+      borderRadius: borderRadius,
       leadingIcon: icon != null
-          ? Icon(icon, size: 20)
+          ? Icon(icon, size: 19)
           : null,
     );
   }
@@ -51,6 +55,7 @@ class BattleSecondaryButton extends StatelessWidget {
   final bool isSoftTint;
   final double? width;
   final double? height;
+  final BorderRadius? borderRadius;
 
   const BattleSecondaryButton({
     super.key,
@@ -59,7 +64,8 @@ class BattleSecondaryButton extends StatelessWidget {
     this.onPressed,
     this.isSoftTint = false,
     this.width,
-    this.height,
+    this.height = 46.0,
+    this.borderRadius = AppRadii.borderPill,
   });
 
   @override
@@ -72,8 +78,9 @@ class BattleSecondaryButton extends StatelessWidget {
       fullWidth: width == null,
       width: width,
       height: height,
+      borderRadius: borderRadius,
       leadingIcon: icon != null
-          ? Icon(icon, size: 20)
+          ? Icon(icon, size: 19)
           : null,
     );
   }
