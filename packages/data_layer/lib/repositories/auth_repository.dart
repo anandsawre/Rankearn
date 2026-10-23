@@ -43,7 +43,7 @@ class AuthRepository {
         phone: cleanPhone,
         data: {
           'name': name.trim(),
-          if (cleanPhone != null) 'phone': cleanPhone,
+          'phone': ?cleanPhone,
           if (examGoal != null && examGoal.trim().isNotEmpty) 'exam_goal': examGoal.trim(),
           if (referralCode != null && referralCode.trim().isNotEmpty)
             'referral_code': referralCode.trim().toUpperCase(),

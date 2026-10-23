@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// Complete Multi-Layered Fluid Harmonic Wave Background matching reference

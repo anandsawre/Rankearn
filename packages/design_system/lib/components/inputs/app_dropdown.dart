@@ -366,7 +366,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                               padding: const EdgeInsets.symmetric(vertical: 4),
                               shrinkWrap: true,
                               itemCount: widget.items.length,
-                              separatorBuilder: (_, __) => Divider(
+                              separatorBuilder: (_, _) => Divider(
                                 height: 1,
                                 thickness: 0.5,
                                 color: AppColors.borderSubtle.withValues(alpha: 0.6),
@@ -815,7 +815,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           shrinkWrap: true,
                           itemCount: widget.items.length,
-                          separatorBuilder: (_, __) => Divider(
+                          separatorBuilder: (_, _) => Divider(
                             height: 1,
                             thickness: 0.5,
                             color: AppColors.borderSubtle.withValues(alpha: 0.5),
