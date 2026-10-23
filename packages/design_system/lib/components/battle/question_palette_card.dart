@@ -29,16 +29,16 @@ class QuestionPaletteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A10194F),
-            blurRadius: 14,
-            offset: Offset(0, 4),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -49,13 +49,13 @@ class QuestionPaletteCard extends StatelessWidget {
           // 1. Header Title
           Row(
             children: const [
-              Icon(Icons.grid_view_rounded, color: Color(0xFF00B96B), size: 20),
-              SizedBox(width: 8),
+              Icon(Icons.grid_view_rounded, color: Color(0xFF00B96B), size: 18),
+              SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Question Palette',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w900,
                     color: AppColors.battleNavy,
                     letterSpacing: -0.2,
@@ -65,14 +65,14 @@ class QuestionPaletteCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
 
           // 2. Numbered Questions Grid (5 columns)
           LayoutBuilder(
             builder: (context, constraints) {
               const columns = 5;
-              const spacing = 6.0;
-              final itemWidth = ((constraints.maxWidth - (spacing * (columns - 1))) / columns).clamp(28.0, 42.0);
+              const spacing = 5.0;
+              final itemWidth = ((constraints.maxWidth - (spacing * (columns - 1))) / columns).clamp(24.0, 32.0);
               return Wrap(
                 spacing: spacing,
                 runSpacing: spacing,
@@ -91,7 +91,7 @@ class QuestionPaletteCard extends StatelessWidget {
                   } else if (isCurrent) {
                     bgColor = Colors.white;
                     textColor = const Color(0xFF2587F8);
-                    border = Border.all(color: const Color(0xFF2587F8), width: 2.0);
+                    border = Border.all(color: const Color(0xFF2587F8), width: 1.8);
                   } else {
                     bgColor = const Color(0xFFF1F5F9);
                     textColor = const Color(0xFF64748B);
@@ -100,13 +100,13 @@ class QuestionPaletteCard extends StatelessWidget {
 
                   return InkWell(
                     onTap: () => onQuestionSelected?.call(index),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                     child: Container(
                       width: itemWidth,
                       height: itemWidth,
                       decoration: BoxDecoration(
                         color: bgColor,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                         border: border,
                       ),
                       alignment: Alignment.center,
@@ -115,7 +115,7 @@ class QuestionPaletteCard extends StatelessWidget {
                         style: TextStyle(
                           color: textColor,
                           fontWeight: FontWeight.w800,
-                          fontSize: itemWidth < 34 ? 12 : 13.5,
+                          fontSize: itemWidth < 30 ? 11 : 12,
                           fontFamily: 'Inter',
                         ),
                       ),
@@ -125,17 +125,17 @@ class QuestionPaletteCard extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
           // 3. Legend Row
           Wrap(
-            spacing: 12,
-            runSpacing: 6,
+            spacing: 10,
+            runSpacing: 4,
             children: [
               _buildLegendItem(
                 dot: Container(
-                  width: 8,
-                  height: 8,
+                  width: 7,
+                  height: 7,
                   decoration: const BoxDecoration(
                     color: Color(0xFF00B96B),
                     shape: BoxShape.circle,
@@ -145,8 +145,8 @@ class QuestionPaletteCard extends StatelessWidget {
               ),
               _buildLegendItem(
                 dot: Container(
-                  width: 8,
-                  height: 8,
+                  width: 7,
+                  height: 7,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: const Color(0xFF2587F8), width: 1.5),
@@ -156,8 +156,8 @@ class QuestionPaletteCard extends StatelessWidget {
               ),
               _buildLegendItem(
                 dot: Container(
-                  width: 8,
-                  height: 8,
+                  width: 7,
+                  height: 7,
                   decoration: const BoxDecoration(
                     color: Color(0xFFCBD5E1),
                     shape: BoxShape.circle,
@@ -167,20 +167,20 @@ class QuestionPaletteCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // 4. Surrender Battle Button (Standardized with AppButton)
           AppButton(
             label: 'Surrender Battle',
             variant: AppButtonVariant.outlined,
-            size: AppButtonSize.medium,
+            size: AppButtonSize.small,
             fullWidth: true,
             foregroundColor: AppColors.errorRose,
             borderColor: AppColors.errorRose,
             leadingIcon: const Icon(
               Icons.flag_rounded,
               color: AppColors.errorRose,
-              size: 18,
+              size: 16,
             ),
             onPressed: () async {
               if (onSurrender != null) {

@@ -220,15 +220,15 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
             builder: (context, constraints) {
               final isDesktop = constraints.maxWidth >= 960;
               final isTablet = constraints.maxWidth >= 650 && !isDesktop;
+              final canFitWithoutScroll = isDesktop && constraints.maxHeight >= 520;
 
-              return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? 28 : (isTablet ? 18 : 12),
-                  vertical: isDesktop ? 20 : 12,
+              final content = ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktop ? 1280 : double.infinity,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // 1. Stadium Versus Header (Spans across top)
                     StadiumVersusBanner(
@@ -242,7 +242,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                       opponentRounds: _opponentRounds,
                       isOpponentLeading: _opponentScore > _playerScore,
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 10),
 
                     // 2. Responsive Content Body
                     if (isDesktop)
@@ -251,6 +251,24 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                       _buildMobileStacked(currentQ),
                   ],
                 ),
+              );
+
+              if (canFitWithoutScroll) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: content,
+                  ),
+                );
+              }
+
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 20 : (isTablet ? 16 : 12),
+                  vertical: isDesktop ? 10 : 10,
+                ),
+                child: Center(child: content),
               );
             },
           ),
@@ -266,7 +284,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
       children: [
         // Left Column: Question Palette & Surrender Action
         SizedBox(
-          width: 220,
+          width: 210,
           child: QuestionPaletteCard(
             totalQuestions: 20,
             currentQuestionIndex: _currentRound - 1,
@@ -275,7 +293,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
             entryFee: _session.entryFee,
           ),
         ),
-        const SizedBox(width: 18),
+        const SizedBox(width: 14),
 
         // Center Column: Question Card & 2x2 Answer Grid
         Expanded(
@@ -291,25 +309,25 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                 timeLimitSeconds: _turnSeconds,
                 questionText: currentQ.questionText,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
 
               // Answer Choices in 2x2 Grid (Desktop Reference Image 2)
               Row(
                 children: [
                   Expanded(child: _buildAnswerTile(currentQ, 0, 'A')),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 10),
                   Expanded(child: _buildAnswerTile(currentQ, 1, 'B')),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(child: _buildAnswerTile(currentQ, 2, 'C')),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 10),
                   Expanded(child: _buildAnswerTile(currentQ, 3, 'D')),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
 
               // Submit Answer Button
               BattlePrimaryButton(
@@ -322,11 +340,11 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
             ],
           ),
         ),
-        const SizedBox(width: 18),
+        const SizedBox(width: 14),
 
         // Right Column: Quick Status, Battle Info, Online Players, Recent Battles
         SizedBox(
-          width: 290,
+          width: 310,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -336,15 +354,15 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                 remainingSeconds: _turnSeconds,
                 stakeCoins: _session.entryFee,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
               BattleInfoCard(
                 winReward: _session.entryFee,
                 correctReward: 10,
                 wrongReward: 0,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
               const PlayersOnlineCard(count: '2,468'),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
               const RecentBattlesCard(),
             ],
           ),

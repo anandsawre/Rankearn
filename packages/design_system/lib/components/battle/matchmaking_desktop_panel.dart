@@ -26,7 +26,7 @@ class MatchmakingProgressPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -46,13 +46,13 @@ class MatchmakingProgressPanel extends StatelessWidget {
           // 1. Heading with Live Signal Icon
           Row(
             children: const [
-              Icon(Icons.sensors_rounded, color: Color(0xFF00B96B), size: 22),
+              Icon(Icons.sensors_rounded, color: Color(0xFF00B96B), size: 20),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Matchmaking in Progress',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w900,
                     color: AppColors.battleNavy,
                     letterSpacing: -0.2,
@@ -62,21 +62,21 @@ class MatchmakingProgressPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           const Text(
             'Searching for a fair match based on your skill level...',
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
               color: AppColors.battleSecondaryText,
               fontFamily: 'Inter',
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
 
           // 2. Three-Stage Progress Stepper
           _buildStageStepper(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
 
           // 3. Status Rows (Wait Time, Skill Level, Players Online)
           _buildStatusRow(
@@ -85,7 +85,7 @@ class MatchmakingProgressPanel extends StatelessWidget {
             title: 'Estimated Wait Time',
             subtitle: waitTime,
           ),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 10, color: Color(0xFFF1F5F9)),
           _buildStatusRow(
             icon: Icons.bar_chart_rounded,
             iconColor: const Color(0xFF00B96B),
@@ -93,7 +93,7 @@ class MatchmakingProgressPanel extends StatelessWidget {
             subtitle: skillLevel,
             isChip: true,
           ),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 10, color: Color(0xFFF1F5F9)),
           _buildStatusRow(
             icon: Icons.groups_rounded,
             iconColor: const Color(0xFF00B96B),
@@ -420,10 +420,10 @@ class MatchmakingDesktopCardsRow extends StatelessWidget {
     required IconData illustrationIcon,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
@@ -438,14 +438,14 @@ class MatchmakingDesktopCardsRow extends StatelessWidget {
         children: [
           // Icon Pill
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: iconBg,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 24),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
 
           // Title & Description
           Expanded(
@@ -455,20 +455,20 @@ class MatchmakingDesktopCardsRow extends StatelessWidget {
               children: [
                 Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 8,
-                  runSpacing: 4,
+                  spacing: 6,
+                  runSpacing: 2,
                   children: [
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w900,
                         color: AppColors.battleNavy,
                         fontFamily: 'Inter',
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: badgeBg,
                         borderRadius: BorderRadius.circular(6),
@@ -476,7 +476,7 @@ class MatchmakingDesktopCardsRow extends StatelessWidget {
                       child: Text(
                         badge,
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 10,
                           fontWeight: FontWeight.w800,
                           color: badgeColor,
                           fontFamily: 'Inter',
@@ -485,33 +485,33 @@ class MatchmakingDesktopCardsRow extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   description,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF64748B),
-                    height: 1.3,
+                    height: 1.25,
                     fontFamily: 'Inter',
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
 
           // Illustration icon on right
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               illustrationIcon,
               color: iconColor.withAlpha(160),
-              size: 28,
+              size: 24,
             ),
           ),
         ],
@@ -534,7 +534,7 @@ class MatchmakingCancelButton extends StatelessWidget {
         label: 'Cancel Matchmaking',
         onPressed: onCancel,
         variant: AppButtonVariant.outlined,
-        size: AppButtonSize.large,
+        size: AppButtonSize.medium,
         width: 220,
         foregroundColor: AppColors.errorRose,
         borderColor: AppColors.errorRose,

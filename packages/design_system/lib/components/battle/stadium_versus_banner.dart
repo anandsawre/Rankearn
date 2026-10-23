@@ -47,19 +47,19 @@ class StadiumVersusBanner extends StatelessWidget {
 
         return Container(
           width: double.infinity,
-          height: isDesktop ? 210 : (isMobile ? 180 : 195),
+          height: isDesktop ? 154 : (isMobile ? 150 : 160),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x1A10194F),
-                blurRadius: 18,
-                offset: Offset(0, 6),
+                blurRadius: 16,
+                offset: Offset(0, 4),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
             child: Stack(
               children: [
                 // 1. Stadium Backdrop with Floodlights & Turf
@@ -71,7 +71,7 @@ class StadiumVersusBanner extends StatelessWidget {
 
                 // 2. Center Stadium Crest & 3D VS Lightning Emblem
                 Positioned(
-                  top: 12,
+                  top: 6,
                   left: 0,
                   right: 0,
                   child: Center(
@@ -83,8 +83,8 @@ class StadiumVersusBanner extends StatelessWidget {
                 Positioned.fill(
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: isDesktop ? 24 : 12,
-                      vertical: 14,
+                      horizontal: isDesktop ? 20 : 10,
+                      vertical: 8,
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -101,7 +101,7 @@ class StadiumVersusBanner extends StatelessWidget {
                         ),
 
                         // Center Spacer for Crest & VS
-                        SizedBox(width: isDesktop ? 160 : (isMobile ? 80 : 110)),
+                        SizedBox(width: isDesktop ? 130 : (isMobile ? 70 : 90)),
 
                         // Right Player Card (Amit Verma)
                         _buildPlayerPod(
@@ -126,7 +126,7 @@ class StadiumVersusBanner extends StatelessWidget {
   }
 
   Widget _buildCenterStadiumCrest(bool isDesktop) {
-    final crestWidth = isDesktop ? 150.0 : 110.0;
+    final crestWidth = isDesktop ? 116.0 : 96.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -139,7 +139,7 @@ class StadiumVersusBanner extends StatelessWidget {
             // Shield Container
             Container(
               width: crestWidth,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF1E3A8A), Color(0xFF0F172A)],
@@ -147,14 +147,14 @@ class StadiumVersusBanner extends StatelessWidget {
                   end: Alignment.bottomCenter,
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                  bottom: Radius.circular(24),
+                  top: Radius.circular(14),
+                  bottom: Radius.circular(20),
                 ),
-                border: Border.all(color: const Color(0xFFFFD700), width: 2.2),
+                border: Border.all(color: const Color(0xFFFFD700), width: 2.0),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x66FFD700),
-                    blurRadius: 16,
+                    blurRadius: 12,
                     spreadRadius: 1,
                   ),
                 ],
@@ -162,28 +162,27 @@ class StadiumVersusBanner extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(height: 2),
                   const Text(
                     '1v1',
                     style: TextStyle(
                       color: Color(0xFFFFE600),
-                      fontSize: 18,
+                      fontSize: 15,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -0.5,
                       fontFamily: 'Inter',
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                     decoration: BoxDecoration(
                       color: const Color(0xFF00B96B),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
                       'Live Arena',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 10.5,
+                        fontSize: 9.5,
                         fontWeight: FontWeight.w800,
                         fontFamily: 'Inter',
                       ),
@@ -195,9 +194,9 @@ class StadiumVersusBanner extends StatelessWidget {
 
             // Top Crown on Shield
             Positioned(
-              top: -12,
+              top: -10,
               child: Container(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(3.5),
                 decoration: const BoxDecoration(
                   color: Color(0xFFFFB800),
                   shape: BoxShape.circle,
@@ -205,17 +204,17 @@ class StadiumVersusBanner extends StatelessWidget {
                     BoxShadow(color: Color(0x66FFA000), blurRadius: 6),
                   ],
                 ),
-                child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 14),
+                child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 12),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
 
         // 3D Golden VS with Lightning Bolt
         const Battle3DVsBadge(
-          width: 54,
-          height: 48,
+          width: 44,
+          height: 36,
         ),
       ],
     );
@@ -230,17 +229,17 @@ class StadiumVersusBanner extends StatelessWidget {
     required bool isCurrentUser,
     required bool isDesktop,
   }) {
-    final podWidth = isDesktop ? 190.0 : 130.0;
+    final podWidth = isDesktop ? 172.0 : 124.0;
 
     return Container(
       width: podWidth,
       padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 14 : 8,
-        vertical: isDesktop ? 10 : 8,
+        horizontal: isDesktop ? 10 : 6,
+        vertical: isDesktop ? 5 : 4,
       ),
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(240),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isCurrentUser ? const Color(0xFF86EFAC) : const Color(0xFFFDA4AF),
           width: 1.5,
@@ -248,8 +247,8 @@ class StadiumVersusBanner extends StatelessWidget {
         boxShadow: const [
           BoxShadow(
             color: Color(0x14000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            blurRadius: 8,
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -259,18 +258,18 @@ class StadiumVersusBanner extends StatelessWidget {
         children: [
           // 3D Cartoon Avatar with Crown
           BattlePlayerAvatar(
-            size: isDesktop ? 56 : 46,
+            size: isDesktop ? 40 : 34,
             isCurrentUser: isCurrentUser,
             hasCrown: isLeading,
             avatarUrl: isCurrentUser ? playerAvatarUrl : opponentAvatarUrl,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 3),
 
           // Name
           Text(
             name,
             style: TextStyle(
-              fontSize: isDesktop ? 14 : 12,
+              fontSize: isDesktop ? 13 : 11.5,
               fontWeight: FontWeight.w900,
               color: AppColors.battleNavy,
               fontFamily: 'Inter',
@@ -282,22 +281,21 @@ class StadiumVersusBanner extends StatelessWidget {
 
           // Rank if available
           if (rank != null && isDesktop) ...[
-            const SizedBox(height: 1),
             Text(
               rank,
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 10.5,
                 fontWeight: FontWeight.w600,
                 color: AppColors.battleSecondaryText,
                 fontFamily: 'Inter',
               ),
             ),
           ],
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
 
           // Score Pill
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
               color: isCurrentUser ? const Color(0xFFD6F6E5) : const Color(0xFFFFE5E8),
               borderRadius: AppRadii.borderPill,
@@ -308,7 +306,7 @@ class StadiumVersusBanner extends StatelessWidget {
                 Icon(
                   Icons.star_rounded,
                   color: isCurrentUser ? const Color(0xFF00B96B) : const Color(0xFFFF385C),
-                  size: 13,
+                  size: 12,
                 ),
                 const SizedBox(width: 3),
                 Text(
@@ -316,14 +314,14 @@ class StadiumVersusBanner extends StatelessWidget {
                   style: TextStyle(
                     color: isCurrentUser ? const Color(0xFF008C52) : const Color(0xFFD61F3D),
                     fontWeight: FontWeight.w800,
-                    fontSize: 11.5,
+                    fontSize: 11,
                     fontFamily: 'Inter',
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
 
           // 5 Round Dots
           Row(

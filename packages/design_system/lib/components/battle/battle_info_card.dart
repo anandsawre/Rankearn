@@ -129,7 +129,7 @@ class BattleTipBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFE7FAF0),
         borderRadius: AppRadii.borderLg,
@@ -139,8 +139,8 @@ class BattleTipBanner extends StatelessWidget {
         children: [
           // Glowing lightbulb badge
           Container(
-            width: 46,
-            height: 46,
+            width: 38,
+            height: 38,
             decoration: const BoxDecoration(
               color: Color(0xFFD0F6E2),
               shape: BoxShape.circle,
@@ -149,10 +149,10 @@ class BattleTipBanner extends StatelessWidget {
             child: const Icon(
               Icons.lightbulb_rounded,
               color: Color(0xFF00B96B),
-              size: 26,
+              size: 22,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
 
           // Message texts
           Expanded(
@@ -163,20 +163,20 @@ class BattleTipBanner extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 14.5,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF008C52),
                     fontFamily: 'Inter',
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   message,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF2C5E47),
-                    height: 1.3,
+                    height: 1.25,
                     fontFamily: 'Inter',
                   ),
                 ),
@@ -185,29 +185,30 @@ class BattleTipBanner extends StatelessWidget {
           ),
           const SizedBox(width: 8),
 
-          // Coin Stack with Sparkles
-          const SizedBox(
-            width: 58,
-            height: 48,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned(
-                  top: 0,
-                  right: 2,
-                  child: Text('✨', style: TextStyle(fontSize: 14)),
-                ),
-                Positioned(
-                  bottom: 2,
-                  left: 4,
-                  child: Text('🪙', style: TextStyle(fontSize: 32)),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 4,
-                  child: Text('🪙', style: TextStyle(fontSize: 26)),
+          // Professional Vector Gold Coin Medallion with Sparkle
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              gradient: const RadialGradient(
+                colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+              ),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFFFD54F), width: 1.5),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33FFB800),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
               ],
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.monetization_on_rounded,
+                color: Color(0xFFFFB800),
+                size: 26,
+              ),
             ),
           ),
         ],

@@ -62,7 +62,7 @@ class BattleQuestionCard extends StatelessWidget {
             // Right: Stake: 100 Coins pill
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF9E6),
                   borderRadius: AppRadii.borderPill,
@@ -71,13 +71,13 @@ class BattleQuestionCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🪙', style: TextStyle(fontSize: 13)),
+                    const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFB800), size: 14),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         'Stake: $stakeCoins Coins',
                         style: const TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 11,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFFB45309),
                           fontFamily: 'Inter',
@@ -92,13 +92,13 @@ class BattleQuestionCard extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
 
         // Animated Round Progress Bar
         ClipRRect(
-          borderRadius: BorderRadius.circular(5),
+          borderRadius: BorderRadius.circular(4),
           child: Container(
-            height: 8,
+            height: 6,
             color: const Color(0xFFE5E7EB),
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
@@ -108,17 +108,17 @@ class BattleQuestionCard extends StatelessWidget {
                   gradient: const LinearGradient(
                     colors: [Color(0xFF00C975), Color(0xFF00A35E)],
                   ),
-                  borderRadius: BorderRadius.circular(5),
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 12),
 
         // 2. Question Card Surface
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: AppRadii.borderXl,
@@ -132,9 +132,9 @@ class BattleQuestionCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Subject Chip (e.g. 📖 General Science)
+                  // Subject Chip
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                     decoration: BoxDecoration(
                       color: const Color(0xFFD1FAE5),
                       borderRadius: AppRadii.borderPill,
@@ -142,12 +142,12 @@ class BattleQuestionCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('📖', style: TextStyle(fontSize: 13)),
+                        const Icon(Icons.menu_book_rounded, color: Color(0xFF047857), size: 14),
                         const SizedBox(width: 5),
                         Text(
                           subject,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF047857),
                             fontFamily: 'Inter',
@@ -157,9 +157,9 @@ class BattleQuestionCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Timer Badge (e.g. ⏱️ 12s)
+                  // Timer Badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEF3C7),
                       borderRadius: AppRadii.borderPill,
@@ -167,12 +167,12 @@ class BattleQuestionCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('⏱️', style: TextStyle(fontSize: 13)),
+                        const Icon(Icons.access_time_rounded, color: Color(0xFFB45309), size: 14),
                         const SizedBox(width: 5),
                         Text(
                           '${timeLimitSeconds}s',
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w800,
                             color: Color(0xFFB45309),
                             fontFamily: 'Inter',
@@ -183,16 +183,16 @@ class BattleQuestionCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
 
               // Question Text
               Text(
                 questionText,
                 style: const TextStyle(
-                  fontSize: 19,
+                  fontSize: 17,
                   fontWeight: FontWeight.w900,
                   color: AppColors.battleNavy,
-                  height: 1.35,
+                  height: 1.3,
                   letterSpacing: -0.2,
                   fontFamily: 'Inter',
                 ),

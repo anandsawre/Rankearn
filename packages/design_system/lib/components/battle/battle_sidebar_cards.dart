@@ -69,54 +69,60 @@ class BattleQuickStatusCardsRow extends StatelessWidget {
     Color? valueColor,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0810194F),
-            blurRadius: 10,
-            offset: Offset(0, 3),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(7),
+            padding: const EdgeInsets.all(4.5),
             decoration: BoxDecoration(
               color: iconBg,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 18),
+            child: Icon(icon, color: iconColor, size: 14),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 5),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.battleSecondaryText,
-                    fontFamily: 'Inter',
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.battleSecondaryText,
+                      fontFamily: 'Inter',
+                    ),
                   ),
                 ),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: valueColor ?? AppColors.battleNavy,
-                    fontFamily: 'Inter',
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: valueColor ?? AppColors.battleNavy,
+                      fontFamily: 'Inter',
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -143,16 +149,16 @@ class BattleInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A10194F),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -161,12 +167,12 @@ class BattleInfoCard extends StatelessWidget {
         children: [
           Row(
             children: const [
-              Icon(Icons.sports_esports_rounded, color: Color(0xFF2587F8), size: 18),
-              SizedBox(width: 8),
+              Icon(Icons.sports_esports_rounded, color: Color(0xFF2587F8), size: 16),
+              SizedBox(width: 6),
               Text(
                 'Battle Info',
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w900,
                   color: AppColors.battleNavy,
                   fontFamily: 'Inter',
@@ -174,21 +180,21 @@ class BattleInfoCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 6),
           _buildRow(
             icon: Icons.emoji_events_rounded,
             iconColor: const Color(0xFFFFB800),
             label: 'Win this Battle',
             coins: '+$winReward Coins',
           ),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow(
             icon: Icons.star_rounded,
             iconColor: const Color(0xFFFFB800),
             label: 'Correct Answer',
             coins: '+$correctReward Coins',
           ),
-          const Divider(height: 16, color: Color(0xFFF1F5F9)),
+          const Divider(height: 8, color: Color(0xFFF1F5F9)),
           _buildRow(
             icon: Icons.close_rounded,
             iconColor: const Color(0xFFFF385C),
@@ -212,13 +218,13 @@ class BattleInfoCard extends StatelessWidget {
         Expanded(
           child: Row(
             children: [
-              Icon(icon, color: iconColor, size: 16),
-              const SizedBox(width: 8),
+              Icon(icon, color: iconColor, size: 14),
+              const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF334155),
                     fontFamily: 'Inter',
@@ -230,16 +236,16 @@ class BattleInfoCard extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFB800), size: 15),
-            const SizedBox(width: 4),
+            const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFB800), size: 13),
+            const SizedBox(width: 3),
             Text(
               coins,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w800,
                 color: AppColors.battleNavy,
                 fontFamily: 'Inter',
@@ -264,10 +270,10 @@ class PlayersOnlineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
@@ -283,13 +289,13 @@ class PlayersOnlineCard extends StatelessWidget {
           Expanded(
             child: Row(
               children: const [
-                Icon(Icons.groups_rounded, color: Color(0xFF00B96B), size: 20),
-                SizedBox(width: 8),
+                Icon(Icons.groups_rounded, color: Color(0xFF00B96B), size: 18),
+                SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     'Players Online',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: AppColors.battleNavy,
                       fontFamily: 'Inter',
@@ -301,23 +307,23 @@ class PlayersOnlineCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 count,
                 style: const TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.w900,
                   color: AppColors.battleNavy,
                   fontFamily: 'Inter',
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 5),
               Container(
-                width: 8,
-                height: 8,
+                width: 7,
+                height: 7,
                 decoration: const BoxDecoration(
                   color: Color(0xFF00B96B),
                   shape: BoxShape.circle,
@@ -343,16 +349,16 @@ class RecentBattlesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A10194F),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -365,13 +371,13 @@ class RecentBattlesCard extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: const [
-                    Icon(Icons.history_rounded, color: Color(0xFF2587F8), size: 18),
-                    SizedBox(width: 8),
+                    Icon(Icons.history_rounded, color: Color(0xFF2587F8), size: 16),
+                    SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Recent Battles',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w900,
                           color: AppColors.battleNavy,
                           fontFamily: 'Inter',
@@ -383,13 +389,13 @@ class RecentBattlesCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               InkWell(
                 onTap: onViewAll,
                 child: const Text(
                   'View All',
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF2587F8),
                     fontFamily: 'Inter',
@@ -398,26 +404,19 @@ class RecentBattlesCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 6),
           _buildItem(
             name: 'Rohit vs Priya',
             coinsDelta: '+100',
             isWin: true,
             avatarBg: const Color(0xFF3B82F6),
           ),
-          const Divider(height: 14, color: Color(0xFFF1F5F9)),
+          const Divider(height: 6, color: Color(0xFFF1F5F9)),
           _buildItem(
             name: 'Aman vs Neha',
             coinsDelta: '-50',
             isWin: false,
             avatarBg: const Color(0xFFFF5C5C),
-          ),
-          const Divider(height: 14, color: Color(0xFFF1F5F9)),
-          _buildItem(
-            name: 'You vs Karan',
-            coinsDelta: '+100',
-            isWin: true,
-            avatarBg: const Color(0xFF10B981),
           ),
         ],
       ),
