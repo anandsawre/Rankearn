@@ -1099,54 +1099,56 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               _buildPasswordFieldSection(isLogin: true),
               const SizedBox(height: 8),
 
-              // Login Extra Row: Keep me logged in + Forgot Password?
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 8,
-                runSpacing: 4,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: Checkbox(
-                          value: _rememberMe,
-                          activeColor: const Color(0xFF00B96B),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                          onChanged: (val) => setState(() => _rememberMe = val ?? true),
+              // Login Extra Row: Keep me logged in (left edge) + Forgot Password? (right edge)
+              SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  runSpacing: 4,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: Checkbox(
+                            value: _rememberMe,
+                            activeColor: const Color(0xFF00B96B),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                            onChanged: (val) => setState(() => _rememberMe = val ?? true),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Keep me logged in',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
-                      ),
-                    ],
-                  ),
-                  InkWell(
-                    onTap: _openForgotPasswordModal,
-                    borderRadius: BorderRadius.circular(6),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      child: Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF00B96B),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Keep me logged in',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
+                        ),
+                      ],
+                    ),
+                    InkWell(
+                      onTap: _openForgotPasswordModal,
+                      borderRadius: BorderRadius.circular(6),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                        child: Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF00B96B),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
             ],
 
-            // Primary Action Button (Login / Register) with Brand Green Gradient
+            // Primary Action Button (Login / Register) with Brand Green Gradient (No Shadow)
             SizedBox(
               width: double.infinity,
               height: 42,
@@ -1159,13 +1161,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     ],
                   ),
                   borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF00B96B).withAlpha(60),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
                 ),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
