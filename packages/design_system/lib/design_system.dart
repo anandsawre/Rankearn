@@ -69,6 +69,11 @@ export 'components/feedback/app_loading.dart';
 export 'components/navigation/app_header.dart';
 export 'components/navigation/app_bottom_nav.dart';
 export 'components/navigation/admin_sidebar.dart';
+export 'components/display/google_logo.dart';
+export 'components/navigation/auth_role_selector.dart';
+export 'components/buttons/social_auth_button.dart';
+export 'components/display/auth_feature_item.dart';
+export 'components/cards/auth_stats_card.dart';
 
 // Showcase
 export 'showcase/design_system_showcase.dart';

@@ -13,6 +13,7 @@ import 'features/earn/earn_screen.dart';
 import 'features/wallet/wallet_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/rewards/rewards_hub_screen.dart';
+import 'features/auth/user_auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -376,6 +377,29 @@ class _UserAppShellState extends State<UserAppShell> {
     );
   }
 
+  void _openAuthScreen({AuthScreenMode mode = AuthScreenMode.login}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => UserAuthScreen(
+          initialMode: mode,
+          onAuthSuccess: (profile) {
+            setState(() {
+              _profile = profile;
+              _activeTab = UserNavTab.home;
+            });
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Welcome back, ${profile.name}!'),
+                backgroundColor: AppColors.primary,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   void _handleLogout() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -383,6 +407,7 @@ class _UserAppShellState extends State<UserAppShell> {
         backgroundColor: Color(0xFFE11D48),
       ),
     );
+    _openAuthScreen(mode: AuthScreenMode.login);
   }
 
   @override
@@ -716,24 +741,44 @@ class _UserAppShellState extends State<UserAppShell> {
               ),
             ),
 
-            // Logout row at drawer bottom
+            // Auth actions row at drawer bottom
             Padding(
-              padding: const EdgeInsets.all(12),
-              child: ListTile(
-                shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
-                leading: const Icon(Icons.logout, color: Color(0xFFE11D48)),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFFE11D48),
-                    fontSize: 14,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Column(
+                children: [
+                  ListTile(
+                    shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+                    leading: const Icon(Icons.login_rounded, color: AppColors.primary),
+                    title: const Text(
+                      'Sign In / Switch Account',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                        fontSize: 13,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openAuthScreen(mode: AuthScreenMode.login);
+                    },
                   ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _handleLogout();
-                },
+                  ListTile(
+                    shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+                    leading: const Icon(Icons.logout, color: Color(0xFFE11D48)),
+                    title: const Text(
+                      'Logout',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFE11D48),
+                        fontSize: 14,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _handleLogout();
+                    },
+                  ),
+                ],
               ),
             ),
           ],
