@@ -1305,10 +1305,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 ],
               ),
             ),
-            if (fillHeight)
-              const Spacer()
-            else
-              const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
             // Divider With Label "OR"
             Row(
@@ -1338,6 +1335,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             SocialAuthButton.phone(
               onPressed: _handlePhoneLogin,
             ),
+            if (fillHeight)
+              const Spacer(),
           ],
         ),
       ),
