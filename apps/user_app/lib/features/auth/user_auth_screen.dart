@@ -674,17 +674,17 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 children: [
                   // Feature items bullet list
                   Expanded(
-                    flex: 9,
+                    flex: 8,
                     child: _buildFeaturesList(),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
 
-                  // Zoomed high-resolution Mascot Artwork
+                  // Zoomed high-resolution Mascot Artwork (Even larger & bold)
                   Expanded(
-                    flex: 12,
+                    flex: 13,
                     child: _buildMascotArtwork(
-                      maxHeight: isDesktop ? 285 : 220,
-                      scale: isDesktop ? 1.16 : 1.05,
+                      maxHeight: isDesktop ? 335 : 240,
+                      scale: isDesktop ? 1.28 : 1.10,
                     ),
                   ),
                 ],
@@ -695,7 +695,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: _buildMascotArtwork(maxHeight: 220, scale: 1.05)),
+                Center(child: _buildMascotArtwork(maxHeight: 240, scale: 1.10)),
                 const SizedBox(height: 14),
                 _buildFeaturesList(),
               ],
