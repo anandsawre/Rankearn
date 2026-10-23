@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 import '../../tokens/shadows.dart';
+import 'battle_versus_card.dart';
 
 /// Announcement Card: "You defeated Amit Verma (Rank #4) in 1v1 Battle! 🏆"
 class BattleResultAnnouncementCard extends StatelessWidget {
@@ -62,188 +63,188 @@ class BattleResultComparisonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: AppColors.battleBorder, width: 1.2),
-        boxShadow: AppShadows.subtle,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFE4F0EA), width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D10194F),
+            blurRadius: 18,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
-      child: Row(
-        children: [
-          // Left Player (Winner)
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 58,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFF34D399).withAlpha(50),
-                        border: Border.all(color: const Color(0xFFFFC107), width: 2.5),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.face_rounded, size: 38, color: Color(0xFF059669)),
-                      ),
-                    ),
-                    Positioned(
-                      top: -10,
-                      left: -4,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFFC107),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Text('👑', style: TextStyle(fontSize: 13)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  winnerName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.battleNavy,
-                    fontFamily: 'Inter',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(26.5),
+        child: Stack(
+          children: [
+            // Left subtle mint ambient gradient glow
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 140,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFE6FAF0), Color(0x00FFFFFF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD1FAE5),
-                      borderRadius: AppRadii.borderPill,
-                    ),
-                    child: Row(
+              ),
+            ),
+
+            // Right subtle rose ambient gradient glow
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: 140,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFFFF0F2), Color(0x00FFFFFF)],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                  ),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+              child: Row(
+                children: [
+                  // Left Player (Winner)
+                  Expanded(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.star_rounded, color: Color(0xFF059669), size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$winnerScore pts',
-                          style: const TextStyle(
-                            color: Color(0xFF065F46),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
-                            fontFamily: 'Inter',
+                        BattlePlayerAvatar(
+                          size: 64,
+                          isCurrentUser: isWinnerCurrentUser,
+                          hasCrown: true,
+                          avatarUrl: winnerAvatar,
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            winnerName,
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.battleNavy,
+                              letterSpacing: -0.2,
+                              fontFamily: 'Inter',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD6F6E5),
+                              borderRadius: AppRadii.borderPill,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star_rounded, color: Color(0xFF00B96B), size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$winnerScore pts',
+                                  style: const TextStyle(
+                                    color: Color(0xFF008C52),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 13,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
 
-          // Center 3D VS
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFA000), Color(0xFFFF6F00)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: AppRadii.borderPill,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFF6F00).withAlpha(80),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                  // Center 3D VS
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6),
+                    child: Battle3DVsBadge(width: 52, height: 48),
+                  ),
+
+                  // Right Player (Loser / Opponent)
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        BattlePlayerAvatar(
+                          size: 64,
+                          isCurrentUser: !isWinnerCurrentUser,
+                          hasCrown: false,
+                          avatarUrl: loserAvatar,
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            loserName,
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.battleNavy,
+                              letterSpacing: -0.2,
+                              fontFamily: 'Inter',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFE5E8),
+                              borderRadius: AppRadii.borderPill,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star_rounded, color: Color(0xFFFF385C), size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$loserScore pts',
+                                  style: const TextStyle(
+                                    color: Color(0xFFD61F3D),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 13,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              child: const Text(
-                '⚡ VS ⚡',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 11,
-                  letterSpacing: 0.5,
-                  fontFamily: 'Inter',
-                ),
-              ),
             ),
-          ),
-
-          // Right Player (Loser / Opponent)
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFFF87171).withAlpha(50),
-                    border: Border.all(color: const Color(0xFFF87171), width: 2.0),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.face_5_rounded, size: 38, color: Color(0xFFDC2626)),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  loserName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.battleNavy,
-                    fontFamily: 'Inter',
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFE4E6),
-                      borderRadius: AppRadii.borderPill,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.star_rounded, color: Color(0xFFE11D48), size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$loserScore pts',
-                          style: const TextStyle(
-                            color: Color(0xFF9F1239),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
