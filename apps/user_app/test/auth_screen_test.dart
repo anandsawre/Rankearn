@@ -66,11 +66,7 @@ void main() {
       expect(find.text('Good To See You Again!'), findsOneWidget);
       expect(find.text('Login to your Rankearn account and continue learning, practicing and earning.'), findsOneWidget);
 
-      // 6. Role Selector
-      expect(find.text('Student Login'), findsOneWidget);
-      expect(find.text('Teacher Login'), findsOneWidget);
-
-      // 7. Social Buttons
+      // 6. Social Buttons
       expect(find.text('Continue with Google'), findsOneWidget);
       expect(find.text('Continue with Phone'), findsOneWidget);
 
@@ -123,25 +119,7 @@ void main() {
       expect(find.text('Welcome Back!'), findsWidgets);
     });
 
-    testWidgets('Role switcher toggles between Student and Teacher', (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(buildAuthApp(initialMode: AuthScreenMode.login));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Student Login'), findsOneWidget);
-      expect(find.text('Teacher Login'), findsOneWidget);
-
-      // Tap Teacher Login
-      await tester.tap(find.text('Teacher Login'));
-      await tester.pumpAndSettle();
-
-      // Tap Student Login
-      await tester.tap(find.text('Student Login'));
-      await tester.pumpAndSettle();
-    });
 
     testWidgets('Phone dialog opens on clicking Continue with Phone', (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1280, 900);
@@ -212,17 +190,7 @@ void main() {
       expect(find.text("It's Free to Join!"), findsOneWidget);
       expect(find.text('Join Rankearn and start your learning journey today!'), findsOneWidget);
 
-      // 3. Role Selector (Student / Teacher)
-      expect(
-        find.descendant(of: find.byType(AuthRoleSelector), matching: find.text('Student')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: find.byType(AuthRoleSelector), matching: find.text('Teacher')),
-        findsOneWidget,
-      );
-
-      // 4. Form Fields
+      // 3. Form Fields
       expect(find.text('Full Name'), findsOneWidget);
       expect(find.text('Enter your full name'), findsOneWidget);
       expect(find.text('Email Address'), findsOneWidget);

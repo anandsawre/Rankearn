@@ -890,17 +890,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             ),
             const SizedBox(height: 18),
 
-            // Role Selector: Student vs Teacher
-            AuthRoleSelector(
-              selectedRole: _role,
-              studentLabel: isLogin ? 'Student Login' : 'Student',
-              teacherLabel: isLogin ? 'Teacher Login' : 'Teacher',
-              onRoleChanged: (role) {
-                setState(() => _role = role);
-              },
-            ),
-            const SizedBox(height: 16),
-
             // Social Logins
             SocialAuthButton.google(
               onPressed: _handleGoogleLogin,
