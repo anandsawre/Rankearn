@@ -904,36 +904,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Social Logins
-            SocialAuthButton.google(
-              onPressed: _handleGoogleLogin,
-            ),
-            const SizedBox(height: 8),
-            SocialAuthButton.phone(
-              onPressed: _handlePhoneLogin,
-            ),
-            const SizedBox(height: 10),
-
-            // Divider With Label "OR"
-            Row(
-              children: const [
-                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    'OR',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
-              ],
-            ),
-            const SizedBox(height: 10),
-
             // Error Notice Banner
             if (_errorMessage != null) ...[
               Container(
@@ -1287,7 +1257,37 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       ),
               ),
             ),
+            const SizedBox(height: 12),
+
+            // Divider With Label "OR"
+            Row(
+              children: const [
+                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    'OR',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
+              ],
+            ),
             const SizedBox(height: 10),
+
+            // Social Logins
+            SocialAuthButton.google(
+              onPressed: _handleGoogleLogin,
+            ),
+            const SizedBox(height: 8),
+            SocialAuthButton.phone(
+              onPressed: _handlePhoneLogin,
+            ),
+            const SizedBox(height: 14),
 
             // Mode Switcher Footer
             Center(

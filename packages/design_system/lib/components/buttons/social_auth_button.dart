@@ -48,12 +48,12 @@ class SocialAuthButton extends StatelessWidget {
     final label = isGoogle ? 'Continue with Google' : 'Continue with Phone';
 
     return Container(
-      height: 46,
+      height: 44,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: const Color(0xFFE2EBF8),
+          color: const Color(0xFFE2E8F0),
           width: 1.2,
         ),
         boxShadow: const [
@@ -68,7 +68,7 @@ class SocialAuthButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: isLoading ? null : onPressed,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -84,12 +84,12 @@ class SocialAuthButton extends StatelessWidget {
                     ),
                   )
                 else if (isGoogle)
-                  const GoogleLogo(size: 18)
+                  const GoogleLogo(size: 20)
                 else
                   const Icon(
                     Icons.phone_rounded,
                     color: Color(0xFF1677FF),
-                    size: 19,
+                    size: 20,
                   ),
                 const SizedBox(width: 10),
                 Flexible(
