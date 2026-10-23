@@ -16,6 +16,8 @@ class BattleResultScreen extends StatelessWidget {
   final UserProfile profile;
   final int entryFee;
   final void Function(int coinsDelta)? onCoinUpdate;
+  final VoidCallback? onPlayAgain;
+  final VoidCallback? onReturnToHub;
 
   const BattleResultScreen({
     super.key,
@@ -24,6 +26,8 @@ class BattleResultScreen extends StatelessWidget {
     required this.profile,
     this.entryFee = 100,
     this.onCoinUpdate,
+    this.onPlayAgain,
+    this.onReturnToHub,
   });
 
   @override
@@ -249,10 +253,18 @@ class BattleResultScreen extends StatelessWidget {
   }
 
   void _returnToHub(BuildContext context) {
+    if (onReturnToHub != null) {
+      onReturnToHub!();
+      return;
+    }
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   void _playAgain(BuildContext context) {
+    if (onPlayAgain != null) {
+      onPlayAgain!();
+      return;
+    }
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => FindingOpponentScreen(
