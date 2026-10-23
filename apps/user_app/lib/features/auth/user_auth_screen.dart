@@ -621,48 +621,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
             // Native Mobile Full Screen Auth Form (no card borders/shadows)
             _buildAuthCard(fillHeight: false, isMobile: true),
-            const SizedBox(height: 18),
-
-            // Native Trust Strip (Clean mobile pills)
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                _buildNativeTrustChip(Icons.people_alt_rounded, '1L+ Learners', const Color(0xFF1677FF)),
-                _buildNativeTrustChip(Icons.quiz_rounded, '10K+ Questions', const Color(0xFF00B96B)),
-                _buildNativeTrustChip(Icons.star_rounded, '4.8 Rating', const Color(0xFFF59E0B)),
-              ],
-            ),
             const SizedBox(height: 16),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildNativeTrustChip(IconData icon, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: color),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1E293B),
-            ),
-          ),
-        ],
       ),
     );
   }
