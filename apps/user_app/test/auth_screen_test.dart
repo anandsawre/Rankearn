@@ -193,6 +193,8 @@ void main() {
       // 3. Form Fields
       expect(find.text('Full Name'), findsOneWidget);
       expect(find.text('Enter your full name'), findsOneWidget);
+      expect(find.text('Mobile Number'), findsOneWidget);
+      expect(find.text('Enter 10-digit number'), findsOneWidget);
       expect(find.text('Email Address'), findsOneWidget);
       expect(find.text('Enter your email'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
@@ -207,6 +209,32 @@ void main() {
 
       // 6. Action Button
       expect(find.text('Sign Up'), findsWidgets);
+    });
+
+    testWidgets('Login Mode allows switching between Email and Mobile Login', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(buildAuthApp(initialMode: AuthScreenMode.login));
+      await tester.pumpAndSettle();
+
+      // Starts with Email Login
+      expect(find.text('Email Login'), findsOneWidget);
+      expect(find.text('Email Address'), findsOneWidget);
+
+      // Tap Mobile Number tab
+      await tester.tap(find.text('Mobile Number'));
+      await tester.pumpAndSettle();
+
+      // Now Mobile Number input is visible
+      expect(find.text('Enter 10-digit number'), findsOneWidget);
+
+      // Tap Email Login tab back
+      await tester.tap(find.text('Email Login'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Enter your email address'), findsOneWidget);
     });
 
     testWidgets('Shows error if email is invalid on Login', (WidgetTester tester) async {

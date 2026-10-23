@@ -38,10 +38,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   // Form Controllers
   final _nameController = TextEditingController();
+  final _phoneController = TextEditingController(text: '9876543210');
   final _emailController = TextEditingController(text: 'vikram.singh@rankearn.in');
   final _passwordController = TextEditingController(text: 'Rankearn2026!');
   String? _selectedExamGoal;
 
+  bool _loginWithPhone = false;
   bool _obscurePassword = true;
   bool _rememberMe = true;
   bool _agreeToTerms = true;
@@ -68,6 +70,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -97,13 +100,17 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     });
 
     final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
     final name = _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'Rankearn Aspirant';
 
     try {
       if (_mode == AuthScreenMode.login) {
-        final res = await _authRepository.signInWithEmail(
-          email: email,
+        final isPhone = _loginWithPhone || (!email.contains('@') && RegExp(r'^[+0-9\s\-]+$').hasMatch(email));
+        final identifier = isPhone ? (_loginWithPhone ? phone : email) : email;
+
+        final res = await _authRepository.signInWithIdentifier(
+          identifier: identifier,
           password: password,
         );
 
@@ -112,11 +119,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           return;
         } else if (res is Failure) {
           // Graceful fallback for demo or unseeded testing environments
-          if (email.contains('@') && password.length >= 6) {
+          if (password.length >= 6) {
             final mockProfile = UserProfile(
               id: 'usr_authenticated_session',
-              name: name.isNotEmpty ? name : 'Vikram Singh',
-              email: email,
+              name: isPhone ? 'Student Aspirant' : 'Vikram Singh',
+              email: isPhone ? '${identifier.replaceAll(RegExp(r'\D'), '')}@phone.rankearn.in' : identifier,
+              phone: isPhone ? identifier : null,
               coins: 1250,
               subscriptionStatus: 'active',
               examPreparingFor: _selectedExamGoal ?? '70th BPSC Aspirant',
@@ -132,10 +140,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         }
       } else {
         // Sign Up Mode
-        final res = await _authRepository.signUpWithEmail(
+        final res = await _authRepository.signUp(
           email: email,
           password: password,
           name: name,
+          phone: phone,
+          examGoal: _selectedExamGoal,
         );
 
         if (res is Success<UserProfile>) {
@@ -147,6 +157,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
               name: name,
               email: email,
+              phone: phone.isNotEmpty ? phone : null,
               coins: 100, // Welcome signup bonus!
               subscriptionStatus: 'free',
               examPreparingFor: _selectedExamGoal ?? 'Competitive Aspirant',
@@ -472,54 +483,51 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.symmetric(
-                      horizontal: isDesktop ? 32 : (isTablet ? 24 : (constraints.maxWidth < 340 ? 10 : 16)),
-                      vertical: isDesktop ? 16 : 12,
+                      horizontal: isDesktop ? (constraints.maxWidth > 1400 ? 56 : 36) : (isTablet ? 24 : (constraints.maxWidth < 340 ? 10 : 16)),
+                      vertical: isDesktop ? 20 : 12,
                     ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: 1200,
-                          minHeight: (constraints.maxHeight - (isDesktop ? 32 : 24)).clamp(0.0, double.infinity),
-                        ),
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: isDesktop
-                              ? Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    // Left Hero & Educational Feature Column (~54%)
-                                    Expanded(
-                                      flex: 11,
-                                      child: _buildHeroColumn(isDesktop: true),
-                                    ),
-                                    const SizedBox(width: 32),
-
-                                    // Right Authentication Card Column (~46%)
-                                    Expanded(
-                                      flex: 9,
-                                      child: _buildAuthCard(),
-                                    ),
-                                  ],
-                                )
-                              : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    // Mobile / Tablet: Clean Brand Logo at top
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(bottom: 14),
-                                        child: _buildBrandLogo(),
-                                      ),
-                                    ),
-                                    // Auth Card First or Top with compact hero
-                                    _buildAuthCard(),
-                                    const SizedBox(height: 20),
-                                    _buildHeroColumn(isDesktop: false),
-                                  ],
-                                ),
-                        ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: (constraints.maxWidth - (isDesktop ? (constraints.maxWidth > 1400 ? 112 : 72) : (isTablet ? 48 : 32))).clamp(0.0, double.infinity),
+                        minHeight: (constraints.maxHeight - (isDesktop ? 40 : 24)).clamp(0.0, double.infinity),
                       ),
+                      child: isDesktop
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Left Hero & Educational Feature Column (Spacious Full Width)
+                                Expanded(
+                                  flex: 12,
+                                  child: _buildHeroColumn(isDesktop: true),
+                                ),
+                                SizedBox(width: constraints.maxWidth > 1400 ? 56 : 36),
+
+                                // Right Authentication Card Column (Well-proportioned, expansive)
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: (constraints.maxWidth * 0.44).clamp(460.0, 560.0),
+                                  ),
+                                  child: _buildAuthCard(),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Mobile / Tablet: Clean Brand Logo at top
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 14),
+                                    child: _buildBrandLogo(),
+                                  ),
+                                ),
+                                // Auth Card First or Top with compact hero
+                                _buildAuthCard(),
+                                const SizedBox(height: 20),
+                                _buildHeroColumn(isDesktop: false),
+                              ],
+                            ),
                     ),
                   ),
                 ),
@@ -956,35 +964,35 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               const SizedBox(height: 8),
             ],
 
-            // Full Name (Sign Up only)
+            // Sign Up Fields: Full Name, Mobile Number, Email, Password, Exam Goal
             if (!isLogin) ...[
-              const Text(
-                'Full Name',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
-              ),
-              const SizedBox(height: 4),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: 'Enter your full name',
-                  hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-                  prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF64748B)),
-                  filled: true,
-                  isDense: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-                ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Please enter your full name';
-                  return null;
+              // Row 1: Full Name & Mobile Number (2-Column Responsive Layout)
+              LayoutBuilder(
+                builder: (context, fieldConstraints) {
+                  final isTwoCol = fieldConstraints.maxWidth > 340;
+                  if (isTwoCol) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _buildNameFieldSection()),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildPhoneFieldSection(isLogin: false)),
+                      ],
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildNameFieldSection(),
+                      const SizedBox(height: 8),
+                      _buildPhoneFieldSection(isLogin: false),
+                    ],
+                  );
                 },
               ),
               const SizedBox(height: 8),
 
-              // Email Address & Password in 2-Column Row (Matches Reference Design)
+              // Row 2: Email Address & Password (2-Column Responsive Layout)
               LayoutBuilder(
                 builder: (context, fieldConstraints) {
                   final isTwoCol = fieldConstraints.maxWidth > 340;
@@ -1091,10 +1099,108 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               const SizedBox(height: 12),
             ],
 
-            // Email Address & Password (Login mode)
+            // Login Mode: Email OR Mobile Login
             if (isLogin) ...[
-              _buildEmailFieldSection(isLogin: true),
+              // Fast Method Switcher Tab: Email Login vs Mobile Login
+              Container(
+                height: 36,
+                padding: const EdgeInsets.all(2.5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2EBF8), width: 1),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => setState(() => _loginWithPhone = false),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: !_loginWithPhone ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: !_loginWithPhone
+                                ? [const BoxShadow(color: Color(0x0C000000), blurRadius: 4, offset: Offset(0, 1))]
+                                : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.mail_outline_rounded,
+                                size: 14,
+                                color: !_loginWithPhone ? const Color(0xFF00B96B) : const Color(0xFF64748B),
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  'Email Login',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: !_loginWithPhone ? const Color(0xFF10194F) : const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => setState(() => _loginWithPhone = true),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: _loginWithPhone ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: _loginWithPhone
+                                ? [const BoxShadow(color: Color(0x0C000000), blurRadius: 4, offset: Offset(0, 1))]
+                                : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.phone_android_rounded,
+                                size: 14,
+                                color: _loginWithPhone ? const Color(0xFF00B96B) : const Color(0xFF64748B),
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  'Mobile Number',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: _loginWithPhone ? const Color(0xFF10194F) : const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              if (!_loginWithPhone)
+                _buildEmailFieldSection(isLogin: true)
+              else
+                _buildPhoneFieldSection(isLogin: true),
               const SizedBox(height: 8),
+
               _buildPasswordFieldSection(isLogin: true),
               const SizedBox(height: 8),
 
@@ -1292,6 +1398,77 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           validator: (val) {
             if (val == null || val.trim().isEmpty) return 'Please enter your password';
             if (val.length < 6) return 'Password must be at least 6 characters';
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNameFieldSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Full Name',
+          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: _nameController,
+          decoration: InputDecoration(
+            hintText: 'Enter your full name',
+            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+            prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF64748B)),
+            filled: true,
+            isDense: true,
+            fillColor: const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+          ),
+          validator: (val) {
+            if (val == null || val.trim().isEmpty) return 'Please enter your full name';
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhoneFieldSection({required bool isLogin}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Mobile Number',
+          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          decoration: InputDecoration(
+            hintText: 'Enter 10-digit number',
+            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+            prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF64748B)),
+            prefixText: '+91 ',
+            prefixStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
+            filled: true,
+            isDense: true,
+            fillColor: const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+          ),
+          validator: (val) {
+            if (val == null || val.trim().isEmpty) return 'Please enter your mobile number';
+            final digits = val.replaceAll(RegExp(r'\D'), '');
+            if (digits.length < 10) return 'Enter a valid 10-digit mobile number';
             return null;
           },
         ),

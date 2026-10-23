@@ -17,11 +17,13 @@ class AuthRepository {
   Stream<supa.AuthState> get authStateChanges =>
       _client?.auth.onAuthStateChange ?? const Stream.empty();
 
-  /// Register new user with Email, Password, Name, and optional Referral Code
-  Future<Result<UserProfile>> signUpWithEmail({
+  /// Register new user with Email, Phone, Password, Name, and optional Referral Code
+  Future<Result<UserProfile>> signUp({
     required String email,
     required String password,
     required String name,
+    String? phone,
+    String? examGoal,
     String? referralCode,
   }) async {
     final client = _client;
@@ -29,11 +31,20 @@ class AuthRepository {
       return const Failure('Database not connected');
     }
     try {
+      final cleanPhone = phone != null && phone.trim().isNotEmpty
+          ? (phone.trim().replaceAll(RegExp(r'\D'), '').length == 10
+              ? '+91${phone.trim().replaceAll(RegExp(r'\D'), '')}'
+              : phone.trim())
+          : null;
+
       final response = await client.auth.signUp(
         email: email.trim(),
         password: password,
+        phone: cleanPhone,
         data: {
           'name': name.trim(),
+          if (cleanPhone != null) 'phone': cleanPhone,
+          if (examGoal != null && examGoal.trim().isNotEmpty) 'exam_goal': examGoal.trim(),
           if (referralCode != null && referralCode.trim().isNotEmpty)
             'referral_code': referralCode.trim().toUpperCase(),
         },
@@ -44,9 +55,7 @@ class AuthRepository {
         return const Failure('Signup failed: No user returned');
       }
 
-      // Allow trigger to execute and fetch created profile
-      final profileResult = await getProfile(user.id);
-      return profileResult;
+      return await getProfile(user.id);
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {
@@ -54,20 +63,48 @@ class AuthRepository {
     }
   }
 
-  /// Sign In with Email & Password
-  Future<Result<UserProfile>> signInWithEmail({
+  /// Register new user with Email, Password, Name, and optional Referral Code
+  Future<Result<UserProfile>> signUpWithEmail({
     required String email,
+    required String password,
+    required String name,
+    String? referralCode,
+  }) async {
+    return signUp(
+      email: email,
+      password: password,
+      name: name,
+      referralCode: referralCode,
+    );
+  }
+
+  /// Sign In with Email OR Mobile Number & Password
+  Future<Result<UserProfile>> signInWithIdentifier({
+    required String identifier,
     required String password,
   }) async {
     final client = _client;
     if (client == null) {
       return const Failure('Database not connected');
     }
+    final trimmed = identifier.trim();
+    final isPhone = !trimmed.contains('@') && RegExp(r'^[+0-9\s\-]+$').hasMatch(trimmed);
+
     try {
-      final response = await client.auth.signInWithPassword(
-        email: email.trim(),
-        password: password,
-      );
+      final supa.AuthResponse response;
+      if (isPhone) {
+        final digits = trimmed.replaceAll(RegExp(r'\D'), '');
+        final phoneE164 = digits.length == 10 ? '+91$digits' : (trimmed.startsWith('+') ? trimmed : '+$trimmed');
+        response = await client.auth.signInWithPassword(
+          phone: phoneE164,
+          password: password,
+        );
+      } else {
+        response = await client.auth.signInWithPassword(
+          email: trimmed,
+          password: password,
+        );
+      }
 
       final user = response.user;
       if (user == null) {
@@ -80,6 +117,14 @@ class AuthRepository {
     } catch (e) {
       return Failure(e.toString(), e);
     }
+  }
+
+  /// Sign In with Email & Password
+  Future<Result<UserProfile>> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    return signInWithIdentifier(identifier: email, password: password);
   }
 
   /// Sign In with Google OAuth ID Token
