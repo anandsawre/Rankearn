@@ -1271,42 +1271,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       ),
               ),
             ),
-            const SizedBox(height: 10),
-
-            // Divider With Label "OR"
-            Row(
-              children: const [
-                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    'OR',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
-              ],
-            ),
             const SizedBox(height: 8),
 
-            // Social Logins
-            SocialAuthButton.google(
-              onPressed: _handleGoogleLogin,
-            ),
-            const SizedBox(height: 6),
-            SocialAuthButton.phone(
-              onPressed: _handlePhoneLogin,
-            ),
-            if (fillHeight)
-              const Spacer()
-            else
-              const SizedBox(height: 12),
-
-            // Mode Switcher Footer
+            // Mode Switcher (Placed above OR divider)
             Center(
               child: Wrap(
                 alignment: WrapAlignment.center,
@@ -1337,6 +1304,39 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ),
                 ],
               ),
+            ),
+            if (fillHeight)
+              const Spacer()
+            else
+              const SizedBox(height: 10),
+
+            // Divider With Label "OR"
+            Row(
+              children: const [
+                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    'OR',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Social Logins
+            SocialAuthButton.google(
+              onPressed: _handleGoogleLogin,
+            ),
+            const SizedBox(height: 6),
+            SocialAuthButton.phone(
+              onPressed: _handlePhoneLogin,
             ),
           ],
         ),
