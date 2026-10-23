@@ -467,49 +467,59 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 ),
 
                 // Main Content Viewport
-                SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 32 : (isTablet ? 24 : (constraints.maxWidth < 340 ? 10 : 16)),
-                    vertical: isDesktop ? 28 : 16,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: isDesktop
-                          ? Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Left Hero & Educational Feature Column (~55%)
-                                Expanded(
-                                  flex: 11,
-                                  child: _buildHeroColumn(isDesktop: true),
-                                ),
-                                const SizedBox(width: 36),
+                ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isDesktop ? 32 : (isTablet ? 24 : (constraints.maxWidth < 340 ? 10 : 16)),
+                      vertical: isDesktop ? 16 : 12,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: 1200,
+                          minHeight: (constraints.maxHeight - (isDesktop ? 32 : 24)).clamp(0.0, double.infinity),
+                        ),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: isDesktop
+                              ? Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Left Hero & Educational Feature Column (~54%)
+                                    Expanded(
+                                      flex: 11,
+                                      child: _buildHeroColumn(isDesktop: true),
+                                    ),
+                                    const SizedBox(width: 32),
 
-                                // Right Authentication Card Column (~45%)
-                                Expanded(
-                                  flex: 9,
-                                  child: _buildAuthCard(),
+                                    // Right Authentication Card Column (~46%)
+                                    Expanded(
+                                      flex: 9,
+                                      child: _buildAuthCard(),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Mobile / Tablet: Clean Brand Logo at top
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(bottom: 14),
+                                        child: _buildBrandLogo(),
+                                      ),
+                                    ),
+                                    // Auth Card First or Top with compact hero
+                                    _buildAuthCard(),
+                                    const SizedBox(height: 20),
+                                    _buildHeroColumn(isDesktop: false),
+                                  ],
                                 ),
-                              ],
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // Mobile / Tablet: Clean Brand Logo at top
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 18),
-                                    child: _buildBrandLogo(),
-                                  ),
-                                ),
-                                // Auth Card First or Top with compact hero
-                                _buildAuthCard(),
-                                const SizedBox(height: 28),
-                                _buildHeroColumn(isDesktop: false),
-                              ],
-                            ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -591,13 +601,13 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         // 0. Clean Brand Logo (Desktop)
         if (isDesktop) ...[
           _buildBrandLogo(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 14),
         ],
 
         // 1. Pill Badge (Login mode reference)
         if (isLogin) ...[
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: const Color(0xFFE4FFF0),
               borderRadius: BorderRadius.circular(20),
@@ -606,25 +616,25 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             child: const Text(
               '👋 Welcome Back!',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF008C52),
                 letterSpacing: -0.2,
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
         ],
 
         // 2. Main Large Heading
         RichText(
           text: TextSpan(
             style: TextStyle(
-              fontSize: isDesktop ? 34 : 26,
+              fontSize: isDesktop ? 28 : 24,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF10194F),
-              height: 1.12,
-              letterSpacing: -0.8,
+              height: 1.14,
+              letterSpacing: -0.6,
               fontFamily: 'Inter',
             ),
             children: isLogin
@@ -644,24 +654,24 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ],
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
 
         // 3. Subtitle / Supporting text
         if (isLogin) ...[
           const Text(
             'Practice Tests • Compete Live • Earn Coins',
             style: TextStyle(
-              fontSize: 13.5,
+              fontSize: 13,
               fontWeight: FontWeight.w800,
               color: Color(0xFF10194F),
               letterSpacing: -0.2,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           const Text(
             'Same account. More learning. Bigger rewards.',
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
               color: Color(0xFF64748B),
             ),
@@ -670,19 +680,19 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           const Text(
             'Take tests, improve your skills and earn real coins with Rankearn.',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12.5,
               fontWeight: FontWeight.w600,
               color: Color(0xFF64748B),
-              height: 1.3,
+              height: 1.25,
             ),
           ),
         ],
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
 
         // 4. Feature List & Mascot Layout
         LayoutBuilder(
           builder: (context, constraints) {
-            final isWideHero = constraints.maxWidth >= 520;
+            final isWideHero = constraints.maxWidth >= 500;
 
             if (isWideHero) {
               return Row(
@@ -693,12 +703,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     flex: 10,
                     child: _buildFeaturesList(),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
 
                   // Cropped high-resolution Mascot Artwork
                   Expanded(
                     flex: 11,
-                    child: _buildMascotArtwork(),
+                    child: _buildMascotArtwork(maxHeight: 250),
                   ),
                 ],
               );
@@ -708,14 +718,14 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: _buildMascotArtwork(maxHeight: 280)),
-                const SizedBox(height: 20),
+                Center(child: _buildMascotArtwork(maxHeight: 220)),
+                const SizedBox(height: 14),
                 _buildFeaturesList(),
               ],
             );
           },
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 14),
 
         // 5. Bottom 3-Metric Statistics Card
         const AuthStatsCard(),
@@ -733,28 +743,28 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           title: 'Mock Tests & PYQs',
           description: 'Practice with real exam pattern',
         ),
-        SizedBox(height: 14),
+        SizedBox(height: 8),
         AuthFeatureItem(
           icon: Icons.bar_chart_rounded,
           iconBgColor: Color(0xFF8B5CF6), // Purple
           title: 'Live Tests',
           description: 'Compete with students across India',
         ),
-        SizedBox(height: 14),
+        SizedBox(height: 8),
         AuthFeatureItem(
           icon: Icons.military_tech_rounded,
           iconBgColor: Color(0xFFF59E0B), // Amber / Gold
           title: '1v1 Quiz Battle',
           description: 'Challenge real players',
         ),
-        SizedBox(height: 14),
+        SizedBox(height: 8),
         AuthFeatureItem(
           icon: Icons.card_giftcard_rounded,
           iconBgColor: Color(0xFF00B96B), // Green
           title: 'Earn Coins',
           description: 'Complete tests, tasks and more',
         ),
-        SizedBox(height: 14),
+        SizedBox(height: 8),
         AuthFeatureItem(
           icon: Icons.emoji_events_rounded,
           iconBgColor: Color(0xFFEF4444), // Coral Red
@@ -765,7 +775,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     );
   }
 
-  Widget _buildMascotArtwork({double maxHeight = 340}) {
+  Widget _buildMascotArtwork({double maxHeight = 250}) {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
@@ -814,7 +824,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: const Color(0xFFE2EBF8),
           width: 1.2,
@@ -822,14 +832,14 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A10194F),
-            blurRadius: 24,
-            offset: Offset(0, 8),
+            blurRadius: 20,
+            offset: Offset(0, 6),
           ),
         ],
       ),
       padding: EdgeInsets.symmetric(
-        horizontal: MediaQuery.of(context).size.width < 360 ? 14 : 22,
-        vertical: 24,
+        horizontal: MediaQuery.of(context).size.width < 360 ? 14 : 20,
+        vertical: 16,
       ),
       child: Form(
         key: _formKey,
@@ -842,19 +852,19 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
               spacing: 8,
-              runSpacing: 6,
+              runSpacing: 4,
               children: [
                 Text(
                   isLogin ? 'Welcome Back!' : 'Create Your Account',
                   style: const TextStyle(
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF10194F),
                     letterSpacing: -0.4,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE4FFF0),
                     borderRadius: BorderRadius.circular(20),
@@ -863,7 +873,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   child: Text(
                     isLogin ? 'Good To See You Again!' : "It's Free to Join!",
                     style: const TextStyle(
-                      fontSize: 10.5,
+                      fontSize: 10,
                       fontWeight: FontWeight.w800,
                       color: Color(0xFF008C52),
                       letterSpacing: -0.1,
@@ -872,40 +882,40 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               isLogin
                   ? 'Login to your Rankearn account and continue learning, practicing and earning.'
                   : 'Join Rankearn and start your learning journey today!',
               style: const TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: Color(0xFF64748B),
-                height: 1.3,
+                height: 1.25,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
 
             // Social Logins
             SocialAuthButton.google(
               onPressed: _handleGoogleLogin,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             SocialAuthButton.phone(
               onPressed: _handlePhoneLogin,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
 
             // Divider With Label "OR"
             Row(
               children: const [
                 Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
                     'OR',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w800,
                       color: Color(0xFF94A3B8),
                     ),
@@ -914,27 +924,27 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
 
             // Error Notice Banner
             if (_errorMessage != null) ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF2F2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: const Color(0xFFFECACA)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 16),
-                    const SizedBox(width: 8),
+                    const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 15),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         _errorMessage!,
                         style: const TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFFB91C1C),
                         ),
@@ -943,123 +953,85 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
             ],
 
             // Full Name (Sign Up only)
             if (!isLogin) ...[
               const Text(
                 'Full Name',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
+                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: 'Enter your full name',
-                  hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                  prefixIcon: const Icon(Icons.person_outline_rounded, size: 19, color: Color(0xFF64748B)),
+                  hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+                  prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF64748B)),
                   filled: true,
+                  isDense: true,
                   fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) return 'Please enter your full name';
                   return null;
                 },
               ),
-              const SizedBox(height: 14),
-            ],
+              const SizedBox(height: 8),
 
-            // Email Address
-            const Text(
-              'Email Address',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
-            ),
-            const SizedBox(height: 6),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                hintText: isLogin ? 'Enter your email address' : 'Enter your email',
-                hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                prefixIcon: const Icon(Icons.mail_outline_rounded, size: 19, color: Color(0xFF64748B)),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+              // Email Address & Password in 2-Column Row (Matches Reference Design)
+              LayoutBuilder(
+                builder: (context, fieldConstraints) {
+                  final isTwoCol = fieldConstraints.maxWidth > 340;
+                  if (isTwoCol) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _buildEmailFieldSection(isLogin: false)),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildPasswordFieldSection(isLogin: false)),
+                      ],
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildEmailFieldSection(isLogin: false),
+                      const SizedBox(height: 8),
+                      _buildPasswordFieldSection(isLogin: false),
+                    ],
+                  );
+                },
               ),
-              validator: (val) {
-                if (val == null || val.trim().isEmpty) return 'Please enter your email address';
-                if (!val.contains('@') || !val.contains('.')) return 'Please enter a valid email address';
-                return null;
-              },
-            ),
-            const SizedBox(height: 14),
+              const SizedBox(height: 8),
 
-            // Password Field
-            const Text(
-              'Password',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
-            ),
-            const SizedBox(height: 6),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                hintText: isLogin ? 'Enter your password' : 'Create a password',
-                hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                prefixIcon: const Icon(Icons.lock_outline_rounded, size: 19, color: Color(0xFF64748B)),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                    size: 19,
-                    color: const Color(0xFF64748B),
-                  ),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                ),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-              ),
-              validator: (val) {
-                if (val == null || val.trim().isEmpty) return 'Please enter your password';
-                if (val.length < 6) return 'Password must be at least 6 characters';
-                return null;
-              },
-            ),
-            const SizedBox(height: 14),
-
-            // Class / Exam Goal (Sign Up only)
-            if (!isLogin) ...[
+              // Class / Exam Goal (Sign Up only)
               const Text(
                 'Class / Exam Goal (Optional)',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
+                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               DropdownButtonFormField<String>(
                 initialValue: _selectedExamGoal,
                 isExpanded: true,
-                hint: const Text('Select your goal', style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500)),
+                hint: const Text('Select your goal', style: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500)),
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.school_outlined, size: 19, color: Color(0xFF64748B)),
+                  prefixIcon: const Icon(Icons.school_outlined, size: 18, color: Color(0xFF64748B)),
                   filled: true,
+                  isDense: true,
                   fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
                 ),
                 icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
-                style: const TextStyle(fontSize: 13, color: Color(0xFF10194F), fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: 12.5, color: Color(0xFF10194F), fontWeight: FontWeight.w600),
                 items: _examGoals.map((goal) {
                   return DropdownMenuItem<String>(
                     value: goal,
@@ -1068,65 +1040,15 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 }).toList(),
                 onChanged: (val) => setState(() => _selectedExamGoal = val),
               ),
-              const SizedBox(height: 14),
-            ],
+              const SizedBox(height: 8),
 
-            // Login Extra Row: Keep me logged in + Forgot Password?
-            if (isLogin) ...[
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: Checkbox(
-                          value: _rememberMe,
-                          activeColor: const Color(0xFF00B96B),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                          onChanged: (val) => setState(() => _rememberMe = val ?? true),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Keep me logged in',
-                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
-                      ),
-                    ],
-                  ),
-                  InkWell(
-                    onTap: _openForgotPasswordModal,
-                    borderRadius: BorderRadius.circular(6),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      child: Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1677FF),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-            ],
-
-            // Sign Up Terms Checkbox
-            if (!isLogin) ...[
+              // Sign Up Terms Checkbox
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 22,
-                    height: 22,
+                    width: 20,
+                    height: 20,
                     child: Checkbox(
                       value: _agreeToTerms,
                       activeColor: const Color(0xFF00B96B),
@@ -1141,24 +1063,24 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       children: [
                         const Text(
                           'I agree to the ',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF475569), fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: 11.5, color: Color(0xFF475569), fontWeight: FontWeight.w500),
                         ),
                         InkWell(
                           onTap: () => _openLegalModal('Terms of Service', 'Welcome to Rankearn. By accessing our mock tests, quiz battles, and reward system, you agree to our standard terms of use, fair play policies, and academic integrity guidelines.'),
                           child: const Text(
                             'Terms of Service',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF1677FF), fontWeight: FontWeight.w700),
+                            style: TextStyle(fontSize: 11.5, color: Color(0xFF1677FF), fontWeight: FontWeight.w700),
                           ),
                         ),
                         const Text(
                           ' and ',
-                          style: TextStyle(fontSize: 12, color: Color(0xFF475569), fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: 11.5, color: Color(0xFF475569), fontWeight: FontWeight.w500),
                         ),
                         InkWell(
                           onTap: () => _openLegalModal('Privacy Policy', 'At Rankearn, your personal data and test analytics are encrypted and securely safeguarded. We never sell your personal information.'),
                           child: const Text(
                             'Privacy Policy',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF1677FF), fontWeight: FontWeight.w700),
+                            style: TextStyle(fontSize: 11.5, color: Color(0xFF1677FF), fontWeight: FontWeight.w700),
                           ),
                         ),
                       ],
@@ -1166,26 +1088,80 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+            ],
+
+            // Email Address & Password (Login mode)
+            if (isLogin) ...[
+              _buildEmailFieldSection(isLogin: true),
+              const SizedBox(height: 8),
+              _buildPasswordFieldSection(isLogin: true),
+              const SizedBox(height: 8),
+
+              // Login Extra Row: Keep me logged in + Forgot Password?
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: Checkbox(
+                          value: _rememberMe,
+                          activeColor: const Color(0xFF00B96B),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          onChanged: (val) => setState(() => _rememberMe = val ?? true),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Keep me logged in',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
+                      ),
+                    ],
+                  ),
+                  InkWell(
+                    onTap: _openForgotPasswordModal,
+                    borderRadius: BorderRadius.circular(6),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1677FF),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
             ],
 
             // Primary Action Button (Login / Sign Up)
             SizedBox(
               width: double.infinity,
-              height: 48,
+              height: 44,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00B96B),
                   foregroundColor: Colors.white,
-                  elevation: 2,
+                  elevation: 1.5,
                   shadowColor: const Color(0xFF00B96B).withValues(alpha: 0.35),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: _isLoading ? null : _handleSubmit,
                 child: _isLoading
                     ? const SizedBox(
-                        width: 22,
-                        height: 22,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
                     : Row(
@@ -1194,18 +1170,18 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                           Text(
                             isLogin ? 'Login' : 'Sign Up',
                             style: const TextStyle(
-                              fontSize: 15,
+                              fontSize: 14.5,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.2,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_rounded, size: 18),
+                          const Icon(Icons.arrow_forward_rounded, size: 17),
                         ],
                       ),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 10),
 
             // Mode Switcher Footer
             Center(
@@ -1216,7 +1192,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   Text(
                     isLogin ? "Don't have an account? " : "Already have an account? ",
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w500,
                       color: Color(0xFF64748B),
                     ),
@@ -1229,7 +1205,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       child: Text(
                         isLogin ? 'Sign Up' : 'Login',
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFF00B96B),
                         ),
@@ -1242,6 +1218,84 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildEmailFieldSection({required bool isLogin}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Email Address',
+          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: InputDecoration(
+            hintText: isLogin ? 'Enter your email address' : 'Enter your email',
+            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+            prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF64748B)),
+            filled: true,
+            isDense: true,
+            fillColor: const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+          ),
+          validator: (val) {
+            if (val == null || val.trim().isEmpty) return 'Please enter your email address';
+            if (!val.contains('@') || !val.contains('.')) return 'Please enter a valid email address';
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordFieldSection({required bool isLogin}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Password',
+          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            hintText: isLogin ? 'Enter your password' : 'Create a password',
+            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+            prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF64748B)),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                size: 18,
+                color: const Color(0xFF64748B),
+              ),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            ),
+            filled: true,
+            isDense: true,
+            fillColor: const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+          ),
+          validator: (val) {
+            if (val == null || val.trim().isEmpty) return 'Please enter your password';
+            if (val.length < 6) return 'Password must be at least 6 characters';
+            return null;
+          },
+        ),
+      ],
     );
   }
 }
