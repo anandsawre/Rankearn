@@ -619,28 +619,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           const SizedBox(height: 14),
         ],
 
-        // 1. Pill Badge (Login mode reference)
-        if (isLogin) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE4FFF0),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF86EFAC), width: 1),
-            ),
-            child: const Text(
-              '👋 Welcome Back!',
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF008C52),
-                letterSpacing: -0.2,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-
         // 2. Main Large Heading
         RichText(
           text: TextSpan(

@@ -30,9 +30,6 @@ void main() {
       await tester.pumpWidget(buildAuthApp(initialMode: AuthScreenMode.login));
       await tester.pumpAndSettle();
 
-      // 1. Hero Pill Badge
-      expect(find.text('👋 Welcome Back!'), findsOneWidget);
-
       // 2. Hero Headings & Subtitles
       expect(
         find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains('Learning Journey')),
