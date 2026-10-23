@@ -974,7 +974,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 label: 'Class / Exam Goal (Optional)',
                 value: _selectedExamGoal,
                 hint: 'Select your goal',
-                prefixIcon: const Icon(Icons.school_outlined, size: 18, color: AppColors.textSecondary),
+                prefixIcon: const Icon(Icons.school_outlined, size: 18, color: Color(0xFF7C3AED)),
                 items: _examGoals,
                 isDense: true,
                 borderRadius: BorderRadius.circular(10),
@@ -1070,7 +1070,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                               Icon(
                                 Icons.mail_outline_rounded,
                                 size: 14,
-                                color: !_loginWithPhone ? const Color(0xFF00B96B) : const Color(0xFF64748B),
+                                color: !_loginWithPhone ? const Color(0xFFEA580C) : const Color(0xFF64748B),
                               ),
                               const SizedBox(width: 5),
                               Flexible(
@@ -1109,7 +1109,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                               Icon(
                                 Icons.phone_android_rounded,
                                 size: 14,
-                                color: _loginWithPhone ? const Color(0xFF00B96B) : const Color(0xFF64748B),
+                                color: _loginWithPhone ? const Color(0xFF0284C7) : const Color(0xFF64748B),
                               ),
                               const SizedBox(width: 5),
                               Flexible(
@@ -1314,7 +1314,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           decoration: InputDecoration(
             hintText: isLogin ? 'Enter your email address' : 'Enter your email',
             hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF64748B)),
+            prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFFEA580C)),
             filled: true,
             isDense: true,
             fillColor: const Color(0xFFF8FAFC),
@@ -1349,7 +1349,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           decoration: InputDecoration(
             hintText: isLogin ? 'Enter your password' : 'Create a password',
             hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF64748B)),
+            prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF059669)),
             suffixIcon: IconButton(
               icon: Icon(
                 _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -1391,7 +1391,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           decoration: InputDecoration(
             hintText: 'Enter your full name',
             hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF64748B)),
+            prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF6366F1)),
             filled: true,
             isDense: true,
             fillColor: const Color(0xFFF8FAFC),
@@ -1425,7 +1425,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           decoration: InputDecoration(
             hintText: 'Enter 10-digit number',
             hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF64748B)),
+            prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF0284C7)),
             prefixText: '+91 ',
             prefixStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
             filled: true,
