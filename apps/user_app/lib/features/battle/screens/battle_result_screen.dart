@@ -57,14 +57,9 @@ class BattleResultScreen extends StatelessWidget {
                   horizontal: isDesktop ? 32 : (isTablet ? 20 : 14),
                   vertical: isDesktop ? 24 : 14,
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1200),
-                    child: isDesktop
-                        ? _buildDesktopTwoColumn(context)
-                        : _buildMobileStacked(context),
-                  ),
-                ),
+                child: isDesktop
+                    ? _buildDesktopTwoColumn(context)
+                    : _buildMobileStacked(context),
               );
             },
           ),

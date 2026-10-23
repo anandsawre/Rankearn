@@ -113,32 +113,27 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
                 horizontal: isDesktop ? 32 : (isTablet ? 20 : 14),
                 vertical: isDesktop ? 24 : 16,
               ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1140),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // 1. Top Matchmaking Hero Dashboard Card
-                      _buildTopHeroDashboard(isDesktop),
-                      const SizedBox(height: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 1. Top Matchmaking Hero Dashboard Card
+                  _buildTopHeroDashboard(isDesktop),
+                  const SizedBox(height: 20),
 
-                      // 2. Three Feature Cards Row (1v1 Battle, Fair Match, No Bots)
-                      const MatchmakingDesktopCardsRow(),
-                      const SizedBox(height: 18),
+                  // 2. Three Feature Cards Row (1v1 Battle, Fair Match, No Bots)
+                  const MatchmakingDesktopCardsRow(),
+                  const SizedBox(height: 18),
 
-                      // 3. Did You Know Banner
-                      const BattleTipBanner(),
-                      const SizedBox(height: 24),
+                  // 3. Did You Know Banner
+                  const BattleTipBanner(),
+                  const SizedBox(height: 24),
 
-                      // 4. Centered Cancel Matchmaking Button
-                      MatchmakingCancelButton(
-                        onCancel: _cancelMatchmaking,
-                      ),
-                      const SizedBox(height: 20),
-                    ],
+                  // 4. Centered Cancel Matchmaking Button
+                  MatchmakingCancelButton(
+                    onCancel: _cancelMatchmaking,
                   ),
-                ),
+                  const SizedBox(height: 20),
+                ],
               ),
             );
           },

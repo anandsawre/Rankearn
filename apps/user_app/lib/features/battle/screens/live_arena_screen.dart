@@ -227,34 +227,29 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                   horizontal: isDesktop ? 28 : (isTablet ? 18 : 12),
                   vertical: isDesktop ? 20 : 12,
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1200),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // 1. Stadium Versus Header (Spans across top)
-                        StadiumVersusBanner(
-                          playerName: widget.userProfile.name.isEmpty ? 'Vikram Singh' : widget.userProfile.name,
-                          playerScore: _playerScore,
-                          playerRounds: _playerRounds,
-                          isPlayerLeading: _playerScore >= _opponentScore,
-                          opponentName: _session.opponent.name,
-                          opponentScore: _opponentScore,
-                          opponentRank: _session.opponent.rank.isNotEmpty ? _session.opponent.rank : 'Rank #3421',
-                          opponentRounds: _opponentRounds,
-                          isOpponentLeading: _opponentScore > _playerScore,
-                        ),
-                        const SizedBox(height: 18),
-
-                        // 2. Responsive Content Body
-                        if (isDesktop)
-                          _buildDesktopThreeColumn(currentQ)
-                        else
-                          _buildMobileStacked(currentQ),
-                      ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 1. Stadium Versus Header (Spans across top)
+                    StadiumVersusBanner(
+                      playerName: widget.userProfile.name.isEmpty ? 'Vikram Singh' : widget.userProfile.name,
+                      playerScore: _playerScore,
+                      playerRounds: _playerRounds,
+                      isPlayerLeading: _playerScore >= _opponentScore,
+                      opponentName: _session.opponent.name,
+                      opponentScore: _opponentScore,
+                      opponentRank: _session.opponent.rank.isNotEmpty ? _session.opponent.rank : 'Rank #3421',
+                      opponentRounds: _opponentRounds,
+                      isOpponentLeading: _opponentScore > _playerScore,
                     ),
-                  ),
+                    const SizedBox(height: 18),
+
+                    // 2. Responsive Content Body
+                    if (isDesktop)
+                      _buildDesktopThreeColumn(currentQ)
+                    else
+                      _buildMobileStacked(currentQ),
+                  ],
                 ),
               );
             },
