@@ -505,6 +505,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                           : _buildMobileNativeLayout(
                               isTablet: isTablet,
                               maxWidth: constraints.maxWidth,
+                              minHeight: constraints.maxHeight,
                             ),
                     ),
                   ),
@@ -583,13 +584,19 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   // Matches user reference design: Hero illustration on top, rounded white
   // bottom sheet card with fields, and 4-pillar features strip at the bottom.
   // =========================================================================
-  Widget _buildMobileNativeLayout({required bool isTablet, required double maxWidth}) {
+  Widget _buildMobileNativeLayout({
+    required bool isTablet,
+    required double maxWidth,
+    required double minHeight,
+  }) {
     final isLogin = _mode == AuthScreenMode.login;
 
-    return Center(
+    return Align(
+      alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: isTablet ? 500 : double.infinity,
+          minHeight: minHeight,
         ),
         child: Container(
           decoration: const BoxDecoration(
@@ -603,35 +610,53 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               ],
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
             children: [
-              // 1. Top Hero Section with Brand, Heading & Student Mascot
-              _buildMobileHeroHeader(isLogin: isLogin, maxWidth: maxWidth),
-
-              // 2. White Sheet with Rounded Top Corners (Matches Reference Design)
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0x0C000000),
-                      blurRadius: 18,
-                      offset: Offset(0, -6),
+              // 1. Stylish Attractive Fluid Wave Background (Ambient Aura, Flowing Ribbons & Stars)
+              const Positioned.fill(
+                child: IgnorePointer(
+                  child: RepaintBoundary(
+                    child: CustomPaint(
+                      painter: _MobileAttractiveWavePainter(),
+                      size: Size.infinite,
                     ),
-                  ],
+                  ),
                 ),
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
-                child: _buildAuthCard(fillHeight: false, isMobile: true),
               ),
 
-              // 3. Bottom 4-Pillar Strip (Learn, Practice, Play, Earn)
-              _buildMobileBottomPillars(),
+              // 2. Foreground Mobile Content Column
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 1. Top Hero Section with Brand, Heading & Student Mascot
+                  _buildMobileHeroHeader(isLogin: isLogin, maxWidth: maxWidth),
+
+                  // 2. White Sheet with Rounded Top Corners (Matches Reference Design)
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x0C000000),
+                          blurRadius: 18,
+                          offset: Offset(0, -6),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
+                    child: _buildAuthCard(fillHeight: false, isMobile: true),
+                  ),
+
+                  // 3. Bottom 4-Pillar Strip (Learn, Practice, Play, Earn)
+                  _buildMobileBottomPillars(),
+                ],
+              ),
             ],
           ),
         ),
@@ -732,15 +757,19 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                         painter: _YellowSwooshPainter(),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        isLogin
-                            ? 'Login to continue your learning journey and keep earning rewards.'
-                            : 'Join Rankearn and start your learning journey today!',
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF64748B),
-                          height: 1.25,
+                      SizedBox(
+                        height: 32,
+                        child: Text(
+                          isLogin
+                              ? 'Login to continue your learning journey and keep earning rewards.'
+                              : 'Join Rankearn and start your learning journey today!',
+                          maxLines: 2,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF64748B),
+                            height: 1.25,
+                          ),
                         ),
                       ),
                     ],
@@ -773,9 +802,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   Widget _buildMobileBottomPillars() {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFF0FDF4),
-        border: Border(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4).withValues(alpha: 0.90),
+        border: const Border(
           top: BorderSide(color: Color(0xFFE2F8EE), width: 1),
         ),
       ),
@@ -1793,8 +1822,183 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 }
 
+/// Modern stylish fluid wave background painter for mobile & tablet auth screens.
+/// Features top fluid wave ribbons, radiant mascot glow, floating golden sparkle stars,
+/// and smooth bottom waves behind the 4-pillar features strip.
+class _MobileAttractiveWavePainter extends CustomPainter {
+  const _MobileAttractiveWavePainter();
 
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
 
+    // -------------------------------------------------------------------------
+    // 1. Top-Right Ambient Luminous Glow (Behind Student Mascot & Lightbulb)
+    // -------------------------------------------------------------------------
+    final auraRect = Rect.fromCircle(
+      center: Offset(w * 0.78, 120),
+      radius: (w * 0.55).clamp(160.0, 260.0),
+    );
+    final auraPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF00B96B).withValues(alpha: 0.18),
+          const Color(0xFF34D399).withValues(alpha: 0.07),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.60, 1.0],
+      ).createShader(auraRect);
+    canvas.drawCircle(auraRect.center, auraRect.width / 2, auraPaint);
+
+    // -------------------------------------------------------------------------
+    // 2. Layer 1: Top Dynamic Fluid Wave Ribbon (Mint & Teal Gradient)
+    // -------------------------------------------------------------------------
+    final topWave1 = Path();
+    topWave1.moveTo(0, 0);
+    topWave1.lineTo(w, 0);
+    topWave1.lineTo(w, 130);
+    topWave1.cubicTo(
+      w * 0.70, 175,
+      w * 0.35, 105,
+      0, 150,
+    );
+    topWave1.close();
+
+    final topShader1 = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFFD1FAE5).withValues(alpha: 0.60),
+        const Color(0xFFE6FBF2).withValues(alpha: 0.35),
+        const Color(0xFFF1FCF6).withValues(alpha: 0.0),
+      ],
+      stops: const [0.0, 0.70, 1.0],
+    ).createShader(Rect.fromLTWH(0, 0, w, 180));
+
+    final topPaint1 = Paint()
+      ..shader = topShader1
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    canvas.drawPath(topWave1, topPaint1);
+
+    // -------------------------------------------------------------------------
+    // 3. Layer 2: Top Accent Flow Wave
+    // -------------------------------------------------------------------------
+    final topWave2 = Path();
+    topWave2.moveTo(0, 0);
+    topWave2.lineTo(w, 0);
+    topWave2.lineTo(w, 85);
+    topWave2.cubicTo(
+      w * 0.65, 125,
+      w * 0.28, 60,
+      0, 105,
+    );
+    topWave2.close();
+
+    final topShader2 = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        const Color(0xFF00B96B).withValues(alpha: 0.16),
+        const Color(0xFF10B981).withValues(alpha: 0.05),
+        Colors.transparent,
+      ],
+    ).createShader(Rect.fromLTWH(0, 0, w, 130));
+
+    final topPaint2 = Paint()
+      ..shader = topShader2
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    canvas.drawPath(topWave2, topPaint2);
+
+    // -------------------------------------------------------------------------
+    // 4. Sparkling Gold Stars (Matching reference design near mascot)
+    // -------------------------------------------------------------------------
+    _drawSparkleStar(canvas, Offset(w * 0.42, 100), 7, const Color(0xFFF59E0B).withValues(alpha: 0.80));
+    _drawSparkleStar(canvas, Offset(w * 0.49, 118), 4.5, const Color(0xFFF59E0B).withValues(alpha: 0.65));
+
+    // -------------------------------------------------------------------------
+    // 5. Layer 3: Bottom Fluid Waves behind/around 4-Pillar Features Strip
+    // -------------------------------------------------------------------------
+    if (h > 400) {
+      final bottomWave1 = Path();
+      bottomWave1.moveTo(0, h - 85);
+      bottomWave1.cubicTo(
+        w * 0.28, h - 110,
+        w * 0.65, h - 65,
+        w, h - 90,
+      );
+      bottomWave1.lineTo(w, h);
+      bottomWave1.lineTo(0, h);
+      bottomWave1.close();
+
+      final bottomShader1 = LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [
+          const Color(0xFFD1FAE5).withValues(alpha: 0.85),
+          const Color(0xFFE8FBF2).withValues(alpha: 0.45),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.65, 1.0],
+      ).createShader(Rect.fromLTWH(0, h - 110, w, 110));
+
+      final bottomPaint1 = Paint()
+        ..shader = bottomShader1
+        ..style = PaintingStyle.fill
+        ..isAntiAlias = true;
+      canvas.drawPath(bottomWave1, bottomPaint1);
+
+      // Bottom Layer 2 Crest
+      final bottomWave2 = Path();
+      bottomWave2.moveTo(0, h - 50);
+      bottomWave2.cubicTo(
+        w * 0.35, h - 35,
+        w * 0.70, h - 60,
+        w, h - 45,
+      );
+      bottomWave2.lineTo(w, h);
+      bottomWave2.lineTo(0, h);
+      bottomWave2.close();
+
+      final bottomShader2 = LinearGradient(
+        begin: Alignment.bottomLeft,
+        end: Alignment.topRight,
+        colors: [
+          const Color(0xFF34D399).withValues(alpha: 0.22),
+          const Color(0xFF00B96B).withValues(alpha: 0.08),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromLTWH(0, h - 60, w, 60));
+
+      final bottomPaint2 = Paint()
+        ..shader = bottomShader2
+        ..style = PaintingStyle.fill
+        ..isAntiAlias = true;
+      canvas.drawPath(bottomWave2, bottomPaint2);
+    }
+  }
+
+  void _drawSparkleStar(Canvas canvas, Offset center, double radius, Color color) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final path = Path();
+    path.moveTo(center.dx, center.dy - radius);
+    path.quadraticBezierTo(center.dx, center.dy, center.dx + radius, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy, center.dx, center.dy + radius);
+    path.quadraticBezierTo(center.dx, center.dy, center.dx - radius, center.dy);
+    path.quadraticBezierTo(center.dx, center.dy, center.dx, center.dy - radius);
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
 
 class _YellowSwooshPainter extends CustomPainter {
   @override
