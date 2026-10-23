@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
-import '../../tokens/radii.dart';
 import '../buttons/app_button.dart';
 
 /// Right-side Matchmaking Progress Panel on Desktop (or integrated in Mobile)
@@ -536,30 +535,13 @@ class MatchmakingCancelButton extends StatelessWidget {
         onPressed: onCancel,
         variant: AppButtonVariant.outlined,
         size: AppButtonSize.large,
-        height: 48.0,
-        width: 250,
-        borderRadius: AppRadii.borderPill,
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.battleErrorRed,
-        borderColor: const Color(0xFFFDA4AF),
+        width: 220,
+        foregroundColor: AppColors.errorRose,
+        borderColor: AppColors.errorRose,
         leadingIcon: const Icon(
           Icons.close_rounded,
-          color: AppColors.battleErrorRed,
+          color: AppColors.errorRose,
           size: 18,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-        customTextStyle: const TextStyle(
-          color: AppColors.battleErrorRed,
-          fontSize: 14.5,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.2,
-          fontFamily: 'Inter',
         ),
       ),
     );

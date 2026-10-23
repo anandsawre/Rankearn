@@ -114,17 +114,20 @@ class BattleResultScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // 5. Horizontal Action Buttons (Return to Hub & Play Again)
-              Row(
+              Wrap(
+                spacing: 16,
+                runSpacing: 12,
                 children: [
-                  Expanded(
+                  SizedBox(
+                    width: 220,
                     child: BattlePrimaryButton(
                       label: 'Return to Hub',
                       icon: Icons.home_rounded,
                       onPressed: () => _returnToHub(context),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
+                  SizedBox(
+                    width: 220,
                     child: BattleSecondaryButton(
                       label: 'Play Again',
                       icon: Icons.refresh_rounded,

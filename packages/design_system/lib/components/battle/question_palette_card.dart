@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
-import '../../tokens/radii.dart';
 import '../buttons/app_button.dart';
 import 'battle_leave_dialog.dart';
 
@@ -176,21 +175,12 @@ class QuestionPaletteCard extends StatelessWidget {
             variant: AppButtonVariant.outlined,
             size: AppButtonSize.medium,
             fullWidth: true,
-            height: 44.0,
-            borderRadius: AppRadii.borderPill,
-            backgroundColor: const Color(0xFFFFF1F2),
-            foregroundColor: AppColors.battleErrorRed,
-            borderColor: const Color(0xFFFDA4AF),
+            foregroundColor: AppColors.errorRose,
+            borderColor: AppColors.errorRose,
             leadingIcon: const Icon(
               Icons.flag_rounded,
-              color: AppColors.battleErrorRed,
+              color: AppColors.errorRose,
               size: 18,
-            ),
-            customTextStyle: const TextStyle(
-              color: AppColors.battleErrorRed,
-              fontSize: 13.5,
-              fontWeight: FontWeight.w800,
-              fontFamily: 'Inter',
             ),
             onPressed: () async {
               if (onSurrender != null) {
