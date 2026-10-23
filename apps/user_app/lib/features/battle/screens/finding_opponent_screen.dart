@@ -148,10 +148,31 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.symmetric(
-                horizontal: isDesktop ? 24 : (isTablet ? 18 : 12),
-                vertical: isDesktop ? 12 : 12,
+                horizontal: isDesktop ? 24 : (isTablet ? 20 : 14),
+                vertical: isDesktop ? 12 : 16,
               ),
-              child: Center(child: content),
+              child: isDesktop ? Center(child: content) : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 1. Top Matchmaking Hero Dashboard Card
+                  _buildTopHeroDashboard(false),
+                  const SizedBox(height: 20),
+
+                  // 2. Three Feature Cards Row (1v1 Battle, Fair Match, No Bots)
+                  const MatchmakingDesktopCardsRow(),
+                  const SizedBox(height: 18),
+
+                  // 3. Did You Know Banner
+                  const BattleTipBanner(),
+                  const SizedBox(height: 24),
+
+                  // 4. Centered Cancel Matchmaking Button
+                  MatchmakingCancelButton(
+                    onCancel: _cancelMatchmaking,
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             );
           },
         ),
@@ -181,7 +202,7 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
             // Left Status & Value Bullets
             Expanded(
               flex: 4,
-              child: _buildLeftStatusColumn(),
+              child: _buildLeftStatusColumn(true),
             ),
             const SizedBox(width: 14),
 
@@ -210,27 +231,27 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
     } else {
       // Mobile / Tablet Stacked Layout
       return Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.battleBorder, width: 1.2),
           boxShadow: const [
             BoxShadow(
               color: Color(0x0C10194F),
-              blurRadius: 14,
+              blurRadius: 16,
               offset: Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           children: [
-            _buildLeftStatusColumn(),
-            const SizedBox(height: 14),
+            _buildLeftStatusColumn(false),
+            const SizedBox(height: 18),
             Center(
-              child: MatchmakingRadar(size: 210),
+              child: MatchmakingRadar(size: 250),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             MatchmakingProgressPanel(
               activeStage: _activeStage,
               waitTime: '10 - 30 seconds',
@@ -243,28 +264,35 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
     }
   }
 
-  Widget _buildLeftStatusColumn() {
+  Widget _buildLeftStatusColumn(bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         // 1v1 Live Arena Chip
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+          padding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 9 : 10,
+            vertical: isDesktop ? 3.5 : 4,
+          ),
           decoration: BoxDecoration(
             color: const Color(0xFFD6F6E5),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.sports_esports_rounded, color: Color(0xFF00B96B), size: 15),
-              SizedBox(width: 5),
+            children: [
+              Icon(
+                Icons.sports_esports_rounded,
+                color: const Color(0xFF00B96B),
+                size: isDesktop ? 15 : 16,
+              ),
+              const SizedBox(width: 5),
               Text(
                 '1v1 Live Arena',
                 style: TextStyle(
-                  color: Color(0xFF008C52),
-                  fontSize: 11.5,
+                  color: const Color(0xFF008C52),
+                  fontSize: isDesktop ? 11.5 : 12,
                   fontWeight: FontWeight.w800,
                   fontFamily: 'Inter',
                 ),
@@ -272,60 +300,60 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: isDesktop ? 10 : 14),
 
         // Finding Opponent Title
-        const Text(
+        Text(
           'Finding Opponent...',
           style: TextStyle(
-            fontSize: 22,
+            fontSize: isDesktop ? 22 : 26,
             fontWeight: FontWeight.w900,
             color: AppColors.battleNavy,
-            letterSpacing: -0.3,
+            letterSpacing: isDesktop ? -0.3 : -0.4,
             fontFamily: 'Inter',
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: isDesktop ? 4 : 6),
 
         // Subtitle
-        const Text(
+        Text(
           'Looking for a player near your skill level',
           style: TextStyle(
-            fontSize: 12.5,
+            fontSize: isDesktop ? 12.5 : 13.5,
             fontWeight: FontWeight.w500,
             color: AppColors.battleSecondaryText,
             fontFamily: 'Inter',
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: isDesktop ? 12 : 20),
 
         // Feature Bullets
-        _buildBulletItem(Icons.bolt_rounded, const Color(0xFF00B96B), 'Real Players Only'),
-        const SizedBox(height: 7),
-        _buildBulletItem(Icons.verified_user_rounded, const Color(0xFF00B96B), 'Fair & Balanced Match'),
-        const SizedBox(height: 7),
-        _buildBulletItem(Icons.groups_rounded, const Color(0xFF00B96B), 'Similar Skill Level'),
+        _buildBulletItem(Icons.bolt_rounded, const Color(0xFF00B96B), 'Real Players Only', isDesktop),
+        SizedBox(height: isDesktop ? 7 : 10),
+        _buildBulletItem(Icons.verified_user_rounded, const Color(0xFF00B96B), 'Fair & Balanced Match', isDesktop),
+        SizedBox(height: isDesktop ? 7 : 10),
+        _buildBulletItem(Icons.groups_rounded, const Color(0xFF00B96B), 'Similar Skill Level', isDesktop),
       ],
     );
   }
 
-  Widget _buildBulletItem(IconData icon, Color color, String text) {
+  Widget _buildBulletItem(IconData icon, Color color, String text, bool isDesktop) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.all(isDesktop ? 4 : 5),
           decoration: BoxDecoration(
             color: color.withAlpha(25),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: color, size: 14),
+          child: Icon(icon, color: color, size: isDesktop ? 14 : 16),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: isDesktop ? 8 : 10),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              fontSize: 12.5,
+            style: TextStyle(
+              fontSize: isDesktop ? 12.5 : 13.5,
               fontWeight: FontWeight.w700,
               color: AppColors.battleNavy,
               fontFamily: 'Inter',

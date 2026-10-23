@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
-import '../../tokens/radii.dart';
 
 /// 3 Horizontal Quick Status Cards (Round, Time Left, Stake)
 class BattleQuickStatusCardsRow extends StatelessWidget {
@@ -8,6 +7,7 @@ class BattleQuickStatusCardsRow extends StatelessWidget {
   final int totalRounds;
   final int remainingSeconds;
   final int stakeCoins;
+  final bool isDesktop;
 
   const BattleQuickStatusCardsRow({
     super.key,
@@ -15,6 +15,7 @@ class BattleQuickStatusCardsRow extends StatelessWidget {
     required this.totalRounds,
     required this.remainingSeconds,
     required this.stakeCoins,
+    this.isDesktop = false,
   });
 
   @override
@@ -68,6 +69,67 @@ class BattleQuickStatusCardsRow extends StatelessWidget {
     required String value,
     Color? valueColor,
   }) {
+    if (!isDesktop) {
+      // Full native mobile styling
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.battleBorder, width: 1.2),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0810194F),
+              blurRadius: 10,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: iconBg,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.battleSecondaryText,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: valueColor ?? AppColors.battleNavy,
+                      fontFamily: 'Inter',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Compact desktop styling with FittedBox
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
       decoration: BoxDecoration(
@@ -138,27 +200,32 @@ class BattleInfoCard extends StatelessWidget {
   final int winReward;
   final int correctReward;
   final int wrongReward;
+  final bool isDesktop;
 
   const BattleInfoCard({
     super.key,
     this.winReward = 100,
     this.correctReward = 10,
     this.wrongReward = 0,
+    this.isDesktop = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 14 : 16,
+        vertical: isDesktop ? 8 : 14,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A10194F),
-            blurRadius: 10,
-            offset: Offset(0, 3),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -166,13 +233,17 @@ class BattleInfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(Icons.sports_esports_rounded, color: Color(0xFF2587F8), size: 16),
-              SizedBox(width: 6),
+            children: [
+              Icon(
+                Icons.sports_esports_rounded,
+                color: const Color(0xFF2587F8),
+                size: isDesktop ? 16 : 18,
+              ),
+              const SizedBox(width: 8),
               Text(
                 'Battle Info',
                 style: TextStyle(
-                  fontSize: 13.5,
+                  fontSize: isDesktop ? 13.5 : 15,
                   fontWeight: FontWeight.w900,
                   color: AppColors.battleNavy,
                   fontFamily: 'Inter',
@@ -180,21 +251,21 @@ class BattleInfoCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: isDesktop ? 6 : 12),
           _buildRow(
             icon: Icons.emoji_events_rounded,
             iconColor: const Color(0xFFFFB800),
             label: 'Win this Battle',
             coins: '+$winReward Coins',
           ),
-          const Divider(height: 8, color: Color(0xFFF1F5F9)),
+          Divider(height: isDesktop ? 8 : 16, color: const Color(0xFFF1F5F9)),
           _buildRow(
             icon: Icons.star_rounded,
             iconColor: const Color(0xFFFFB800),
             label: 'Correct Answer',
             coins: '+$correctReward Coins',
           ),
-          const Divider(height: 8, color: Color(0xFFF1F5F9)),
+          Divider(height: isDesktop ? 8 : 16, color: const Color(0xFFF1F5F9)),
           _buildRow(
             icon: Icons.close_rounded,
             iconColor: const Color(0xFFFF385C),
@@ -218,15 +289,15 @@ class BattleInfoCard extends StatelessWidget {
         Expanded(
           child: Row(
             children: [
-              Icon(icon, color: iconColor, size: 14),
-              const SizedBox(width: 6),
+              Icon(icon, color: iconColor, size: isDesktop ? 14 : 16),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 12,
+                  style: TextStyle(
+                    fontSize: isDesktop ? 12 : 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF334155),
+                    color: const Color(0xFF334155),
                     fontFamily: 'Inter',
                   ),
                   maxLines: 1,
@@ -236,16 +307,20 @@ class BattleInfoCard extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFB800), size: 13),
-            const SizedBox(width: 3),
+            Icon(
+              Icons.monetization_on_rounded,
+              color: const Color(0xFFFFB800),
+              size: isDesktop ? 13 : 15,
+            ),
+            const SizedBox(width: 4),
             Text(
               coins,
-              style: const TextStyle(
-                fontSize: 12,
+              style: TextStyle(
+                fontSize: isDesktop ? 12 : 13,
                 fontWeight: FontWeight.w800,
                 color: AppColors.battleNavy,
                 fontFamily: 'Inter',
@@ -261,19 +336,24 @@ class BattleInfoCard extends StatelessWidget {
 /// Live Players Online Card
 class PlayersOnlineCard extends StatelessWidget {
   final String count;
+  final bool isDesktop;
 
   const PlayersOnlineCard({
     super.key,
     this.count = '2,468',
+    this.isDesktop = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 14 : 16,
+        vertical: isDesktop ? 8 : 14,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
@@ -288,14 +368,18 @@ class PlayersOnlineCard extends StatelessWidget {
         children: [
           Expanded(
             child: Row(
-              children: const [
-                Icon(Icons.groups_rounded, color: Color(0xFF00B96B), size: 18),
-                SizedBox(width: 6),
+              children: [
+                Icon(
+                  Icons.groups_rounded,
+                  color: const Color(0xFF00B96B),
+                  size: isDesktop ? 18 : 20,
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Players Online',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: isDesktop ? 13 : 14,
                       fontWeight: FontWeight.w800,
                       color: AppColors.battleNavy,
                       fontFamily: 'Inter',
@@ -307,23 +391,23 @@ class PlayersOnlineCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 count,
-                style: const TextStyle(
-                  fontSize: 14,
+                style: TextStyle(
+                  fontSize: isDesktop ? 14 : 15,
                   fontWeight: FontWeight.w900,
                   color: AppColors.battleNavy,
                   fontFamily: 'Inter',
                 ),
               ),
-              const SizedBox(width: 5),
+              const SizedBox(width: 6),
               Container(
-                width: 7,
-                height: 7,
+                width: isDesktop ? 7 : 8,
+                height: isDesktop ? 7 : 8,
                 decoration: const BoxDecoration(
                   color: Color(0xFF00B96B),
                   shape: BoxShape.circle,
@@ -343,22 +427,30 @@ class PlayersOnlineCard extends StatelessWidget {
 /// Recent Battles Card with Win/Loss tags
 class RecentBattlesCard extends StatelessWidget {
   final VoidCallback? onViewAll;
+  final bool isDesktop;
 
-  const RecentBattlesCard({super.key, this.onViewAll});
+  const RecentBattlesCard({
+    super.key,
+    this.onViewAll,
+    this.isDesktop = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 14 : 16,
+        vertical: isDesktop ? 8 : 14,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.battleBorder, width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A10194F),
-            blurRadius: 10,
-            offset: Offset(0, 3),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -370,14 +462,18 @@ class RecentBattlesCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Row(
-                  children: const [
-                    Icon(Icons.history_rounded, color: Color(0xFF2587F8), size: 16),
-                    SizedBox(width: 6),
+                  children: [
+                    Icon(
+                      Icons.history_rounded,
+                      color: const Color(0xFF2587F8),
+                      size: isDesktop ? 16 : 18,
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Recent Battles',
                         style: TextStyle(
-                          fontSize: 13.5,
+                          fontSize: isDesktop ? 13.5 : 15,
                           fontWeight: FontWeight.w900,
                           color: AppColors.battleNavy,
                           fontFamily: 'Inter',
@@ -389,35 +485,44 @@ class RecentBattlesCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: onViewAll,
-                child: const Text(
+                child: Text(
                   'View All',
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: isDesktop ? 11.5 : 12.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF2587F8),
+                    color: const Color(0xFF2587F8),
                     fontFamily: 'Inter',
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: isDesktop ? 6 : 12),
           _buildItem(
             name: 'Rohit vs Priya',
             coinsDelta: '+100',
             isWin: true,
             avatarBg: const Color(0xFF3B82F6),
           ),
-          const Divider(height: 6, color: Color(0xFFF1F5F9)),
+          Divider(height: isDesktop ? 6 : 14, color: const Color(0xFFF1F5F9)),
           _buildItem(
             name: 'Aman vs Neha',
             coinsDelta: '-50',
             isWin: false,
             avatarBg: const Color(0xFFFF5C5C),
           ),
+          if (!isDesktop) ...[
+            const Divider(height: 14, color: Color(0xFFF1F5F9)),
+            _buildItem(
+              name: 'You vs Karan',
+              coinsDelta: '+100',
+              isWin: true,
+              avatarBg: const Color(0xFF10B981),
+            ),
+          ],
         ],
       ),
     );
@@ -436,18 +541,18 @@ class RecentBattlesCard extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                radius: 13,
+                radius: isDesktop ? 11 : 13,
                 backgroundColor: avatarBg.withAlpha(40),
-                child: Icon(Icons.person, size: 16, color: avatarBg),
+                child: Icon(Icons.person, size: isDesktop ? 14 : 16, color: avatarBg),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   name,
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: TextStyle(
+                    fontSize: isDesktop ? 12 : 13,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF334155),
+                    color: const Color(0xFF334155),
                     fontFamily: 'Inter',
                   ),
                   maxLines: 1,
@@ -464,27 +569,38 @@ class RecentBattlesCard extends StatelessWidget {
             Text(
               coinsDelta,
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: isDesktop ? 11.5 : 12.5,
                 fontWeight: FontWeight.w800,
                 color: isWin ? const Color(0xFF00B96B) : const Color(0xFFFF385C),
                 fontFamily: 'Inter',
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
               decoration: BoxDecoration(
                 color: isWin ? const Color(0xFFD6F6E5) : const Color(0xFFFFE5E8),
-                borderRadius: AppRadii.borderPill,
+                borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(
-                isWin ? '🏆 Win' : '❌ Lose',
-                style: TextStyle(
-                  color: isWin ? const Color(0xFF008C52) : const Color(0xFFD61F3D),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  fontFamily: 'Inter',
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isWin ? Icons.emoji_events_rounded : Icons.close_rounded,
+                    color: isWin ? const Color(0xFF00B96B) : const Color(0xFFFF385C),
+                    size: 11,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    isWin ? 'Win' : 'Loss',
+                    style: TextStyle(
+                      color: isWin ? const Color(0xFF008C52) : const Color(0xFFD61F3D),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
