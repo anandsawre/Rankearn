@@ -117,16 +117,20 @@ void main() {
       final startBattleCta = find.text('Start Battle');
       expect(startBattleCta, findsOneWidget);
       await tester.tap(startBattleCta);
-      await tester.pump(); // Start animation dialog
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300)); // Finish route push transition
 
-      // Verify Matchmaking dialog appears
-      expect(find.text('Searching Opponent...'), findsOneWidget);
-      expect(find.text('Cancel Matchmaking'), findsOneWidget);
+      // Verify Finding Opponent screen appears
+      expect(find.text('Finding Opponent...'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
 
-      // Cancel matchmaking to close dialog cleanly
-      await tester.tap(find.text('Cancel Matchmaking'));
+      // Cancel matchmaking to navigate back cleanly
+      final cancelFinder = find.text('Cancel');
+      await tester.ensureVisible(cancelFinder);
+      await tester.pump();
+      await tester.tap(cancelFinder);
       await tester.pumpAndSettle();
-      expect(find.text('Searching Opponent...'), findsNothing);
+      expect(find.text('Finding Opponent...'), findsNothing);
     });
 
     testWidgets('Interactive Custom Room: Opens Custom Room Dialog', (WidgetTester tester) async {

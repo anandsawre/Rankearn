@@ -159,3 +159,171 @@ class BattleHistoryItemModel {
     );
   }
 }
+
+/// Matchmaking & Live Arena State
+enum BattleMatchState {
+  idle,
+  searching,
+  matchFound,
+  inProgress,
+  roundTransition,
+  completed,
+  cancelled,
+  timedOut,
+  failed,
+}
+
+/// 1v1 Battle Question Model
+class BattleQuestion {
+  final String id;
+  final String subject;
+  final String questionText;
+  final List<String> options;
+  final int correctAnswer;
+  final int timeLimitSeconds;
+
+  const BattleQuestion({
+    required this.id,
+    this.subject = 'General Science',
+    required this.questionText,
+    required this.options,
+    required this.correctAnswer,
+    this.timeLimitSeconds = 15,
+  });
+
+  factory BattleQuestion.fromJson(Map<String, dynamic> json) {
+    return BattleQuestion(
+      id: json['id'] as String? ?? 'q_${DateTime.now().microsecondsSinceEpoch}',
+      subject: json['subject'] as String? ?? 'General Science',
+      questionText: json['question_text'] as String? ?? '',
+      options: (json['options'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+          ['A', 'B', 'C', 'D'],
+      correctAnswer: json['correct_answer'] as int? ?? 0,
+      timeLimitSeconds: json['time_limit_seconds'] as int? ?? 15,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'subject': subject,
+        'question_text': questionText,
+        'options': options,
+        'correct_answer': correctAnswer,
+        'time_limit_seconds': timeLimitSeconds,
+      };
+}
+
+/// Live Player state in 1v1 Arena
+class BattlePlayer {
+  final String id;
+  final String name;
+  final String rank;
+  final String? avatarUrl;
+  final int score;
+  final List<bool?> roundResults; // true: correct, false: wrong, null: pending
+
+  const BattlePlayer({
+    required this.id,
+    required this.name,
+    this.rank = '#1',
+    this.avatarUrl,
+    this.score = 0,
+    this.roundResults = const [null, null, null, null, null],
+  });
+
+  BattlePlayer copyWith({
+    String? id,
+    String? name,
+    String? rank,
+    String? avatarUrl,
+    int? score,
+    List<bool?>? roundResults,
+  }) {
+    return BattlePlayer(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      rank: rank ?? this.rank,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      score: score ?? this.score,
+      roundResults: roundResults ?? this.roundResults,
+    );
+  }
+}
+
+/// Active Battle Session
+class BattleSession {
+  final String id;
+  final BattlePlayer player;
+  final BattlePlayer opponent;
+  final int entryFee;
+  final int currentRound;
+  final int totalRounds;
+  final List<BattleQuestion> questions;
+  final BattleMatchState state;
+
+  const BattleSession({
+    required this.id,
+    required this.player,
+    required this.opponent,
+    this.entryFee = 100,
+    this.currentRound = 1,
+    this.totalRounds = 5,
+    required this.questions,
+    this.state = BattleMatchState.inProgress,
+  });
+
+  BattleQuestion get currentQuestion => questions[(currentRound - 1).clamp(0, questions.length - 1)];
+
+  bool get isPlayerLeading => player.score > opponent.score;
+  bool get isOpponentLeading => opponent.score > player.score;
+  bool get isTied => player.score == opponent.score;
+
+  BattleSession copyWith({
+    String? id,
+    BattlePlayer? player,
+    BattlePlayer? opponent,
+    int? entryFee,
+    int? currentRound,
+    int? totalRounds,
+    List<BattleQuestion>? questions,
+    BattleMatchState? state,
+  }) {
+    return BattleSession(
+      id: id ?? this.id,
+      player: player ?? this.player,
+      opponent: opponent ?? this.opponent,
+      entryFee: entryFee ?? this.entryFee,
+      currentRound: currentRound ?? this.currentRound,
+      totalRounds: totalRounds ?? this.totalRounds,
+      questions: questions ?? this.questions,
+      state: state ?? this.state,
+    );
+  }
+}
+
+/// 1v1 Battle Result Outcome
+class BattleResult {
+  final bool isVictory;
+  final bool isDraw;
+  final bool isDefeat;
+  final String playerName;
+  final int playerScore;
+  final String opponentName;
+  final int opponentScore;
+  final String opponentRank;
+  final int coinsWon;
+  final String message;
+
+  const BattleResult({
+    required this.isVictory,
+    this.isDraw = false,
+    this.isDefeat = false,
+    required this.playerName,
+    required this.playerScore,
+    required this.opponentName,
+    required this.opponentScore,
+    this.opponentRank = 'Rank #4',
+    required this.coinsWon,
+    required this.message,
+  });
+}

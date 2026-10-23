@@ -56,38 +56,21 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
     });
   }
 
-  // --- Interactive Matchmaking Modal Flow ---
+  // --- Interactive Matchmaking Flow (Screen 1: Finding Opponent Radar) ---
   void _startMatchmaking({required String battleType, required int entryFee}) {
     if (widget.userCoins < entryFee) {
       _showInsufficientCoinsDialog(entryFee);
       return;
     }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogCtx) => _MatchmakingDialog(
-        battleType: battleType,
-        entryFee: entryFee,
-        playerName: widget.profile.name,
-        onMatchFound: (opponentName) {
-          Navigator.of(dialogCtx).pop(); // Close dialog
-          _launchBattleMatch(opponentName: opponentName, entryFee: entryFee);
-        },
-        onCancel: () => Navigator.of(dialogCtx).pop(),
-      ),
-    );
-  }
-
-  void _launchBattleMatch({required String opponentName, required int entryFee}) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => BattleScreen(
-          playerName: widget.profile.name,
-          opponentName: opponentName,
-          entryFeeCoins: entryFee,
-          onExit: () => Navigator.of(context).pop(),
-          onMatchFinished: (coinsWon) {
+        builder: (_) => FindingOpponentScreen(
+          userCoins: widget.userCoins,
+          profile: widget.profile,
+          battleType: battleType,
+          entryFee: entryFee,
+          onCoinUpdate: (coinsWon) {
             widget.onCoinUpdate?.call(coinsWon);
             _loadBattleData();
           },

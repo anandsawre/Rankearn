@@ -131,4 +131,30 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  // --- 1v1 Quiz Battle Arena Tokens ---
+  static const Color battleGreen = Color(0xFF00B96B);
+  static const Color battleGreenDark = Color(0xFF008C52);
+  static const Color battleMintBg = Color(0xFFE3FFF2);
+  static const Color battlePageBg = Color(0xFFF2F8FF);
+  static const Color battleNavy = Color(0xFF10194F);
+  static const Color battleGold = Color(0xFFFFC928);
+  static const Color battleGoldDark = Color(0xFFE6A700);
+  static const Color battleErrorRed = Color(0xFFFF385C);
+  static const Color battlePurple = Color(0xFF702FFF);
+  static const Color battleSecondaryText = Color(0xFF637394);
+  static const Color battleBorder = Color(0xFFDFE9FA);
+  static const Color battleCardBg = Color(0xFFFFFFFF);
+
+  static const LinearGradient battleHeaderGradient = LinearGradient(
+    colors: [Color(0xFF00B96B), Color(0xFF008C52)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient battleVictoryGradient = LinearGradient(
+    colors: [Color(0xFF00D277), Color(0xFF009C59), Color(0xFF00683B)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
 }

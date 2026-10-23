@@ -81,5 +81,17 @@ export 'components/display/auth_security_notice.dart';
 export 'components/display/wave_background.dart';
 export 'components/display/auth_background_waves.dart';
 
+// 1v1 Battle Arena Components
+export 'components/battle/battle_app_bar.dart';
+export 'components/battle/battle_radar_view.dart';
+export 'components/battle/battle_info_card.dart';
+export 'components/battle/battle_versus_card.dart';
+export 'components/battle/battle_question_card.dart';
+export 'components/battle/battle_answer_tile.dart';
+export 'components/battle/battle_button.dart';
+export 'components/battle/battle_victory_banner.dart';
+export 'components/battle/battle_reward_card.dart';
+export 'components/battle/battle_leave_dialog.dart';
+
 // Showcase
 export 'showcase/design_system_showcase.dart';

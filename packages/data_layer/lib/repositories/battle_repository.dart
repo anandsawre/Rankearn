@@ -213,6 +213,133 @@ class BattleRepository {
     });
   }
 
+  /// Get 5 high-yield competitive battle questions
+  Future<Result<List<BattleQuestion>>> getLiveBattleQuestions() async {
+    final client = _client;
+    if (client != null) {
+      try {
+        final res = await client
+            .from('battle_questions')
+            .select()
+            .limit(5);
+        if (res.isNotEmpty) {
+          final list = res.map((r) => BattleQuestion.fromJson(r)).toList();
+          if (list.length >= 5) return Success(list);
+        }
+      } catch (_) {}
+    }
+
+    // Default reference-accurate curriculum questions
+    return const Success([
+      BattleQuestion(
+        id: 'bq_1',
+        subject: 'Solar Astronomy',
+        questionText: 'Which planet is known as the Red Planet in our solar system?',
+        options: ['Venus', 'Mars', 'Jupiter', 'Mercury'],
+        correctAnswer: 1,
+        timeLimitSeconds: 15,
+      ),
+      BattleQuestion(
+        id: 'bq_2',
+        subject: 'Indian Geography',
+        questionText: 'What is the capital city of the state of Bihar?',
+        options: ['Gaya', 'Patna', 'Muzaffarpur', 'Bhagalpur'],
+        correctAnswer: 1,
+        timeLimitSeconds: 15,
+      ),
+      BattleQuestion(
+        id: 'bq_3',
+        subject: 'Indian Heritage',
+        questionText: 'Who composed the National Anthem of India "Jana Gana Mana"?',
+        options: [
+          'Bankim Chandra Chatterjee',
+          'Rabindranath Tagore',
+          'Sarojini Naidu',
+          'Subhas Chandra Bose'
+        ],
+        correctAnswer: 1,
+        timeLimitSeconds: 15,
+      ),
+      BattleQuestion(
+        id: 'bq_4',
+        subject: 'General Science',
+        questionText: 'Which is the largest organ in the human body?',
+        options: ['Liver', 'Heart', 'Skin', 'Lungs'],
+        correctAnswer: 2,
+        timeLimitSeconds: 15,
+      ),
+      BattleQuestion(
+        id: 'bq_5',
+        subject: 'Modern History',
+        questionText: 'In which historic year did India gain Independence from British rule?',
+        options: ['1942', '1945', '1947', '1950'],
+        correctAnswer: 2,
+        timeLimitSeconds: 15,
+      ),
+    ]);
+  }
+
+  /// Instantiate a fresh synchronized 1v1 Battle Session
+  Future<Result<BattleSession>> createLiveBattleSession({
+    required String playerName,
+    required String opponentName,
+    int entryFee = 100,
+    String opponentRank = 'Rank #4',
+  }) async {
+    final questionsRes = await getLiveBattleQuestions();
+    final questions = questionsRes is Success<List<BattleQuestion>>
+        ? questionsRes.data
+        : const <BattleQuestion>[];
+
+    final session = BattleSession(
+      id: 'session_${DateTime.now().millisecondsSinceEpoch}',
+      player: BattlePlayer(
+        id: 'p_current',
+        name: playerName.isEmpty ? 'Vikram Singh' : playerName,
+        rank: '#1',
+        score: 0,
+        roundResults: const [null, null, null, null, null],
+      ),
+      opponent: BattlePlayer(
+        id: 'p_opponent',
+        name: opponentName.isEmpty ? 'Amit Verma (Rank #4)' : opponentName,
+        rank: opponentRank,
+        score: 0,
+        roundResults: const [null, null, null, null, null],
+      ),
+      entryFee: entryFee,
+      currentRound: 1,
+      totalRounds: 5,
+      questions: questions,
+      state: BattleMatchState.inProgress,
+    );
+
+    return Success(session);
+  }
+
+  /// Authoritative server record of battle completion and reward distribution
+  Future<Result<bool>> recordBattleOutcome({
+    required String userId,
+    required BattleResult result,
+    required int entryFee,
+  }) async {
+    final client = _client;
+    if (client != null && userId.isNotEmpty) {
+      try {
+        await client.from('battles').insert({
+          'user_id': userId,
+          'opponent_name': result.opponentName,
+          'my_score': result.playerScore,
+          'opponent_score': result.opponentScore,
+          'result': result.isVictory ? 'Won' : (result.isDraw ? 'Draw' : 'Lost'),
+          'coins_delta': result.isVictory ? (entryFee * 2) : -entryFee,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
+    }
+    return const Success(true);
+  }
+
   static const List<BattlePlayerModel> _defaultTopPlayers = [
     BattlePlayerModel(rank: 1, id: 'u_1', name: 'Aman Kumar', score: 12540),
     BattlePlayerModel(rank: 2, id: 'u_2', name: 'Priya Singh', score: 11230),

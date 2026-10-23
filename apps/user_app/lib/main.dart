@@ -246,15 +246,14 @@ class _UserAppShellState extends State<UserAppShell> {
     );
   }
 
-  void _startBattle([int entryFee = 20]) {
+  void _startBattle([int entryFee = 100]) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => BattleScreen(
-          playerName: _profile.name,
-          opponentName: 'Amit Verma (Rank #4)',
-          entryFeeCoins: entryFee,
-          onExit: () => Navigator.of(context).pop(),
-          onMatchFinished: (coinsWon) {
+        builder: (context) => FindingOpponentScreen(
+          userCoins: _profile.coins,
+          profile: _profile,
+          entryFee: entryFee,
+          onCoinUpdate: (coinsWon) {
             setState(() {
               _profile = _profile.copyWith(coins: _profile.coins + coinsWon);
             });
