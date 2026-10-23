@@ -452,29 +452,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
             return Stack(
               children: [
-                // Soft Ambient Decorative Background Glows
-                Positioned(
-                  top: -80,
-                  left: -80,
-                  child: Container(
-                    width: 320,
-                    height: 320,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFE4FFF0).withValues(alpha: 0.7),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: -60,
-                  right: -60,
-                  child: Container(
-                    width: 360,
-                    height: 360,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFE5F5FF).withValues(alpha: 0.7),
-                    ),
+                // Premium Seamlessly Blended Multi-Layer Wave Background
+                const Positioned.fill(
+                  child: IgnorePointer(
+                    child: WaveBackground(),
                   ),
                 ),
 

@@ -74,6 +74,7 @@ export 'components/navigation/auth_role_selector.dart';
 export 'components/buttons/social_auth_button.dart';
 export 'components/display/auth_feature_item.dart';
 export 'components/cards/auth_stats_card.dart';
+export 'components/display/wave_background.dart';
 
 // Showcase
 export 'showcase/design_system_showcase.dart';
