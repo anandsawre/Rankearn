@@ -439,22 +439,23 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F8FF),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth >= 990;
-            final isTablet = constraints.maxWidth >= 640 && constraints.maxWidth < 990;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 990;
+        final isTablet = constraints.maxWidth >= 640 && constraints.maxWidth < 990;
 
-            return Stack(
+        return Scaffold(
+          backgroundColor: isDesktop ? const Color(0xFFF4F8FF) : Colors.white,
+          body: SafeArea(
+            child: Stack(
               children: [
-                // Premium Seamlessly Blended Multi-Layer Wave Background
-                const Positioned.fill(
-                  child: IgnorePointer(
-                    child: WaveBackground(),
+                // Premium Seamlessly Blended Multi-Layer Wave Background (Desktop only)
+                if (isDesktop)
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: WaveBackground(),
+                    ),
                   ),
-                ),
 
                 // Main Content Viewport
                 ScrollConfiguration(
@@ -462,13 +463,19 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.symmetric(
-                      horizontal: isDesktop ? (constraints.maxWidth > 1400 ? 56 : 36) : (isTablet ? 24 : (constraints.maxWidth < 340 ? 10 : 16)),
-                      vertical: isDesktop ? 16 : 12,
+                      horizontal: isDesktop
+                          ? (constraints.maxWidth > 1400 ? 56 : 36)
+                          : (isTablet ? 32 : (constraints.maxWidth < 360 ? 14 : 20)),
+                      vertical: isDesktop ? 16 : 14,
                     ),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        minWidth: (constraints.maxWidth - (isDesktop ? (constraints.maxWidth > 1400 ? 112 : 72) : (isTablet ? 48 : 32))).clamp(0.0, double.infinity),
-                        minHeight: (constraints.maxHeight - (isDesktop ? 32 : 24)).clamp(0.0, double.infinity),
+                        minWidth: (constraints.maxWidth -
+                                (isDesktop
+                                    ? (constraints.maxWidth > 1400 ? 112 : 72)
+                                    : (isTablet ? 64 : (constraints.maxWidth < 360 ? 28 : 40))))
+                            .clamp(0.0, double.infinity),
+                        minHeight: (constraints.maxHeight - (isDesktop ? 32 : 28)).clamp(0.0, double.infinity),
                       ),
                       child: isDesktop
                           ? SizedBox(
@@ -491,7 +498,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                                     constraints: BoxConstraints(
                                       maxWidth: (constraints.maxWidth * 0.44).clamp(440.0, 520.0),
                                     ),
-                                    child: _buildAuthCard(fillHeight: true),
+                                    child: _buildAuthCard(fillHeight: true, isMobile: false),
                                   ),
                                 ],
                               ),
@@ -504,10 +511,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ),
                 ),
               ],
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -570,16 +577,16 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   // =========================================================================
   // MOBILE & TABLET NATIVE AUTH LAYOUT
-  // Focused, clean, and intuitive native smartphone experience
+  // Full-screen, clean, and intuitive native smartphone experience
   // =========================================================================
   Widget _buildMobileNativeLayout({required bool isTablet, required double maxWidth}) {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: isTablet ? 480 : 440,
+          maxWidth: isTablet ? 500 : double.infinity,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
             // Top Bar: Back Button (if navigation available)
@@ -587,7 +594,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: InkWell(
                     onTap: widget.onBackToHome ?? () {
                       if (Navigator.canPop(context)) Navigator.pop(context);
@@ -597,16 +604,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: const Color(0xFFE2E8F0)),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x06000000),
-                            blurRadius: 4,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
                       ),
                       child: const Icon(
                         Icons.arrow_back_rounded,
@@ -618,9 +618,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 ),
               ),
 
-            // Native Mobile Auth Card
-            _buildAuthCard(fillHeight: false),
-            const SizedBox(height: 16),
+            // Native Mobile Full Screen Auth Form (no card borders/shadows)
+            _buildAuthCard(fillHeight: false, isMobile: true),
+            const SizedBox(height: 18),
 
             // Native Trust Strip (Clean mobile pills)
             Wrap(
@@ -633,7 +633,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 _buildNativeTrustChip(Icons.star_rounded, '4.8 Rating', const Color(0xFFF59E0B)),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -885,42 +885,43 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 
   // =========================================================================
-  // RIGHT COLUMN: AUTHENTICATION CARD (ADMIN STRUCTURED, BRAND GREEN THEME)
+  // AUTHENTICATION CONTENT (CARD ON DESKTOP, FULL-SCREEN ON MOBILE)
   // =========================================================================
-  Widget _buildAuthCard({bool fillHeight = false}) {
+  Widget _buildAuthCard({bool fillHeight = false, bool isMobile = false}) {
     final isLogin = _mode == AuthScreenMode.login;
-    final isDesktop = MediaQuery.of(context).size.width >= 990;
+    final isDesktop = !isMobile && MediaQuery.of(context).size.width >= 990;
 
     return Container(
       height: fillHeight ? double.infinity : null,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: const Color(0xFFF1F5F9),
-          width: 1.2,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0C304070),
-            blurRadius: 36,
-            offset: Offset(0, 16),
-          ),
-          BoxShadow(
-            color: Color(0x04000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 24 : (MediaQuery.of(context).size.width < 360 ? 14 : 20),
-        vertical: isDesktop ? 18 : 16,
-      ),
+      decoration: isDesktop
+          ? BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: const Color(0xFFF1F5F9),
+                width: 1.2,
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0C304070),
+                  blurRadius: 36,
+                  offset: Offset(0, 16),
+                ),
+                BoxShadow(
+                  color: Color(0x04000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            )
+          : null, // Full-screen on mobile: zero card borders, zero radius, zero shadow!
+      padding: isDesktop
+          ? const EdgeInsets.symmetric(horizontal: 24, vertical: 18)
+          : EdgeInsets.zero,
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
+          physics: isDesktop ? const ClampingScrollPhysics() : const NeverScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
