@@ -1594,239 +1594,157 @@ class _MobileStylishWavePainter extends CustomPainter {
     final h = size.height;
 
     // -------------------------------------------------------------------------
-    // 1. Ambient Glow 1: Top-Right Emerald / Mint Radial Blend
+    // 1. Top Soft Luminous Aura (Gently illuminates Brand Logo & Welcome area)
     // -------------------------------------------------------------------------
-    final glow1Rect = Rect.fromCircle(
-      center: Offset(w * 0.90, h * 0.12),
-      radius: (w * 0.55).clamp(180.0, 320.0),
+    final topAuraRect = Rect.fromCircle(
+      center: Offset(w * 0.50, h * 0.08),
+      radius: (w * 0.65).clamp(200.0, 360.0),
     );
-    final glow1Paint = Paint()
+    final topAuraPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF00B96B).withValues(alpha: 0.14),
-          const Color(0xFF34D399).withValues(alpha: 0.05),
+          const Color(0xFF00B96B).withValues(alpha: 0.12),
+          const Color(0xFF38BDF8).withValues(alpha: 0.05),
           Colors.transparent,
         ],
         stops: const [0.0, 0.55, 1.0],
-      ).createShader(glow1Rect);
-    canvas.drawCircle(glow1Rect.center, glow1Rect.width / 2, glow1Paint);
+      ).createShader(topAuraRect);
+    canvas.drawCircle(topAuraRect.center, topAuraRect.width / 2, topAuraPaint);
 
     // -------------------------------------------------------------------------
-    // 2. Ambient Glow 2: Bottom-Left Azure / Sky Radial Blend
+    // 2. Layer 1: Top Fluid Wave Canopy (Soft, organic, seamless gradient header)
     // -------------------------------------------------------------------------
-    final glow2Rect = Rect.fromCircle(
-      center: Offset(w * 0.10, h * 0.85),
-      radius: (w * 0.60).clamp(200.0, 360.0),
+    final topWave1 = Path();
+    topWave1.moveTo(0, 0);
+    topWave1.lineTo(w, 0);
+    topWave1.lineTo(w, h * 0.15);
+    topWave1.cubicTo(
+      w * 0.70, h * 0.19,
+      w * 0.35, h * 0.11,
+      0, h * 0.16,
     );
-    final glow2Paint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF1677FF).withValues(alpha: 0.10),
-          const Color(0xFF38BDF8).withValues(alpha: 0.04),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.60, 1.0],
-      ).createShader(glow2Rect);
-    canvas.drawCircle(glow2Rect.center, glow2Rect.width / 2, glow2Paint);
+    topWave1.close();
 
-    // -------------------------------------------------------------------------
-    // 3. Ambient Glow 3: Center-Right Subtle Warm Gold Glow (Rankearn coin vibe)
-    // -------------------------------------------------------------------------
-    final glow3Rect = Rect.fromCircle(
-      center: Offset(w * 0.95, h * 0.48),
-      radius: (w * 0.35).clamp(120.0, 200.0),
+    final topShader1 = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFFE4F8EE).withValues(alpha: 0.85),
+        const Color(0xFFE8F4FD).withValues(alpha: 0.45),
+        const Color(0xFFF8FCFA).withValues(alpha: 0.0),
+      ],
+      stops: const [0.0, 0.60, 1.0],
+    ).createShader(Rect.fromLTWH(0, 0, w, h * 0.19));
+
+    final topPaint1 = Paint()
+      ..shader = topShader1
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+    canvas.drawPath(topWave1, topPaint1);
+
+    // Layer 2: Second counter-wave at top for rich organic depth
+    final topWave2 = Path();
+    topWave2.moveTo(0, 0);
+    topWave2.lineTo(w, 0);
+    topWave2.lineTo(w, h * 0.11);
+    topWave2.cubicTo(
+      w * 0.65, h * 0.08,
+      w * 0.28, h * 0.14,
+      0, h * 0.09,
     );
-    final glow3Paint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFF59E0B).withValues(alpha: 0.07),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 1.0],
-      ).createShader(glow3Rect);
-    canvas.drawCircle(glow3Rect.center, glow3Rect.width / 2, glow3Paint);
+    topWave2.close();
 
-    // -------------------------------------------------------------------------
-    // 4. Layer 1: Top Dynamic Curved Wave Canopy
-    // -------------------------------------------------------------------------
-    final topWavePath = Path();
-    topWavePath.moveTo(0, 0);
-    topWavePath.lineTo(w, 0);
-    topWavePath.lineTo(w, h * 0.16);
-    topWavePath.cubicTo(
-      w * 0.72, h * 0.22,
-      w * 0.38, h * 0.10,
-      0, h * 0.17,
-    );
-    topWavePath.close();
-
-    final topWaveShader = LinearGradient(
+    final topShader2 = LinearGradient(
       begin: Alignment.topRight,
       end: Alignment.bottomLeft,
       colors: [
-        const Color(0xFF00B96B).withValues(alpha: 0.10),
-        const Color(0xFF10B981).withValues(alpha: 0.05),
-        const Color(0xFFF0FDF4).withValues(alpha: 0.0),
+        const Color(0xFF38BDF8).withValues(alpha: 0.12),
+        const Color(0xFF00B96B).withValues(alpha: 0.07),
+        Colors.transparent,
       ],
-      stops: const [0.0, 0.65, 1.0],
-    ).createShader(Rect.fromLTWH(0, 0, w, h * 0.22));
+      stops: const [0.0, 0.50, 1.0],
+    ).createShader(Rect.fromLTWH(0, 0, w, h * 0.14));
 
-    final topWavePaint = Paint()
-      ..shader = topWaveShader
+    final topPaint2 = Paint()
+      ..shader = topShader2
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
-    canvas.drawPath(topWavePath, topWavePaint);
+    canvas.drawPath(topWave2, topPaint2);
 
-    // Top Wave Accent Stroke Ribbon
-    final topRibbonPath = Path();
-    topRibbonPath.moveTo(0, h * 0.17);
-    topRibbonPath.cubicTo(
-      w * 0.38, h * 0.10,
-      w * 0.72, h * 0.22,
-      w, h * 0.16,
+    // -------------------------------------------------------------------------
+    // 3. Bottom Ambient Glow & Sweeping Harmonic Waves (Behind Trust Chips)
+    // -------------------------------------------------------------------------
+    final bottomGlowRect = Rect.fromCircle(
+      center: Offset(w * 0.50, h * 0.94),
+      radius: (w * 0.70).clamp(220.0, 380.0),
     );
-
-    final topRibbonPaint = Paint()
-      ..shader = LinearGradient(
+    final bottomGlowPaint = Paint()
+      ..shader = RadialGradient(
         colors: [
-          const Color(0xFF00B96B).withValues(alpha: 0.28),
-          const Color(0xFF1677FF).withValues(alpha: 0.20),
-          const Color(0xFF00B96B).withValues(alpha: 0.05),
+          const Color(0xFF00B96B).withValues(alpha: 0.09),
+          const Color(0xFF1677FF).withValues(alpha: 0.05),
+          Colors.transparent,
         ],
-      ).createShader(Rect.fromLTWH(0, h * 0.10, w, h * 0.12))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
-      ..isAntiAlias = true;
-    canvas.drawPath(topRibbonPath, topRibbonPaint);
+        stops: const [0.0, 0.60, 1.0],
+      ).createShader(bottomGlowRect);
+    canvas.drawCircle(bottomGlowRect.center, bottomGlowRect.width / 2, bottomGlowPaint);
 
-    // -------------------------------------------------------------------------
-    // 5. Layer 2: Bottom Sweeping Harmonic Waves (Dual Crest)
-    // -------------------------------------------------------------------------
-    // Deep Base Wave
-    final bottomPath1 = Path();
-    bottomPath1.moveTo(0, h * 0.82);
-    bottomPath1.cubicTo(
-      w * 0.26, h * 0.76,
-      w * 0.58, h * 0.88,
-      w, h * 0.80,
+    // Deep Bottom Wave Base
+    final bottomWave1 = Path();
+    bottomWave1.moveTo(0, h * 0.88);
+    bottomWave1.cubicTo(
+      w * 0.30, h * 0.84,
+      w * 0.68, h * 0.93,
+      w, h * 0.86,
     );
-    bottomPath1.lineTo(w, h);
-    bottomPath1.lineTo(0, h);
-    bottomPath1.close();
+    bottomWave1.lineTo(w, h);
+    bottomWave1.lineTo(0, h);
+    bottomWave1.close();
 
     final bottomShader1 = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
       colors: [
-        const Color(0xFF00B96B).withValues(alpha: 0.07),
-        const Color(0xFF38BDF8).withValues(alpha: 0.05),
-        const Color(0xFF1677FF).withValues(alpha: 0.03),
+        Colors.transparent,
+        const Color(0xFFE8FAF2).withValues(alpha: 0.60),
+        const Color(0xFFE0F2FE).withValues(alpha: 0.45),
       ],
-      stops: const [0.0, 0.55, 1.0],
-    ).createShader(Rect.fromLTWH(0, h * 0.76, w, h * 0.24));
+      stops: const [0.0, 0.35, 1.0],
+    ).createShader(Rect.fromLTWH(0, h * 0.84, w, h * 0.16));
 
     final bottomPaint1 = Paint()
       ..shader = bottomShader1
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
-    canvas.drawPath(bottomPath1, bottomPaint1);
+    canvas.drawPath(bottomWave1, bottomPaint1);
 
-    // Front Crest Wave
-    final bottomPath2 = Path();
-    bottomPath2.moveTo(0, h * 0.89);
-    bottomPath2.cubicTo(
-      w * 0.32, h * 0.94,
-      w * 0.68, h * 0.84,
-      w, h * 0.89,
+    // Front Bottom Wave (Gently cradles the trust strip)
+    final bottomWave2 = Path();
+    bottomWave2.moveTo(0, h * 0.93);
+    bottomWave2.cubicTo(
+      w * 0.38, h * 0.96,
+      w * 0.72, h * 0.90,
+      w, h * 0.94,
     );
-    bottomPath2.lineTo(w, h);
-    bottomPath2.lineTo(0, h);
-    bottomPath2.close();
+    bottomWave2.lineTo(w, h);
+    bottomWave2.lineTo(0, h);
+    bottomWave2.close();
 
     final bottomShader2 = LinearGradient(
       begin: Alignment.bottomLeft,
       end: Alignment.topRight,
       colors: [
-        const Color(0xFF10B981).withValues(alpha: 0.08),
-        const Color(0xFF6EE7B7).withValues(alpha: 0.04),
+        const Color(0xFF34D399).withValues(alpha: 0.14),
+        const Color(0xFF38BDF8).withValues(alpha: 0.08),
         Colors.transparent,
       ],
-    ).createShader(Rect.fromLTWH(0, h * 0.84, w, h * 0.16));
+    ).createShader(Rect.fromLTWH(0, h * 0.90, w, h * 0.10));
 
     final bottomPaint2 = Paint()
       ..shader = bottomShader2
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
-    canvas.drawPath(bottomPath2, bottomPaint2);
-
-    // Bottom Delicate Accent Ribbon Stroke
-    final bottomRibbonPath = Path();
-    bottomRibbonPath.moveTo(0, h * 0.82);
-    bottomRibbonPath.cubicTo(
-      w * 0.26, h * 0.76,
-      w * 0.58, h * 0.88,
-      w, h * 0.80,
-    );
-
-    final bottomRibbonPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0xFF00B96B).withValues(alpha: 0.25),
-          const Color(0xFF38BDF8).withValues(alpha: 0.22),
-          const Color(0xFF1677FF).withValues(alpha: 0.10),
-        ],
-      ).createShader(Rect.fromLTWH(0, h * 0.76, w, h * 0.12))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..isAntiAlias = true;
-    canvas.drawPath(bottomRibbonPath, bottomRibbonPaint);
-
-    // -------------------------------------------------------------------------
-    // 6. Layer 3: Modern Floating Geometry Micro-Accents
-    // -------------------------------------------------------------------------
-    // Top-Right Delicate Ring Orb
-    final ringPaint1 = Paint()
-      ..color = const Color(0xFF00B96B).withValues(alpha: 0.25)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..isAntiAlias = true;
-    canvas.drawCircle(Offset(w * 0.88, h * 0.06), 14, ringPaint1);
-
-    final dotPaint1 = Paint()
-      ..color = const Color(0xFF1677FF).withValues(alpha: 0.20)
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-    canvas.drawCircle(Offset(w * 0.94, h * 0.10), 4, dotPaint1);
-
-    // Top-Left Micro Diamond
-    final diamondPaint = Paint()
-      ..color = const Color(0xFF00B96B).withValues(alpha: 0.18)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0
-      ..isAntiAlias = true;
-    final dPath = Path();
-    const dX = 36.0;
-    final dY = h * 0.12;
-    dPath.moveTo(dX, dY - 6);
-    dPath.lineTo(dX + 6, dY);
-    dPath.lineTo(dX, dY + 6);
-    dPath.lineTo(dX - 6, dY);
-    dPath.close();
-    canvas.drawPath(dPath, diamondPaint);
-
-    // Bottom-Left Delicate Ring Orb
-    final ringPaint2 = Paint()
-      ..color = const Color(0xFF1677FF).withValues(alpha: 0.22)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..isAntiAlias = true;
-    canvas.drawCircle(Offset(w * 0.09, h * 0.84), 16, ringPaint2);
-
-    final dotPaint2 = Paint()
-      ..color = const Color(0xFFF59E0B).withValues(alpha: 0.25)
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-    canvas.drawCircle(Offset(w * 0.15, h * 0.87), 4.5, dotPaint2);
+    canvas.drawPath(bottomWave2, bottomPaint2);
   }
 
   @override
