@@ -679,12 +679,13 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ),
                   const SizedBox(width: 8),
 
-                  // Zoomed high-resolution Mascot Artwork (Even larger & bold)
+                  // Zoomed high-resolution Mascot Artwork (Prominent & Shifted Upwards)
                   Expanded(
-                    flex: 13,
+                    flex: 14,
                     child: _buildMascotArtwork(
-                      maxHeight: isDesktop ? 335 : 240,
-                      scale: isDesktop ? 1.28 : 1.10,
+                      maxHeight: isDesktop ? 350 : 250,
+                      scale: isDesktop ? 1.38 : 1.15,
+                      offsetY: isDesktop ? -20.0 : -6.0,
                     ),
                   ),
                 ],
@@ -695,7 +696,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: _buildMascotArtwork(maxHeight: 240, scale: 1.10)),
+                Center(child: _buildMascotArtwork(maxHeight: 250, scale: 1.15, offsetY: -6.0)),
                 const SizedBox(height: 14),
                 _buildFeaturesList(),
               ],
@@ -753,16 +754,22 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     );
   }
 
-  Widget _buildMascotArtwork({double maxHeight = 285, double scale = 1.0}) {
+  Widget _buildMascotArtwork({
+    double maxHeight = 350,
+    double scale = 1.0,
+    double offsetY = 0.0,
+  }) {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Transform.scale(
-          scale: scale,
-          child: Image.asset(
-            'assets/images/user_auth_mascot.png',
-            fit: BoxFit.contain,
-            alignment: Alignment.center,
+        child: Transform.translate(
+          offset: Offset(0, offsetY),
+          child: Transform.scale(
+            scale: scale,
+            child: Image.asset(
+              'assets/images/user_auth_mascot.png',
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
             errorBuilder: (context, error, stackTrace) => Container(
               height: 240,
               width: 220,
@@ -787,6 +794,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ),
                 ],
               ),
+            ),
             ),
           ),
         ),
