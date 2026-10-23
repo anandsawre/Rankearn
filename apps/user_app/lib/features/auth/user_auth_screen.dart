@@ -436,32 +436,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F8FF), // Pale blue-mint surface
-      appBar: AppHeader(
-        coins: 1250,
-        userName: 'Aman Kumar',
-        currentTab: UserNavTab.home,
-        onTabSelected: (tab) {
-          switch (tab) {
-            case UserNavTab.home:
-              widget.onBackToHome?.call();
-              break;
-            case UserNavTab.tests:
-              widget.onNavigateToTests?.call();
-              break;
-            case UserNavTab.live:
-              widget.onNavigateToLive?.call();
-              break;
-            case UserNavTab.battle:
-              widget.onNavigateToBattle?.call();
-              break;
-            case UserNavTab.rewards:
-              widget.onNavigateToRewards?.call();
-              break;
-            default:
-              break;
-          }
-        },
-      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -526,7 +500,15 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                           : Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                // Mobile / Tablet: Auth Card First or Top with compact hero
+                                // Mobile / Tablet: Clean Brand Logo at top
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 18),
+                                    child: _buildBrandLogo(),
+                                  ),
+                                ),
+                                // Auth Card First or Top with compact hero
                                 _buildAuthCard(),
                                 const SizedBox(height: 28),
                                 _buildHeroColumn(isDesktop: false),
@@ -543,6 +525,63 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     );
   }
 
+  Widget _buildBrandLogo() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF9E6),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFFDE68A), width: 1),
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.emoji_events_rounded,
+            color: Color(0xFFF59E0B),
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RichText(
+              text: const TextSpan(
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF10194F),
+                  letterSpacing: -0.5,
+                  fontFamily: 'Inter',
+                ),
+                children: [
+                  TextSpan(text: 'Rank'),
+                  TextSpan(
+                    text: 'earn',
+                    style: TextStyle(color: Color(0xFF00B96B)),
+                  ),
+                ],
+              ),
+            ),
+            const Text(
+              'Learn • Practice • Earn',
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF64748B),
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   // =========================================================================
   // LEFT COLUMN: HERO, FEATURES, MASCOT, AND STATISTICS
   // =========================================================================
@@ -553,6 +592,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        // 0. Clean Brand Logo (Desktop)
+        if (isDesktop) ...[
+          _buildBrandLogo(),
+          const SizedBox(height: 24),
+        ],
+
         // 1. Pill Badge (Login mode reference)
         if (isLogin) ...[
           Container(
