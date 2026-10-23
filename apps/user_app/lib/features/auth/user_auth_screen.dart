@@ -485,18 +485,18 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.symmetric(
                       horizontal: isDesktop ? (constraints.maxWidth > 1400 ? 56 : 36) : (isTablet ? 24 : (constraints.maxWidth < 340 ? 10 : 16)),
-                      vertical: isDesktop ? 20 : 12,
+                      vertical: isDesktop ? 16 : 12,
                     ),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
                         minWidth: (constraints.maxWidth - (isDesktop ? (constraints.maxWidth > 1400 ? 112 : 72) : (isTablet ? 48 : 32))).clamp(0.0, double.infinity),
-                        minHeight: (constraints.maxHeight - (isDesktop ? 40 : 24)).clamp(0.0, double.infinity),
+                        minHeight: (constraints.maxHeight - (isDesktop ? 32 : 24)).clamp(0.0, double.infinity),
                       ),
                       child: isDesktop
                           ? SizedBox(
                               height: math.max(
-                                (constraints.maxHeight - (constraints.maxWidth > 1400 ? 40 : 40)).clamp(0.0, double.infinity),
-                                _mode == AuthScreenMode.login ? 660.0 : 720.0,
+                                (constraints.maxHeight - 32).clamp(0.0, double.infinity),
+                                560.0,
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -723,7 +723,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   // Cropped high-resolution Mascot Artwork
                   Expanded(
                     flex: 11,
-                    child: _buildMascotArtwork(maxHeight: 250),
+                    child: _buildMascotArtwork(maxHeight: 200),
                   ),
                 ],
               );
@@ -857,7 +857,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       ),
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 26 : (MediaQuery.of(context).size.width < 360 ? 14 : 20),
-        vertical: isDesktop ? 22 : 16,
+        vertical: isDesktop ? 18 : 14,
       ),
       child: Form(
         key: _formKey,
@@ -970,7 +970,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
               // Row 2: Email Address & Password (2-Column Responsive Layout)
               LayoutBuilder(
@@ -990,13 +990,13 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildEmailFieldSection(isLogin: false),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildPasswordFieldSection(isLogin: false),
                     ],
                   );
                 },
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
               // Class / Exam Goal (Sign Up only)
               const Text(
@@ -1013,7 +1013,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   filled: true,
                   isDense: true,
                   fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8.5),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
@@ -1028,7 +1028,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 }).toList(),
                 onChanged: (val) => setState(() => _selectedExamGoal = val),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
               // Sign Up Terms Checkbox
               Row(
@@ -1076,7 +1076,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
             ],
 
             // Login Mode: Email OR Mobile Login
@@ -1267,7 +1267,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             // Divider With Label "OR"
             Row(
@@ -1287,20 +1287,20 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             // Social Logins
             SocialAuthButton.google(
               onPressed: _handleGoogleLogin,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             SocialAuthButton.phone(
               onPressed: _handlePhoneLogin,
             ),
             if (fillHeight)
               const Spacer()
             else
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
             // Mode Switcher Footer
             Center(
