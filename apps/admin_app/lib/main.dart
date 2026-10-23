@@ -22,12 +22,22 @@ import 'features/posts/posts_tab.dart';
 import 'features/support/support_tab.dart';
 import 'features/feedback/feedback_tab.dart';
 import 'features/questions/questions_tab.dart';
+import 'package:flutter/services.dart';
 import 'features/polls/polls_tab.dart';
 import 'features/settings/settings_tab.dart';
 import 'features/auth/admin_login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.white,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
   try {
     await SupabaseConfig.initialize();
   } catch (e) {
@@ -105,54 +115,69 @@ class _AdminAppShellState extends State<AdminAppShell> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 1000;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      drawer: isNarrow ? _buildAdminDrawer(context) : null,
-      bottomNavigationBar: isNarrow ? _buildMobileBottomNav(context) : null,
-      body: Column(
-        children: [
-          // 1. Pixel-perfect Top Navigation Bar
-          _buildPixelPerfectHeaderBar(context, isNarrow),
-
-          // 2. Main Page Content (Full Width)
-          Expanded(
-            child: Container(
-              color: const Color(0xFFF8FAFC),
-              width: double.infinity,
-              child: switch (_activeTab) {
-                AdminNavTab.overview => OverviewTab(
-                    onGoToTests: () => setState(() => _activeTab = AdminNavTab.tests),
-                    onGoToFinance: () => setState(() => _activeTab = AdminNavTab.finance),
-                    onGoToUsers: () => setState(() => _activeTab = AdminNavTab.users),
-                    onGoToAiCreator: () => setState(() => _activeTab = AdminNavTab.aiCreator),
-                    onGoToNotifications: () => setState(() => _activeTab = AdminNavTab.notifications),
-                    onGoToCategories: () => setState(() => _activeTab = AdminNavTab.patterns),
-                    onGoToLiveQuiz: () => setState(() => _activeTab = AdminNavTab.contests),
-                    onGoToTournaments: () => setState(() => _activeTab = AdminNavTab.leaderboard),
-                  ),
-                AdminNavTab.tests => const TestsTab(),
-                AdminNavTab.users => const UsersTab(),
-                AdminNavTab.patterns => const CategoriesTab(),
-                AdminNavTab.aiCreator => AiCreatorTab(
-                    onSavedToTests: () => setState(() => _activeTab = AdminNavTab.tests),
-                  ),
-                AdminNavTab.finance => const PaymentsTab(),
-                AdminNavTab.contests => const ContestsTab(),
-                AdminNavTab.banners => const BannersTab(),
-                AdminNavTab.notifications => const NotificationsTab(),
-                AdminNavTab.wheel => const LuckyWheelTab(),
-                AdminNavTab.leaderboard => const TournamentsTab(),
-                AdminNavTab.referrals => const ReferralsTab(),
-                AdminNavTab.posts => const PostsTab(),
-                AdminNavTab.support => const SupportTab(),
-                AdminNavTab.feedback => const FeedbackTab(),
-                AdminNavTab.battleQs => const QuestionsTab(),
-                AdminNavTab.polls => const PollsTab(),
-                AdminNavTab.settings => const SettingsTab(),
-              },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        drawer: isNarrow ? _buildAdminDrawer(context) : null,
+        bottomNavigationBar: isNarrow ? _buildMobileBottomNav(context) : null,
+        body: Column(
+          children: [
+            // 1. Pixel-perfect Top Navigation Bar with Seamless Status Bar Integration
+            Container(
+              color: Colors.white,
+              child: SafeArea(
+                bottom: false,
+                child: _buildPixelPerfectHeaderBar(context, isNarrow),
+              ),
             ),
-          ),
-        ],
+
+            // 2. Main Page Content (Full Width)
+            Expanded(
+              child: Container(
+                color: const Color(0xFFF8FAFC),
+                width: double.infinity,
+                child: switch (_activeTab) {
+                  AdminNavTab.overview => OverviewTab(
+                      onGoToTests: () => setState(() => _activeTab = AdminNavTab.tests),
+                      onGoToFinance: () => setState(() => _activeTab = AdminNavTab.finance),
+                      onGoToUsers: () => setState(() => _activeTab = AdminNavTab.users),
+                      onGoToAiCreator: () => setState(() => _activeTab = AdminNavTab.aiCreator),
+                      onGoToNotifications: () => setState(() => _activeTab = AdminNavTab.notifications),
+                      onGoToCategories: () => setState(() => _activeTab = AdminNavTab.patterns),
+                      onGoToLiveQuiz: () => setState(() => _activeTab = AdminNavTab.contests),
+                      onGoToTournaments: () => setState(() => _activeTab = AdminNavTab.leaderboard),
+                    ),
+                  AdminNavTab.tests => const TestsTab(),
+                  AdminNavTab.users => const UsersTab(),
+                  AdminNavTab.patterns => const CategoriesTab(),
+                  AdminNavTab.aiCreator => AiCreatorTab(
+                      onSavedToTests: () => setState(() => _activeTab = AdminNavTab.tests),
+                    ),
+                  AdminNavTab.finance => const PaymentsTab(),
+                  AdminNavTab.contests => const ContestsTab(),
+                  AdminNavTab.banners => const BannersTab(),
+                  AdminNavTab.notifications => const NotificationsTab(),
+                  AdminNavTab.wheel => const LuckyWheelTab(),
+                  AdminNavTab.leaderboard => const TournamentsTab(),
+                  AdminNavTab.referrals => const ReferralsTab(),
+                  AdminNavTab.posts => const PostsTab(),
+                  AdminNavTab.support => const SupportTab(),
+                  AdminNavTab.feedback => const FeedbackTab(),
+                  AdminNavTab.battleQs => const QuestionsTab(),
+                  AdminNavTab.polls => const PollsTab(),
+                  AdminNavTab.settings => const SettingsTab(),
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -162,7 +187,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
   // ==========================================
   Widget _buildPixelPerfectHeaderBar(BuildContext context, bool isNarrow) {
     return Container(
-      height: 70,
+      height: isNarrow ? 60 : 70,
       width: double.infinity,
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -177,7 +202,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: isNarrow ? 12 : 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -190,36 +215,44 @@ class _AdminAppShellState extends State<AdminAppShell> {
                     icon: const Icon(
                       Icons.menu_rounded,
                       color: Color(0xFF101A3A),
-                      size: 26,
+                      size: 24,
                     ),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     onPressed: () => Scaffold.of(ctx).openDrawer(),
                     tooltip: 'Open Menu',
                   ),
                 ),
-                const SizedBox(width: 8),
-              ] else ...[
-                const Icon(
-                  Icons.emoji_events_rounded,
-                  color: Color(0xFFF59E0B),
-                  size: 28,
-                ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 6),
               ],
+              Container(
+                width: isNarrow ? 28 : 34,
+                height: isNarrow ? 28 : 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF9E6),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.emoji_events_rounded,
+                  color: const Color(0xFFF59E0B),
+                  size: isNarrow ? 18 : 22,
+                ),
+              ),
+              const SizedBox(width: 8),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text.rich(
-                    const TextSpan(
+                    TextSpan(
                       children: [
                         TextSpan(
                           text: 'Rank',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: isNarrow ? 16 : 18,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF101A3A),
+                            color: const Color(0xFF101A3A),
                             letterSpacing: -0.4,
                             height: 1.15,
                           ),
@@ -227,9 +260,9 @@ class _AdminAppShellState extends State<AdminAppShell> {
                         TextSpan(
                           text: 'earn',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: isNarrow ? 16 : 18,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF5636F5),
+                            color: const Color(0xFF5636F5),
                             letterSpacing: -0.4,
                             height: 1.15,
                           ),
@@ -239,7 +272,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   ),
                   const SizedBox(height: 2),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEEF0FF),
                       borderRadius: BorderRadius.circular(4),
@@ -248,10 +281,10 @@ class _AdminAppShellState extends State<AdminAppShell> {
                     child: const Text(
                       'Admin Panel',
                       style: TextStyle(
-                        fontSize: 9.5,
+                        fontSize: 9,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF5636F5),
-                        letterSpacing: 0.3,
+                        letterSpacing: 0.2,
                         height: 1.1,
                       ),
                     ),
@@ -417,8 +450,8 @@ class _AdminAppShellState extends State<AdminAppShell> {
                         borderRadius: BorderRadius.circular(20),
                         child: Image.memory(
                           kAdminAvatarBytes,
-                          width: 38,
-                          height: 38,
+                          width: isNarrow ? 32 : 38,
+                          height: isNarrow ? 32 : 38,
                           fit: BoxFit.cover,
                         ),
                       ),

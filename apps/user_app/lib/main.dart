@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
@@ -17,6 +18,15 @@ import 'features/auth/user_auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.white,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
   try {
     await SupabaseConfig.initialize();
   } catch (e) {
@@ -470,8 +480,16 @@ class _UserAppShellState extends State<UserAppShell> {
     final isPro = _profile.subscriptionStatus == 'premium';
     final isDesktop = MediaQuery.of(context).size.width >= 850;
 
-    return Scaffold(
-      key: _scaffoldKey,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        key: _scaffoldKey,
       drawer: isDesktop ? null : _buildDrawer(),
       appBar: AppHeader(
         coins: _profile.coins,
@@ -567,6 +585,7 @@ class _UserAppShellState extends State<UserAppShell> {
             onOpenFeedback: _openFeedbackDialog,
           ),
       },
+      ),
     );
   }
 

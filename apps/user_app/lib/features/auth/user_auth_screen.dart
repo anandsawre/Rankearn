@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 
@@ -442,10 +443,19 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 990;
         final isTablet = constraints.maxWidth >= 640 && constraints.maxWidth < 990;
+        final statusBarBgColor = isDesktop ? const Color(0xFFF4F8FF) : const Color(0xFFE8FBF2);
 
-        return Scaffold(
-          backgroundColor: isDesktop ? const Color(0xFFF4F8FF) : const Color(0xFFE8FBF2),
-          body: SafeArea(
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: statusBarBgColor,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+            systemNavigationBarColor: Colors.white,
+            systemNavigationBarIconBrightness: Brightness.dark,
+          ),
+          child: Scaffold(
+            backgroundColor: statusBarBgColor,
+            body: SafeArea(
             child: Stack(
               children: [
                 // Stylish Wave Background (Desktop Multi-Layer Wave only; Mobile uses Hero Banner)
@@ -513,8 +523,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               ],
             ),
           ),
-        );
-      },
+        ),
+      );
+    },
     );
   }
 

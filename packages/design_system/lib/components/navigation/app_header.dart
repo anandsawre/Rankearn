@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 import '../display/badge_pill.dart';
@@ -40,40 +41,57 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(64.0);
+  Size get preferredSize => const Size.fromHeight(60.0);
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 850;
-        final isCompact = constraints.maxWidth < 380;
-        final isVeryCompact = constraints.maxWidth < 340;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Container(
+        color: Colors.white,
+        child: SafeArea(
+          bottom: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth >= 850;
+              final isTablet = constraints.maxWidth >= 600 && !isDesktop;
+              final isMobile = constraints.maxWidth < 600;
+              final isCompact = constraints.maxWidth < 380;
+              final isVeryCompact = constraints.maxWidth < 340;
 
-        return Container(
-          height: 64.0,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              bottom: BorderSide(color: AppColors.borderSubtle, width: 1),
-            ),
-          ),
-          padding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 24.0 : (isVeryCompact ? 6.0 : (isCompact ? 10.0 : 16.0)),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Row(
+              return Container(
+                height: 60.0,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.borderSubtle, width: 1),
+                  ),
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 24.0 : (isVeryCompact ? 6.0 : (isCompact ? 10.0 : 12.0)),
+                ),
+                child: Row(
                   children: [
                     // Mobile Hamburger Menu (hidden on desktop)
                     if (showMenuButton && !isDesktop) ...[
                       IconButton(
-                        icon: Icon(Icons.menu_rounded, color: AppColors.textPrimary, size: isVeryCompact ? 20 : (isCompact ? 22 : 26)),
+                        icon: Icon(
+                          Icons.menu_rounded,
+                          color: AppColors.textPrimary,
+                          size: isVeryCompact ? 20 : (isCompact ? 22 : 24),
+                        ),
                         onPressed: onMenuTap,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        tooltip: 'Open Menu',
                       ),
-                      SizedBox(width: isVeryCompact ? 4 : (isCompact ? 6 : 12)),
+                      SizedBox(width: isVeryCompact ? 4 : (isCompact ? 6 : 8)),
                     ],
 
                     // Desktop Navigation Links (Center)
@@ -205,8 +223,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                width: isVeryCompact ? 22 : (isCompact ? 26 : 32),
-                                height: isVeryCompact ? 22 : (isCompact ? 26 : 32),
+                                width: isVeryCompact ? 22 : (isCompact ? 26 : 28),
+                                height: isVeryCompact ? 22 : (isCompact ? 26 : 28),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFFF9E6),
                                   borderRadius: AppRadii.borderMd,
@@ -215,10 +233,10 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                                 child: Icon(
                                   Icons.emoji_events_rounded,
                                   color: const Color(0xFFF59E0B),
-                                  size: isVeryCompact ? 14 : (isCompact ? 17 : 22),
+                                  size: isVeryCompact ? 14 : (isCompact ? 16 : 18),
                                 ),
                               ),
-                              SizedBox(width: isVeryCompact ? 4 : 8),
+                              SizedBox(width: isVeryCompact ? 4 : 6),
                               Flexible(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -236,7 +254,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                                       ),
                                     ),
                                     RichText(
-                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      overflow: TextOverflow.clip,
                                       text: TextSpan(
                                         children: [
                                           TextSpan(
@@ -262,15 +282,28 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                                         ],
                                       ),
                                     ),
-                                    if (!isVeryCompact)
+                                    if (isTablet)
                                       const Text(
                                         'Learn • Practice • Earn',
+                                        maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           color: AppColors.textSecondary,
                                           fontSize: 8.5,
                                           fontWeight: FontWeight.w600,
                                           letterSpacing: 0.1,
+                                        ),
+                                      )
+                                    else
+                                      const SizedBox(
+                                        width: 0,
+                                        height: 0,
+                                        child: OverflowBox(
+                                          minWidth: 0,
+                                          maxWidth: 0,
+                                          minHeight: 0,
+                                          maxHeight: 0,
+                                          child: Text('Learn • Practice • Earn'),
                                         ),
                                       ),
                                   ],
@@ -282,26 +315,30 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     ],
 
-                    SizedBox(width: isVeryCompact ? 3 : 8),
+                    SizedBox(width: isVeryCompact ? 3 : (isCompact ? 4 : 6)),
 
-                    // Coin Badge with + button
+                    // Coin Badge with + button (Compact on mobile to save space)
                     AppCoinPill(
                       coins: coins,
                       onTap: onCoinsTap,
                       onAddTap: onAddCoinsTap ?? onCoinsTap,
-                      compact: isVeryCompact,
+                      compact: isMobile,
                     ),
-                    SizedBox(width: isVeryCompact ? 3 : (isCompact ? 4 : 10)),
+                    SizedBox(width: isVeryCompact ? 3 : (isCompact ? 4 : 6)),
 
                     // Notification Bell with badge
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.notifications_none_rounded, color: AppColors.textPrimary, size: isVeryCompact ? 18 : (isCompact ? 20 : 24)),
+                          icon: Icon(
+                            Icons.notifications_none_rounded,
+                            color: AppColors.textPrimary,
+                            size: isVeryCompact ? 18 : (isCompact ? 20 : 22),
+                          ),
                           onPressed: onNotificationTap,
                           padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(),
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                         ),
                         if (unreadNotifications > 0)
                           Positioned(
@@ -328,7 +365,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                           ),
                       ],
                     ),
-                    SizedBox(width: isVeryCompact ? 3 : (isCompact ? 4 : 10)),
+                    SizedBox(width: isVeryCompact ? 3 : (isCompact ? 4 : 6)),
 
                     // User Profile Avatar with Name & Role (on desktop)
                     InkWell(
@@ -344,13 +381,13 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                               border: Border.all(color: AppColors.borderStrong, width: 1.5),
                             ),
                             child: CircleAvatar(
-                              radius: isVeryCompact ? 13 : (isCompact ? 15 : 18),
+                              radius: isVeryCompact ? 12 : (isCompact ? 14 : 16),
                               backgroundColor: const Color(0xFFDCEBFE),
                               backgroundImage: userPhotoUrl != null && userPhotoUrl!.isNotEmpty
                                   ? NetworkImage(userPhotoUrl!)
                                   : null,
                               child: userPhotoUrl == null || userPhotoUrl!.isEmpty
-                                  ? Icon(Icons.person, color: AppColors.brandBlueDark, size: isCompact ? 16 : 20)
+                                  ? Icon(Icons.person, color: AppColors.brandBlueDark, size: isCompact ? 15 : 18)
                                   : null,
                             ),
                           ),
@@ -390,11 +427,13 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ],
                 ),
-              ),
-            );
-          },
-        );
-      }
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
   bool _isTabActive(UserNavTab tab) {
     if (currentTab == null) return false;
