@@ -1345,16 +1345,17 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             SocialAuthButton.phone(
               onPressed: _handlePhoneLogin,
             ),
-            const SizedBox(height: 12),
 
-            // Security Notice Box (Admin Card Style in Brand Green)
-            const AuthSecurityNotice(
-              iconColor: Color(0xFF00B96B),
-              title: '100% Safe & Secure Authentication',
-              description: 'Rankearn SafeAuth keeps your learning progress, test data and coins completely protected.',
-            ),
-
-            const SizedBox(height: 6),
+            // Security Notice Box (Shown on Desktop Card only; removed on Mobile Screen)
+            if (isDesktop) ...[
+              const SizedBox(height: 12),
+              const AuthSecurityNotice(
+                iconColor: Color(0xFF00B96B),
+                title: '100% Safe & Secure Authentication',
+                description: 'Rankearn SafeAuth keeps your learning progress, test data and coins completely protected.',
+              ),
+              const SizedBox(height: 6),
+            ],
           ],
         ),
       ),
