@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
+import '../buttons/app_button.dart';
 import 'battle_leave_dialog.dart';
 
 /// Question Palette Card for 1v1 Live Arena Quiz Battle
@@ -169,8 +170,28 @@ class QuestionPaletteCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 4. Surrender Battle Button
-          OutlinedButton(
+          // 4. Surrender Battle Button (Standardized with AppButton)
+          AppButton(
+            label: 'Surrender Battle',
+            variant: AppButtonVariant.outlined,
+            size: AppButtonSize.medium,
+            fullWidth: true,
+            height: 44.0,
+            borderRadius: AppRadii.borderPill,
+            backgroundColor: const Color(0xFFFFF1F2),
+            foregroundColor: AppColors.battleErrorRed,
+            borderColor: const Color(0xFFFDA4AF),
+            leadingIcon: const Icon(
+              Icons.flag_rounded,
+              color: AppColors.battleErrorRed,
+              size: 18,
+            ),
+            customTextStyle: const TextStyle(
+              color: AppColors.battleErrorRed,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Inter',
+            ),
             onPressed: () async {
               if (onSurrender != null) {
                 onSurrender!();
@@ -178,35 +199,6 @@ class QuestionPaletteCard extends StatelessWidget {
                 await BattleLeaveDialog.show(context, entryFee: entryFee);
               }
             },
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFFFDA4AF), width: 1.5),
-              backgroundColor: const Color(0xFFFFF1F2),
-              shape: RoundedRectangleBorder(
-                borderRadius: AppRadii.borderPill,
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(Icons.flag_rounded, color: Color(0xFFFF385C), size: 18),
-                SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    'Surrender Battle',
-                    style: TextStyle(
-                      color: Color(0xFFFF385C),
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Inter',
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

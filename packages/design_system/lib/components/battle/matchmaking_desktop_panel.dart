@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
+import '../buttons/app_button.dart';
 
 /// Right-side Matchmaking Progress Panel on Desktop (or integrated in Mobile)
 /// Matches Reference Image 3:
@@ -521,6 +522,7 @@ class MatchmakingDesktopCardsRow extends StatelessWidget {
 }
 
 /// Red Outlined Cancel Button matching Reference Image 3
+/// Standardized through Rankearn AppButton and centralized Design System tokens
 class MatchmakingCancelButton extends StatelessWidget {
   final VoidCallback? onCancel;
 
@@ -529,34 +531,35 @@ class MatchmakingCancelButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: OutlinedButton(
+      child: AppButton(
+        label: 'Cancel Matchmaking',
         onPressed: onCancel,
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFFFDA4AF), width: 1.5),
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadii.borderPill,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
-          elevation: 2,
-          shadowColor: const Color(0x1A000000),
+        variant: AppButtonVariant.outlined,
+        size: AppButtonSize.large,
+        height: 48.0,
+        width: 250,
+        borderRadius: AppRadii.borderPill,
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.battleErrorRed,
+        borderColor: const Color(0xFFFDA4AF),
+        leadingIcon: const Icon(
+          Icons.close_rounded,
+          color: AppColors.battleErrorRed,
+          size: 18,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.close_rounded, color: Color(0xFFFF385C), size: 18),
-            SizedBox(width: 8),
-            Text(
-              'Cancel Matchmaking',
-              style: TextStyle(
-                color: Color(0xFFFF385C),
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
-                fontFamily: 'Inter',
-              ),
-            ),
-          ],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+        customTextStyle: const TextStyle(
+          color: AppColors.battleErrorRed,
+          fontSize: 14.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.2,
+          fontFamily: 'Inter',
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../tokens/radii.dart';
+import '../buttons/app_button.dart';
 
 /// Confirmation dialog when leaving an in-progress battle
 class BattleLeaveDialog extends StatelessWidget {
@@ -52,24 +53,19 @@ class BattleLeaveDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        AppButton(
+          label: 'Keep Playing',
+          variant: AppButtonVariant.ghost,
+          size: AppButtonSize.small,
+          foregroundColor: const Color(0xFF00B96B),
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text(
-            'Keep Playing',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF00B96B),
-            ),
-          ),
         ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFEF4444),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
-          ),
+        AppButton(
+          label: 'Leave Match',
+          variant: AppButtonVariant.destructive,
+          size: AppButtonSize.small,
+          borderRadius: AppRadii.borderMd,
           onPressed: onConfirmLeave,
-          child: const Text('Leave Match'),
         ),
       ],
     );
