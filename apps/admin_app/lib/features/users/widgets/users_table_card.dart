@@ -113,40 +113,34 @@ class _UsersTableCardState extends State<UsersTableCard> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Role', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
-                  const SizedBox(height: 6),
-                  DropdownButtonFormField<String>(
-                    initialValue: tempRole,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      isDense: true,
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'all', child: Text('All Roles')),
-                      DropdownMenuItem(value: 'student', child: Text('Student')),
-                      DropdownMenuItem(value: 'premium', child: Text('Premium')),
-                      DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
-                      DropdownMenuItem(value: 'moderator', child: Text('Moderator')),
-                    ],
+                  AppDropdown<String>.simple(
+                    label: 'Role',
+                    value: tempRole,
+                    isDense: true,
+                    items: const ['all', 'student', 'premium', 'teacher', 'moderator'],
+                    itemLabel: (v) => {
+                      'all': 'All Roles',
+                      'student': 'Student',
+                      'premium': 'Premium',
+                      'teacher': 'Teacher',
+                      'moderator': 'Moderator',
+                    }[v] ?? v,
                     onChanged: (v) {
                       if (v != null) setModalState(() => tempRole = v);
                     },
                   ),
                   const SizedBox(height: 14),
-                  const Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
-                  const SizedBox(height: 6),
-                  DropdownButtonFormField<String>(
-                    initialValue: tempStatus,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      isDense: true,
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'all', child: Text('All Status')),
-                      DropdownMenuItem(value: 'active', child: Text('Active')),
-                      DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-                      DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
-                    ],
+                  AppDropdown<String>.simple(
+                    label: 'Status',
+                    value: tempStatus,
+                    isDense: true,
+                    items: const ['all', 'active', 'inactive', 'blocked'],
+                    itemLabel: (v) => {
+                      'all': 'All Status',
+                      'active': 'Active',
+                      'inactive': 'Inactive',
+                      'blocked': 'Blocked',
+                    }[v] ?? v,
                     onChanged: (v) {
                       if (v != null) setModalState(() => tempStatus = v);
                     },
@@ -353,88 +347,58 @@ class _UsersTableCardState extends State<UsersTableCard> {
   }
 
   Widget _buildRoleDropdown() {
-    return Container(
+    const roles = {
+      'all': 'All Roles',
+      'student': 'Student',
+      'premium': 'Premium',
+      'teacher': 'Teacher',
+      'moderator': 'Moderator',
+    };
+    return AppDropdownFilter<String>(
       height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: widget.roleFilter,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF64748B)),
-          style: const TextStyle(fontSize: 12, color: Color(0xFF101A3A), fontWeight: FontWeight.w600),
-          items: const [
-            DropdownMenuItem(value: 'all', child: Text('All Roles')),
-            DropdownMenuItem(value: 'student', child: Text('Student')),
-            DropdownMenuItem(value: 'premium', child: Text('Premium')),
-            DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
-            DropdownMenuItem(value: 'moderator', child: Text('Moderator')),
-          ],
-          onChanged: (v) {
-            if (v != null) widget.onRoleFilterChanged(v);
-          },
-        ),
-      ),
+      value: widget.roleFilter,
+      items: roles.keys.toList(),
+      itemLabel: (v) => roles[v] ?? v,
+      onChanged: (v) {
+        if (v != null) widget.onRoleFilterChanged(v);
+      },
     );
   }
 
   Widget _buildStatusDropdown() {
-    return Container(
+    const statuses = {
+      'all': 'All Status',
+      'active': 'Active',
+      'inactive': 'Inactive',
+      'blocked': 'Blocked',
+    };
+    return AppDropdownFilter<String>(
       height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: widget.statusFilter,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF64748B)),
-          style: const TextStyle(fontSize: 12, color: Color(0xFF101A3A), fontWeight: FontWeight.w600),
-          items: const [
-            DropdownMenuItem(value: 'all', child: Text('All Status')),
-            DropdownMenuItem(value: 'active', child: Text('Active')),
-            DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-            DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
-          ],
-          onChanged: (v) {
-            if (v != null) widget.onStatusFilterChanged(v);
-          },
-        ),
-      ),
+      value: widget.statusFilter,
+      items: statuses.keys.toList(),
+      itemLabel: (v) => statuses[v] ?? v,
+      onChanged: (v) {
+        if (v != null) widget.onStatusFilterChanged(v);
+      },
     );
   }
 
   Widget _buildRegistrationDropdown() {
-    return Container(
+    const registrations = {
+      'all': 'All Registration',
+      'today': 'Today',
+      'week': 'This Week',
+      'month': 'This Month',
+      'year': 'This Year',
+    };
+    return AppDropdownFilter<String>(
       height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: widget.registrationFilter,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF64748B)),
-          style: const TextStyle(fontSize: 12, color: Color(0xFF101A3A), fontWeight: FontWeight.w600),
-          items: const [
-            DropdownMenuItem(value: 'all', child: Text('All Registration')),
-            DropdownMenuItem(value: 'today', child: Text('Today')),
-            DropdownMenuItem(value: 'week', child: Text('This Week')),
-            DropdownMenuItem(value: 'month', child: Text('This Month')),
-            DropdownMenuItem(value: 'year', child: Text('This Year')),
-          ],
-          onChanged: (v) {
-            if (v != null) widget.onRegistrationFilterChanged(v);
-          },
-        ),
-      ),
+      value: widget.registrationFilter,
+      items: registrations.keys.toList(),
+      itemLabel: (v) => registrations[v] ?? v,
+      onChanged: (v) {
+        if (v != null) widget.onRegistrationFilterChanged(v);
+      },
     );
   }
 
@@ -915,30 +879,15 @@ class _UsersTableCardState extends State<UsersTableCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Show ', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-            Container(
+            AppDropdownFilter<int>(
+              value: widget.pageSize,
+              items: const [7, 10, 20, 50],
               height: 28,
               padding: const EdgeInsets.symmetric(horizontal: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: widget.pageSize,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Color(0xFF64748B)),
-                  style: const TextStyle(fontSize: 11.5, color: Color(0xFF101A3A), fontWeight: FontWeight.w600),
-                  items: const [
-                    DropdownMenuItem(value: 7, child: Text('7')),
-                    DropdownMenuItem(value: 10, child: Text('10')),
-                    DropdownMenuItem(value: 20, child: Text('20')),
-                    DropdownMenuItem(value: 50, child: Text('50')),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) widget.onPageSizeChanged(v);
-                  },
-                ),
-              ),
+              borderRadius: BorderRadius.circular(6),
+              onChanged: (v) {
+                if (v != null) widget.onPageSizeChanged(v);
+              },
             ),
             const Text(' per page', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
           ],

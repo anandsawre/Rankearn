@@ -6,6 +6,7 @@ import '../tokens/typography.dart';
 import '../components/buttons/app_button.dart';
 import '../components/cards/app_card.dart';
 import '../components/inputs/app_text_field.dart';
+import '../components/inputs/app_dropdown.dart';
 import '../components/display/badge_pill.dart';
 import '../components/feedback/app_loading.dart';
 import '../components/navigation/app_header.dart';
@@ -23,6 +24,7 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
   UserNavTab _activeNavTab = UserNavTab.home;
   bool _isLoadingButton = false;
   final TextEditingController _testController = TextEditingController();
+  String? _selectedCategory = 'SSC CGL';
 
   @override
   void dispose() {
@@ -170,8 +172,8 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
             ),
             const SizedBox(height: 28),
 
-            // --- 6. Form Fields ---
-            _buildSectionTitle('6. Form & Text Input Fields'),
+            // --- 6. Form Fields & Dropdowns ---
+            _buildSectionTitle('6. Form Fields & Centralized Dropdown Components'),
             const AppTextField(
               label: 'UTR / Transaction Reference (12 Digits)',
               hintText: 'Enter 12-digit UTR number',
@@ -183,6 +185,27 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
               hintText: '••••••••',
               isPassword: true,
               prefixIcon: Icon(Icons.lock_outline, color: AppColors.textMuted, size: 20),
+            ),
+            const SizedBox(height: 12),
+            AppDropdown<String>.simple(
+              label: 'Class / Target Examination Goal',
+              value: _selectedCategory,
+              hint: 'Select target examination',
+              prefixIcon: const Icon(Icons.school_outlined, color: AppColors.textSecondary, size: 20),
+              items: const ['SSC CGL', 'UPSC Prelims', 'Banking PO', 'Railway RRB', 'Class 10th CBSE', 'Class 12th CBSE'],
+              onChanged: (val) => setState(() => _selectedCategory = val),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Text('Table Filter Component:', style: AppTypography.labelLarge),
+                const SizedBox(width: 10),
+                AppDropdownFilter<String>(
+                  value: _selectedCategory ?? 'SSC CGL',
+                  items: const ['SSC CGL', 'UPSC Prelims', 'Banking PO', 'Railway RRB'],
+                  onChanged: (val) => setState(() => _selectedCategory = val),
+                ),
+              ],
             ),
             const SizedBox(height: 28),
 

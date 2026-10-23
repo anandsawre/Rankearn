@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 
 class SendNotificationDialog extends StatefulWidget {
   final int selectedUsersCount;
@@ -95,24 +96,33 @@ class _SendNotificationDialogState extends State<SendNotificationDialog> {
                 const SizedBox(height: 18),
 
                 // Audience Dropdown
-                DropdownButtonFormField<String>(
-                  initialValue: _targetAudience,
-                  decoration: InputDecoration(
-                    labelText: 'Target Audience',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    isDense: true,
-                  ),
+                AppDropdown<String>.simple(
+                  label: 'Target Audience',
+                  value: _targetAudience,
+                  isDense: true,
                   items: [
-                    const DropdownMenuItem(value: 'all', child: Text('All Platform Users (12,458)')),
-                    const DropdownMenuItem(value: 'students', child: Text('Students Only (8,972)')),
-                    const DropdownMenuItem(value: 'premium', child: Text('Premium Subscribers (2,241)')),
-                    const DropdownMenuItem(value: 'teachers', child: Text('Teachers (623)')),
-                    if (widget.selectedUsersCount > 0)
-                      DropdownMenuItem(
-                        value: 'selected',
-                        child: Text('Selected Users (${widget.selectedUsersCount})'),
-                      ),
+                    'all',
+                    'students',
+                    'premium',
+                    'teachers',
+                    if (widget.selectedUsersCount > 0) 'selected',
                   ],
+                  itemLabel: (val) {
+                    switch (val) {
+                      case 'all':
+                        return 'All Platform Users (12,458)';
+                      case 'students':
+                        return 'Students Only (8,972)';
+                      case 'premium':
+                        return 'Premium Subscribers (2,241)';
+                      case 'teachers':
+                        return 'Teachers (623)';
+                      case 'selected':
+                        return 'Selected Users (${widget.selectedUsersCount})';
+                      default:
+                        return val;
+                    }
+                  },
                   onChanged: (val) {
                     if (val != null) setState(() => _targetAudience = val);
                   },

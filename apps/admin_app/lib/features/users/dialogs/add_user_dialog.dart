@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import '../models/user_management_item.dart';
 
 class AddUserDialog extends StatefulWidget {
@@ -159,26 +160,18 @@ class _AddUserDialogState extends State<AddUserDialog> {
                 Row(
                   children: [
                     Expanded(
-                      child: DropdownButtonFormField<UserRole>(
-                        initialValue: _selectedRole,
-                        decoration: InputDecoration(
-                          labelText: 'Role',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          isDense: true,
-                        ),
+                      child: AppDropdown<UserRole>(
+                        label: 'Role',
+                        value: _selectedRole,
+                        isDense: true,
                         items: UserRole.values.map((r) {
-                          return DropdownMenuItem(
+                          return AppDropdownItem<UserRole>(
                             value: r,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(color: r.color, shape: BoxShape.circle),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(r.label, style: const TextStyle(fontSize: 13)),
-                              ],
+                            label: r.label,
+                            leading: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(color: r.color, shape: BoxShape.circle),
                             ),
                           );
                         }).toList(),
@@ -189,26 +182,18 @@ class _AddUserDialogState extends State<AddUserDialog> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: DropdownButtonFormField<UserStatus>(
-                        initialValue: _selectedStatus,
-                        decoration: InputDecoration(
-                          labelText: 'Status',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          isDense: true,
-                        ),
+                      child: AppDropdown<UserStatus>(
+                        label: 'Status',
+                        value: _selectedStatus,
+                        isDense: true,
                         items: UserStatus.values.map((s) {
-                          return DropdownMenuItem(
+                          return AppDropdownItem<UserStatus>(
                             value: s,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(s.label, style: const TextStyle(fontSize: 13)),
-                              ],
+                            label: s.label,
+                            leading: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
                             ),
                           );
                         }).toList(),

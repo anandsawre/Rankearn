@@ -970,33 +970,21 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               const SizedBox(height: 6),
 
               // Class / Exam Goal (Sign Up only)
-              const Text(
-                'Class / Exam Goal (Optional)',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
-              ),
-              const SizedBox(height: 4),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedExamGoal,
-                isExpanded: true,
-                hint: const Text('Select your goal', style: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500)),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.school_outlined, size: 18, color: Color(0xFF64748B)),
-                  filled: true,
-                  isDense: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8.5),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2EBF8))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-                ),
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
-                style: const TextStyle(fontSize: 12.5, color: Color(0xFF10194F), fontWeight: FontWeight.w600),
-                items: _examGoals.map((goal) {
-                  return DropdownMenuItem<String>(
-                    value: goal,
-                    child: Text(goal, overflow: TextOverflow.ellipsis),
-                  );
-                }).toList(),
+              AppDropdown<String>.simple(
+                label: 'Class / Exam Goal (Optional)',
+                value: _selectedExamGoal,
+                hint: 'Select your goal',
+                prefixIcon: const Icon(Icons.school_outlined, size: 18, color: AppColors.textSecondary),
+                items: _examGoals,
+                isDense: true,
+                borderRadius: BorderRadius.circular(10),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8.5),
+                style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                hintStyle: const TextStyle(fontSize: 12.5, color: AppColors.textMuted, fontWeight: FontWeight.w500),
+                labelStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                fillColor: const Color(0xFFF8FAFC),
+                borderColor: const Color(0xFFE2EBF8),
+                focusedBorderColor: AppColors.brandPrimary,
                 onChanged: (val) => setState(() => _selectedExamGoal = val),
               ),
               const SizedBox(height: 6),

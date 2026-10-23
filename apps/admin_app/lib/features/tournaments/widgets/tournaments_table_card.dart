@@ -229,47 +229,21 @@ class _TournamentsTableCardState extends State<TournamentsTableCard> {
         ),
 
         // Status Filter Dropdown
-        Container(
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: widget.selectedStatus,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.textSecondary),
-              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-              onChanged: (val) {
-                if (val != null) widget.onStatusChanged(val);
-              },
-              items: _statuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-            ),
-          ),
+        AppDropdownFilter<String>(
+          value: widget.selectedStatus,
+          items: _statuses,
+          onChanged: (val) {
+            if (val != null) widget.onStatusChanged(val);
+          },
         ),
 
         // Category Filter Dropdown
-        Container(
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: widget.selectedCategory,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.textSecondary),
-              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-              onChanged: (val) {
-                if (val != null) widget.onCategoryChanged(val);
-              },
-              items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-            ),
-          ),
+        AppDropdownFilter<String>(
+          value: widget.selectedCategory,
+          items: _categories,
+          onChanged: (val) {
+            if (val != null) widget.onCategoryChanged(val);
+          },
         ),
 
         // Date Range Filter Button
@@ -919,27 +893,15 @@ class _TournamentsTableCardState extends State<TournamentsTableCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Show ', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-            Container(
+            AppDropdownFilter<int>(
+              value: widget.rowsPerPage,
+              items: const [5, 10, 20, 50],
               height: 28,
               padding: const EdgeInsets.symmetric(horizontal: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: widget.rowsPerPage,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textSecondary),
-                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                  onChanged: (val) {
-                    if (val != null) widget.onRowsPerPageChanged(val);
-                  },
-                  items: [5, 10, 20, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text(n.toString())))
-                      .toList(),
-                ),
-              ),
+              borderRadius: BorderRadius.circular(6),
+              onChanged: (val) {
+                if (val != null) widget.onRowsPerPageChanged(val);
+              },
             ),
             const Text(' per page', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
           ],
