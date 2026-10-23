@@ -40,38 +40,48 @@ jobs:
           cd apps/user_app && flutter pub get && cd ../..
           cd apps/admin_app && flutter pub get && cd ../..
 
-      - name: Build User App Release APK
+      - name: Build User App Release APKs (Compact & Universal)
         run: |
           cd apps/user_app
+          flutter build apk --release --split-per-abi
           flutter build apk --release
 
-      - name: Build Admin App Release APK
+      - name: Build Admin App Release APKs (Compact & Universal)
         run: |
           cd apps/admin_app
+          flutter build apk --release --split-per-abi
           flutter build apk --release
 
       - name: Organize APK Artifacts
         run: |
           mkdir -p release-apks
-          cp apps/user_app/build/app/outputs/flutter-apk/app-release.apk release-apks/rankearn-user-app-release.apk
-          cp apps/admin_app/build/app/outputs/flutter-apk/app-release.apk release-apks/rankearn-admin-app-release.apk
+          # User App (Compact arm64 for 99% phones + Universal for all devices)
+          cp apps/user_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release-apks/rankearn-user-app-arm64.apk
+          cp apps/user_app/build/app/outputs/flutter-apk/app-release.apk release-apks/rankearn-user-app-universal.apk
 
-      - name: Upload User App APK Artifact
+          # Admin App (Compact arm64 for 99% phones + Universal for all devices)
+          cp apps/admin_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release-apks/rankearn-admin-app-arm64.apk
+          cp apps/admin_app/build/app/outputs/flutter-apk/app-release.apk release-apks/rankearn-admin-app-universal.apk
+
+          echo "Generated APK Sizes:"
+          ls -lh release-apks/
+
+      - name: Upload User App Compact APK (arm64 - ~18MB)
         uses: actions/upload-artifact@v4
         with:
-          name: rankearn-user-app-release
-          path: release-apks/rankearn-user-app-release.apk
+          name: rankearn-user-app-compact-arm64
+          path: release-apks/rankearn-user-app-arm64.apk
 
-      - name: Upload Admin App APK Artifact
+      - name: Upload Admin App Compact APK (arm64 - ~18MB)
         uses: actions/upload-artifact@v4
         with:
-          name: rankearn-admin-app-release
-          path: release-apks/rankearn-admin-app-release.apk
+          name: rankearn-admin-app-compact-arm64
+          path: release-apks/rankearn-admin-app-arm64.apk
 
-      - name: Upload All Release APKs
+      - name: Upload All Release APKs (Compact & Universal)
         uses: actions/upload-artifact@v4
         with:
-          name: rankearn-release-apks
+          name: rankearn-all-release-apks
           path: release-apks/*.apk
 
       - name: Publish GitHub Release (on tag or manual dispatch)
