@@ -496,22 +496,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                                 ],
                               ),
                             )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // Mobile / Tablet: Clean Brand Logo at top
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 14),
-                                    child: _buildBrandLogo(),
-                                  ),
-                                ),
-                                // Auth Card Top with compact hero
-                                _buildAuthCard(fillHeight: false),
-                                const SizedBox(height: 20),
-                                _buildHeroColumn(isDesktop: false),
-                              ],
+                          : _buildMobileNativeLayout(
+                              isTablet: isTablet,
+                              maxWidth: constraints.maxWidth,
                             ),
                     ),
                   ),
@@ -578,6 +565,104 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  // =========================================================================
+  // MOBILE & TABLET NATIVE AUTH LAYOUT
+  // Focused, clean, and intuitive native smartphone experience
+  // =========================================================================
+  Widget _buildMobileNativeLayout({required bool isTablet, required double maxWidth}) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: isTablet ? 480 : 440,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Top Bar: Back Button (if navigation available)
+            if (widget.onBackToHome != null || Navigator.canPop(context))
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: InkWell(
+                    onTap: widget.onBackToHome ?? () {
+                      if (Navigator.canPop(context)) Navigator.pop(context);
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x06000000),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        size: 18,
+                        color: Color(0xFF10194F),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Native Mobile Auth Card
+            _buildAuthCard(fillHeight: false),
+            const SizedBox(height: 16),
+
+            // Native Trust Strip (Clean mobile pills)
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                _buildNativeTrustChip(Icons.people_alt_rounded, '1L+ Learners', const Color(0xFF1677FF)),
+                _buildNativeTrustChip(Icons.quiz_rounded, '10K+ Questions', const Color(0xFF00B96B)),
+                _buildNativeTrustChip(Icons.star_rounded, '4.8 Rating', const Color(0xFFF59E0B)),
+              ],
+            ),
+            const SizedBox(height: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNativeTrustChip(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
