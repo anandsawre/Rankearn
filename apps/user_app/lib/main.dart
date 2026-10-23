@@ -25,15 +25,34 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: RankearnUserApp(),
+      child: RankearnUserApp(showAuthInitially: true),
     ),
   );
 }
 
-class RankearnUserApp extends StatelessWidget {
+class RankearnUserApp extends StatefulWidget {
   final List<TestModel>? initialTests;
+  final bool showAuthInitially;
 
-  const RankearnUserApp({super.key, this.initialTests});
+  const RankearnUserApp({
+    super.key,
+    this.initialTests,
+    this.showAuthInitially = false,
+  });
+
+  @override
+  State<RankearnUserApp> createState() => _RankearnUserAppState();
+}
+
+class _RankearnUserAppState extends State<RankearnUserApp> {
+  late bool _showAuth;
+  UserProfile? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _showAuth = widget.showAuthInitially;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,15 +60,41 @@ class RankearnUserApp extends StatelessWidget {
       title: 'Rankearn',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: UserAppShell(initialTests: initialTests),
+      home: _showAuth
+          ? UserAuthScreen(
+              initialMode: AuthScreenMode.login,
+              onAuthSuccess: (profile) {
+                setState(() {
+                  _currentUser = profile;
+                  _showAuth = false;
+                });
+              },
+            )
+          : UserAppShell(
+              initialTests: widget.initialTests,
+              initialProfile: _currentUser,
+              onLogout: () {
+                setState(() {
+                  _showAuth = true;
+                  _currentUser = null;
+                });
+              },
+            ),
     );
   }
 }
 
 class UserAppShell extends StatefulWidget {
   final List<TestModel>? initialTests;
+  final UserProfile? initialProfile;
+  final VoidCallback? onLogout;
 
-  const UserAppShell({super.key, this.initialTests});
+  const UserAppShell({
+    super.key,
+    this.initialTests,
+    this.initialProfile,
+    this.onLogout,
+  });
 
   @override
   State<UserAppShell> createState() => _UserAppShellState();
@@ -58,18 +103,24 @@ class UserAppShell extends StatefulWidget {
 class _UserAppShellState extends State<UserAppShell> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   UserNavTab _activeTab = UserNavTab.home;
+  late UserProfile _profile;
 
-  UserProfile _profile = UserProfile(
-    id: 'usr_vikram_70',
-    name: 'Vikram Singh',
-    email: 'vikram.singh@rankearn.in',
-    phone: '+91 98765 43210',
-    coins: 1450,
-    subscriptionStatus: 'premium',
-    examPreparingFor: '70th BPSC Aspirant',
-    state: 'Bihar, India',
-    createdAt: DateTime(2026, 10, 1),
-  );
+  @override
+  void initState() {
+    super.initState();
+    _profile = widget.initialProfile ??
+        UserProfile(
+          id: 'usr_vikram_70',
+          name: 'Vikram Singh',
+          email: 'vikram.singh@rankearn.in',
+          phone: '+91 98765 43210',
+          coins: 1450,
+          subscriptionStatus: 'premium',
+          examPreparingFor: '70th BPSC Aspirant',
+          state: 'Bihar, India',
+          createdAt: DateTime(2026, 10, 1),
+        );
+  }
 
   int _unreadNotifications = 2;
 
@@ -407,7 +458,11 @@ class _UserAppShellState extends State<UserAppShell> {
         backgroundColor: Color(0xFFE11D48),
       ),
     );
-    _openAuthScreen(mode: AuthScreenMode.login);
+    if (widget.onLogout != null) {
+      widget.onLogout!();
+    } else {
+      _openAuthScreen(mode: AuthScreenMode.login);
+    }
   }
 
   @override
