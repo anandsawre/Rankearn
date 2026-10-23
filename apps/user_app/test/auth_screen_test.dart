@@ -71,9 +71,9 @@ void main() {
       expect(find.text('OR'), findsOneWidget);
 
       // 9. Input Form Fields
-      expect(find.text('Email Address'), findsOneWidget);
+      expect(find.text('Email Address or Mobile Number'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
-      expect(find.text('Enter your email address'), findsOneWidget);
+      expect(find.text('Enter your email or 10-digit mobile number'), findsOneWidget);
       expect(find.text('Enter your password'), findsOneWidget);
       expect(find.text('Keep me logged in'), findsOneWidget);
       expect(find.text('Forgot Password?'), findsOneWidget);
@@ -208,7 +208,7 @@ void main() {
       expect(find.text('Register'), findsOneWidget);
     });
 
-    testWidgets('Login Mode allows switching between Email and Mobile Login', (WidgetTester tester) async {
+    testWidgets('Login Mode supports unified Email or Mobile Number input with password', (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1280, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -216,25 +216,23 @@ void main() {
       await tester.pumpWidget(buildAuthApp(initialMode: AuthScreenMode.login));
       await tester.pumpAndSettle();
 
-      // Starts with Email Login
-      expect(find.text('Email Login'), findsOneWidget);
-      expect(find.text('Email Address'), findsOneWidget);
+      // Unified field is displayed
+      expect(find.text('Email Address or Mobile Number'), findsOneWidget);
+      expect(find.text('Enter your email or 10-digit mobile number'), findsOneWidget);
 
-      // Tap Mobile Number tab
-      await tester.tap(find.text('Mobile Number'));
+      // Typing mobile number dynamically updates prefix icon
+      final inputFinder = find.widgetWithText(TextFormField, 'Enter your email or 10-digit mobile number');
+      await tester.enterText(inputFinder, '9876543210');
       await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.phone_android_rounded), findsWidgets);
 
-      // Now Mobile Number input is visible
-      expect(find.text('Enter 10-digit number'), findsOneWidget);
-
-      // Tap Email Login tab back
-      await tester.tap(find.text('Email Login'));
+      // Typing email address updates icon to alternate_email
+      await tester.enterText(inputFinder, 'vikram@rankearn.in');
       await tester.pumpAndSettle();
-
-      expect(find.text('Enter your email address'), findsOneWidget);
+      expect(find.byIcon(Icons.alternate_email_rounded), findsOneWidget);
     });
 
-    testWidgets('Shows error if email is invalid on Login', (WidgetTester tester) async {
+    testWidgets('Shows error if email or phone is invalid on Login', (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1280, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -243,7 +241,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Enter invalid email
-      await tester.enterText(find.widgetWithText(TextFormField, 'Enter your email address'), 'not-an-email');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Enter your email or 10-digit mobile number'), 'not-an-email');
       await tester.enterText(find.widgetWithText(TextFormField, 'Enter your password'), '123456');
 
       // Tap Login
@@ -252,7 +250,7 @@ void main() {
       await tester.tap(loginBtn);
       await tester.pumpAndSettle();
 
-      expect(find.text('Please enter a valid email address'), findsOneWidget);
+      expect(find.text('Enter a valid email address'), findsOneWidget);
     });
   });
 

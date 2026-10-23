@@ -108,8 +108,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
     try {
       if (_mode == AuthScreenMode.login) {
-        final isPhone = _loginWithPhone || (!email.contains('@') && RegExp(r'^[+0-9\s\-]+$').hasMatch(email));
-        final identifier = isPhone ? (_loginWithPhone ? phone : email) : email;
+        final identifier = email;
+        final isPhone = !identifier.contains('@') && RegExp(r'^[+0-9\s\-]+$').hasMatch(identifier);
 
         final res = await _authRepository.signInWithIdentifier(
           identifier: identifier,
@@ -1087,106 +1087,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               const SizedBox(height: 10),
             ],
 
-            // Login Mode: Email OR Mobile Login
+            // Login Mode: Unified Email or Mobile with Password
             if (isLogin) ...[
-              // Fast Method Switcher Tab: Email Login vs Mobile Login
-              Container(
-                height: 36,
-                padding: const EdgeInsets.all(2.5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2EBF8), width: 1),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => setState(() => _loginWithPhone = false),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: !_loginWithPhone ? Colors.white : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: !_loginWithPhone
-                                ? [const BoxShadow(color: Color(0x0C000000), blurRadius: 4, offset: Offset(0, 1))]
-                                : null,
-                          ),
-                          alignment: Alignment.center,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.mail_outline_rounded,
-                                size: 14,
-                                color: !_loginWithPhone ? const Color(0xFF00B96B) : const Color(0xFF64748B),
-                              ),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  'Email Login',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: !_loginWithPhone ? const Color(0xFF10194F) : const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => setState(() => _loginWithPhone = true),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: _loginWithPhone ? Colors.white : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: _loginWithPhone
-                                ? [const BoxShadow(color: Color(0x0C000000), blurRadius: 4, offset: Offset(0, 1))]
-                                : null,
-                          ),
-                          alignment: Alignment.center,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.phone_android_rounded,
-                                size: 14,
-                                color: _loginWithPhone ? const Color(0xFF00B96B) : const Color(0xFF64748B),
-                              ),
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  'Mobile Number',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: _loginWithPhone ? const Color(0xFF10194F) : const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              if (!_loginWithPhone)
-                _buildEmailFieldSection(isLogin: true)
-              else
-                _buildPhoneFieldSection(isLogin: true),
+              _buildUnifiedLoginField(),
               const SizedBox(height: 8),
 
               _buildPasswordFieldSection(isLogin: true),
@@ -1371,6 +1274,62 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       ),
     ),
   );
+}
+
+  Widget _buildUnifiedLoginField() {
+    final text = _emailController.text.trim();
+    final isPhoneInput = text.isNotEmpty && RegExp(r'^[+0-9\s\-]+$').hasMatch(text);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Email Address or Mobile Number',
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            hintText: 'Enter your email or 10-digit mobile number',
+            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+            prefixIcon: Icon(
+              isPhoneInput ? Icons.phone_android_rounded : Icons.alternate_email_rounded,
+              size: 18,
+              color: const Color(0xFF00B96B),
+            ),
+            filled: true,
+            isDense: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+          ),
+          validator: (val) {
+            if (val == null || val.trim().isEmpty) {
+              return 'Please enter your email or mobile number';
+            }
+            final clean = val.trim();
+            final isPhone = RegExp(r'^[+0-9\s\-]+$').hasMatch(clean);
+            if (isPhone) {
+              final digits = clean.replaceAll(RegExp(r'\D'), '');
+              if (digits.length < 10) {
+                return 'Enter a valid 10-digit mobile number';
+              }
+            } else {
+              if (!clean.contains('@') || !clean.contains('.')) {
+                return 'Enter a valid email address';
+              }
+            }
+            return null;
+          },
+        ),
+      ],
+    );
   }
 
   Widget _buildEmailFieldSection({required bool isLogin}) {
