@@ -8,24 +8,28 @@ class SocialAuthButton extends StatelessWidget {
   final SocialAuthType type;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final bool showChevron;
 
   const SocialAuthButton({
     super.key,
     required this.type,
     required this.onPressed,
     this.isLoading = false,
+    this.showChevron = false,
   });
 
   factory SocialAuthButton.google({
     Key? key,
     required VoidCallback? onPressed,
     bool isLoading = false,
+    bool showChevron = false,
   }) {
     return SocialAuthButton(
       key: key,
       type: SocialAuthType.google,
       onPressed: onPressed,
       isLoading: isLoading,
+      showChevron: showChevron,
     );
   }
 
@@ -33,12 +37,14 @@ class SocialAuthButton extends StatelessWidget {
     Key? key,
     required VoidCallback? onPressed,
     bool isLoading = false,
+    bool showChevron = false,
   }) {
     return SocialAuthButton(
       key: key,
       type: SocialAuthType.phone,
       onPressed: onPressed,
       isLoading: isLoading,
+      showChevron: showChevron,
     );
   }
 
@@ -48,10 +54,10 @@ class SocialAuthButton extends StatelessWidget {
     final label = isGoogle ? 'Continue with Google' : 'Continue with Phone';
 
     return Container(
-      height: 44,
+      height: 46,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: const Color(0xFFE2E8F0),
           width: 1.2,
@@ -68,11 +74,11 @@ class SocialAuthButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: isLoading ? null : onPressed,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: showChevron ? MainAxisAlignment.start : MainAxisAlignment.center,
               children: [
                 if (isLoading)
                   const SizedBox(
@@ -91,12 +97,13 @@ class SocialAuthButton extends StatelessWidget {
                     color: Color(0xFF1677FF),
                     size: 20,
                   ),
-                const SizedBox(width: 10),
-                Flexible(
+                const SizedBox(width: 12),
+                Expanded(
                   child: Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    textAlign: showChevron ? TextAlign.start : TextAlign.center,
                     style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
@@ -105,6 +112,12 @@ class SocialAuthButton extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (showChevron)
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Color(0xFF64748B),
+                    size: 20,
+                  ),
               ],
             ),
           ),

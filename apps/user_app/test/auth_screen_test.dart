@@ -269,9 +269,6 @@ void main() {
     for (final entry in viewports.entries) {
       testWidgets('Renders Login cleanly at ${entry.key} with zero overflow', (WidgetTester tester) async {
         tester.view.physicalSize = entry.value;
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-
         await tester.pumpWidget(buildAuthApp(initialMode: AuthScreenMode.login));
         await tester.pumpAndSettle();
 

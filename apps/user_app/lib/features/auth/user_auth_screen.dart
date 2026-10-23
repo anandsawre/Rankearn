@@ -45,7 +45,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   final _passwordController = TextEditingController(text: 'Rankearn2026!');
   String? _selectedExamGoal;
 
-  bool _loginWithPhone = false;
   bool _obscurePassword = true;
   bool _rememberMe = true;
   bool _agreeToTerms = true;
@@ -445,18 +444,17 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         final isTablet = constraints.maxWidth >= 640 && constraints.maxWidth < 990;
 
         return Scaffold(
-          backgroundColor: isDesktop ? const Color(0xFFF4F8FF) : const Color(0xFFF8FCFA),
+          backgroundColor: isDesktop ? const Color(0xFFF4F8FF) : const Color(0xFFE8FBF2),
           body: SafeArea(
             child: Stack(
               children: [
-                // Stylish Wave Background (Desktop Multi-Layer Wave, Mobile Stylish Wave Canopy & Ribbon)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: isDesktop
-                        ? const WaveBackground()
-                        : const _MobileStylishWaveBackground(),
+                // Stylish Wave Background (Desktop Multi-Layer Wave only; Mobile uses Hero Banner)
+                if (isDesktop)
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: WaveBackground(),
+                    ),
                   ),
-                ),
 
                 // Main Content Viewport
                 ScrollConfiguration(
@@ -466,17 +464,17 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     padding: EdgeInsets.symmetric(
                       horizontal: isDesktop
                           ? (constraints.maxWidth > 1400 ? 56 : 36)
-                          : (isTablet ? 32 : (constraints.maxWidth < 360 ? 14 : 20)),
-                      vertical: isDesktop ? 16 : 14,
+                          : 0,
+                      vertical: isDesktop ? 16 : 0,
                     ),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
                         minWidth: (constraints.maxWidth -
                                 (isDesktop
                                     ? (constraints.maxWidth > 1400 ? 112 : 72)
-                                    : (isTablet ? 64 : (constraints.maxWidth < 360 ? 28 : 40))))
+                                    : 0))
                             .clamp(0.0, double.infinity),
-                        minHeight: (constraints.maxHeight - (isDesktop ? 32 : 28)).clamp(0.0, double.infinity),
+                        minHeight: (constraints.maxHeight - (isDesktop ? 32 : 0)).clamp(0.0, double.infinity),
                       ),
                       child: isDesktop
                           ? SizedBox(
@@ -538,39 +536,43 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             size: 22,
           ),
         ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF10194F),
-                  letterSpacing: -0.5,
-                  fontFamily: 'Inter',
-                ),
-                children: [
-                  TextSpan(text: 'Rank'),
-                  TextSpan(
-                    text: 'earn',
-                    style: TextStyle(color: Color(0xFF00B96B)),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RichText(
+                text: const TextSpan(
+                  style: TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF10194F),
+                    letterSpacing: -0.5,
+                    fontFamily: 'Inter',
                   ),
-                ],
+                  children: [
+                    TextSpan(text: 'Rank'),
+                    TextSpan(
+                      text: 'earn',
+                      style: TextStyle(color: Color(0xFF00B96B)),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Text(
-              'Learn • Practice • Earn',
-              style: TextStyle(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF64748B),
-                letterSpacing: 0.3,
+              const Text(
+                'Learn • Practice • Play • Earn',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF64748B),
+                  letterSpacing: 0.1,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -578,52 +580,270 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   // =========================================================================
   // MOBILE & TABLET NATIVE AUTH LAYOUT
-  // Full-screen, clean, and intuitive native smartphone experience
+  // Matches user reference design: Hero illustration on top, rounded white
+  // bottom sheet card with fields, and 4-pillar features strip at the bottom.
   // =========================================================================
   Widget _buildMobileNativeLayout({required bool isTablet, required double maxWidth}) {
+    final isLogin = _mode == AuthScreenMode.login;
+
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: isTablet ? 500 : double.infinity,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Top Bar: Back Button (if navigation available)
-            if (widget.onBackToHome != null || Navigator.canPop(context))
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: InkWell(
-                    onTap: widget.onBackToHome ?? () {
-                      if (Navigator.canPop(context)) Navigator.pop(context);
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_rounded,
-                        size: 18,
-                        color: Color(0xFF10194F),
-                      ),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFE8FBF2),
+                Color(0xFFF1FCF6),
+                Color(0xFFF9FCFA),
+              ],
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 1. Top Hero Section with Brand, Heading & Student Mascot
+              _buildMobileHeroHeader(isLogin: isLogin, maxWidth: maxWidth),
+
+              // 2. White Sheet with Rounded Top Corners (Matches Reference Design)
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x0C000000),
+                      blurRadius: 18,
+                      offset: Offset(0, -6),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
+                child: _buildAuthCard(fillHeight: false, isMobile: true),
+              ),
+
+              // 3. Bottom 4-Pillar Strip (Learn, Practice, Play, Earn)
+              _buildMobileBottomPillars(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileHeroHeader({required bool isLogin, required double maxWidth}) {
+    final isVeryNarrow = maxWidth < 340;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(isVeryNarrow ? 14 : 20, 14, isVeryNarrow ? 14 : 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top Navigation & Brand Logo Row
+          Row(
+            children: [
+              if (widget.onBackToHome != null || Navigator.canPop(context)) ...[
+                InkWell(
+                  onTap: widget.onBackToHome ?? () {
+                    if (Navigator.canPop(context)) Navigator.pop(context);
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x06000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 18,
+                      color: Color(0xFF10194F),
                     ),
                   ),
                 ),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: _buildBrandLogo(),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
 
-            // Native Mobile Full Screen Auth Form (no card borders/shadows)
-            _buildAuthCard(fillHeight: false, isMobile: true),
-            const SizedBox(height: 16),
-          ],
+          // Main Header Content: Heading & Student Mascot
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Left: Heading & Subtitle
+              Expanded(
+                flex: 12,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            fontSize: isVeryNarrow ? 22 : 26,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF0F172A),
+                            height: 1.12,
+                            letterSpacing: -0.6,
+                            fontFamily: 'Inter',
+                          ),
+                          children: isLogin
+                              ? const [
+                                  TextSpan(text: 'Good\nTo See You\n'),
+                                  TextSpan(
+                                    text: 'Again!',
+                                    style: TextStyle(color: Color(0xFF00B96B)),
+                                  ),
+                                ]
+                              : const [
+                                  TextSpan(text: 'Create\nYour Account\n'),
+                                  TextSpan(
+                                    text: 'Today!',
+                                    style: TextStyle(color: Color(0xFF00B96B)),
+                                  ),
+                                ],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      CustomPaint(
+                        size: const Size(54, 7),
+                        painter: _YellowSwooshPainter(),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        isLogin
+                            ? 'Login to continue your learning journey and keep earning rewards.'
+                            : 'Join Rankearn and start your learning journey today!',
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF64748B),
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+
+              // Right: Student Mascot Artwork (Laptop, books, floating caps/coins)
+              Expanded(
+                flex: 13,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: isVeryNarrow ? 140 : 175,
+                  ),
+                  child: Image.asset(
+                    'assets/images/user_auth_mascot.png',
+                    fit: BoxFit.contain,
+                    alignment: Alignment.bottomRight,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileBottomPillars() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFF0FDF4),
+        border: Border(
+          top: BorderSide(color: Color(0xFFE2F8EE), width: 1),
         ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildPillarItem(
+            icon: Icons.menu_book_rounded,
+            color: const Color(0xFF00B96B),
+            title: 'Learn',
+            subtitle: 'Quality Content',
+          ),
+          _buildPillarItem(
+            icon: Icons.track_changes_rounded,
+            color: const Color(0xFF1677FF),
+            title: 'Practice',
+            subtitle: 'Mock Tests',
+          ),
+          _buildPillarItem(
+            icon: Icons.sports_esports_rounded,
+            color: const Color(0xFFF59E0B),
+            title: 'Play',
+            subtitle: 'Quiz & Battles',
+          ),
+          _buildPillarItem(
+            icon: Icons.monetization_on_rounded,
+            color: const Color(0xFF8B5CF6),
+            title: 'Earn',
+            subtitle: 'Rewards & Cash',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPillarItem({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 5),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF64748B),
+              height: 1.15,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -888,99 +1108,102 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-            // 1. Centered Brand Logo (Cup icon on left of Rankearn)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFFBEB),
-                    shape: BoxShape.circle,
+            // 1. Desktop Header (Shown in Desktop Right Card only; on Mobile shown in Hero Banner)
+            if (isDesktop) ...[
+              // Centered Brand Logo
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFFBEB),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.emoji_events_rounded,
+                      color: Color(0xFFF59E0B),
+                      size: 21,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.emoji_events_rounded,
-                    color: Color(0xFFF59E0B),
-                    size: 21,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text.rich(
-                  const TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Rank',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF101A3A),
-                          letterSpacing: -0.4,
+                  const SizedBox(width: 8),
+                  Text.rich(
+                    const TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Rank',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF101A3A),
+                            letterSpacing: -0.4,
+                          ),
                         ),
-                      ),
-                      TextSpan(
-                        text: 'earn',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF00B96B),
-                          letterSpacing: -0.4,
+                        TextSpan(
+                          text: 'earn',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF00B96B),
+                            letterSpacing: -0.4,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-
-            // 3. Centered Pill Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE4FFF0),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF86EFAC), width: 0.8),
+                ],
               ),
-              child: Text(
-                isLogin ? 'Good To See You Again!' : "It's Free to Join!",
+              const SizedBox(height: 6),
+
+              // Centered Pill Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE4FFF0),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF86EFAC), width: 0.8),
+                ),
+                child: Text(
+                  isLogin ? 'Good To See You Again!' : "It's Free to Join!",
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF008C52),
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Centered Heading
+              Text(
+                isLogin ? 'Welcome Back!' : 'Create Your Account',
                 style: const TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF008C52),
-                  letterSpacing: -0.1,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF0F172A),
+                  letterSpacing: -0.3,
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
+              const SizedBox(height: 3),
 
-            // 4. Centered Heading
-            Text(
-              isLogin ? 'Welcome Back!' : 'Create Your Account',
-              style: const TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w900,
-                color: Color(0xFF0F172A),
-                letterSpacing: -0.3,
+              // Subtitle
+              Text(
+                isLogin
+                    ? 'Login to your Rankearn account and continue learning, practicing and earning.'
+                    : 'Join Rankearn and start your learning journey today!',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF64748B),
+                  height: 1.25,
+                ),
               ),
-            ),
-            const SizedBox(height: 3),
-
-            // 5. Subtitle
-            Text(
-              isLogin
-                  ? 'Login to your Rankearn account and continue learning, practicing and earning.'
-                  : 'Join Rankearn and start your learning journey today!',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF64748B),
-                height: 1.25,
-              ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
+            ],
 
             // Error Notice Banner
             if (_errorMessage != null) ...[
@@ -1215,7 +1438,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   onPressed: _isLoading ? null : _handleSubmit,
                   child: _isLoading
@@ -1224,25 +1447,48 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                           height: 18,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      : Stack(
+                          alignment: Alignment.center,
                           children: [
-                            Icon(isLogin ? Icons.login_rounded : Icons.person_add_alt_1_rounded, size: 17),
-                            const SizedBox(width: 8),
-                            Text(
-                              isLogin ? 'Login' : 'Register',
-                              style: const TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.2,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(isLogin ? Icons.login_rounded : Icons.person_add_alt_1_rounded, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  isLogin ? 'Login' : 'Register',
+                                  style: const TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ],
                             ),
+                            if (isMobile)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: Color(0xFF00B96B),
+                                    size: 19,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
             // Mode Switcher (Placed above OR divider)
             Center(
@@ -1253,7 +1499,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   Text(
                     isLogin ? "Don't have an account? " : "Already have an account? ",
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w500,
                       color: Color(0xFF64748B),
                     ),
@@ -1263,20 +1509,33 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     borderRadius: BorderRadius.circular(4),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      child: Text(
-                        isLogin ? 'Sign Up' : 'Login',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF00B96B),
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            isLogin ? 'Sign Up' : 'Login',
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF00B96B),
+                            ),
+                          ),
+                          if (isMobile) ...[
+                            const SizedBox(width: 2),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 16,
+                              color: Color(0xFF00B96B),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
             // Divider With Label "OR"
             Row(
@@ -1296,15 +1555,17 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
 
-            // Social Logins
+            // Social Logins (Google & Phone with right chevron on mobile)
             SocialAuthButton.google(
               onPressed: _handleGoogleLogin,
+              showChevron: isMobile,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             SocialAuthButton.phone(
               onPressed: _handlePhoneLogin,
+              showChevron: isMobile,
             ),
 
             // Security Notice Box (Shown on Desktop Card only; removed on Mobile Screen)
@@ -1429,7 +1690,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           controller: _passwordController,
           obscureText: _obscurePassword,
           decoration: InputDecoration(
-            hintText: isLogin ? 'Enter your password' : 'Create a password',
+            hintText: MediaQuery.of(context).size.width >= 990
+                ? (isLogin ? 'Enter your password' : 'Create a password')
+                : (isLogin ? '••••••••••' : 'Create a password'),
             hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
             prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF00B96B)),
             suffixIcon: IconButton(
@@ -1530,183 +1793,22 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 }
 
-/// Premium Stylish Fluid Wave Background for Mobile & Tablet screens
-/// Provides modern fluid wave canopies, accent ribbons, ambient radial glows,
-/// and subtle floating geometric micro-accents for an attractive, professional look.
-class _MobileStylishWaveBackground extends StatelessWidget {
-  const _MobileStylishWaveBackground();
 
-  @override
-  Widget build(BuildContext context) {
-    return const RepaintBoundary(
-      child: CustomPaint(
-        painter: _MobileStylishWavePainter(),
-        size: Size.infinite,
-      ),
-    );
-  }
-}
 
-class _MobileStylishWavePainter extends CustomPainter {
-  const _MobileStylishWavePainter();
 
+class _YellowSwooshPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
+    final paint = Paint()
+      ..color = const Color(0xFFF59E0B)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.8
+      ..strokeCap = StrokeCap.round;
 
-    // -------------------------------------------------------------------------
-    // 1. Top Soft Luminous Aura (Gently illuminates Brand Logo & Welcome area)
-    // -------------------------------------------------------------------------
-    final topAuraRect = Rect.fromCircle(
-      center: Offset(w * 0.50, h * 0.08),
-      radius: (w * 0.65).clamp(200.0, 360.0),
-    );
-    final topAuraPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF00B96B).withValues(alpha: 0.12),
-          const Color(0xFF38BDF8).withValues(alpha: 0.05),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.55, 1.0],
-      ).createShader(topAuraRect);
-    canvas.drawCircle(topAuraRect.center, topAuraRect.width / 2, topAuraPaint);
-
-    // -------------------------------------------------------------------------
-    // 2. Layer 1: Top Fluid Wave Canopy (Soft, organic, seamless gradient header)
-    // -------------------------------------------------------------------------
-    final topWave1 = Path();
-    topWave1.moveTo(0, 0);
-    topWave1.lineTo(w, 0);
-    topWave1.lineTo(w, h * 0.15);
-    topWave1.cubicTo(
-      w * 0.70, h * 0.19,
-      w * 0.35, h * 0.11,
-      0, h * 0.16,
-    );
-    topWave1.close();
-
-    final topShader1 = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        const Color(0xFFE4F8EE).withValues(alpha: 0.85),
-        const Color(0xFFE8F4FD).withValues(alpha: 0.45),
-        const Color(0xFFF8FCFA).withValues(alpha: 0.0),
-      ],
-      stops: const [0.0, 0.60, 1.0],
-    ).createShader(Rect.fromLTWH(0, 0, w, h * 0.19));
-
-    final topPaint1 = Paint()
-      ..shader = topShader1
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-    canvas.drawPath(topWave1, topPaint1);
-
-    // Layer 2: Second counter-wave at top for rich organic depth
-    final topWave2 = Path();
-    topWave2.moveTo(0, 0);
-    topWave2.lineTo(w, 0);
-    topWave2.lineTo(w, h * 0.11);
-    topWave2.cubicTo(
-      w * 0.65, h * 0.08,
-      w * 0.28, h * 0.14,
-      0, h * 0.09,
-    );
-    topWave2.close();
-
-    final topShader2 = LinearGradient(
-      begin: Alignment.topRight,
-      end: Alignment.bottomLeft,
-      colors: [
-        const Color(0xFF38BDF8).withValues(alpha: 0.12),
-        const Color(0xFF00B96B).withValues(alpha: 0.07),
-        Colors.transparent,
-      ],
-      stops: const [0.0, 0.50, 1.0],
-    ).createShader(Rect.fromLTWH(0, 0, w, h * 0.14));
-
-    final topPaint2 = Paint()
-      ..shader = topShader2
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-    canvas.drawPath(topWave2, topPaint2);
-
-    // -------------------------------------------------------------------------
-    // 3. Bottom Ambient Glow & Sweeping Harmonic Waves (Behind Trust Chips)
-    // -------------------------------------------------------------------------
-    final bottomGlowRect = Rect.fromCircle(
-      center: Offset(w * 0.50, h * 0.94),
-      radius: (w * 0.70).clamp(220.0, 380.0),
-    );
-    final bottomGlowPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF00B96B).withValues(alpha: 0.09),
-          const Color(0xFF1677FF).withValues(alpha: 0.05),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.60, 1.0],
-      ).createShader(bottomGlowRect);
-    canvas.drawCircle(bottomGlowRect.center, bottomGlowRect.width / 2, bottomGlowPaint);
-
-    // Deep Bottom Wave Base
-    final bottomWave1 = Path();
-    bottomWave1.moveTo(0, h * 0.88);
-    bottomWave1.cubicTo(
-      w * 0.30, h * 0.84,
-      w * 0.68, h * 0.93,
-      w, h * 0.86,
-    );
-    bottomWave1.lineTo(w, h);
-    bottomWave1.lineTo(0, h);
-    bottomWave1.close();
-
-    final bottomShader1 = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Colors.transparent,
-        const Color(0xFFE8FAF2).withValues(alpha: 0.60),
-        const Color(0xFFE0F2FE).withValues(alpha: 0.45),
-      ],
-      stops: const [0.0, 0.35, 1.0],
-    ).createShader(Rect.fromLTWH(0, h * 0.84, w, h * 0.16));
-
-    final bottomPaint1 = Paint()
-      ..shader = bottomShader1
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-    canvas.drawPath(bottomWave1, bottomPaint1);
-
-    // Front Bottom Wave (Gently cradles the trust strip)
-    final bottomWave2 = Path();
-    bottomWave2.moveTo(0, h * 0.93);
-    bottomWave2.cubicTo(
-      w * 0.38, h * 0.96,
-      w * 0.72, h * 0.90,
-      w, h * 0.94,
-    );
-    bottomWave2.lineTo(w, h);
-    bottomWave2.lineTo(0, h);
-    bottomWave2.close();
-
-    final bottomShader2 = LinearGradient(
-      begin: Alignment.bottomLeft,
-      end: Alignment.topRight,
-      colors: [
-        const Color(0xFF34D399).withValues(alpha: 0.14),
-        const Color(0xFF38BDF8).withValues(alpha: 0.08),
-        Colors.transparent,
-      ],
-    ).createShader(Rect.fromLTWH(0, h * 0.90, w, h * 0.10));
-
-    final bottomPaint2 = Paint()
-      ..shader = bottomShader2
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-    canvas.drawPath(bottomWave2, bottomPaint2);
+    final path = Path();
+    path.moveTo(2, size.height * 0.35);
+    path.quadraticBezierTo(size.width * 0.5, size.height, size.width - 2, size.height * 0.25);
+    canvas.drawPath(path, paint);
   }
 
   @override
