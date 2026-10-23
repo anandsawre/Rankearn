@@ -11,7 +11,6 @@ class BattleQuestionCard extends StatelessWidget {
   final String subject;
   final int timeLimitSeconds;
   final String questionText;
-  final bool isDesktop;
 
   const BattleQuestionCard({
     super.key,
@@ -21,7 +20,6 @@ class BattleQuestionCard extends StatelessWidget {
     this.subject = 'General Science',
     this.timeLimitSeconds = 12,
     required this.questionText,
-    this.isDesktop = false,
   });
 
   @override
@@ -64,10 +62,7 @@ class BattleQuestionCard extends StatelessWidget {
             // Right: Stake: 100 Coins pill
             Flexible(
               child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? 8 : 9,
-                  vertical: isDesktop ? 3.5 : 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF9E6),
                   borderRadius: AppRadii.borderPill,
@@ -76,15 +71,15 @@ class BattleQuestionCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.monetization_on_rounded, color: Color(0xFFFFB800), size: 14),
+                    const Text('🪙', style: TextStyle(fontSize: 13)),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         'Stake: $stakeCoins Coins',
-                        style: TextStyle(
-                          fontSize: isDesktop ? 11 : 11.5,
+                        style: const TextStyle(
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFFB45309),
+                          color: Color(0xFFB45309),
                           fontFamily: 'Inter',
                         ),
                         maxLines: 1,
@@ -97,13 +92,13 @@ class BattleQuestionCard extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: isDesktop ? 6 : 8),
+        const SizedBox(height: 8),
 
         // Animated Round Progress Bar
         ClipRRect(
-          borderRadius: BorderRadius.circular(isDesktop ? 4 : 5),
+          borderRadius: BorderRadius.circular(5),
           child: Container(
-            height: isDesktop ? 6 : 8,
+            height: 8,
             color: const Color(0xFFE5E7EB),
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
@@ -113,20 +108,17 @@ class BattleQuestionCard extends StatelessWidget {
                   gradient: const LinearGradient(
                     colors: [Color(0xFF00C975), Color(0xFF00A35E)],
                   ),
-                  borderRadius: BorderRadius.circular(isDesktop ? 4 : 5),
+                  borderRadius: BorderRadius.circular(5),
                 ),
               ),
             ),
           ),
         ),
-        SizedBox(height: isDesktop ? 12 : 18),
+        const SizedBox(height: 18),
 
         // 2. Question Card Surface
         Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 18 : 20,
-            vertical: isDesktop ? 14 : 22,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: AppRadii.borderXl,
@@ -140,12 +132,9 @@ class BattleQuestionCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Subject Chip
+                  // Subject Chip (e.g. 📖 General Science)
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isDesktop ? 9 : 10,
-                      vertical: isDesktop ? 3.5 : 4.5,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
                     decoration: BoxDecoration(
                       color: const Color(0xFFD1FAE5),
                       borderRadius: AppRadii.borderPill,
@@ -153,14 +142,14 @@ class BattleQuestionCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.menu_book_rounded, color: Color(0xFF047857), size: 14),
+                        const Text('📖', style: TextStyle(fontSize: 13)),
                         const SizedBox(width: 5),
                         Text(
                           subject,
-                          style: TextStyle(
-                            fontSize: isDesktop ? 11.5 : 12,
+                          style: const TextStyle(
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF047857),
+                            color: Color(0xFF047857),
                             fontFamily: 'Inter',
                           ),
                         ),
@@ -168,12 +157,9 @@ class BattleQuestionCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Timer Badge
+                  // Timer Badge (e.g. ⏱️ 12s)
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isDesktop ? 9 : 10,
-                      vertical: isDesktop ? 3.5 : 4.5,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEF3C7),
                       borderRadius: AppRadii.borderPill,
@@ -181,14 +167,14 @@ class BattleQuestionCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.access_time_rounded, color: Color(0xFFB45309), size: 14),
+                        const Text('⏱️', style: TextStyle(fontSize: 13)),
                         const SizedBox(width: 5),
                         Text(
                           '${timeLimitSeconds}s',
-                          style: TextStyle(
-                            fontSize: isDesktop ? 11.5 : 12,
+                          style: const TextStyle(
+                            fontSize: 12,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFFB45309),
+                            color: Color(0xFFB45309),
                             fontFamily: 'Inter',
                           ),
                         ),
@@ -197,16 +183,16 @@ class BattleQuestionCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: isDesktop ? 12 : 20),
+              const SizedBox(height: 20),
 
               // Question Text
               Text(
                 questionText,
-                style: TextStyle(
-                  fontSize: isDesktop ? 17 : 19,
+                style: const TextStyle(
+                  fontSize: 19,
                   fontWeight: FontWeight.w900,
                   color: AppColors.battleNavy,
-                  height: isDesktop ? 1.3 : 1.35,
+                  height: 1.35,
                   letterSpacing: -0.2,
                   fontFamily: 'Inter',
                 ),

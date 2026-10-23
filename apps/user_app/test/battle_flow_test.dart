@@ -12,7 +12,7 @@ void main() {
     name: 'Vikram Singh',
     email: 'vikram@rankearn.com',
     coins: 100,
-    createdAt: DateTime(2026, 1, 1),
+    createdAt: DateTime.now(),
   );
 
   final testQuestion = const BattleQuestion(
@@ -31,14 +31,14 @@ void main() {
       name: 'Vikram Singh',
       rank: '#1',
       score: 10,
-      roundResults: [true, true, true, null, null],
+      roundResults: [true, false, true, null, null],
     ),
     opponent: const BattlePlayer(
       id: 'p_2',
       name: 'Amit Verma (Rank #4)',
       rank: 'Rank #4',
       score: 0,
-      roundResults: [false, null, null, null, null],
+      roundResults: [false, false, false, null, null],
     ),
     entryFee: 100,
     currentRound: 4,
@@ -46,8 +46,8 @@ void main() {
     questions: [testQuestion],
   );
 
-  group('Rankearn 1v1 Quiz Battle — Responsive Reference Specification Tests', () {
-    testWidgets('Screen A: Finding Opponent Screen renders all Reference Image 3 elements on Mobile', (tester) async {
+  group('Rankearn 1v1 Quiz Battle — 3-Screen Reference Specification Tests', () {
+    testWidgets('Screen One: Finding Opponent Screen renders all reference components', (tester) async {
       tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -62,80 +62,38 @@ void main() {
           ),
         ),
       );
-      await tester.pump();
 
-      // 1. Header & Radar
+      // Verify Header
+      expect(find.textContaining('1v1'), findsWidgets);
+      expect(find.textContaining('Live'), findsWidgets);
+      expect(find.textContaining('Arena'), findsWidgets);
+      expect(find.text('100'), findsOneWidget);
+
+      // Verify Matchmaking Radar
       expect(find.byType(MatchmakingRadar), findsOneWidget);
 
-      // 2. Search Status & Highlights
+      // Verify Search Status
       expect(find.text('Finding Opponent...'), findsOneWidget);
       expect(find.text('Looking for a player near your skill level'), findsOneWidget);
-      expect(find.text('Real Players Only'), findsOneWidget);
-      expect(find.text('Fair & Balanced Match'), findsOneWidget);
-      expect(find.text('Similar Skill Level'), findsOneWidget);
 
-      // 3. Matchmaking Progress Stepper & Stats
-      expect(find.text('Matchmaking in Progress'), findsOneWidget);
-      expect(find.textContaining('Finding'), findsWidgets);
-      expect(find.text('Estimated Wait Time'), findsOneWidget);
-      expect(find.text('10 - 30 seconds'), findsOneWidget);
-      expect(find.text('Your Skill Level'), findsOneWidget);
-      expect(find.text('Intermediate'), findsOneWidget);
-      expect(find.text('Players Online'), findsWidgets);
-
-      // 4. Three Benefit Feature Cards
-      expect(find.text('1v1 Battle'), findsWidgets);
+      // Verify 3 Fair Match Cards
+      expect(find.text('1v1 Battle'), findsOneWidget);
       expect(find.text('Real Players'), findsOneWidget);
       expect(find.text('Fair Match'), findsOneWidget);
       expect(find.text('Similar Skill'), findsOneWidget);
       expect(find.text('No Bots'), findsOneWidget);
       expect(find.text('100% Real'), findsOneWidget);
 
-      // 5. Did you know? Banner
+      // Verify Did you know? Card
       expect(find.text('Did you know?'), findsOneWidget);
       expect(find.textContaining('Win battles to earn coins'), findsOneWidget);
 
-      // 6. Cancel Button
-      expect(find.text('Cancel Matchmaking'), findsOneWidget);
-      await tester.tap(find.text('Cancel Matchmaking'), warnIfMissed: false);
-      await tester.pump();
+      // Verify Cancel Button
+      expect(find.text('Cancel'), findsOneWidget);
     });
 
-    testWidgets('Screen A: Finding Opponent Screen renders Desktop 3-section layout cleanly', (tester) async {
-      tester.view.physicalSize = const Size(1280, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: FindingOpponentScreen(
-            userCoins: 1250,
-            profile: testProfile,
-            entryFee: 100,
-          ),
-        ),
-      );
-      await tester.pump();
-
-      // Desktop navigation header
-      expect(find.text('Home'), findsOneWidget);
-      expect(find.text('Tests'), findsOneWidget);
-      expect(find.text('Live'), findsOneWidget);
-      expect(find.text('1v1 Battle'), findsWidgets);
-      expect(find.text('Rewards'), findsOneWidget);
-
-      // 3-section hero elements
-      expect(find.byType(MatchmakingRadar), findsOneWidget);
-      expect(find.text('Finding Opponent...'), findsOneWidget);
-      expect(find.text('Matchmaking in Progress'), findsOneWidget);
-      expect(find.text('Cancel Matchmaking'), findsOneWidget);
-      await tester.tap(find.text('Cancel Matchmaking'), warnIfMissed: false);
-      await tester.pump();
-    });
-
-    testWidgets('Screen B: Live Arena Screen renders all Reference Image 2 elements on Mobile & Desktop', (tester) async {
-      tester.view.physicalSize = const Size(1280, 800);
+    testWidgets('Screen Two: Live Arena Screen renders all Reference Image 1 elements', (tester) async {
+      tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -144,49 +102,46 @@ void main() {
           theme: AppTheme.lightTheme,
           home: LiveArenaScreen(
             initialSession: testSession,
-            userCoins: 1250,
+            userCoins: 100,
             userProfile: testProfile,
           ),
         ),
       );
-      await tester.pump();
 
-      // 1. Stadium Versus Banner
-      expect(find.byType(StadiumVersusBanner), findsOneWidget);
-      expect(find.descendant(of: find.byType(StadiumVersusBanner), matching: find.text('Vikram Singh')), findsOneWidget);
+      // 1. Dual Player Scoreboard
+      expect(find.text('Vikram Singh'), findsOneWidget);
       expect(find.text('10 pts'), findsOneWidget);
       expect(find.text('Amit Verma (Rank #4)'), findsOneWidget);
       expect(find.text('0 pts'), findsOneWidget);
+      expect(find.textContaining('VS'), findsOneWidget);
 
-      // 2. Question Palette Card (Left column on Desktop)
-      expect(find.byType(QuestionPaletteCard), findsOneWidget);
-      expect(find.text('Question Palette'), findsOneWidget);
-      expect(find.text('Surrender Battle'), findsOneWidget);
+      // 2. Round Info & Stake
+      expect(find.text('Round 4 of 5'), findsOneWidget);
+      expect(find.text('Stake: 100 Coins'), findsOneWidget);
 
-      // 3. Question Card & Options
+      // 3. Question Card
       expect(find.text('General Science'), findsOneWidget);
       expect(find.text('Which is the largest organ in the human body?'), findsOneWidget);
+
+      // 4. Four Options: A Liver, B Heart, C Skin, D Lungs
+      expect(find.text('A'), findsOneWidget);
       expect(find.text('Liver'), findsOneWidget);
+      expect(find.text('B'), findsOneWidget);
       expect(find.text('Heart'), findsOneWidget);
+      expect(find.text('C'), findsOneWidget);
       expect(find.text('Skin'), findsOneWidget);
+      expect(find.text('D'), findsOneWidget);
       expect(find.text('Lungs'), findsOneWidget);
+
+      // 5. Submit Answer Button
       expect(find.text('Submit Answer'), findsOneWidget);
 
-      // 4. Right Sidebar Cards
-      expect(find.text('Round 4 of 5'), findsOneWidget);
-      expect(find.text('Time Left'), findsOneWidget);
-      expect(find.text('Stake'), findsOneWidget);
-      expect(find.text('Battle Info'), findsOneWidget);
-      expect(find.text('Win this Battle'), findsOneWidget);
-      expect(find.text('Players Online'), findsOneWidget);
-      expect(find.text('Recent Battles'), findsOneWidget);
-
-      // Interactive answer selection
+      // 6. Interactive Answer Selection
       final skinFinder = find.text('Skin');
       await tester.tap(skinFinder);
       await tester.pumpAndSettle();
 
-      // Submit answer
+      // Submit the selected answer
       final submitFinder = find.text('Submit Answer');
       await tester.tap(submitFinder);
       await tester.pump();
@@ -194,8 +149,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 950));
     });
 
-    testWidgets('Screen C: Victory Screen renders all Reference Image 1 elements on Desktop & Mobile', (tester) async {
-      tester.view.physicalSize = const Size(1280, 800);
+    testWidgets('Screen Three: Victory Screen renders all Reference Image 3 elements', (tester) async {
+      tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -215,45 +170,34 @@ void main() {
           theme: AppTheme.lightTheme,
           home: BattleResultScreen(
             result: victoryResult,
-            userCoins: 1250,
+            userCoins: 200,
             profile: testProfile,
             entryFee: 100,
           ),
         ),
       );
-      await tester.pump();
 
       // 1. Victory Celebration Banner
       expect(find.text('VICTORY!'), findsOneWidget);
+
+      // 2. Announcement Message Card
       expect(find.text('You defeated Amit Verma (Rank #4) in 1v1 Battle! 🏆'), findsOneWidget);
 
-      // 2. Player Comparison Card
-      expect(find.text('Vikram Singh'), findsAtLeastNWidgets(1));
+      // 3. Player Comparison Card
+      expect(find.text('Vikram Singh'), findsOneWidget);
       expect(find.text('10 pts'), findsOneWidget);
       expect(find.text('Amit Verma (Rank #4)'), findsOneWidget);
       expect(find.text('0 pts'), findsOneWidget);
+      expect(find.textContaining('VS'), findsOneWidget);
 
-      // 3. Reward Summary Card
+      // 4. Reward Summary Card
       expect(find.text('You won'), findsOneWidget);
       expect(find.text('+100 Coins'), findsOneWidget);
       expect(find.text('Great job! Keep playing to climb the ranks.'), findsOneWidget);
 
-      // 4. Action Buttons
+      // 5. Action Buttons
       expect(find.text('Return to Hub'), findsOneWidget);
       expect(find.text('Play Again'), findsOneWidget);
-
-      // 5. Right Sidebar Cards on Desktop (Image 1)
-      expect(find.text('Battle Summary'), findsOneWidget);
-      expect(find.text('Total Questions'), findsOneWidget);
-      expect(find.text('Your Correct Answers'), findsOneWidget);
-      expect(find.text('Time Taken'), findsOneWidget);
-
-      expect(find.text('Rank Impact'), findsOneWidget);
-      expect(find.text('Your Rank'), findsOneWidget);
-      expect(find.text('+28'), findsOneWidget);
-      expect(find.text('3 Wins'), findsOneWidget);
-
-      expect(find.text('Keep Going!'), findsOneWidget);
     });
   });
 }

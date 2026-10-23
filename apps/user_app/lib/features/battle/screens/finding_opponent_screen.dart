@@ -4,11 +4,10 @@ import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'live_arena_screen.dart';
 
-/// Screen A: 1v1 Arena Matchmaking Dashboard
-/// Direct responsive parity with Reference Image 3:
-/// - Desktop: 3-column top hero card (Status/Highlights, Animated Radar, Progress Stepper & Stats),
-///   3 Benefit feature cards, motivational tip banner, and centered Cancel Matchmaking button.
-/// - Mobile: Fluid single-column layout preserving all interactive components with zero overflow.
+/// Screen One: Finding Opponent Screen
+/// Direct pixel-accurate match with Reference Image 2.
+/// Features circular matchmaking radar, fair-match info cards,
+/// motivational tip banner, and safe cancellation flow.
 class FindingOpponentScreen extends StatefulWidget {
   final int userCoins;
   final UserProfile profile;
@@ -31,9 +30,7 @@ class FindingOpponentScreen extends StatefulWidget {
 
 class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
   final BattleRepository _repository = BattleRepository();
-  Timer? _stageTimer;
   Timer? _searchTimer;
-  int _activeStage = 1;
 
   @override
   void initState() {
@@ -42,26 +39,21 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
   }
 
   void _startMatchmakingHandshake() {
-    // Stage 1 -> 2 transition after 1.2s
-    _stageTimer = Timer(const Duration(milliseconds: 1200), () {
-      if (mounted) setState(() => _activeStage = 2);
-    });
-
-    // Final handshake & battle creation
+    // 2.5 second simulated radar scan before matching real opponent
     _searchTimer = Timer(const Duration(milliseconds: 2500), () async {
       if (!mounted) return;
-      setState(() => _activeStage = 3);
 
       final res = await _repository.createLiveBattleSession(
         playerName: widget.profile.name.isEmpty ? 'Vikram Singh' : widget.profile.name,
-        opponentName: 'Amit Verma',
+        opponentName: 'Amit Verma (Rank #4)',
         entryFee: widget.entryFee,
-        opponentRank: 'Rank #3421',
+        opponentRank: 'Rank #4',
       );
 
       if (!mounted) return;
 
       if (res is Success<BattleSession>) {
+        // Transition to Live Arena
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => LiveArenaScreen(
@@ -77,14 +69,12 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
   }
 
   void _cancelMatchmaking() {
-    _stageTimer?.cancel();
     _searchTimer?.cancel();
     Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
-    _stageTimer?.cancel();
     _searchTimer?.cancel();
     super.dispose();
   }
@@ -92,277 +82,79 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F7FF),
-      appBar: AppHeader(
+      backgroundColor: const Color(0xFFF2F8FF),
+      appBar: BattleAppBar(
         coins: widget.userCoins,
-        userName: widget.profile.name.isEmpty ? 'Vikram Singh' : widget.profile.name,
-        currentTab: UserNavTab.battle,
-        unreadNotifications: 3,
-        showMenuButton: false,
-        onMenuTap: _cancelMatchmaking,
+        onBack: _cancelMatchmaking,
       ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth >= 900;
-            final isTablet = constraints.maxWidth >= 600 && !isDesktop;
-            final canFitWithoutScroll = isDesktop && constraints.maxHeight >= 540;
+            final isDesktop = constraints.maxWidth >= 768;
 
-            final content = ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: isDesktop ? 1200 : double.infinity,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 1. Top Matchmaking Hero Dashboard Card
-                  _buildTopHeroDashboard(isDesktop),
-                  const SizedBox(height: 12),
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 540),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // 1. Central Radar Visualization
+                      const SizedBox(height: 10),
+                      MatchmakingRadar(
+                        size: isDesktop ? 300 : 260,
+                      ),
+                      const SizedBox(height: 22),
 
-                  // 2. Three Feature Cards Row (1v1 Battle, Fair Match, No Bots)
-                  const MatchmakingDesktopCardsRow(),
-                  const SizedBox(height: 10),
+                      // 2. Search Status Heading & Subtitle
+                      const Text(
+                        'Finding Opponent...',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.battleNavy,
+                          letterSpacing: -0.3,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Looking for a player near your skill level',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.battleSecondaryText,
+                          fontFamily: 'Inter',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
 
-                  // 3. Did You Know Banner
-                  const BattleTipBanner(),
-                  const SizedBox(height: 14),
+                      // 3. Fair Match 3 Cards Row
+                      const MatchmakingFairCardsRow(),
+                      const SizedBox(height: 20),
 
-                  // 4. Centered Cancel Matchmaking Button
-                  MatchmakingCancelButton(
-                    onCancel: _cancelMatchmaking,
+                      // 4. "Did you know?" Banner Card
+                      const BattleTipBanner(),
+                      const SizedBox(height: 24),
+
+                      // 5. Full-width Soft Mint Cancel Button
+                      BattleSecondaryButton(
+                        label: 'Cancel',
+                        isSoftTint: true,
+                        onPressed: _cancelMatchmaking,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   ),
-                ],
-              ),
-            );
-
-            if (canFitWithoutScroll) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  child: content,
                 ),
-              );
-            }
-
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(
-                horizontal: isDesktop ? 24 : (isTablet ? 20 : 14),
-                vertical: isDesktop ? 12 : 16,
-              ),
-              child: isDesktop ? Center(child: content) : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 1. Top Matchmaking Hero Dashboard Card
-                  _buildTopHeroDashboard(false),
-                  const SizedBox(height: 20),
-
-                  // 2. Three Feature Cards Row (1v1 Battle, Fair Match, No Bots)
-                  const MatchmakingDesktopCardsRow(),
-                  const SizedBox(height: 18),
-
-                  // 3. Did You Know Banner
-                  const BattleTipBanner(),
-                  const SizedBox(height: 24),
-
-                  // 4. Centered Cancel Matchmaking Button
-                  MatchmakingCancelButton(
-                    onCancel: _cancelMatchmaking,
-                  ),
-                  const SizedBox(height: 20),
-                ],
               ),
             );
           },
         ),
       ),
-    );
-  }
-
-  Widget _buildTopHeroDashboard(bool isDesktop) {
-    if (isDesktop) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: AppColors.battleBorder, width: 1.2),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0C10194F),
-              blurRadius: 16,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Left Status & Value Bullets
-            Expanded(
-              flex: 4,
-              child: _buildLeftStatusColumn(true),
-            ),
-            const SizedBox(width: 14),
-
-            // Center Radar Animation
-            Expanded(
-              flex: 4,
-              child: Center(
-                child: MatchmakingRadar(size: 200),
-              ),
-            ),
-            const SizedBox(width: 14),
-
-            // Right Matchmaking Progress Stepper & Live Stats
-            Expanded(
-              flex: 4,
-              child: MatchmakingProgressPanel(
-                activeStage: _activeStage,
-                waitTime: '10 - 30 seconds',
-                skillLevel: 'Intermediate',
-                playersOnline: '2,468',
-              ),
-            ),
-          ],
-        ),
-      );
-    } else {
-      // Mobile / Tablet Stacked Layout
-      return Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.battleBorder, width: 1.2),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0C10194F),
-              blurRadius: 16,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            _buildLeftStatusColumn(false),
-            const SizedBox(height: 18),
-            Center(
-              child: MatchmakingRadar(size: 250),
-            ),
-            const SizedBox(height: 20),
-            MatchmakingProgressPanel(
-              activeStage: _activeStage,
-              waitTime: '10 - 30 seconds',
-              skillLevel: 'Intermediate',
-              playersOnline: '2,468',
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  Widget _buildLeftStatusColumn(bool isDesktop) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 1v1 Live Arena Chip
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 9 : 10,
-            vertical: isDesktop ? 3.5 : 4,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFD6F6E5),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.sports_esports_rounded,
-                color: const Color(0xFF00B96B),
-                size: isDesktop ? 15 : 16,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                '1v1 Live Arena',
-                style: TextStyle(
-                  color: const Color(0xFF008C52),
-                  fontSize: isDesktop ? 11.5 : 12,
-                  fontWeight: FontWeight.w800,
-                  fontFamily: 'Inter',
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: isDesktop ? 10 : 14),
-
-        // Finding Opponent Title
-        Text(
-          'Finding Opponent...',
-          style: TextStyle(
-            fontSize: isDesktop ? 22 : 26,
-            fontWeight: FontWeight.w900,
-            color: AppColors.battleNavy,
-            letterSpacing: isDesktop ? -0.3 : -0.4,
-            fontFamily: 'Inter',
-          ),
-        ),
-        SizedBox(height: isDesktop ? 4 : 6),
-
-        // Subtitle
-        Text(
-          'Looking for a player near your skill level',
-          style: TextStyle(
-            fontSize: isDesktop ? 12.5 : 13.5,
-            fontWeight: FontWeight.w500,
-            color: AppColors.battleSecondaryText,
-            fontFamily: 'Inter',
-          ),
-        ),
-        SizedBox(height: isDesktop ? 12 : 20),
-
-        // Feature Bullets
-        _buildBulletItem(Icons.bolt_rounded, const Color(0xFF00B96B), 'Real Players Only', isDesktop),
-        SizedBox(height: isDesktop ? 7 : 10),
-        _buildBulletItem(Icons.verified_user_rounded, const Color(0xFF00B96B), 'Fair & Balanced Match', isDesktop),
-        SizedBox(height: isDesktop ? 7 : 10),
-        _buildBulletItem(Icons.groups_rounded, const Color(0xFF00B96B), 'Similar Skill Level', isDesktop),
-      ],
-    );
-  }
-
-  Widget _buildBulletItem(IconData icon, Color color, String text, bool isDesktop) {
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(isDesktop ? 4 : 5),
-          decoration: BoxDecoration(
-            color: color.withAlpha(25),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: isDesktop ? 14 : 16),
-        ),
-        SizedBox(width: isDesktop ? 8 : 10),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: isDesktop ? 12.5 : 13.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.battleNavy,
-              fontFamily: 'Inter',
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 }

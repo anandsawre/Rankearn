@@ -122,10 +122,10 @@ void main() {
 
       // Verify Finding Opponent screen appears
       expect(find.text('Finding Opponent...'), findsOneWidget);
-      expect(find.textContaining('Cancel'), findsWidgets);
+      expect(find.text('Cancel'), findsOneWidget);
 
       // Cancel matchmaking to navigate back cleanly
-      final cancelFinder = find.textContaining('Cancel').first;
+      final cancelFinder = find.text('Cancel');
       await tester.ensureVisible(cancelFinder);
       await tester.pump();
       await tester.tap(cancelFinder);
