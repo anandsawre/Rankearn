@@ -8,7 +8,6 @@ enum AuthScreenMode { login, signUp }
 /// Direct visual parity with Login & Sign Up reference designs.
 class UserAuthScreen extends StatefulWidget {
   final AuthScreenMode initialMode;
-  final AuthUserRole initialRole;
   final void Function(UserProfile profile)? onAuthSuccess;
   final VoidCallback? onBackToHome;
   final VoidCallback? onNavigateToTests;
@@ -19,7 +18,6 @@ class UserAuthScreen extends StatefulWidget {
   const UserAuthScreen({
     super.key,
     this.initialMode = AuthScreenMode.login,
-    this.initialRole = AuthUserRole.student,
     this.onAuthSuccess,
     this.onBackToHome,
     this.onNavigateToTests,
@@ -37,7 +35,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late AuthScreenMode _mode;
-  late AuthUserRole _role;
 
   // Form Controllers
   final _nameController = TextEditingController();
@@ -66,7 +63,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   void initState() {
     super.initState();
     _mode = widget.initialMode;
-    _role = widget.initialRole;
   }
 
   @override
