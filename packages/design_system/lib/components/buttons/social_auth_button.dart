@@ -72,12 +72,10 @@ class SocialAuthButton extends StatelessWidget {
         child: InkWell(
           onTap: isLoading ? null : onPressed,
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
+            child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              mainAxisAlignment: showChevron
-                  ? MainAxisAlignment.start
-                  : MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (isLoading)
                   const SizedBox(
@@ -98,13 +96,12 @@ class SocialAuthButton extends StatelessWidget {
                     color: Color(0xFF1677FF),
                     size: 20,
                   ),
-                const SizedBox(width: 12),
-                Expanded(
+                const SizedBox(width: 10),
+                Flexible(
                   child: Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    textAlign: showChevron ? TextAlign.start : TextAlign.center,
                     style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
@@ -113,12 +110,6 @@ class SocialAuthButton extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (showChevron)
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Color(0xFF64748B),
-                    size: 20,
-                  ),
               ],
             ),
           ),

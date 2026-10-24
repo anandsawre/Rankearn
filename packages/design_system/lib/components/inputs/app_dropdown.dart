@@ -241,10 +241,12 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
   late final Animation<double> _chevronAnimation;
   late final Animation<double> _fadeAnimation;
   late final Animation<double> _scaleAnimation;
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 180),
@@ -265,6 +267,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
   void dispose() {
     _closeDropdown(animated: false);
     _animationController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -363,6 +366,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                         child: ClipRRect(
                           borderRadius: effectiveRadius,
                           child: RawScrollbar(
+                            controller: _scrollController,
                             thumbVisibility: true,
                             thickness: 4,
                             radius: const Radius.circular(4),
@@ -370,6 +374,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                               alpha: 0.35,
                             ),
                             child: ListView.separated(
+                              controller: _scrollController,
                               padding: const EdgeInsets.symmetric(vertical: 4),
                               shrinkWrap: true,
                               itemCount: widget.items.length,

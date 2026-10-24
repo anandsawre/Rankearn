@@ -39,11 +39,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   late AuthScreenMode _mode;
 
-  // Form Controllers
+  // Form Controllers & Focus Nodes
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController(text: '9876543210');
   final _emailController = TextEditingController(text: 'vikram.singh@rankearn.in');
   final _passwordController = TextEditingController(text: 'Rankearn2026!');
+  final _phoneFocusNode = FocusNode();
   String? _selectedExamGoal;
 
   bool _obscurePassword = true;
@@ -67,6 +68,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   void initState() {
     super.initState();
     _mode = widget.initialMode;
+    _phoneFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -75,6 +79,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _phoneFocusNode.dispose();
     super.dispose();
   }
 
@@ -660,12 +665,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
+                    padding: const EdgeInsets.fromLTRB(20, 26, 20, 20),
                     child: _buildAuthCard(fillHeight: false, isMobile: true),
                   ),
-
-                  // 3. Bottom 4-Pillar Strip (Learn, Practice, Play, Earn)
-                  _buildMobileBottomPillars(),
                 ],
               ),
             ],
@@ -805,83 +807,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileBottomPillars() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4).withValues(alpha: 0.90),
-        border: const Border(
-          top: BorderSide(color: Color(0xFFE2F8EE), width: 1),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildPillarItem(
-            icon: Icons.menu_book_rounded,
-            color: const Color(0xFF00B96B),
-            title: 'Learn',
-            subtitle: 'Quality Content',
-          ),
-          _buildPillarItem(
-            icon: Icons.track_changes_rounded,
-            color: const Color(0xFF1677FF),
-            title: 'Practice',
-            subtitle: 'Mock Tests',
-          ),
-          _buildPillarItem(
-            icon: Icons.sports_esports_rounded,
-            color: const Color(0xFFF59E0B),
-            title: 'Play',
-            subtitle: 'Quiz & Battles',
-          ),
-          _buildPillarItem(
-            icon: Icons.monetization_on_rounded,
-            color: const Color(0xFF8B5CF6),
-            title: 'Earn',
-            subtitle: 'Rewards & Cash',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPillarItem({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-  }) {
-    return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 5),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF64748B),
-              height: 1.15,
-            ),
           ),
         ],
       ),
@@ -1279,79 +1204,35 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               const SizedBox(height: 8),
             ],
 
-            // Sign Up Fields: Full Name, Mobile Number, Email, Password, Exam Goal
+            // Sign Up Fields: Full Name, Mobile Number, Email, Password, Exam Goal (Single Column Stack)
             if (!isLogin) ...[
-              // Row 1: Full Name & Mobile Number (2-Column Responsive Layout)
-              LayoutBuilder(
-                builder: (context, fieldConstraints) {
-                  final isTwoCol = fieldConstraints.maxWidth > 340;
-                  if (isTwoCol) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildNameFieldSection()),
-                        const SizedBox(width: 10),
-                        Expanded(child: _buildPhoneFieldSection(isLogin: false)),
-                      ],
-                    );
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildNameFieldSection(),
-                      const SizedBox(height: 8),
-                      _buildPhoneFieldSection(isLogin: false),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 6),
-
-              // Row 2: Email Address & Password (2-Column Responsive Layout)
-              LayoutBuilder(
-                builder: (context, fieldConstraints) {
-                  final isTwoCol = fieldConstraints.maxWidth > 340;
-                  if (isTwoCol) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildEmailFieldSection(isLogin: false)),
-                        const SizedBox(width: 10),
-                        Expanded(child: _buildPasswordFieldSection(isLogin: false)),
-                      ],
-                    );
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildEmailFieldSection(isLogin: false),
-                      const SizedBox(height: 6),
-                      _buildPasswordFieldSection(isLogin: false),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 6),
+              if (isMobile) const SizedBox(height: 6),
+              _buildNameFieldSection(),
+              const SizedBox(height: 18),
+              _buildPhoneFieldSection(isLogin: false),
+              const SizedBox(height: 18),
+              _buildEmailFieldSection(isLogin: false),
+              const SizedBox(height: 18),
+              _buildPasswordFieldSection(isLogin: false),
+              const SizedBox(height: 18),
 
               // Class / Exam Goal (Sign Up only)
               AppDropdown<String>.simple(
-                label: 'Class / Exam Goal (Optional)',
                 value: _selectedExamGoal,
-                hint: 'Select your goal',
+                hint: 'Class / Exam Goal (Optional)',
                 prefixIcon: const Icon(Icons.school_outlined, size: 18, color: Color(0xFF00B96B)),
                 items: _examGoals,
                 isDense: true,
                 borderRadius: BorderRadius.circular(10),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8.5),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                hintStyle: const TextStyle(fontSize: 12.5, color: AppColors.textMuted, fontWeight: FontWeight.w500),
-                labelStyle: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
                 fillColor: Colors.white,
                 borderColor: const Color(0xFFE2E8F0),
                 focusedBorderColor: const Color(0xFF00B96B),
                 onChanged: (val) => setState(() => _selectedExamGoal = val),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 14),
 
               // Sign Up Terms Checkbox
               Row(
@@ -1399,16 +1280,17 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
             ],
 
             // Login Mode: Unified Email or Mobile with Password
             if (isLogin) ...[
+              if (isMobile) const SizedBox(height: 6),
               _buildUnifiedLoginField(),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
 
               _buildPasswordFieldSection(isLogin: true),
-              const SizedBox(height: 8),
+              const SizedBox(height: 14),
 
               // Login Extra Row: Keep me logged in (left edge) + Forgot Password? (right edge)
               SizedBox(
@@ -1487,42 +1369,19 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                           height: 18,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : Stack(
-                          alignment: Alignment.center,
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(isLogin ? Icons.login_rounded : Icons.person_add_alt_1_rounded, size: 18),
-                                const SizedBox(width: 8),
-                                Text(
-                                  isLogin ? 'Login' : 'Register',
-                                  style: const TextStyle(
-                                    fontSize: 14.5,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (isMobile)
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: const Icon(
-                                    Icons.chevron_right_rounded,
-                                    color: Color(0xFF00B96B),
-                                    size: 19,
-                                  ),
-                                ),
+                            Icon(isLogin ? Icons.login_rounded : Icons.person_add_alt_1_rounded, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              isLogin ? 'Login' : 'Register',
+                              style: const TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
                               ),
+                            ),
                           ],
                         ),
                 ),
@@ -1597,15 +1456,13 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Social Logins (Google & Phone with right chevron on mobile)
+            // Social Logins (Google & Phone)
             SocialAuthButton.google(
               onPressed: _handleGoogleLogin,
-              showChevron: isMobile,
             ),
             const SizedBox(height: 8),
             SocialAuthButton.phone(
               onPressed: _handlePhoneLogin,
-              showChevron: isMobile,
             ),
 
             // Security Notice Box (Shown on Desktop Card only; removed on Mobile Screen)
@@ -1629,206 +1486,171 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     final text = _emailController.text.trim();
     final isPhoneInput = text.isNotEmpty && RegExp(r'^[+0-9\s\-]+$').hasMatch(text);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          'Email Address or Mobile Number',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      onChanged: (_) => setState(() {}),
+      decoration: InputDecoration(
+        labelText: 'Email Address or Mobile Number',
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
+        prefixIcon: Icon(
+          isPhoneInput ? Icons.phone_android_rounded : Icons.alternate_email_rounded,
+          size: 18,
+          color: const Color(0xFF00B96B),
         ),
-        const SizedBox(height: 4),
-        TextFormField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: 'Enter your email or 10-digit mobile number',
-            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            prefixIcon: Icon(
-              isPhoneInput ? Icons.phone_android_rounded : Icons.alternate_email_rounded,
-              size: 18,
-              color: const Color(0xFF00B96B),
-            ),
-            filled: true,
-            isDense: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-          ),
-          validator: (val) {
-            if (val == null || val.trim().isEmpty) {
-              return 'Please enter your email or mobile number';
-            }
-            final clean = val.trim();
-            final isPhone = RegExp(r'^[+0-9\s\-]+$').hasMatch(clean);
-            if (isPhone) {
-              final digits = clean.replaceAll(RegExp(r'\D'), '');
-              if (digits.length < 10) {
-                return 'Enter a valid 10-digit mobile number';
-              }
-            } else {
-              if (!clean.contains('@') || !clean.contains('.')) {
-                return 'Enter a valid email address';
-              }
-            }
-            return null;
-          },
-        ),
-      ],
+        filled: true,
+        isDense: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
+      ),
+      validator: (val) {
+        if (val == null || val.trim().isEmpty) {
+          return 'Please enter your email or mobile number';
+        }
+        final clean = val.trim();
+        final isPhone = RegExp(r'^[+0-9\s\-]+$').hasMatch(clean);
+        if (isPhone) {
+          final digits = clean.replaceAll(RegExp(r'\D'), '');
+          if (digits.length < 10) {
+            return 'Enter a valid 10-digit mobile number';
+          }
+        } else {
+          if (!clean.contains('@') || !clean.contains('.')) {
+            return 'Enter a valid email address';
+          }
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildEmailFieldSection({required bool isLogin}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          'Email Address',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
-        ),
-        const SizedBox(height: 4),
-        TextFormField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            hintText: isLogin ? 'Enter your email address' : 'Enter your email',
-            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF00B96B)),
-            filled: true,
-            isDense: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-          ),
-          validator: (val) {
-            if (val == null || val.trim().isEmpty) return 'Please enter your email address';
-            if (!val.contains('@') || !val.contains('.')) return 'Please enter a valid email address';
-            return null;
-          },
-        ),
-      ],
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      decoration: InputDecoration(
+        labelText: 'Email Address',
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
+        prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF00B96B)),
+        filled: true,
+        isDense: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
+      ),
+      validator: (val) {
+        if (val == null || val.trim().isEmpty) return 'Please enter your email address';
+        if (!val.contains('@') || !val.contains('.')) return 'Please enter a valid email address';
+        return null;
+      },
     );
   }
 
   Widget _buildPasswordFieldSection({required bool isLogin}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          'Password',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
-        ),
-        const SizedBox(height: 4),
-        TextFormField(
-          controller: _passwordController,
-          obscureText: _obscurePassword,
-          decoration: InputDecoration(
-            hintText: MediaQuery.of(context).size.width >= 990
-                ? (isLogin ? 'Enter your password' : 'Create a password')
-                : (isLogin ? '••••••••••' : 'Create a password'),
-            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF00B96B)),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                size: 18,
-                color: const Color(0xFF94A3B8),
-              ),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-            ),
-            filled: true,
-            isDense: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: _obscurePassword,
+      decoration: InputDecoration(
+        labelText: 'Password',
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
+        prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF00B96B)),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            size: 18,
+            color: const Color(0xFF94A3B8),
           ),
-          validator: (val) {
-            if (val == null || val.trim().isEmpty) return 'Please enter your password';
-            if (val.length < 6) return 'Password must be at least 6 characters';
-            return null;
-          },
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
-      ],
+        filled: true,
+        isDense: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
+      ),
+      validator: (val) {
+        if (val == null || val.trim().isEmpty) return 'Please enter your password';
+        if (val.length < 6) return 'Password must be at least 6 characters';
+        return null;
+      },
     );
   }
 
   Widget _buildNameFieldSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          'Full Name',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
-        ),
-        const SizedBox(height: 4),
-        TextFormField(
-          controller: _nameController,
-          decoration: InputDecoration(
-            hintText: 'Enter your full name',
-            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF00B96B)),
-            filled: true,
-            isDense: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-          ),
-          validator: (val) {
-            if (val == null || val.trim().isEmpty) return 'Please enter your full name';
-            return null;
-          },
-        ),
-      ],
+    return TextFormField(
+      controller: _nameController,
+      decoration: InputDecoration(
+        labelText: 'Full Name',
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
+        prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF00B96B)),
+        filled: true,
+        isDense: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
+      ),
+      validator: (val) {
+        if (val == null || val.trim().isEmpty) return 'Please enter your full name';
+        return null;
+      },
     );
   }
 
   Widget _buildPhoneFieldSection({required bool isLogin}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          'Mobile Number',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
-        ),
-        const SizedBox(height: 4),
-        TextFormField(
-          controller: _phoneController,
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            hintText: 'Enter 10-digit number',
-            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF00B96B)),
-            prefixText: '+91 ',
-            prefixStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
-            filled: true,
-            isDense: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-          ),
-          validator: (val) {
-            if (val == null || val.trim().isEmpty) return 'Please enter your mobile number';
-            final digits = val.replaceAll(RegExp(r'\D'), '');
-            if (digits.length < 10) return 'Enter a valid 10-digit mobile number';
-            return null;
-          },
-        ),
-      ],
+    final showPrefix = _phoneFocusNode.hasFocus || _phoneController.text.isNotEmpty;
+    return TextFormField(
+      controller: _phoneController,
+      focusNode: _phoneFocusNode,
+      keyboardType: TextInputType.phone,
+      decoration: InputDecoration(
+        labelText: 'Mobile Number',
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
+        prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF00B96B)),
+        prefixText: showPrefix ? '+91 ' : null,
+        prefixStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
+        filled: true,
+        isDense: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
+      ),
+      validator: (val) {
+        if (val == null || val.trim().isEmpty) return 'Please enter your mobile number';
+        final digits = val.replaceAll(RegExp(r'\D'), '');
+        if (digits.length < 10) return 'Enter a valid 10-digit mobile number';
+        return null;
+      },
     );
   }
 }

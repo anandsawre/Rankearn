@@ -73,8 +73,6 @@ void main() {
       // 9. Input Form Fields
       expect(find.text('Email Address or Mobile Number'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
-      expect(find.text('Enter your email or 10-digit mobile number'), findsOneWidget);
-      expect(find.text('Enter your password'), findsOneWidget);
       expect(find.text('Keep me logged in'), findsOneWidget);
       expect(find.text('Forgot Password?'), findsOneWidget);
 
@@ -189,15 +187,10 @@ void main() {
 
       // 3. Form Fields
       expect(find.text('Full Name'), findsOneWidget);
-      expect(find.text('Enter your full name'), findsOneWidget);
       expect(find.text('Mobile Number'), findsOneWidget);
-      expect(find.text('Enter 10-digit number'), findsOneWidget);
       expect(find.text('Email Address'), findsOneWidget);
-      expect(find.text('Enter your email'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
-      expect(find.text('Create a password'), findsOneWidget);
       expect(find.text('Class / Exam Goal (Optional)'), findsOneWidget);
-      expect(find.text('Select your goal'), findsOneWidget);
 
       // 5. Terms Checkbox
       expect(find.textContaining('I agree to the'), findsOneWidget);
@@ -216,12 +209,11 @@ void main() {
       await tester.pumpWidget(buildAuthApp(initialMode: AuthScreenMode.login));
       await tester.pumpAndSettle();
 
-      // Unified field is displayed
+      // Unified field is displayed with floating label
       expect(find.text('Email Address or Mobile Number'), findsOneWidget);
-      expect(find.text('Enter your email or 10-digit mobile number'), findsOneWidget);
 
       // Typing mobile number dynamically updates prefix icon
-      final inputFinder = find.widgetWithText(TextFormField, 'Enter your email or 10-digit mobile number');
+      final inputFinder = find.widgetWithText(TextFormField, 'Email Address or Mobile Number');
       await tester.enterText(inputFinder, '9876543210');
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.phone_android_rounded), findsWidgets);
@@ -241,8 +233,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Enter invalid email
-      await tester.enterText(find.widgetWithText(TextFormField, 'Enter your email or 10-digit mobile number'), 'not-an-email');
-      await tester.enterText(find.widgetWithText(TextFormField, 'Enter your password'), '123456');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Email Address or Mobile Number'), 'not-an-email');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Password'), '123456');
 
       // Tap Login
       final loginBtn = find.text('Login');
