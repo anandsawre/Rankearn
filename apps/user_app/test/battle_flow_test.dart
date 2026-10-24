@@ -133,17 +133,9 @@ void main() {
       expect(find.text('D'), findsOneWidget);
       expect(find.text('Lungs'), findsOneWidget);
 
-      // 5. Submit Answer Button
-      expect(find.text('Submit Answer'), findsOneWidget);
-
-      // 6. Interactive Answer Selection
+      // 5. Interactive Answer Selection (Instant submission on tap)
       final skinFinder = find.text('Skin');
       await tester.tap(skinFinder);
-      await tester.pumpAndSettle();
-
-      // Submit the selected answer
-      final submitFinder = find.text('Submit Answer');
-      await tester.tap(submitFinder);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 750));
       await tester.pump(const Duration(milliseconds: 950));

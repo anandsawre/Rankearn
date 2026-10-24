@@ -5,9 +5,8 @@ import 'package:data_layer/data_layer.dart';
 import 'battle_result_screen.dart';
 
 /// Screen Two: Live Arena / Quiz Battle Screen
-/// Direct pixel-accurate match with Reference Image 1.
 /// Features live player vs opponent card with crown, circular timer,
-/// question card, 4 answer options (A, B, C, D), and Submit Answer button.
+/// question card, and 4 answer options (A, B, C, D) with tap submission.
 class LiveArenaScreen extends StatefulWidget {
   final BattleSession initialSession;
   final int userCoins;
@@ -30,17 +29,16 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
   final BattleRepository _repository = BattleRepository();
 
   late BattleSession _session;
-  int _currentRound = 4; // Starts on Round 4 of 5 for direct parity with Reference Image 1
+  int _currentRound = 4; // Starts on Round 4 of 5
   int _playerScore = 10;
   int _opponentScore = 0;
   final List<bool?> _playerRounds = [true, false, true, null, null];
   final List<bool?> _opponentRounds = [false, false, false, null, null];
 
-  int? _selectedOption = 2; // Option C (Skin) pre-selected matching reference image
+  int? _selectedOption;
   bool _isAnswerLocked = false;
-  bool _isSubmitting = false;
 
-  int _turnSeconds = 12; // 12 seconds matching Reference Image 1
+  int _turnSeconds = 12; // 12 seconds
   Timer? _countdownTimer;
   Timer? _submitDelayTimer;
   Timer? _reviewDelayTimer;
@@ -56,7 +54,6 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
     _countdownTimer?.cancel();
     _turnSeconds = 12;
     _isAnswerLocked = false;
-    _isSubmitting = false;
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_turnSeconds > 1) {
@@ -80,6 +77,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
     setState(() {
       _selectedOption = index;
     });
+    _submitCurrentAnswer();
   }
 
   void _submitCurrentAnswer({bool timedOut = false}) {
@@ -88,7 +86,6 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
     _countdownTimer?.cancel();
     setState(() {
       _isAnswerLocked = true;
-      _isSubmitting = true;
     });
 
     final currentQ = _session.currentQuestion;
@@ -102,7 +99,6 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
       if (!mounted) return;
 
       setState(() {
-        _isSubmitting = false;
         if (isCorrect) _playerScore += 10;
         if (opponentCorrect) _opponentScore += 10;
 
@@ -274,16 +270,6 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                             onTap: () => _onOptionSelected(index),
                           );
                         }),
-                        const SizedBox(height: 10),
-
-                        // 4. Submit Answer Primary Button
-                        BattlePrimaryButton(
-                          label: 'Submit Answer',
-                          icon: Icons.send_rounded,
-                          isEnabled: _selectedOption != null && !_isAnswerLocked,
-                          isLoading: _isSubmitting,
-                          onPressed: () => _submitCurrentAnswer(),
-                        ),
                         const SizedBox(height: 16),
                       ],
                     ),
