@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import 'components/profile_hero_card.dart';
+import 'components/profile_stats_grid.dart';
+import 'components/profile_streak_banner.dart';
+import 'components/profile_shortcuts_grid.dart';
+import 'components/profile_premium_banner.dart';
+import 'components/profile_settings_list.dart';
+import 'components/profile_modals.dart';
 
+/// Rankearn Profile Dashboard Tab
+/// Full responsive architecture supporting both Mobile native app experience
+/// and Desktop 1200px dashboard experience.
 class ProfileScreen extends StatefulWidget {
   final UserProfile profile;
   final void Function(UserProfile updatedProfile) onUpdateProfile;
   final VoidCallback onLogout;
   final VoidCallback onOpenSupport;
   final VoidCallback onOpenFeedback;
+  final void Function(UserNavTab tab)? onNavigateToTab;
 
   const ProfileScreen({
     super.key,
@@ -16,6 +27,7 @@ class ProfileScreen extends StatefulWidget {
     required this.onLogout,
     required this.onOpenSupport,
     required this.onOpenFeedback,
+    this.onNavigateToTab,
   });
 
   @override
@@ -25,851 +37,826 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late UserProfile _currentProfile;
 
-  // Controllers for edit modal
-  late final TextEditingController _nameController;
-  late final TextEditingController _phoneController;
-  late final TextEditingController _stateController;
-  late final TextEditingController _examController;
-
   @override
   void initState() {
     super.initState();
     _currentProfile = widget.profile;
-    _nameController = TextEditingController(text: _currentProfile.name);
-    _phoneController = TextEditingController(text: _currentProfile.phone ?? '');
-    _stateController = TextEditingController(text: _currentProfile.state ?? '');
-    _examController = TextEditingController(text: _currentProfile.examPreparingFor ?? '');
   }
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _stateController.dispose();
-    _examController.dispose();
-    super.dispose();
+  void didUpdateWidget(covariant ProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.profile != oldWidget.profile) {
+      _currentProfile = widget.profile;
+    }
   }
 
-  void _openEditProfileDialog() {
-    _nameController.text = _currentProfile.name;
-    _phoneController.text = _currentProfile.phone ?? '';
-    _stateController.text = _currentProfile.state ?? '';
-    _examController.text = _currentProfile.examPreparingFor ?? '';
+  void _handleProfileUpdate(UserProfile updated) {
+    setState(() => _currentProfile = updated);
+    widget.onUpdateProfile(updated);
+  }
 
+  // ---------------------------------------------------------------------------
+  // INTERACTION HANDLERS
+  // ---------------------------------------------------------------------------
+  void _openEditProfile() {
+    ProfileModals.showEditProfile(
+      context: context,
+      profile: _currentProfile,
+      onSave: _handleProfileUpdate,
+    );
+  }
+
+  void _openAvatarPicker() {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Emerald Gradient Header matching React Edit Profile Modal
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF059669), Color(0xFF10B981)],
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Change Profile Photo', style: AppTypography.cardHeading),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: Color(0xFF0F766E),
+                ),
+                title: const Text(
+                  'Take a photo from camera',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Camera opened — avatar updated!'),
                     ),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(50),
-                          borderRadius: AppRadii.borderMd,
-                        ),
-                        child: const Icon(Icons.person, color: Colors.white, size: 24),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'EDIT PROFILE',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            Text(
-                              'Personal details & exam preferences',
-                              style: TextStyle(
-                                color: Colors.white.withAlpha(200),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Form Content
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Avatar Preview with Camera badge
-                      Center(
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundColor: AppColors.primarySubtle,
-                              child: Text(
-                                _nameController.text.isNotEmpty ? _nameController.text[0] : 'U',
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Fields
-                      const Text('Full Name', style: AppTypography.labelLarge),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _nameController,
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.person_outline, color: AppColors.primary),
-                          border: OutlineInputBorder(borderRadius: AppRadii.borderMd),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      const Text('Phone Number', style: AppTypography.labelLarge),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.primary),
-                          border: OutlineInputBorder(borderRadius: AppRadii.borderMd),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('State', style: AppTypography.labelLarge),
-                                const SizedBox(height: 6),
-                                TextField(
-                                  controller: _stateController,
-                                  decoration: InputDecoration(
-                                    prefixIcon: const Icon(Icons.location_on_outlined, color: AppColors.primary),
-                                    border: OutlineInputBorder(borderRadius: AppRadii.borderMd),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Target Exam', style: AppTypography.labelLarge),
-                                const SizedBox(height: 6),
-                                TextField(
-                                  controller: _examController,
-                                  decoration: InputDecoration(
-                                    prefixIcon: const Icon(Icons.shield_outlined, color: AppColors.primary),
-                                    border: OutlineInputBorder(borderRadius: AppRadii.borderMd),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Actions
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppButton(
-                              label: 'Cancel',
-                              variant: AppButtonVariant.secondary,
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 2,
-                            child: AppButton(
-                              label: 'Update Profile',
-                              variant: AppButtonVariant.primary,
-                              onPressed: () {
-                                final updated = _currentProfile.copyWith(
-                                  name: _nameController.text.trim(),
-                                  phone: _phoneController.text.trim(),
-                                  state: _stateController.text.trim(),
-                                  examPreparingFor: _examController.text.trim(),
-                                );
-                                setState(() => _currentProfile = updated);
-                                widget.onUpdateProfile(updated);
-                                Navigator.pop(context);
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Profile updated successfully!'),
-                                    backgroundColor: AppColors.primary,
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _confirmLogout() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w900)),
-          content: const Text('Are you sure you want to sign out from your Rankearn account?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE11D48),
-                foregroundColor: Colors.white,
+                  );
+                },
               ),
-              onPressed: () {
-                Navigator.pop(context);
-                widget.onLogout();
-              },
-              child: const Text('Sign Out'),
-            ),
-          ],
+              ListTile(
+                leading: const Icon(
+                  Icons.photo_library_rounded,
+                  color: Color(0xFF2563EB),
+                ),
+                title: const Text(
+                  'Choose from gallery',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Gallery photo selected!')),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.face_rounded,
+                  color: Color(0xFF7C3AED),
+                ),
+                title: const Text(
+                  'Use Rankearn 3D Avatar (Default)',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: () {
+                  final updated = _currentProfile.copyWith(profilePhotoUrl: '');
+                  _handleProfileUpdate(updated);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isPro = _currentProfile.subscriptionStatus == 'premium';
+  void _openRoleSelector() {
+    ProfileModals.showRoleSelector(
+      context: context,
+      profile: _currentProfile,
+      onSave: _handleProfileUpdate,
+    );
+  }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.pagePaddingMobile),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Master Profile Header Card matching React Profile.tsx:298-345
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                // Top User Section
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  color: AppColors.canvasDark.withAlpha(120),
-                  child: Row(
-                    children: [
-                      // Avatar with Camera edit button
-                      Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 36,
-                            backgroundColor: AppColors.primary,
-                            child: Text(
-                              _currentProfile.name.isNotEmpty ? _currentProfile.name[0] : 'U',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: InkWell(
-                              onTap: _openEditProfileDialog,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
-                                ),
-                                child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 16),
-
-                      // User Info Stack
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    _currentProfile.name,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                if (isPro)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFEF3C7),
-                                      border: Border.all(color: const Color(0xFFFDE68A)),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: const [
-                                        Icon(Icons.star, color: Color(0xFFD97706), size: 12),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'PRO',
-                                          style: TextStyle(
-                                            color: Color(0xFFB45309),
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            // Target Exam Badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.primarySubtle,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.primary.withAlpha(60)),
-                              ),
-                              child: Text(
-                                _currentProfile.examPreparingFor ?? '70th BPSC Aspirant',
-                                style: const TextStyle(
-                                  color: AppColors.primaryDark,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: const [
-                                Icon(Icons.calendar_today, size: 12, color: Color(0xFF3B82F6)),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Joined Oct 2026',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1, color: AppColors.border),
-
-                // Performance Summary Quick Stats
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                  child: Row(
-                    children: [
-                      _buildPerformanceStat('Tests Taken', '18', Icons.quiz),
-                      _buildPerformanceStat('Avg Score', '78%', Icons.analytics),
-                      _buildPerformanceStat('Rank', '#14', Icons.military_tech),
-                      _buildPerformanceStat('Won Coins', '${_currentProfile.coins}', Icons.monetization_on),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+  void _showRankDetails() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          const SizedBox(height: 16),
-
-          // 2. PRO Pass Upgrade Card (Matching React Subscription.tsx)
-          _buildProPassCard(isPro),
-          const SizedBox(height: 16),
-
-          // 3. Account Details Section Card
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                // Header with Edit Pencil Button
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFEFF6FF),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.person, color: Color(0xFF3B82F6), size: 18),
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Account Details',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.edit, color: Colors.white, size: 14),
-                        ),
-                        onPressed: _openEditProfileDialog,
-                        tooltip: 'Edit Profile',
-                      ),
-                    ],
-                  ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFEFF6FF),
                 ),
-                const Divider(height: 1, color: AppColors.border),
-
-                // Section Rows
-                _buildAccountDetailRow(
-                  icon: Icons.mail_outline,
-                  iconColor: const Color(0xFF2563EB),
-                  iconBg: const Color(0xFFEFF6FF),
-                  label: 'EMAIL ADDRESS',
-                  value: _currentProfile.email,
+                child: const Icon(
+                  Icons.military_tech_rounded,
+                  color: Color(0xFF1D4ED8),
+                  size: 32,
                 ),
-                const Divider(height: 1, color: AppColors.border),
-                _buildAccountDetailRow(
-                  icon: Icons.phone_outlined,
-                  iconColor: const Color(0xFF059669),
-                  iconBg: const Color(0xFFECFDF5),
-                  label: 'PHONE NUMBER',
-                  value: _currentProfile.phone ?? '+91 98765 43210',
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                _buildAccountDetailRow(
-                  icon: Icons.location_on_outlined,
-                  iconColor: const Color(0xFF4F46E5),
-                  iconBg: const Color(0xFFEEF2FF),
-                  label: 'STATE',
-                  value: _currentProfile.state ?? 'Bihar, India',
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                _buildAccountDetailRow(
-                  icon: Icons.shield_outlined,
-                  iconColor: const Color(0xFF7C3AED),
-                  iconBg: const Color(0xFFF5F3FF),
-                  label: 'SUBSCRIPTION PLAN',
-                  value: isPro ? 'PRO Member (Active Pass)' : 'Free Plan (Basic)',
-                ),
-                const Divider(height: 1, color: AppColors.border),
-
-                // Sign Out Row
-                InkWell(
-                  onTap: _confirmLogout,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFE4E6),
-                            borderRadius: AppRadii.borderMd,
-                          ),
-                          child: const Icon(Icons.logout, color: Color(0xFFE11D48), size: 18),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                'SESSION',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFFE11D48),
-                                ),
-                              ),
-                              Text(
-                                'Sign Out from Account',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFFE11D48),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.chevron_right, color: Color(0xFFFDA4AF)),
-                      ],
+              ),
+              const SizedBox(height: 12),
+              Text('All-India Rank #1256', style: AppTypography.sectionHeading),
+              const SizedBox(height: 6),
+              Text(
+                'Top 5% of all active test aspirants in India. Earn 744 more points to unlock Rank #1000 and enter the Elite League!',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E3A8A),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 4. Help & Support Card
-          AppCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _buildNavRow(
-                  icon: Icons.chat_bubble_outline,
-                  title: 'Support Chat',
-                  subtitle: 'Get quick help with tests and wallet',
-                  onTap: widget.onOpenSupport,
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                _buildNavRow(
-                  icon: Icons.star_outline,
-                  title: 'Give Feedback',
-                  subtitle: 'Share your thoughts and suggestions',
-                  onTap: widget.onOpenFeedback,
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                _buildNavRow(
-                  icon: Icons.policy_outlined,
-                  title: 'Privacy Policy & Terms',
-                  subtitle: 'Read our platform terms and safety policies',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Opening Platform Legal Terms & Policy...')),
-                    );
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    widget.onNavigateToTab?.call(UserNavTab.tests);
                   },
+                  child: const Text(
+                    'Take Tests to Boost Rank',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildPerformanceStat(String label, String value, IconData icon) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
-            ),
+  void _showStreakDetails() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🔥', style: TextStyle(fontSize: 42)),
+              const SizedBox(height: 10),
+              Text(
+                '7 Days Active Streak!',
+                style: AppTypography.sectionHeading,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Amazing dedication! You have practiced every day this week. Complete Saturday and Sunday quizzes to claim the Weekly 50-Coin Streak Bonus!',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium,
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    widget.onNavigateToTab?.call(UserNavTab.tests);
+                  },
+                  child: const Text(
+                    'Practice Today\'s Quiz',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildProPassCard(bool isPro) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: AppRadii.borderLg,
-        border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  void _showProgress() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B),
-                      borderRadius: AppRadii.borderSm,
-                    ),
-                    child: const Icon(Icons.bolt, color: Colors.white, size: 20),
+                  Text(
+                    'My Learning Progress',
+                    style: AppTypography.sectionHeading,
                   ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Rankearn PRO Pass',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF92400E),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
                   ),
                 ],
               ),
-              if (isPro)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'ACTIVE (28 DAYS)',
-                    style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
-                  ),
-                )
-              else
-                const Text(
-                  '₹250 / Month',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFFB45309),
-                  ),
-                ),
+              const SizedBox(height: 14),
+              _buildMetricTile(
+                title: 'Tests Attempted',
+                value: '28 Tests',
+                icon: Icons.feed_rounded,
+                color: const Color(0xFF10B981),
+              ),
+              _buildMetricTile(
+                title: 'Average Accuracy',
+                value: '78%',
+                icon: Icons.track_changes_rounded,
+                color: const Color(0xFFF43F5E),
+              ),
+              _buildMetricTile(
+                title: '1v1 Battle Win Rate',
+                value: '64%',
+                icon: Icons.sports_kabaddi_rounded,
+                color: const Color(0xFF0284C7),
+              ),
+              _buildMetricTile(
+                title: 'Total Study Time',
+                value: '34 Hours',
+                icon: Icons.timer_rounded,
+                color: const Color(0xFF8B5CF6),
+              ),
             ],
           ),
-          const SizedBox(height: 10),
-          const Text(
-            '• Unlimited Full Mock Tests for all State & Central Exams\n• 50% Flat Entry Discount on Daily Paid Tournaments\n• PRO Golden Badge on Profile & All-India Leaderboard',
-            style: TextStyle(
-              fontSize: 11,
-              color: Color(0xFF78350F),
-              height: 1.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (!isPro)
-            AppButton(
-              label: 'Upgrade to PRO (5,000 Coins) →',
-              variant: AppButtonVariant.primary,
-              fullWidth: true,
-              onPressed: () {
-                if (_currentProfile.coins < 5000) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('You need 5,000 Coins to activate PRO Pass. Top up your wallet first.'),
-                      backgroundColor: Color(0xFFE11D48),
-                    ),
-                  );
-                  return;
-                }
-                final updated = _currentProfile.copyWith(
-                  coins: _currentProfile.coins - 5000,
-                  subscriptionStatus: 'premium',
-                );
-                setState(() => _currentProfile = updated);
-                widget.onUpdateProfile(updated);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Congratulations! Welcome to Rankearn PRO 🎉'),
-                    backgroundColor: AppColors.primary,
-                    duration: Duration(seconds: 3),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildAccountDetailRow({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBg,
-    required String label,
+  void _showAchievements() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final badges = [
+          ('Quiz Master', 'Scored 90%+ in 5 consecutive tests', '🏆', true),
+          (
+            'Streak Champion',
+            'Completed 7-day daily learning streak',
+            '🔥',
+            true,
+          ),
+          ('1v1 Gladiator', 'Won 10 arena battles against peers', '⚔️', true),
+          ('Fast Solver', 'Answered all questions in under 30s', '⚡', true),
+          (
+            'PRO Gold Member',
+            'Active premium subscription tier',
+            '👑',
+            _currentProfile.isPro,
+          ),
+        ];
+
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'My Achievements & Badges',
+                    style: AppTypography.sectionHeading,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...badges.map(
+                (b) => ListTile(
+                  leading: Text(b.$3, style: AppTypography.displayMedium),
+                  title: Text(b.$1, style: AppTypography.titleSmall),
+                  subtitle: Text(b.$2, style: AppTypography.metricLabel),
+                  trailing: Icon(
+                    b.$4
+                        ? Icons.check_circle_rounded
+                        : Icons.lock_outline_rounded,
+                    color: b.$4
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDownloads() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFECFDF5),
+                ),
+                child: const Icon(
+                  Icons.download_done_rounded,
+                  color: Color(0xFF059669),
+                  size: 30,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Downloaded Tests & Notes',
+                style: AppTypography.sectionHeading,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '3 full-length mock tests and 14 quick revision notes available offline.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium,
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    widget.onNavigateToTab?.call(UserNavTab.tests);
+                  },
+                  child: const Text(
+                    'Open Offline Tests',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showWishlist() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFFFE4E6),
+                ),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  color: Color(0xFFE11D48),
+                  size: 30,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Saved Tests (Wishlist)',
+                style: AppTypography.sectionHeading,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'You have 5 bookmarked test series saved to practice later.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium,
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE11D48),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    widget.onNavigateToTab?.call(UserNavTab.tests);
+                  },
+                  child: const Text(
+                    'Browse Saved Tests',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showUpgradePass() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('👑', style: TextStyle(fontSize: 44)),
+              const SizedBox(height: 10),
+              Text(
+                'Upgrade to Rankearn PRO',
+                style: AppTypography.sectionHeading,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '• Unlimited Mock Tests & Solution Analytics\n• Free Entry to Weekly Paid Battle Tournaments\n• Gold VIP Crown Badge on Leaderboard\n• Priority 24/7 Expert Doubt Support',
+                style: AppTypography.bodyMedium.copyWith(height: 1.6),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF59E0B),
+                    foregroundColor: const Color(0xFF0F172A),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    final updated = _currentProfile.copyWith(
+                      subscriptionStatus: 'premium',
+                    );
+                    _handleProfileUpdate(updated);
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          '🎉 Congratulations! You are now a PRO Gold Member!',
+                        ),
+                        backgroundColor: Color(0xFFF59E0B),
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Activate PRO (5,000 Coins) →',
+                    style: AppTypography.buttonText.copyWith(
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMetricTile({
+    required String title,
     required String value,
+    required IconData icon,
+    required Color color,
   }) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: AppRadii.borderMd,
+              color: color.withAlpha(30),
+              shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 20),
+            child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.chevron_right, color: AppColors.border),
+          Expanded(child: Text(title, style: AppTypography.titleSmall)),
+          Text(value, style: AppTypography.metricValue),
         ],
       ),
     );
   }
 
-  Widget _buildNavRow({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.canvasDark,
-                borderRadius: AppRadii.borderMd,
-              ),
-              child: Icon(icon, color: AppColors.textSecondary, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
+  // ---------------------------------------------------------------------------
+  // MAIN BUILD
+  // ---------------------------------------------------------------------------
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 960;
+        final hPadding = isDesktop ? 24.0 : 16.0;
+
+        if (isDesktop) {
+          // Desktop: 2-Column Dashboard Layout
+          // Left: Hero Section, Statistics, Streak, Shortcuts, Premium
+          // Right: Account & Settings, Legal & About, Logout
+          return SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // LEFT COLUMN (Starts with Hero Section)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 1. Profile Hero Card (Iridescent mesh gradient + Student Avatar + Rank Card)
+                      ProfileHeroCard(
+                        profile: _currentProfile,
+                        onEditProfile: _openEditProfile,
+                        onChangeAvatar: _openAvatarPicker,
+                        onSelectRole: _openRoleSelector,
+                        onRankTap: _showRankDetails,
+                        isDesktop: true,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 2. Statistics Grid (Coins, Tests, Average Score, Badges)
+                      ProfileStatsGrid(
+                        coins: _currentProfile.coins,
+                        testsAttempted: 28,
+                        averageScore: 78,
+                        badgesEarned: _currentProfile.badges.isNotEmpty
+                            ? _currentProfile.badges.length
+                            : 12,
+                        onCoinsTap: () =>
+                            widget.onNavigateToTab?.call(UserNavTab.wallet),
+                        onTestsTap: () =>
+                            widget.onNavigateToTab?.call(UserNavTab.tests),
+                        onScoreTap: _showProgress,
+                        onBadgesTap: _showAchievements,
+                        isDesktop: true,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 3. Daily Streak Banner (Deep Navy + Flame + Weekday Indicators)
+                      ProfileStreakBanner(
+                        streakDays: 7,
+                        completedDays: 5,
+                        onTap: _showStreakDetails,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 4. Six Shortcut Cards (Edit, Progress, Achievements, History, Downloads, Wishlist)
+                      ProfileShortcutsGrid(
+                        onEditProfile: _openEditProfile,
+                        onMyProgress: _showProgress,
+                        onMyAchievements: _showAchievements,
+                        onTestHistory: () =>
+                            widget.onNavigateToTab?.call(UserNavTab.tests),
+                        onDownloads: _showDownloads,
+                        onMyWishlist: _showWishlist,
+                        isDesktop: true,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 5. Premium Upgrade Banner (Soft Gold Gradient + Crown Illustration)
+                      ProfilePremiumBanner(
+                        isPro: _currentProfile.isPro,
+                        onUpgrade: _showUpgradePass,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                   ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: 24),
+
+                // RIGHT COLUMN (Directly to the right of Hero Section)
+                SizedBox(
+                  width: constraints.maxWidth > 1250 ? 440 : 380,
+                  child: ProfileSettingsList(
+                    onPersonalInformation: _openEditProfile,
+                    onNotificationSettings: () =>
+                        ProfileModals.showNotificationSettings(
+                          context: context,
+                        ),
+                    onAppSettings: () =>
+                        ProfileModals.showAppSettings(context: context),
+                    onHelpSupport: widget.onOpenSupport,
+                    onInviteFriends: () => ProfileModals.showInviteFriends(
+                      context: context,
+                      referralCode: _currentProfile.referralCode ?? 'RANK100',
                     ),
+                    onTermsConditions: () => ProfileModals.showInfoModal(
+                      context: context,
+                      title: 'Terms & Conditions',
+                      content:
+                          'Welcome to Rankearn. By accessing our platform, test series, 1v1 battle arena, and coin rewards, you agree to abide by our code of conduct, fair-play policies, and academic integrity standards.',
+                    ),
+                    onPrivacyPolicy: () => ProfileModals.showInfoModal(
+                      context: context,
+                      title: 'Privacy Policy',
+                      content:
+                          'Rankearn is committed to safeguarding your privacy. Your personal information, phone number, and performance statistics are encrypted and securely stored. We never sell your personal data to third parties.',
+                    ),
+                    onAboutRankearn: () => ProfileModals.showInfoModal(
+                      context: context,
+                      title: 'About Rankearn',
+                      content:
+                          'Rankearn is India\'s premier competitive learning platform where students learn, practice with high-yield test series, and earn rewards for academic excellence.',
+                    ),
+                    onLogout: widget.onLogout,
+                    appVersion: 'v1.0.0',
+                    isDesktop: true,
+                    isSidebar: true,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Icon(Icons.chevron_right, color: AppColors.border),
-          ],
-        ),
-      ),
+          );
+        }
+
+        // Mobile / Tablet: Stack vertically
+        return SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Profile Hero Card (Iridescent mesh gradient + Student Avatar + Rank Card)
+              ProfileHeroCard(
+                profile: _currentProfile,
+                onEditProfile: _openEditProfile,
+                onChangeAvatar: _openAvatarPicker,
+                onSelectRole: _openRoleSelector,
+                onRankTap: _showRankDetails,
+                isDesktop: false,
+              ),
+              const SizedBox(height: 16),
+
+              // 2. Statistics Grid (Coins, Tests, Average Score, Badges)
+              ProfileStatsGrid(
+                coins: _currentProfile.coins,
+                testsAttempted: 28,
+                averageScore: 78,
+                badgesEarned: _currentProfile.badges.isNotEmpty
+                    ? _currentProfile.badges.length
+                    : 12,
+                onCoinsTap: () =>
+                    widget.onNavigateToTab?.call(UserNavTab.wallet),
+                onTestsTap: () =>
+                    widget.onNavigateToTab?.call(UserNavTab.tests),
+                onScoreTap: _showProgress,
+                onBadgesTap: _showAchievements,
+                isDesktop: false,
+              ),
+              const SizedBox(height: 16),
+
+              // 3. Daily Streak Banner (Deep Navy + Flame + Weekday Indicators)
+              ProfileStreakBanner(
+                streakDays: 7,
+                completedDays: 5,
+                onTap: _showStreakDetails,
+              ),
+              const SizedBox(height: 16),
+
+              // 4. Six Shortcut Cards (Edit, Progress, Achievements, History, Downloads, Wishlist)
+              ProfileShortcutsGrid(
+                onEditProfile: _openEditProfile,
+                onMyProgress: _showProgress,
+                onMyAchievements: _showAchievements,
+                onTestHistory: () =>
+                    widget.onNavigateToTab?.call(UserNavTab.tests),
+                onDownloads: _showDownloads,
+                onMyWishlist: _showWishlist,
+                isDesktop: false,
+              ),
+              const SizedBox(height: 16),
+
+              // 5. Premium Upgrade Banner (Soft Gold Gradient + Crown Illustration)
+              ProfilePremiumBanner(
+                isPro: _currentProfile.isPro,
+                onUpgrade: _showUpgradePass,
+              ),
+              const SizedBox(height: 22),
+
+              // 6. Account & Settings + Legal & About + Pink Logout Button
+              ProfileSettingsList(
+                onPersonalInformation: _openEditProfile,
+                onNotificationSettings: () =>
+                    ProfileModals.showNotificationSettings(context: context),
+                onAppSettings: () =>
+                    ProfileModals.showAppSettings(context: context),
+                onHelpSupport: widget.onOpenSupport,
+                onInviteFriends: () => ProfileModals.showInviteFriends(
+                  context: context,
+                  referralCode: _currentProfile.referralCode ?? 'RANK100',
+                ),
+                onTermsConditions: () => ProfileModals.showInfoModal(
+                  context: context,
+                  title: 'Terms & Conditions',
+                  content:
+                      'Welcome to Rankearn. By accessing our platform, test series, 1v1 battle arena, and coin rewards, you agree to abide by our code of conduct, fair-play policies, and academic integrity standards.',
+                ),
+                onPrivacyPolicy: () => ProfileModals.showInfoModal(
+                  context: context,
+                  title: 'Privacy Policy',
+                  content:
+                      'Rankearn is committed to safeguarding your privacy. Your personal information, phone number, and performance statistics are encrypted and securely stored. We never sell your personal data to third parties.',
+                ),
+                onAboutRankearn: () => ProfileModals.showInfoModal(
+                  context: context,
+                  title: 'About Rankearn',
+                  content:
+                      'Rankearn is India\'s premier competitive learning platform where students learn, practice with high-yield test series, and earn rewards for academic excellence.',
+                ),
+                onLogout: widget.onLogout,
+                appVersion: 'v1.0.0',
+                isDesktop: false,
+                isSidebar: false,
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
     );
   }
 }

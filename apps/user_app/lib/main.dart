@@ -582,6 +582,7 @@ class _UserAppShellState extends State<UserAppShell> {
             onLogout: _handleLogout,
             onOpenSupport: _openSupportDialog,
             onOpenFeedback: _openFeedbackDialog,
+            onNavigateToTab: (tab) => setState(() => _activeTab = tab),
           ),
       },
       ),
