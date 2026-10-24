@@ -54,7 +54,10 @@ class DailyStreakCard extends StatelessWidget {
                       gradient: const RadialGradient(
                         colors: [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
                       ),
-                      border: Border.all(color: const Color(0xFFFED7AA), width: 1.5),
+                      border: Border.all(
+                        color: const Color(0xFFFED7AA),
+                        width: 1.5,
+                      ),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x15F97316),
@@ -119,7 +122,9 @@ class DailyStreakCard extends StatelessWidget {
                             shape: BoxShape.circle,
                             color: isCompleted
                                 ? const Color(0xFF10B981) // Vibrant Brand Green
-                                : const Color(0xFFE2E8F0), // Inactive light grey
+                                : const Color(
+                                    0xFFE2E8F0,
+                                  ), // Inactive light grey
                             boxShadow: isCompleted
                                 ? const [
                                     BoxShadow(
@@ -147,8 +152,12 @@ class DailyStreakCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 10,
-                            fontWeight: isCompleted ? FontWeight.w700 : FontWeight.w500,
-                            color: isCompleted ? AppColors.textPrimary : AppColors.textMuted,
+                            fontWeight: isCompleted
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isCompleted
+                                ? AppColors.textPrimary
+                                : AppColors.textMuted,
                           ),
                         ),
                       ],

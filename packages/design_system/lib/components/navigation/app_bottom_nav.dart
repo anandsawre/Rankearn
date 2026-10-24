@@ -9,34 +9,48 @@ enum UserNavTab {
   battle,
   rewards,
   profile,
-  // Backward compatibility aliases
+  // Backward compatibility aliases & new routes
   earn,
   spin,
   wallet,
+  leaderboard,
+  categories,
 }
 
 /// Rankearn Mobile Bottom Navigation Bar (6 Tabs)
-/// Direct parity with the Rankearn Home Dashboard reference design.
+/// Supports standard dashboard navigation and leaderboard context navigation
 class AppBottomNav extends StatelessWidget {
   final UserNavTab currentTab;
   final ValueChanged<UserNavTab> onTabSelected;
+  final List<(UserNavTab, IconData, String)>? customItems;
 
   const AppBottomNav({
     super.key,
     required this.currentTab,
     required this.onTabSelected,
+    this.customItems,
   });
 
   bool _isSelected(UserNavTab tab) {
-    if (currentTab == tab) return true;
-    if (tab == UserNavTab.live && currentTab == UserNavTab.earn) return true;
-    if (tab == UserNavTab.rewards && (currentTab == UserNavTab.spin || currentTab == UserNavTab.wallet)) return true;
+    if (currentTab == tab) {
+      return true;
+    }
+    if (tab == UserNavTab.live && currentTab == UserNavTab.earn) {
+      return true;
+    }
+    if (tab == UserNavTab.rewards &&
+        (currentTab == UserNavTab.spin || currentTab == UserNavTab.wallet)) {
+      return true;
+    }
+    if (tab == UserNavTab.tests && currentTab == UserNavTab.categories) {
+      return true;
+    }
     return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    final items = [
+    final defaultDashboardItems = [
       (UserNavTab.home, Icons.home_rounded, 'Home'),
       (UserNavTab.tests, Icons.feed_outlined, 'Tests'),
       (UserNavTab.live, Icons.sensors_rounded, 'Live'),
@@ -44,6 +58,21 @@ class AppBottomNav extends StatelessWidget {
       (UserNavTab.rewards, Icons.card_giftcard_rounded, 'Rewards'),
       (UserNavTab.profile, Icons.person_outline_rounded, 'Profile'),
     ];
+
+    final leaderboardItems = [
+      (UserNavTab.home, Icons.home_rounded, 'Home'),
+      (UserNavTab.categories, Icons.grid_view_rounded, 'Categories'),
+      (UserNavTab.tests, Icons.feed_outlined, 'Tests'),
+      (UserNavTab.live, Icons.sensors_rounded, 'Live'),
+      (UserNavTab.leaderboard, Icons.emoji_events_rounded, 'Leaderboard'),
+      (UserNavTab.rewards, Icons.card_giftcard_rounded, 'Rewards'),
+    ];
+
+    final items =
+        customItems ??
+        (currentTab == UserNavTab.leaderboard
+            ? leaderboardItems
+            : defaultDashboardItems);
 
     return Container(
       height: 68,
@@ -79,7 +108,10 @@ class AppBottomNav extends StatelessWidget {
                   children: [
                     if (isSelected)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE6F8EF),
                           borderRadius: AppRadii.borderPill,
@@ -97,7 +129,9 @@ class AppBottomNav extends StatelessWidget {
                       style: TextStyle(
                         color: isSelected ? activeColor : inactiveColor,
                         fontSize: 11,
-                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
                       ),
                     ),
                   ],

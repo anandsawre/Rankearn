@@ -66,7 +66,10 @@ class BattleVersusCard extends StatelessWidget {
               children: [
                 // 3D VS Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFFFFA000), Color(0xFFFF6F00)],
@@ -188,7 +191,9 @@ class BattleVersusCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
           decoration: BoxDecoration(
-            color: isCurrentUser ? const Color(0xFFD1FAE5) : const Color(0xFFFFE4E6),
+            color: isCurrentUser
+                ? const Color(0xFFD1FAE5)
+                : const Color(0xFFFFE4E6),
             borderRadius: AppRadii.borderPill,
           ),
           child: Row(
@@ -196,14 +201,18 @@ class BattleVersusCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.star_rounded,
-                color: isCurrentUser ? const Color(0xFF059669) : const Color(0xFFE11D48),
+                color: isCurrentUser
+                    ? const Color(0xFF059669)
+                    : const Color(0xFFE11D48),
                 size: 14,
               ),
               const SizedBox(width: 4),
               Text(
                 '$score pts',
                 style: TextStyle(
-                  color: isCurrentUser ? const Color(0xFF065F46) : const Color(0xFF9F1239),
+                  color: isCurrentUser
+                      ? const Color(0xFF065F46)
+                      : const Color(0xFF9F1239),
                   fontWeight: FontWeight.w900,
                   fontSize: 12,
                   fontFamily: 'Inter',
@@ -244,9 +253,14 @@ class BattleVersusCard extends StatelessWidget {
   }
 
   Widget _buildCircularTimerRing() {
-    final progress = (remainingSeconds / math.max(1, totalTurnSeconds)).clamp(0.0, 1.0);
+    final progress = (remainingSeconds / math.max(1, totalTurnSeconds)).clamp(
+      0.0,
+      1.0,
+    );
     final isLowTime = remainingSeconds <= 4;
-    final ringColor = isLowTime ? const Color(0xFFEF4444) : const Color(0xFF00C975);
+    final ringColor = isLowTime
+        ? const Color(0xFFEF4444)
+        : const Color(0xFF00C975);
 
     return Container(
       width: 58,
@@ -301,4 +315,3 @@ class BattleVersusCard extends StatelessWidget {
     );
   }
 }
-

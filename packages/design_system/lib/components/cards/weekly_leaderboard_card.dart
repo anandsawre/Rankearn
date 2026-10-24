@@ -46,7 +46,8 @@ class LeaderboardRow extends StatelessWidget {
         rankTextColor = const Color(0xFF64748B);
     }
 
-    final letter = initial ?? (name.isNotEmpty ? name.trim()[0].toUpperCase() : '?');
+    final letter =
+        initial ?? (name.isNotEmpty ? name.trim()[0].toUpperCase() : '?');
 
     return Material(
       color: Colors.transparent,
@@ -158,9 +159,9 @@ class LeaderboardRow extends StatelessWidget {
 
   String _formatCoins(int count) {
     return count.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        );
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]},',
+    );
   }
 }
 
@@ -259,10 +260,7 @@ class WeeklyLeaderboardCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x06000000),
@@ -315,7 +313,10 @@ class WeeklyLeaderboardCard extends StatelessWidget {
                       onTap: onViewAll,
                       borderRadius: BorderRadius.circular(6),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: const [
@@ -341,11 +342,7 @@ class WeeklyLeaderboardCard extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(
-            height: 1,
-            thickness: 0.8,
-            color: Color(0xFFF1F5F9),
-          ),
+          const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
 
           // User list rows & dividers
           for (int i = 0; i < topUsers.length; i++) ...[

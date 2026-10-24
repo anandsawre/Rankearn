@@ -58,10 +58,7 @@ class SocialAuthButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0610194F),
@@ -78,7 +75,9 @@ class SocialAuthButton extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              mainAxisAlignment: showChevron ? MainAxisAlignment.start : MainAxisAlignment.center,
+              mainAxisAlignment: showChevron
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 if (isLoading)
                   const SizedBox(
@@ -86,7 +85,9 @@ class SocialAuthButton extends StatelessWidget {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10194F)),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFF10194F),
+                      ),
                     ),
                   )
                 else if (isGoogle)

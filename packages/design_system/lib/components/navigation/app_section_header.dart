@@ -58,7 +58,8 @@ class AppSectionHeader extends StatelessWidget {
               Flexible(
                 child: Text(
                   title,
-                  style: titleStyle ??
+                  style:
+                      titleStyle ??
                       const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,

@@ -101,7 +101,9 @@ class QuickActionsCard extends StatelessWidget {
           : const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: isCompact ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
+        mainAxisAlignment: isCompact
+            ? MainAxisAlignment.spaceBetween
+            : MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           // ── Header ──
@@ -176,7 +178,8 @@ class QuickActionsCard extends StatelessWidget {
           // ── Action Tiles ──
           Builder(
             builder: (context) {
-              final isSmall = MediaQuery.sizeOf(context).width < smallBreakpoint;
+              final isSmall =
+                  MediaQuery.sizeOf(context).width < smallBreakpoint;
 
               final tiles = actions
                   .map((a) => _QuickActionTile(data: a, compact: isCompact))
@@ -187,10 +190,15 @@ class QuickActionsCard extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: tiles
-                        .map((t) => Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: SizedBox(width: isCompact ? 72 : 80, child: t),
-                            ))
+                        .map(
+                          (t) => Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: SizedBox(
+                              width: isCompact ? 72 : 80,
+                              child: t,
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                 );
@@ -199,12 +207,16 @@ class QuickActionsCard extends StatelessWidget {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: tiles
-                    .map((t) => Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: isCompact ? 2.5 : 4),
-                            child: t,
+                    .map(
+                      (t) => Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isCompact ? 2.5 : 4,
                           ),
-                        ))
+                          child: t,
+                        ),
+                      ),
+                    )
                     .toList(),
               );
             },
@@ -250,7 +262,9 @@ class _QuickActionTileState extends State<_QuickActionTile> {
               ? const EdgeInsets.symmetric(vertical: 4, horizontal: 2)
               : const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
           decoration: BoxDecoration(
-            color: _hovering ? d.cardColor : d.cardColor.withValues(alpha: 0.55),
+            color: _hovering
+                ? d.cardColor
+                : d.cardColor.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(compact ? 10 : 14),
             border: Border.all(
               color: _hovering
@@ -282,7 +296,9 @@ class _QuickActionTileState extends State<_QuickActionTile> {
                   borderRadius: BorderRadius.circular(compact ? 9 : 12),
                   boxShadow: [
                     BoxShadow(
-                      color: d.iconColor.withValues(alpha: _hovering ? 0.35 : 0.20),
+                      color: d.iconColor.withValues(
+                        alpha: _hovering ? 0.35 : 0.20,
+                      ),
                       blurRadius: _hovering ? 8 : 5,
                       offset: const Offset(0, 2),
                     ),

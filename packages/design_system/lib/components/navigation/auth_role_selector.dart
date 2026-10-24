@@ -22,12 +22,11 @@ class AuthRoleSelector extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9), // Light neutral background matching reference
+        color: const Color(
+          0xFFF1F5F9,
+        ), // Light neutral background matching reference
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
       ),
       child: Row(
         children: [
@@ -91,7 +90,9 @@ class AuthRoleSelector extends StatelessWidget {
               Icon(
                 icon,
                 size: 16,
-                color: isSelected ? const Color(0xFF008C52) : const Color(0xFF64748B),
+                color: isSelected
+                    ? const Color(0xFF008C52)
+                    : const Color(0xFF64748B),
               ),
               const SizedBox(width: 5),
               Flexible(
@@ -100,7 +101,9 @@ class AuthRoleSelector extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? const Color(0xFF008C52) : const Color(0xFF64748B),
+                    color: isSelected
+                        ? const Color(0xFF008C52)
+                        : const Color(0xFF64748B),
                     letterSpacing: -0.2,
                   ),
                   maxLines: 1,

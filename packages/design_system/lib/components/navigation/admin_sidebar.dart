@@ -84,12 +84,20 @@ class AdminSidebar extends StatelessWidget {
                   onTap: () => onTabSelected(item.$1),
                   borderRadius: AppRadii.borderMd,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.brandPrimaryLight : Colors.transparent,
+                      color: isSelected
+                          ? AppColors.brandPrimaryLight
+                          : Colors.transparent,
                       borderRadius: AppRadii.borderMd,
                       border: isSelected
-                          ? Border.all(color: AppColors.brandPrimary.withAlpha(80), width: 1)
+                          ? Border.all(
+                              color: AppColors.brandPrimary.withAlpha(80),
+                              width: 1,
+                            )
                           : null,
                     ),
                     child: Row(
@@ -97,7 +105,9 @@ class AdminSidebar extends StatelessWidget {
                         Icon(
                           item.$2,
                           size: 20,
-                          color: isSelected ? AppColors.brandPrimary : AppColors.textSecondary,
+                          color: isSelected
+                              ? AppColors.brandPrimary
+                              : AppColors.textSecondary,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -107,8 +117,12 @@ class AdminSidebar extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.titleSmall.copyWith(
                               fontSize: 13,
-                              color: isSelected ? AppColors.brandPrimaryDark : AppColors.textPrimary,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                              color: isSelected
+                                  ? AppColors.brandPrimaryDark
+                                  : AppColors.textPrimary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w500,
                             ),
                           ),
                         ),
@@ -127,7 +141,10 @@ class AdminSidebar extends StatelessWidget {
                 onTap: onLogout,
                 borderRadius: AppRadii.borderMd,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   child: const Row(
                     children: [
                       Icon(Icons.logout, color: AppColors.errorRose, size: 20),

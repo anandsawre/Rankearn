@@ -114,7 +114,10 @@ class BattleTopRewardsCard extends StatelessWidget {
                   onTap: onViewAll,
                   borderRadius: BorderRadius.circular(6),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: const [
@@ -251,13 +254,7 @@ class _BattleRewardTile extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Center(
-                    child: Icon(
-                      icon,
-                      color: iconColor,
-                      size: 18,
-                    ),
-                  ),
+                  child: Center(child: Icon(icon, color: iconColor, size: 18)),
                 ),
                 const SizedBox(height: 6),
                 FittedBox(

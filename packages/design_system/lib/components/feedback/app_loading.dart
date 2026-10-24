@@ -18,7 +18,8 @@ class AppLogoLoader extends StatefulWidget {
   State<AppLogoLoader> createState() => _AppLogoLoaderState();
 }
 
-class _AppLogoLoaderState extends State<AppLogoLoader> with SingleTickerProviderStateMixin {
+class _AppLogoLoaderState extends State<AppLogoLoader>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -86,10 +87,7 @@ class _AppLogoLoaderState extends State<AppLogoLoader> with SingleTickerProvider
             ],
           ),
           const SizedBox(height: 18),
-          const Text(
-            'Rankearn',
-            style: AppTypography.displayMedium,
-          ),
+          const Text('Rankearn', style: AppTypography.displayMedium),
           const SizedBox(height: 4),
           Text(
             widget.message.toUpperCase(),
@@ -112,15 +110,9 @@ class _AppLogoLoaderState extends State<AppLogoLoader> with SingleTickerProvider
     );
 
     if (widget.fullScreen) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: content,
-      );
+      return Scaffold(backgroundColor: AppColors.background, body: content);
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: content,
-    );
+    return Padding(padding: const EdgeInsets.all(32.0), child: content);
   }
 }

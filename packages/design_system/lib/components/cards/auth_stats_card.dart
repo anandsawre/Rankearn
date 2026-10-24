@@ -20,10 +20,7 @@ class AuthStatsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE2EBF8),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFE2EBF8), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0610194F),

@@ -51,7 +51,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceSubtle,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: AppRadii.borderMd,
           borderSide: const BorderSide(color: AppColors.borderSubtle),
@@ -68,7 +71,9 @@ class AppTheme {
           borderRadius: AppRadii.borderMd,
           borderSide: const BorderSide(color: AppColors.errorRose),
         ),
-        hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted),
+        hintStyle: AppTypography.bodyMedium.copyWith(
+          color: AppColors.textMuted,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -84,7 +89,9 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.brandPrimary,
-          textStyle: AppTypography.buttonText.copyWith(color: AppColors.brandPrimary),
+          textStyle: AppTypography.buttonText.copyWith(
+            color: AppColors.brandPrimary,
+          ),
           side: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
@@ -93,7 +100,9 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.brandPrimary,
-          textStyle: AppTypography.buttonText.copyWith(color: AppColors.brandPrimary),
+          textStyle: AppTypography.buttonText.copyWith(
+            color: AppColors.brandPrimary,
+          ),
         ),
       ),
       dividerTheme: const DividerThemeData(

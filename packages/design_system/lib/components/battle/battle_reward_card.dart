@@ -8,10 +8,7 @@ import 'battle_wave_card.dart';
 class BattleResultAnnouncementCard extends StatelessWidget {
   final String text;
 
-  const BattleResultAnnouncementCard({
-    super.key,
-    required this.text,
-  });
+  const BattleResultAnnouncementCard({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -81,10 +78,17 @@ class BattleResultComparisonCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: const Color(0xFF34D399).withAlpha(50),
-                        border: Border.all(color: const Color(0xFFFFC107), width: 2.5),
+                        border: Border.all(
+                          color: const Color(0xFFFFC107),
+                          width: 2.5,
+                        ),
                       ),
                       child: const Center(
-                        child: Icon(Icons.face_rounded, size: 38, color: Color(0xFF059669)),
+                        child: Icon(
+                          Icons.face_rounded,
+                          size: 38,
+                          color: Color(0xFF059669),
+                        ),
                       ),
                     ),
                     Positioned(
@@ -118,7 +122,10 @@ class BattleResultComparisonCard extends StatelessWidget {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3.5,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFD1FAE5),
                       borderRadius: AppRadii.borderPill,
@@ -126,7 +133,11 @@ class BattleResultComparisonCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.star_rounded, color: Color(0xFF059669), size: 14),
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Color(0xFF059669),
+                          size: 14,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '$winnerScore pts',
@@ -189,10 +200,17 @@ class BattleResultComparisonCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color(0xFFF87171).withAlpha(50),
-                    border: Border.all(color: const Color(0xFFF87171), width: 2.0),
+                    border: Border.all(
+                      color: const Color(0xFFF87171),
+                      width: 2.0,
+                    ),
                   ),
                   child: const Center(
-                    child: Icon(Icons.face_5_rounded, size: 38, color: Color(0xFFDC2626)),
+                    child: Icon(
+                      Icons.face_5_rounded,
+                      size: 38,
+                      color: Color(0xFFDC2626),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -212,7 +230,10 @@ class BattleResultComparisonCard extends StatelessWidget {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3.5,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFE4E6),
                       borderRadius: AppRadii.borderPill,
@@ -220,7 +241,11 @@ class BattleResultComparisonCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.star_rounded, color: Color(0xFFE11D48), size: 14),
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Color(0xFFE11D48),
+                          size: 14,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '$loserScore pts',
@@ -244,8 +269,6 @@ class BattleResultComparisonCard extends StatelessWidget {
   }
 }
 
-
-
 /// Reward Summary Card: Minted Gold Coin + "+100 Coins" with Royal Violet & Sunset Amber Waves
 class BattleRewardSummaryCard extends StatelessWidget {
   final int coinsWon;
@@ -263,7 +286,10 @@ class BattleRewardSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24.0),
-        border: Border.all(color: const Color(0xFFE2E8F0).withAlpha(180), width: 1.2),
+        border: Border.all(
+          color: const Color(0xFFE2E8F0).withAlpha(180),
+          width: 1.2,
+        ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0C000000),
@@ -304,7 +330,9 @@ class BattleRewardSummaryCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          isVictory ? 'You won' : (coinsWon == 0 ? 'Match Tied' : 'Entry Lost'),
+                          isVictory
+                              ? 'You won'
+                              : (coinsWon == 0 ? 'Match Tied' : 'Entry Lost'),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -317,7 +345,11 @@ class BattleRewardSummaryCard extends StatelessWidget {
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            isVictory ? '+$coinsWon Coins' : (coinsWon == 0 ? '0 Coins' : '-$coinsWon Coins'),
+                            isVictory
+                                ? '+$coinsWon Coins'
+                                : (coinsWon == 0
+                                      ? '0 Coins'
+                                      : '-$coinsWon Coins'),
                             style: TextStyle(
                               fontSize: 23,
                               fontWeight: FontWeight.w900,
@@ -331,9 +363,14 @@ class BattleRewardSummaryCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 5),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3.5,
+                          ),
                           decoration: BoxDecoration(
-                            color: isVictory ? const Color(0xFFECFDF5) : const Color(0xFFFFF7ED),
+                            color: isVictory
+                                ? const Color(0xFFECFDF5)
+                                : const Color(0xFFFFF7ED),
                             borderRadius: AppRadii.borderPill,
                             border: Border.all(
                               color: isVictory
@@ -349,7 +386,9 @@ class BattleRewardSummaryCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w600,
-                              color: isVictory ? const Color(0xFF047857) : const Color(0xFFC2410C),
+                              color: isVictory
+                                  ? const Color(0xFF047857)
+                                  : const Color(0xFFC2410C),
                               fontFamily: 'Inter',
                             ),
                             maxLines: 1,
@@ -383,11 +422,7 @@ class _RewardCoinBadge extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: const RadialGradient(
-          colors: [
-            Color(0xFFFFFBEB),
-            Color(0xFFFEF3C7),
-            Color(0xFFFDE68A),
-          ],
+          colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7), Color(0xFFFDE68A)],
         ),
         border: Border.all(color: const Color(0xFFFBBF24), width: 2.2),
         boxShadow: [
@@ -405,11 +440,7 @@ class _RewardCoinBadge extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
-              colors: [
-                Color(0xFFFFDF00),
-                Color(0xFFF59E0B),
-                Color(0xFFD97706),
-              ],
+              colors: [Color(0xFFFFDF00), Color(0xFFF59E0B), Color(0xFFD97706)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -474,27 +505,39 @@ class _RewardCardWavePainter extends CustomPainter {
     // Warm Golden Sunburst behind the coin badge on the left
     final coinGlow = Paint()
       ..isAntiAlias = true
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFFBBF24).withAlpha(55),
-          const Color(0xFFF59E0B).withAlpha(25),
-          const Color(0xFFF59E0B).withAlpha(0),
-        ],
-        stops: const [0.0, 0.55, 1.0],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.12, h * 0.50), radius: w * 0.30));
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFFFBBF24).withAlpha(55),
+              const Color(0xFFF59E0B).withAlpha(25),
+              const Color(0xFFF59E0B).withAlpha(0),
+            ],
+            stops: const [0.0, 0.55, 1.0],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(w * 0.12, h * 0.50),
+              radius: w * 0.30,
+            ),
+          );
     canvas.drawCircle(Offset(w * 0.12, h * 0.50), w * 0.30, coinGlow);
 
     // Soft Electric Violet Ambient Halo on the right
     final violetHalo = Paint()
       ..isAntiAlias = true
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFC4B5FD).withAlpha(45),
-          const Color(0xFF8B5CF6).withAlpha(20),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.50, 1.0],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.88, h * 0.40), radius: w * 0.32));
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFFC4B5FD).withAlpha(45),
+              const Color(0xFF8B5CF6).withAlpha(20),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.50, 1.0],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(w * 0.88, h * 0.40),
+              radius: w * 0.32,
+            ),
+          );
     canvas.drawCircle(Offset(w * 0.88, h * 0.40), w * 0.32, violetHalo);
 
     // -------------------------------------------------------------------------
@@ -504,15 +547,14 @@ class _RewardCardWavePainter extends CustomPainter {
     final goldWave1 = Path();
     goldWave1.moveTo(0, h * 0.36);
     goldWave1.cubicTo(
-      w * 0.12, h * 0.50,
-      w * 0.24, h * 0.78,
-      w * 0.45, h * 0.84,
+      w * 0.12,
+      h * 0.50,
+      w * 0.24,
+      h * 0.78,
+      w * 0.45,
+      h * 0.84,
     );
-    goldWave1.cubicTo(
-      w * 0.65, h * 0.90,
-      w * 0.82, h * 0.96,
-      w, h * 0.98,
-    );
+    goldWave1.cubicTo(w * 0.65, h * 0.90, w * 0.82, h * 0.96, w, h * 0.98);
     goldWave1.lineTo(w, h);
     goldWave1.lineTo(0, h);
     goldWave1.close();
@@ -539,15 +581,14 @@ class _RewardCardWavePainter extends CustomPainter {
     final purpleWave1 = Path();
     purpleWave1.moveTo(w, h * 0.22);
     purpleWave1.cubicTo(
-      w * 0.88, h * 0.38,
-      w * 0.76, h * 0.68,
-      w * 0.58, h * 0.78,
+      w * 0.88,
+      h * 0.38,
+      w * 0.76,
+      h * 0.68,
+      w * 0.58,
+      h * 0.78,
     );
-    purpleWave1.cubicTo(
-      w * 0.42, h * 0.86,
-      w * 0.24, h * 0.94,
-      0, h * 0.98,
-    );
+    purpleWave1.cubicTo(w * 0.42, h * 0.86, w * 0.24, h * 0.94, 0, h * 0.98);
     purpleWave1.lineTo(0, h);
     purpleWave1.lineTo(w, h);
     purpleWave1.close();
@@ -572,14 +613,20 @@ class _RewardCardWavePainter extends CustomPainter {
     // -------------------------------------------------------------------------
     final centerBlend = Paint()
       ..isAntiAlias = true
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFFDE68A).withAlpha(110),
-          const Color(0xFFDDD6FE).withAlpha(70),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.55, 1.0],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.50, h * 0.92), radius: w * 0.26));
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFFFDE68A).withAlpha(110),
+              const Color(0xFFDDD6FE).withAlpha(70),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.55, 1.0],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(w * 0.50, h * 0.92),
+              radius: w * 0.26,
+            ),
+          );
     canvas.drawCircle(Offset(w * 0.50, h * 0.92), w * 0.26, centerBlend);
 
     // -------------------------------------------------------------------------
@@ -589,14 +636,20 @@ class _RewardCardWavePainter extends CustomPainter {
     final goldWave2 = Path();
     goldWave2.moveTo(0, h * 0.54);
     goldWave2.cubicTo(
-      w * 0.10, h * 0.66,
-      w * 0.22, h * 0.86,
-      w * 0.38, h * 0.88,
+      w * 0.10,
+      h * 0.66,
+      w * 0.22,
+      h * 0.86,
+      w * 0.38,
+      h * 0.88,
     );
     goldWave2.cubicTo(
-      w * 0.50, h * 0.90,
-      w * 0.62, h * 0.96,
-      w * 0.75, h * 0.98,
+      w * 0.50,
+      h * 0.90,
+      w * 0.62,
+      h * 0.96,
+      w * 0.75,
+      h * 0.98,
     );
     goldWave2.lineTo(w * 0.75, h);
     goldWave2.lineTo(0, h);
@@ -621,14 +674,20 @@ class _RewardCardWavePainter extends CustomPainter {
     final goldHighlight = Path();
     goldHighlight.moveTo(0, h * 0.54);
     goldHighlight.cubicTo(
-      w * 0.10, h * 0.66,
-      w * 0.22, h * 0.86,
-      w * 0.38, h * 0.88,
+      w * 0.10,
+      h * 0.66,
+      w * 0.22,
+      h * 0.86,
+      w * 0.38,
+      h * 0.88,
     );
     goldHighlight.cubicTo(
-      w * 0.50, h * 0.90,
-      w * 0.62, h * 0.96,
-      w * 0.70, h * 0.98,
+      w * 0.50,
+      h * 0.90,
+      w * 0.62,
+      h * 0.96,
+      w * 0.70,
+      h * 0.98,
     );
     final goldHighlightPaint = Paint()
       ..isAntiAlias = true
@@ -652,14 +711,20 @@ class _RewardCardWavePainter extends CustomPainter {
     final purpleWave2 = Path();
     purpleWave2.moveTo(w, h * 0.42);
     purpleWave2.cubicTo(
-      w * 0.89, h * 0.55,
-      w * 0.78, h * 0.78,
-      w * 0.64, h * 0.84,
+      w * 0.89,
+      h * 0.55,
+      w * 0.78,
+      h * 0.78,
+      w * 0.64,
+      h * 0.84,
     );
     purpleWave2.cubicTo(
-      w * 0.52, h * 0.88,
-      w * 0.40, h * 0.95,
-      w * 0.28, h * 0.98,
+      w * 0.52,
+      h * 0.88,
+      w * 0.40,
+      h * 0.95,
+      w * 0.28,
+      h * 0.98,
     );
     purpleWave2.lineTo(w * 0.28, h);
     purpleWave2.lineTo(w, h);
@@ -684,14 +749,20 @@ class _RewardCardWavePainter extends CustomPainter {
     final purpleHighlight = Path();
     purpleHighlight.moveTo(w, h * 0.42);
     purpleHighlight.cubicTo(
-      w * 0.89, h * 0.55,
-      w * 0.78, h * 0.78,
-      w * 0.64, h * 0.84,
+      w * 0.89,
+      h * 0.55,
+      w * 0.78,
+      h * 0.78,
+      w * 0.64,
+      h * 0.84,
     );
     purpleHighlight.cubicTo(
-      w * 0.52, h * 0.88,
-      w * 0.40, h * 0.95,
-      w * 0.32, h * 0.98,
+      w * 0.52,
+      h * 0.88,
+      w * 0.40,
+      h * 0.95,
+      w * 0.32,
+      h * 0.98,
     );
     final purpleHighlightPaint = Paint()
       ..isAntiAlias = true

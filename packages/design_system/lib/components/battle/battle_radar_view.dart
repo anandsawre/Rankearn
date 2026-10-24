@@ -9,11 +9,7 @@ class MatchmakingRadar extends StatefulWidget {
   final double size;
   final List<String>? avatarUrls;
 
-  const MatchmakingRadar({
-    super.key,
-    this.size = 280,
-    this.avatarUrls,
-  });
+  const MatchmakingRadar({super.key, this.size = 280, this.avatarUrls});
 
   @override
   State<MatchmakingRadar> createState() => _MatchmakingRadarState();
@@ -63,7 +59,8 @@ class _MatchmakingRadarState extends State<MatchmakingRadar>
               // 2. Six Orbiting Player Avatars on circumference
               ...List.generate(6, (index) {
                 final baseAngle = (index * 60) * (math.pi / 180);
-                final currentAngle = baseAngle + (angle * (index % 2 == 0 ? 0.25 : -0.25));
+                final currentAngle =
+                    baseAngle + (angle * (index % 2 == 0 ? 0.25 : -0.25));
                 final radius = (s * 0.42);
 
                 final x = radius * math.cos(currentAngle);
@@ -84,7 +81,9 @@ class _MatchmakingRadarState extends State<MatchmakingRadar>
                   color: const Color(0xFFD3F9E5),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.battleGreen.withAlpha((40 + 25 * math.sin(angle * 2)).toInt()),
+                      color: AppColors.battleGreen.withAlpha(
+                        (40 + 25 * math.sin(angle * 2)).toInt(),
+                      ),
                       blurRadius: 18,
                       spreadRadius: 4,
                     ),
@@ -180,7 +179,8 @@ class _RadarBackgroundPainter extends CustomPainter {
     // 2. Draw expanding radar ripple waves
     for (int i = 0; i < 2; i++) {
       final waveProgress = (progress + (i * 0.5)) % 1.0;
-      final waveRadius = (maxRadius * 0.35) + (waveProgress * (maxRadius * 0.65));
+      final waveRadius =
+          (maxRadius * 0.35) + (waveProgress * (maxRadius * 0.65));
       final waveAlpha = ((1.0 - waveProgress) * 70).toInt().clamp(0, 255);
 
       final wavePaint = Paint()
@@ -199,7 +199,8 @@ class _RadarBackgroundPainter extends CustomPainter {
     final dotAngles = [0.4, 1.2, 2.1, 3.4, 4.3, 5.2];
     for (int i = 0; i < dotAngles.length; i++) {
       final r = maxRadius * (i % 2 == 0 ? 0.70 : 0.45);
-      final a = dotAngles[i] + (progress * 2 * math.pi * (i % 2 == 0 ? 0.15 : -0.15));
+      final a =
+          dotAngles[i] + (progress * 2 * math.pi * (i % 2 == 0 ? 0.15 : -0.15));
       final dotCenter = Offset(
         center.dx + r * math.cos(a),
         center.dy + r * math.sin(a),

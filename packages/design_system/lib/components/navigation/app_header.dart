@@ -216,6 +216,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                               ),
                               const SizedBox(width: 4),
                               _buildDesktopNavItem(
+                                icon: Icons.leaderboard_rounded,
+                                label: 'Leaderboard',
+                                tab: UserNavTab.leaderboard,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
                                 icon: Icons.person_outline_rounded,
                                 label: 'Profile',
                                 tab: UserNavTab.profile,
@@ -507,6 +513,13 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     required UserNavTab tab,
   }) {
     final active = _isTabActive(tab);
+    final isGreen = tab == UserNavTab.leaderboard;
+    final activeBg = isGreen
+        ? const Color(0xFFE8FDF5)
+        : const Color(0xFFEEF2FF);
+    final activeColor = isGreen
+        ? const Color(0xFF00B96B)
+        : AppColors.brandPurple;
 
     return InkWell(
       onTap: () => onTabSelected?.call(tab),
@@ -514,7 +527,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFEEF2FF) : Colors.transparent,
+          color: active ? activeBg : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -523,7 +536,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             Icon(
               icon,
               size: 18,
-              color: active ? AppColors.brandPurple : AppColors.textSecondary,
+              color: active ? activeColor : AppColors.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
@@ -531,7 +544,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                color: active ? AppColors.brandPurple : AppColors.textPrimary,
+                color: active ? activeColor : AppColors.textPrimary,
               ),
             ),
           ],

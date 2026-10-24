@@ -58,18 +58,22 @@ class AppColors {
   static const Color canvasDark = surfaceSubtle;
 
   // --- Canvas & Surfaces ---
-  static const Color background = Color(0xFFF4F7FF);         // Crisp pale blue/lavender canvas
-  static const Color surface = Color(0xFFFFFFFF);            // Primary card surface
-  static const Color surfaceSubtle = Color(0xFFF8FAFF);      // Soft secondary surface
+  static const Color background = Color(
+    0xFFF4F7FF,
+  ); // Crisp pale blue/lavender canvas
+  static const Color surface = Color(0xFFFFFFFF); // Primary card surface
+  static const Color surfaceSubtle = Color(
+    0xFFF8FAFF,
+  ); // Soft secondary surface
   static const Color surfaceMuted = Color(0xFFEEF2F9);
   static const Color surfaceDark = Color(0xFF0F172A);
   static const Color surfaceDarkCard = Color(0xFF1E293B);
 
   // --- Typography & Neutral Text ---
-  static const Color textPrimary = Color(0xFF101A3A);        // Deep navy
-  static const Color textSecondary = Color(0xFF536789);      // Muted slate
-  static const Color textMuted = Color(0xFF8290AA);          // Subtle text
-  static const Color textOnPrimary = Color(0xFFFFFFFF);      // White on brand colors
+  static const Color textPrimary = Color(0xFF101A3A); // Deep navy
+  static const Color textSecondary = Color(0xFF536789); // Muted slate
+  static const Color textMuted = Color(0xFF8290AA); // Subtle text
+  static const Color textOnPrimary = Color(0xFFFFFFFF); // White on brand colors
 
   // --- Borders & Dividers ---
   static const Color border = Color(0xFFE3EAF7);
@@ -154,6 +158,100 @@ class AppColors {
 
   static const LinearGradient battleVictoryGradient = LinearGradient(
     colors: [Color(0xFF00D277), Color(0xFF009C59), Color(0xFF00683B)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  // --- Leaderboard Design System Tokens ---
+  static const Color leaderboardBg = Color(0xFFF2F8FF);
+  static const Color leaderboardGreen = Color(0xFF00B96B);
+  static const Color leaderboardGreenDark = Color(0xFF008C52);
+  static const Color leaderboardMintBg = Color(0xFFE8FDF5);
+  static const Color leaderboardNavy = Color(0xFF10194F);
+  static const Color leaderboardGold = Color(0xFFFFD32A);
+  static const Color leaderboardGoldDark = Color(0xFFB45309);
+  static const Color leaderboardSilver = Color(0xFF94A3B8);
+  static const Color leaderboardBronze = Color(0xFFD97706);
+  static const Color leaderboardBorder = Color(0xFFE2ECFA);
+  static const Color leaderboardMuted = Color(0xFF64748B);
+  static const Color leaderboardSubtle = Color(0xFF586B9B);
+  static const Color leaderboardRibbonRed = Color(0xFFDC2626);
+
+  // Surface & Slate Grays
+  static const Color leaderboardDarkSlate = Color(0xFF0F172A);
+  static const Color leaderboardSlate800 = Color(0xFF1E293B);
+  static const Color leaderboardSlate700 = Color(0xFF334155);
+  static const Color leaderboardSlate300 = Color(0xFFCBD5E1);
+  static const Color leaderboardSlate200 = Color(0xFFE2E8F0);
+  static const Color leaderboardSlate100 = Color(0xFFF1F5F9);
+  static const Color leaderboardSlate50 = Color(0xFFF8FAFC);
+
+  // Semantic & Accents for Leaderboard
+  static const Color leaderboardAmber500 = Color(0xFFF59E0B);
+  static const Color leaderboardAmber100 = Color(0xFFFEF3C7);
+  static const Color leaderboardAmber50 = Color(0xFFFFFBEB);
+  static const Color leaderboardOrange100 = Color(0xFFFFEDD5);
+  static const Color leaderboardOrange300 = Color(0xFFFDBA74);
+  static const Color leaderboardOrange900 = Color(0xFF78350F);
+  static const Color leaderboardSky600 = Color(0xFF0284C7);
+  static const Color leaderboardSky100 = Color(0xFFE0F2FE);
+  static const Color leaderboardBlue600 = Color(0xFF2563EB);
+  static const Color leaderboardBlue100 = Color(0xFFDBEAFE);
+  static const Color leaderboardGreen100 = Color(0xFFD1FAE5);
+  static const Color leaderboardRed100 = Color(0xFFFEE2E2);
+  static const Color leaderboardPurple100 = Color(0xFFEDE9FE);
+  static const Color leaderboardPink100 = Color(0xFFFCE7F3);
+  static const Color leaderboardIndigo100 = Color(0xFFE0E7FF);
+
+  // Avatar Pastel Palette
+  static const Color avatarPastelBlue = Color(0xFFDCEBFE);
+  static const Color avatarPastelRed = Color(0xFFFEE2E2);
+  static const Color avatarPastelPurple = Color(0xFFEDE9FE);
+  static const Color avatarPastelGreen = Color(0xFFD1FAE5);
+  static const Color avatarPastelPink = Color(0xFFFCE7F3);
+  static const Color avatarPastelIndigo = Color(0xFFE0E7FF);
+  static const Color avatarPastelYellow = Color(0xFFFEF3C7);
+  static const Color avatarPastelOrange = Color(0xFFFFEDD5);
+  static const Color avatarPastelSky = Color(0xFFE0F2FE);
+
+  static const LinearGradient leaderboardHeroGradient = LinearGradient(
+    colors: [Color(0xFF00B96B), Color(0xFF008C52)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient leaderboardPodiumGold = LinearGradient(
+    colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient leaderboardPodiumSilver = LinearGradient(
+    colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient leaderboardPodiumBronze = LinearGradient(
+    colors: [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient leaderboardStepGold = LinearGradient(
+    colors: [Color(0xFFFDE68A), Color(0xFFF59E0B)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient leaderboardStepSilver = LinearGradient(
+    colors: [Color(0xFFE2E8F0), Color(0xFFCBD5E1)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  static const LinearGradient leaderboardStepBronze = LinearGradient(
+    colors: [Color(0xFFFFEDD5), Color(0xFFFDBA74)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

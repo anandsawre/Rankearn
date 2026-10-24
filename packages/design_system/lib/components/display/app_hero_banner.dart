@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
+import '../../tokens/typography.dart';
 
 /// Standardized, reusable Hero Banner component across the Rankearn app.
 /// Ensures consistent vertical height, typography hierarchy, responsive padding,
@@ -63,6 +64,9 @@ class AppHeroBanner extends StatelessWidget {
   /// Height of the mascot on compact mobile viewports. Defaults to 140px.
   final double mobileMascotHeight;
 
+  /// Optional leading emblem on the left (e.g. 3D Trophy Ribbon for Leaderboard).
+  final Widget? leadingEmblem;
+
   /// Card border radius. Defaults to 16px (AppRadii.borderLg).
   final BorderRadius? borderRadius;
 
@@ -72,6 +76,7 @@ class AppHeroBanner extends StatelessWidget {
     this.titleWidget,
     this.subtitle,
     this.badge,
+    this.leadingEmblem,
     this.ctaLabel,
     this.onCtaPressed,
     this.ctaColor = const Color(0xFFFFD633),
@@ -173,8 +178,14 @@ class AppHeroBanner extends StatelessWidget {
             fontFamily: 'Inter',
           ),
           children: [
-            TextSpan(text: 'Live ', style: TextStyle(color: Colors.white)),
-            TextSpan(text: 'Tests', style: TextStyle(color: Color(0xFFFFD633))),
+            TextSpan(
+              text: 'Live ',
+              style: TextStyle(color: Colors.white),
+            ),
+            TextSpan(
+              text: 'Tests',
+              style: TextStyle(color: Color(0xFFFFD633)),
+            ),
           ],
         ),
       ),
@@ -267,8 +278,14 @@ class AppHeroBanner extends StatelessWidget {
             fontFamily: 'Inter',
           ),
           children: [
-            TextSpan(text: 'Earn\n', style: TextStyle(color: Colors.white)),
-            TextSpan(text: 'More Rewards', style: TextStyle(color: Color(0xFFFFD633))),
+            TextSpan(
+              text: 'Earn\n',
+              style: TextStyle(color: Colors.white),
+            ),
+            TextSpan(
+              text: 'More Rewards',
+              style: TextStyle(color: Color(0xFFFFD633)),
+            ),
           ],
         ),
       ),
@@ -327,7 +344,10 @@ class AppHeroBanner extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xCC1A0C42),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 0.8),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.25),
+              width: 0.8,
+            ),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x22000000),
@@ -340,7 +360,11 @@ class AppHeroBanner extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: const [
-              Icon(Icons.workspace_premium_rounded, color: Color(0xFFFFD633), size: 16),
+              Icon(
+                Icons.workspace_premium_rounded,
+                color: Color(0xFFFFD633),
+                size: 16,
+              ),
               SizedBox(height: 2),
               Text(
                 'Learn\nPractice\nPlay\nEarn',
@@ -378,12 +402,19 @@ class AppHeroBanner extends StatelessWidget {
             fontFamily: 'Inter',
           ),
           children: [
-            TextSpan(text: '1v1\n', style: TextStyle(color: Color(0xFFFFD633))),
-            TextSpan(text: 'Quiz Battle', style: TextStyle(color: Colors.white)),
+            TextSpan(
+              text: '1v1\n',
+              style: TextStyle(color: Color(0xFFFFD633)),
+            ),
+            TextSpan(
+              text: 'Quiz Battle',
+              style: TextStyle(color: Colors.white),
+            ),
           ],
         ),
       ),
-      subtitle: 'Challenge real players,\nshow your skills and\nwin exciting rewards!',
+      subtitle:
+          'Challenge real players,\nshow your skills and\nwin exciting rewards!',
       ctaLabel: 'Start Battle',
       onCtaPressed: onStartBattle ?? onBannerTap,
       imageAssetPath: imageAssetPath,
@@ -438,7 +469,10 @@ class AppHeroBanner extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xCC1A0C42),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 0.8),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.25),
+              width: 0.8,
+            ),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x22000000),
@@ -451,7 +485,11 @@ class AppHeroBanner extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: const [
-              Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD633), size: 16),
+              Icon(
+                Icons.emoji_events_rounded,
+                color: Color(0xFFFFD633),
+                size: 16,
+              ),
               SizedBox(height: 2),
               Text(
                 'Play\nCompete\nEarn',
@@ -491,6 +529,182 @@ class AppHeroBanner extends StatelessWidget {
     );
   }
 
+  /// Factory preset for the Leaderboard Tab Hero Banner matching Reference Image 1
+  factory AppHeroBanner.leaderboard({
+    String? mascotAssetPath = 'assets/images/leaderboard_hero_mascot.jpg',
+    String? emblemAssetPath = 'assets/images/leaderboard_trophy_ribbon.jpg',
+    BorderRadius? borderRadius,
+  }) {
+    return AppHeroBanner(
+      leadingEmblem: _buildLeaderboardEmblem(emblemAssetPath),
+      titleWidget: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Text(
+            'Top Learners',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.6,
+              height: 1.1,
+              color: Colors.white,
+              fontFamilyFallback: AppTypography.fontFallbacks,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            'Compete • Improve • Earn More',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.1,
+              color: Color(0xFFFFD633),
+              fontFamilyFallback: AppTypography.fontFallbacks,
+            ),
+          ),
+        ],
+      ),
+      subtitle:
+          'Climb the ranks by attempting tests, playing battles and earning coins.',
+      imageAssetPath: mascotAssetPath,
+      borderRadius: borderRadius,
+      gradient: const LinearGradient(
+        colors: [Color(0xFF00B96B), Color(0xFF009C59), Color(0xFF007E47)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x33008C52),
+          blurRadius: 20,
+          offset: Offset(0, 8),
+        ),
+      ],
+      ambientGlows: [
+        Positioned(
+          top: -30,
+          left: -20,
+          child: Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withAlpha(25),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: -30,
+          right: 120,
+          child: Container(
+            width: 130,
+            height: 130,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFFFD32A).withAlpha(30),
+            ),
+          ),
+        ),
+      ],
+      fallbackIllustration: Image.asset(
+        'assets/images/tests_hero_mascot.jpg',
+        fit: BoxFit.contain,
+        alignment: Alignment.centerRight,
+        errorBuilder: (context, error, stackTrace) =>
+            _buildLeaderboardMascotFallback(),
+      ),
+    );
+  }
+
+  static Widget _buildLeaderboardMascotFallback() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Center(
+        child: Icon(
+          Icons.emoji_events_rounded,
+          color: Color(0xFFFFD633),
+          size: 64,
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildLeaderboardEmblem(String? emblemAssetPath) {
+    return Container(
+      width: 90,
+      height: 90,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withAlpha(35),
+        border: Border.all(color: Colors.white.withAlpha(60), width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: emblemAssetPath != null
+          ? Image.asset(
+              emblemAssetPath,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) =>
+                  _buildTrophyWithRibbonFallback(),
+            )
+          : _buildTrophyWithRibbonFallback(),
+    );
+  }
+
+  static Widget _buildTrophyWithRibbonFallback() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        const Icon(
+          Icons.workspace_premium_rounded,
+          color: Color(0xFFFFD633),
+          size: 66,
+        ),
+        const Icon(
+          Icons.emoji_events_rounded,
+          color: Color(0xFFFFFBEB),
+          size: 42,
+        ),
+        Positioned(
+          bottom: 4,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDC2626),
+              borderRadius: BorderRadius.circular(4),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x30000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            ),
+            child: const Text(
+              'LEADERBOARD',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 7.5,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.6,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Factory preset for the Home Dashboard Hero Banner
   factory AppHeroBanner.home({
     String? imageAssetPath = 'assets/images/hero_mascot.jpg',
@@ -508,8 +722,14 @@ class AppHeroBanner extends StatelessWidget {
             fontFamily: 'Inter',
           ),
           children: [
-            TextSpan(text: 'Learn & Practice\n', style: TextStyle(color: Colors.white)),
-            TextSpan(text: 'Earn Rewards', style: TextStyle(color: Color(0xFFFFD633))),
+            TextSpan(
+              text: 'Learn & Practice\n',
+              style: TextStyle(color: Colors.white),
+            ),
+            TextSpan(
+              text: 'Earn Rewards',
+              style: TextStyle(color: Color(0xFFFFD633)),
+            ),
           ],
         ),
       ),
@@ -584,14 +804,18 @@ class AppHeroBanner extends StatelessWidget {
         final isCompact = constraints.maxWidth < 420;
         final isVeryCompact = constraints.maxWidth < 360;
 
-        final mascotHeight = isCompact ? mobileMascotHeight : desktopMascotHeight;
+        final mascotHeight = isCompact
+            ? mobileMascotHeight
+            : desktopMascotHeight;
 
         return Container(
           width: double.infinity,
           decoration: BoxDecoration(
             gradient: gradient,
             borderRadius: borderRadius ?? BorderRadius.circular(12),
-            border: borderColor != null ? Border.all(color: borderColor!, width: 1) : null,
+            border: borderColor != null
+                ? Border.all(color: borderColor!, width: 1)
+                : null,
             boxShadow: boxShadow,
           ),
           clipBehavior: Clip.antiAlias,
@@ -611,6 +835,12 @@ class AppHeroBanner extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    if (leadingEmblem != null) ...[
+                      leadingEmblem!,
+                      SizedBox(
+                        width: isVeryCompact ? 10 : (isCompact ? 14 : 20),
+                      ),
+                    ],
                     // Left Column: Badge, Title, Subtitle, CTA, Features
                     Expanded(
                       flex: isCompact ? 13 : 11,
@@ -631,7 +861,9 @@ class AppHeroBanner extends StatelessWidget {
                             Text(
                               title!,
                               style: TextStyle(
-                                fontSize: isVeryCompact ? 26 : (isCompact ? 28 : 34),
+                                fontSize: isVeryCompact
+                                    ? 26
+                                    : (isCompact ? 28 : 34),
                                 fontWeight: FontWeight.w900,
                                 color: AppColors.textPrimary,
                                 letterSpacing: -0.8,
@@ -648,7 +880,9 @@ class AppHeroBanner extends StatelessWidget {
                                 color: _isDarkGradient()
                                     ? const Color(0xFFE2E8F0)
                                     : AppColors.textSecondary,
-                                fontSize: isVeryCompact ? 11 : (isCompact ? 12 : 13),
+                                fontSize: isVeryCompact
+                                    ? 11
+                                    : (isCompact ? 12 : 13),
                                 fontWeight: FontWeight.w500,
                                 height: 1.3,
                               ),
@@ -659,7 +893,8 @@ class AppHeroBanner extends StatelessWidget {
                           ],
 
                           // 4. CTA Button & Feature Chips
-                          if (ctaLabel != null || (features != null && features!.isNotEmpty))
+                          if (ctaLabel != null ||
+                              (features != null && features!.isNotEmpty))
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
@@ -682,7 +917,9 @@ class AppHeroBanner extends StatelessWidget {
                                             borderRadius: AppRadii.borderPill,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: ctaColor.withValues(alpha: 0.35),
+                                                color: ctaColor.withValues(
+                                                  alpha: 0.35,
+                                                ),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 2),
                                               ),
@@ -695,7 +932,9 @@ class AppHeroBanner extends StatelessWidget {
                                                 ctaLabel!,
                                                 style: TextStyle(
                                                   color: ctaTextColor,
-                                                  fontSize: isVeryCompact ? 11.5 : 12.5,
+                                                  fontSize: isVeryCompact
+                                                      ? 11.5
+                                                      : 12.5,
                                                   fontWeight: FontWeight.w900,
                                                 ),
                                               ),
@@ -710,11 +949,17 @@ class AppHeroBanner extends StatelessWidget {
                                         ),
                                       ),
                                     ),
-                                    if (features != null && features!.isNotEmpty)
+                                    if (features != null &&
+                                        features!.isNotEmpty)
                                       const SizedBox(width: 14),
                                   ],
-                                  if (features != null && features!.isNotEmpty) ...[
-                                    for (int i = 0; i < features!.length; i++) ...[
+                                  if (features != null &&
+                                      features!.isNotEmpty) ...[
+                                    for (
+                                      int i = 0;
+                                      i < features!.length;
+                                      i++
+                                    ) ...[
                                       features![i],
                                       if (i < features!.length - 1)
                                         const SizedBox(width: 10),
@@ -745,10 +990,13 @@ class AppHeroBanner extends StatelessWidget {
                                     imageAssetPath!,
                                     fit: BoxFit.contain,
                                     alignment: Alignment.centerRight,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        fallbackIllustration ?? const SizedBox.shrink(),
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            fallbackIllustration ??
+                                            const SizedBox.shrink(),
                                   )
-                                : (fallbackIllustration ?? const SizedBox.shrink()),
+                                : (fallbackIllustration ??
+                                      const SizedBox.shrink()),
                           ),
                           ?floatingMascotBadge,
                         ],
@@ -849,7 +1097,11 @@ class AppHeroBanner extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: const [
-            Icon(Icons.military_tech_rounded, color: Color(0xFFFFD633), size: 14),
+            Icon(
+              Icons.military_tech_rounded,
+              color: Color(0xFFFFD633),
+              size: 14,
+            ),
             Text(
               'Small Steps',
               style: TextStyle(
@@ -881,9 +1133,7 @@ class AppHeroBanner extends StatelessWidget {
         color: const Color(0xFF1E105C).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Center(
-        child: Icon(icon, color: color, size: 48),
-      ),
+      child: Center(child: Icon(icon, color: color, size: 48)),
     );
   }
 }

@@ -33,7 +33,10 @@ class HeroStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 9, vertical: verticalPadding ?? 7),
+      padding: EdgeInsets.symmetric(
+        horizontal: 9,
+        vertical: verticalPadding ?? 7,
+      ),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(14),
@@ -62,11 +65,7 @@ class HeroStatsCard extends StatelessWidget {
                   color: iconColor,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                child: Icon(icon, color: Colors.white, size: 16),
               ),
               const SizedBox(width: 7),
 
@@ -90,7 +89,10 @@ class HeroStatsCard extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFDCFCE7),
                             borderRadius: BorderRadius.circular(5),

@@ -7,11 +7,7 @@ class VictoryBanner extends StatefulWidget {
   final bool isVictory;
   final bool isDraw;
 
-  const VictoryBanner({
-    super.key,
-    this.isVictory = true,
-    this.isDraw = false,
-  });
+  const VictoryBanner({super.key, this.isVictory = true, this.isDraw = false});
 
   @override
   State<VictoryBanner> createState() => _VictoryBannerState();
@@ -86,7 +82,10 @@ class _VictoryBannerState extends State<VictoryBanner>
                           // Left Laurel
                           Transform.rotate(
                             angle: -0.2,
-                            child: const Text('🌿', style: TextStyle(fontSize: 36)),
+                            child: const Text(
+                              '🌿',
+                              style: TextStyle(fontSize: 36),
+                            ),
                           ),
                           const SizedBox(width: 6),
 
@@ -96,23 +95,38 @@ class _VictoryBannerState extends State<VictoryBanner>
                             clipBehavior: Clip.none,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 2,
+                                ),
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
                                   gradient: RadialGradient(
-                                    colors: [Color(0x60FFF9E6), Color(0x00FFF9E6)],
+                                    colors: [
+                                      Color(0x60FFF9E6),
+                                      Color(0x00FFF9E6),
+                                    ],
                                   ),
                                 ),
-                                child: const Text('🏆', style: TextStyle(fontSize: 66)),
+                                child: const Text(
+                                  '🏆',
+                                  style: TextStyle(fontSize: 66),
+                                ),
                               ),
                               const Positioned(
                                 top: -10,
-                                child: Text('👑', style: TextStyle(fontSize: 26)),
+                                child: Text(
+                                  '👑',
+                                  style: TextStyle(fontSize: 26),
+                                ),
                               ),
                               const Positioned(
                                 top: -2,
                                 right: 0,
-                                child: Text('✨', style: TextStyle(fontSize: 18)),
+                                child: Text(
+                                  '✨',
+                                  style: TextStyle(fontSize: 18),
+                                ),
                               ),
                             ],
                           ),
@@ -121,8 +135,12 @@ class _VictoryBannerState extends State<VictoryBanner>
                           // Right Laurel (mirrored)
                           Transform(
                             alignment: Alignment.center,
-                            transform: Matrix4.rotationY(math.pi)..rotateZ(-0.2),
-                            child: const Text('🌿', style: TextStyle(fontSize: 36)),
+                            transform: Matrix4.rotationY(math.pi)
+                              ..rotateZ(-0.2),
+                            child: const Text(
+                              '🌿',
+                              style: TextStyle(fontSize: 36),
+                            ),
                           ),
                         ],
                       )
@@ -138,24 +156,34 @@ class _VictoryBannerState extends State<VictoryBanner>
 
                     // 4. Curved Green 3D Ribbon with VICTORY!
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: widget.isVictory
                               ? const [Color(0xFF00C975), Color(0xFF007A43)]
                               : (widget.isDraw
-                                  ? const [Color(0xFF3B82F6), Color(0xFF1D4ED8)]
-                                  : const [Color(0xFFEF4444), Color(0xFF991B1B)]),
+                                    ? const [
+                                        Color(0xFF3B82F6),
+                                        Color(0xFF1D4ED8),
+                                      ]
+                                    : const [
+                                        Color(0xFFEF4444),
+                                        Color(0xFF991B1B),
+                                      ]),
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: (widget.isVictory
-                                    ? const Color(0xFF007A43)
-                                    : const Color(0xFF991B1B))
-                                .withAlpha(120),
+                            color:
+                                (widget.isVictory
+                                        ? const Color(0xFF007A43)
+                                        : const Color(0xFF991B1B))
+                                    .withAlpha(120),
                             blurRadius: 12,
                             offset: const Offset(0, 5),
                           ),
@@ -204,7 +232,8 @@ class _SunburstPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, 70);
     final paint = Paint()
-      ..color = (isVictory ? const Color(0xFF00C975) : const Color(0xFFEF4444)).withAlpha(20)
+      ..color = (isVictory ? const Color(0xFF00C975) : const Color(0xFFEF4444))
+          .withAlpha(20)
       ..style = PaintingStyle.fill;
 
     const numRays = 16;

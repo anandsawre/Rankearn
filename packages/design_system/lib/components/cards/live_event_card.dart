@@ -58,7 +58,10 @@ class LiveEventCard extends StatelessWidget {
                   children: [
                     if (isLive) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1.5,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFE4E6),
                           borderRadius: AppRadii.borderPill,
@@ -66,7 +69,11 @@ class LiveEventCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: const [
-                            Icon(Icons.circle, color: Color(0xFFE11D48), size: 5),
+                            Icon(
+                              Icons.circle,
+                              color: Color(0xFFE11D48),
+                              size: 5,
+                            ),
                             SizedBox(width: 3),
                             Text(
                               'LIVE',

@@ -76,7 +76,9 @@ class BattleSecondaryButton extends StatelessWidget {
     return AppButton(
       label: label,
       onPressed: onPressed,
-      variant: isSoftTint ? AppButtonVariant.secondary : AppButtonVariant.outlined,
+      variant: isSoftTint
+          ? AppButtonVariant.secondary
+          : AppButtonVariant.outlined,
       size: AppButtonSize.large,
       backgroundColor: isSoftTint ? const Color(0xFFD5F7E6) : Colors.white,
       foregroundColor: fg,
@@ -85,9 +87,7 @@ class BattleSecondaryButton extends StatelessWidget {
       width: width,
       height: height,
       borderRadius: borderRadius,
-      leadingIcon: icon != null
-          ? Icon(icon, color: fg, size: 20)
-          : null,
+      leadingIcon: icon != null ? Icon(icon, color: fg, size: 20) : null,
     );
   }
 }

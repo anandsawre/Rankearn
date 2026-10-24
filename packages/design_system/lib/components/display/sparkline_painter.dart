@@ -34,7 +34,9 @@ class SparklinePainter extends CustomPainter {
       final x = (i / (data.length - 1)) * size.width;
       // Invert Y so higher values are higher up
       final normalized = (data[i] - minVal) / range;
-      final y = size.height - (normalized * (size.height * 0.7) + (size.height * 0.15));
+      final y =
+          size.height -
+          (normalized * (size.height * 0.7) + (size.height * 0.15));
       points.add(Offset(x, y));
     }
 
@@ -59,10 +61,7 @@ class SparklinePainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            fillColor!.withAlpha(60),
-            fillColor!.withAlpha(0),
-          ],
+          colors: [fillColor!.withAlpha(60), fillColor!.withAlpha(0)],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
         ..style = PaintingStyle.fill;
 

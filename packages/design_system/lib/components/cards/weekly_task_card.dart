@@ -31,10 +31,7 @@ class WeeklyTaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadii.borderLg,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.1,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x06000000),
@@ -62,13 +59,7 @@ class WeeklyTaskCard extends StatelessWidget {
                     width: 1,
                   ),
                 ),
-                child: Center(
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 24,
-                  ),
-                ),
+                child: Center(child: Icon(icon, color: iconColor, size: 24)),
               ),
               const SizedBox(width: 10),
 

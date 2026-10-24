@@ -85,13 +85,21 @@ class AppButton extends StatelessWidget {
     }
 
     if (effectiveEnabled) {
-      if (backgroundColor != null) bg = backgroundColor!;
-      if (foregroundColor != null) fg = foregroundColor!;
-      if (borderColor != null) border = BorderSide(color: borderColor!, width: 1.2);
+      if (backgroundColor != null) {
+        bg = backgroundColor!;
+      }
+      if (foregroundColor != null) {
+        fg = foregroundColor!;
+      }
+      if (borderColor != null) {
+        border = BorderSide(color: borderColor!, width: 1.2);
+      }
     }
 
     if (!effectiveEnabled && !isLoading) {
-      bg = bg == Colors.transparent ? Colors.transparent : AppColors.surfaceSubtle;
+      bg = bg == Colors.transparent
+          ? Colors.transparent
+          : AppColors.surfaceSubtle;
       fg = AppColors.textMuted;
       if (border != null) {
         border = const BorderSide(color: AppColors.borderSubtle);
@@ -158,7 +166,9 @@ class AppButton extends StatelessWidget {
           child: Padding(
             padding: padding,
             child: Row(
-              mainAxisSize: effectiveWidth == null ? MainAxisSize.min : MainAxisSize.max,
+              mainAxisSize: effectiveWidth == null
+                  ? MainAxisSize.min
+                  : MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (isLoading) ...[
@@ -173,7 +183,10 @@ class AppButton extends StatelessWidget {
                   const SizedBox(width: 6),
                 ] else if (leadingIcon != null) ...[
                   IconTheme.merge(
-                    data: IconThemeData(color: fg, size: size == AppButtonSize.small ? 16 : 18),
+                    data: IconThemeData(
+                      color: fg,
+                      size: size == AppButtonSize.small ? 16 : 18,
+                    ),
                     child: leadingIcon!,
                   ),
                   const SizedBox(width: 8),
@@ -191,7 +204,10 @@ class AppButton extends StatelessWidget {
                 if (!isLoading && trailingIcon != null) ...[
                   const SizedBox(width: 8),
                   IconTheme.merge(
-                    data: IconThemeData(color: fg, size: size == AppButtonSize.small ? 16 : 18),
+                    data: IconThemeData(
+                      color: fg,
+                      size: size == AppButtonSize.small ? 16 : 18,
+                    ),
                     child: trailingIcon!,
                   ),
                 ],

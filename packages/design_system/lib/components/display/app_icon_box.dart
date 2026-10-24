@@ -3,16 +3,16 @@ import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 
 enum AppIconBoxVariant {
-  solid,   // Vibrant solid background with white icon (e.g. Quick Actions style)
-  soft,    // Subtle tinted background with colored icon (e.g. Metric cards style)
+  solid, // Vibrant solid background with white icon (e.g. Quick Actions style)
+  soft, // Subtle tinted background with colored icon (e.g. Metric cards style)
   outline, // Border with transparent background
-  flat,    // Plain transparent background
+  flat, // Plain transparent background
 }
 
 enum AppIconBoxShape {
   rounded, // Rounded rectangle (borderMd / radius 14)
-  circle,  // Full circle (pill)
-  square,  // Sharp corners
+  circle, // Full circle (pill)
+  square, // Sharp corners
 }
 
 /// Centralized Rankearn Icon Container Component
@@ -147,11 +147,7 @@ class AppIconBox extends StatelessWidget {
         border: _getBorder(),
       ),
       child: Center(
-        child: Icon(
-          icon,
-          size: iconSize,
-          color: _getEffectiveIconColor(),
-        ),
+        child: Icon(icon, size: iconSize, color: _getEffectiveIconColor()),
       ),
     );
 
@@ -196,10 +192,7 @@ class AppIconBox extends StatelessWidget {
     }
 
     if (tooltip != null) {
-      content = Tooltip(
-        message: tooltip!,
-        child: content,
-      );
+      content = Tooltip(message: tooltip!, child: content);
     }
 
     return content;

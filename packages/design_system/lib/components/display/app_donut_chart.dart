@@ -19,7 +19,9 @@ class DonutSlice {
   });
 
   /// Factory helper to build from a record for backwards compatibility.
-  factory DonutSlice.fromRecord(({String name, double percentage, Color color}) record) {
+  factory DonutSlice.fromRecord(
+    ({String name, double percentage, Color color}) record,
+  ) {
     return DonutSlice(
       label: record.name,
       percentage: record.percentage,
@@ -96,7 +98,8 @@ class AppDonutChart extends StatelessWidget {
             children: [
               Text(
                 _formatNumber(totalCount),
-                style: totalNumberStyle ??
+                style:
+                    totalNumberStyle ??
                     TextStyle(
                       fontSize: isLarge ? 22 : 16,
                       fontWeight: FontWeight.w800,
@@ -107,7 +110,8 @@ class AppDonutChart extends StatelessWidget {
               ),
               Text(
                 totalLabel,
-                style: totalLabelStyle ??
+                style:
+                    totalLabelStyle ??
                     TextStyle(
                       fontSize: isLarge ? 12 : 9.5,
                       fontWeight: FontWeight.w500,
@@ -122,22 +126,22 @@ class AppDonutChart extends StatelessWidget {
 
     final legendItems = slices.map((s) {
       return Padding(
-        padding: EdgeInsets.symmetric(vertical: fillHeight ? 1.5 : (isLarge ? 3.5 : 2.2)),
+        padding: EdgeInsets.symmetric(
+          vertical: fillHeight ? 1.5 : (isLarge ? 3.5 : 2.2),
+        ),
         child: Row(
           children: [
             Container(
               width: isLarge ? 8 : 7.5,
               height: isLarge ? 8 : 7.5,
-              decoration: BoxDecoration(
-                color: s.color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 7),
             Expanded(
               child: Text(
                 s.label,
-                style: legendLabelStyle ??
+                style:
+                    legendLabelStyle ??
                     TextStyle(
                       fontSize: isLarge ? 11.5 : 10,
                       fontWeight: FontWeight.w500,
@@ -151,7 +155,8 @@ class AppDonutChart extends StatelessWidget {
               s.count != null
                   ? '${s.percentage.toInt()}% (${_formatNumber(s.count!)})'
                   : '${s.percentage.toInt()}%',
-              style: legendPercentageStyle ??
+              style:
+                  legendPercentageStyle ??
                   TextStyle(
                     fontSize: isLarge ? 11.5 : 10,
                     fontWeight: FontWeight.w700,
@@ -171,7 +176,9 @@ class AppDonutChart extends StatelessWidget {
         Expanded(
           child: Column(
             mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
-            mainAxisAlignment: fillHeight ? MainAxisAlignment.spaceEvenly : legendAlignment,
+            mainAxisAlignment: fillHeight
+                ? MainAxisAlignment.spaceEvenly
+                : legendAlignment,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: legendItems,
           ),
@@ -259,11 +266,7 @@ class AppDonutChartCard extends StatelessWidget {
                   borderRadius: iconRadius,
                 ),
                 alignment: Alignment.center,
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 14,
-                ),
+                child: Icon(icon, color: Colors.white, size: 14),
               ),
               const SizedBox(width: 8),
               Expanded(

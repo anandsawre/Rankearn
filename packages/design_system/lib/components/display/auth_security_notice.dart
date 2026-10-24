@@ -11,14 +11,18 @@ class AuthSecurityNotice extends StatelessWidget {
     super.key,
     this.verticalPadding,
     this.title = 'Authorized Access Only',
-    this.description = 'This area is protected by Rankearn multi-factor authentication. All activity is secured & encrypted.',
+    this.description =
+        'This area is protected by Rankearn multi-factor authentication. All activity is secured & encrypted.',
     this.iconColor = const Color(0xFF00B96B),
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: verticalPadding ?? 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: verticalPadding ?? 8,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4FD),
         borderRadius: BorderRadius.circular(12),

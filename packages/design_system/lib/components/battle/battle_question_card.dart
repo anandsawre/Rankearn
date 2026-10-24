@@ -41,7 +41,11 @@ class BattleQuestionCard extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.bar_chart_rounded, color: AppColors.battleSecondaryText, size: 20),
+                  const Icon(
+                    Icons.bar_chart_rounded,
+                    color: AppColors.battleSecondaryText,
+                    size: 20,
+                  ),
                   const SizedBox(width: 5),
                   Flexible(
                     child: Text(
@@ -138,7 +142,10 @@ class BattleQuestionCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF3C7),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFFDE68A), width: 1.2),
+                    border: Border.all(
+                      color: const Color(0xFFFDE68A),
+                      width: 1.2,
+                    ),
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x14F59E0B),

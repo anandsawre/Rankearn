@@ -134,10 +134,7 @@ class AppDropdown<T> extends StatefulWidget {
       value: value,
       items: items.map((item) {
         final labelStr = itemLabel != null ? itemLabel(item) : item.toString();
-        return AppDropdownItem<T>(
-          value: item,
-          label: labelStr,
-        );
+        return AppDropdownItem<T>(value: item, label: labelStr);
       }).toList(),
       onChanged: onChanged,
       validator: validator,
@@ -283,7 +280,8 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
     if (_isOpen || !widget.enabled) return;
 
     final overlay = Overlay.of(context, rootOverlay: true);
-    final renderBox = _fieldKey.currentContext?.findRenderObject() as RenderBox? ??
+    final renderBox =
+        _fieldKey.currentContext?.findRenderObject() as RenderBox? ??
         context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
@@ -296,7 +294,8 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
     final effectiveRadius = widget.borderRadius ?? AppRadii.borderMd;
     final effectiveDropdownColor = widget.dropdownColor ?? AppColors.surface;
     final effectiveBorderColor = widget.borderColor ?? AppColors.borderSubtle;
-    final effectiveTextStyle = widget.style ??
+    final effectiveTextStyle =
+        widget.style ??
         AppTypography.bodyMedium.copyWith(
           color: AppColors.textPrimary,
           fontSize: 12.5,
@@ -329,7 +328,9 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                     opacity: _fadeAnimation,
                     child: ScaleTransition(
                       scale: _scaleAnimation,
-                      alignment: openUpward ? Alignment.bottomCenter : Alignment.topCenter,
+                      alignment: openUpward
+                          ? Alignment.bottomCenter
+                          : Alignment.topCenter,
                       child: Container(
                         constraints: BoxConstraints(
                           maxHeight: widget.menuMaxHeight ?? 240,
@@ -343,13 +344,17 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF10194F).withValues(alpha: 0.12),
+                              color: const Color(
+                                0xFF10194F,
+                              ).withValues(alpha: 0.12),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                               spreadRadius: -2,
                             ),
                             BoxShadow(
-                              color: const Color(0xFF10194F).withValues(alpha: 0.04),
+                              color: const Color(
+                                0xFF10194F,
+                              ).withValues(alpha: 0.04),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -361,7 +366,9 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                             thumbVisibility: true,
                             thickness: 4,
                             radius: const Radius.circular(4),
-                            thumbColor: AppColors.textMuted.withValues(alpha: 0.35),
+                            thumbColor: AppColors.textMuted.withValues(
+                              alpha: 0.35,
+                            ),
                             child: ListView.separated(
                               padding: const EdgeInsets.symmetric(vertical: 4),
                               shrinkWrap: true,
@@ -369,7 +376,9 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                               separatorBuilder: (_, _) => Divider(
                                 height: 1,
                                 thickness: 0.5,
-                                color: AppColors.borderSubtle.withValues(alpha: 0.6),
+                                color: AppColors.borderSubtle.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                               itemBuilder: (context, index) {
                                 final item = widget.items[index];
@@ -423,29 +432,33 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
   @override
   Widget build(BuildContext context) {
     final effectiveBorderRadius = widget.borderRadius ?? AppRadii.borderMd;
-    final effectiveFillColor = widget.fillColor ??
+    final effectiveFillColor =
+        widget.fillColor ??
         (widget.enabled ? AppColors.surfaceSubtle : AppColors.surfaceMuted);
     final effectiveBorderColor = _isOpen
         ? (widget.focusedBorderColor ?? AppColors.brandPrimary)
         : _isHovered
-            ? (widget.borderColor ?? AppColors.borderSubtle).withValues(alpha: 0.8)
-            : (widget.borderColor ?? AppColors.borderSubtle);
+        ? (widget.borderColor ?? AppColors.borderSubtle).withValues(alpha: 0.8)
+        : (widget.borderColor ?? AppColors.borderSubtle);
 
-    final effectiveTextStyle = widget.style ??
+    final effectiveTextStyle =
+        widget.style ??
         AppTypography.bodyMedium.copyWith(
           color: widget.enabled ? AppColors.textPrimary : AppColors.textMuted,
           fontSize: 12.5,
           fontWeight: FontWeight.w600,
         );
 
-    final effectiveHintStyle = widget.hintStyle ??
+    final effectiveHintStyle =
+        widget.hintStyle ??
         AppTypography.bodyMedium.copyWith(
           color: AppColors.textMuted,
           fontSize: 12.5,
           fontWeight: FontWeight.w500,
         );
 
-    final effectiveContentPadding = widget.contentPadding ??
+    final effectiveContentPadding =
+        widget.contentPadding ??
         (widget.isDense
             ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8.5)
             : const EdgeInsets.symmetric(horizontal: 14, vertical: 12));
@@ -473,7 +486,8 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
         ] else if (widget.label != null) ...[
           Text(
             widget.label!,
-            style: widget.labelStyle ??
+            style:
+                widget.labelStyle ??
                 AppTypography.labelLarge.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -490,10 +504,14 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                 ? SystemMouseCursors.click
                 : SystemMouseCursors.basic,
             onEnter: (_) {
-              if (widget.enabled && !_isHovered) setState(() => _isHovered = true);
+              if (widget.enabled && !_isHovered) {
+                setState(() => _isHovered = true);
+              }
             },
             onExit: (_) {
-              if (widget.enabled && _isHovered) setState(() => _isHovered = false);
+              if (widget.enabled && _isHovered) {
+                setState(() => _isHovered = false);
+              }
             },
             child: GestureDetector(
               onTap: widget.enabled ? _toggleDropdown : null,
@@ -507,15 +525,17 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                     color: _isOpen
                         ? (widget.focusedBorderColor ?? AppColors.brandPrimary)
                         : (widget.errorText != null)
-                            ? (widget.errorBorderColor ?? AppColors.errorRose)
-                            : effectiveBorderColor,
+                        ? (widget.errorBorderColor ?? AppColors.errorRose)
+                        : effectiveBorderColor,
                     width: _isOpen ? 1.5 : 1.0,
                   ),
                   boxShadow: _isOpen
                       ? [
                           BoxShadow(
-                            color: (widget.focusedBorderColor ?? AppColors.brandPrimary)
-                                .withValues(alpha: 0.15),
+                            color:
+                                (widget.focusedBorderColor ??
+                                        AppColors.brandPrimary)
+                                    .withValues(alpha: 0.15),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -532,7 +552,11 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                       selectedLeading,
                       const SizedBox(width: 8),
                     ] else if (selectedIcon != null) ...[
-                      Icon(selectedIcon, size: 18, color: AppColors.textSecondary),
+                      Icon(
+                        selectedIcon,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: 8),
                     ],
                     Expanded(
@@ -543,16 +567,17 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                               overflow: TextOverflow.ellipsis,
                             )
                           : widget.hintWidget ??
-                              Text(
-                                widget.hint ?? '',
-                                style: effectiveHintStyle,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                Text(
+                                  widget.hint ?? '',
+                                  style: effectiveHintStyle,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                     ),
                     const SizedBox(width: 6),
                     RotationTransition(
                       turns: _chevronAnimation,
-                      child: widget.suffixIcon ??
+                      child:
+                          widget.suffixIcon ??
                           const Icon(
                             Icons.keyboard_arrow_down_rounded,
                             color: AppColors.textSecondary,
@@ -611,14 +636,14 @@ class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
     final bgColor = isSelected
         ? const Color(0xFFECFDF5) // Brand emerald tint
         : _isHovered
-            ? const Color(0xFFF8FAFC) // Crisp subtle hover
-            : Colors.transparent;
+        ? const Color(0xFFF8FAFC) // Crisp subtle hover
+        : Colors.transparent;
 
     final textColor = isSelected
         ? const Color(0xFF00B96B) // Brand green
         : !isEnabled
-            ? AppColors.textMuted
-            : AppColors.textPrimary;
+        ? AppColors.textMuted
+        : AppColors.textPrimary;
 
     return MouseRegion(
       cursor: isEnabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
@@ -761,14 +786,16 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
     if (_isOpen) return;
 
     final overlay = Overlay.of(context, rootOverlay: true);
-    final renderBox = _fieldKey.currentContext?.findRenderObject() as RenderBox? ??
+    final renderBox =
+        _fieldKey.currentContext?.findRenderObject() as RenderBox? ??
         context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
     final size = renderBox.size;
     final minWidth = size.width < 140 ? 140.0 : size.width;
     final effectiveRadius = widget.borderRadius ?? BorderRadius.circular(8);
-    final effectiveTextStyle = widget.textStyle ??
+    final effectiveTextStyle =
+        widget.textStyle ??
         AppTypography.bodyMedium.copyWith(
           fontSize: 11.5,
           fontWeight: FontWeight.w600,
@@ -800,10 +827,15 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: effectiveRadius,
-                        border: Border.all(color: AppColors.borderSubtle, width: 1),
+                        border: Border.all(
+                          color: AppColors.borderSubtle,
+                          width: 1,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF10194F).withValues(alpha: 0.10),
+                            color: const Color(
+                              0xFF10194F,
+                            ).withValues(alpha: 0.10),
                             blurRadius: 16,
                             offset: const Offset(0, 6),
                           ),
@@ -818,7 +850,9 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                           separatorBuilder: (_, _) => Divider(
                             height: 1,
                             thickness: 0.5,
-                            color: AppColors.borderSubtle.withValues(alpha: 0.5),
+                            color: AppColors.borderSubtle.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                           itemBuilder: (context, index) {
                             final item = widget.items[index];
@@ -834,7 +868,9 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 8),
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
                                 color: isSelected
                                     ? const Color(0xFFECFDF5)
                                     : Colors.transparent,
@@ -904,13 +940,15 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
     final effectiveBorderColor = _isOpen
         ? AppColors.brandPrimary
         : (widget.borderColor ?? AppColors.borderSubtle);
-    final effectiveTextStyle = widget.textStyle ??
+    final effectiveTextStyle =
+        widget.textStyle ??
         AppTypography.bodyMedium.copyWith(
           fontSize: 11.5,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
         );
-    final effectiveHintStyle = widget.hintStyle ??
+    final effectiveHintStyle =
+        widget.hintStyle ??
         AppTypography.bodyMedium.copyWith(
           fontSize: 11.5,
           fontWeight: FontWeight.w500,
@@ -919,8 +957,8 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
 
     final displayLabel = widget.value != null
         ? (widget.itemLabel != null
-            ? widget.itemLabel!(widget.value as T)
-            : widget.value.toString())
+              ? widget.itemLabel!(widget.value as T)
+              : widget.value.toString())
         : widget.hint;
 
     return CompositedTransformTarget(
@@ -933,7 +971,8 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
             height: widget.height,
-            padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 8),
+            padding:
+                widget.padding ?? const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               color: effectiveBgColor,
               borderRadius: effectiveRadius,
@@ -960,7 +999,9 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                 ],
                 Text(
                   displayLabel ?? '',
-                  style: widget.value != null ? effectiveTextStyle : effectiveHintStyle,
+                  style: widget.value != null
+                      ? effectiveTextStyle
+                      : effectiveHintStyle,
                 ),
                 const SizedBox(width: 4),
                 RotationTransition(

@@ -172,6 +172,7 @@ void main() {
 
       // Dialog dismisses
       expect(find.text('Congratulations! 🎉'), findsNothing);
+      expect(coinsWon, isNotNull);
     });
 
     testWidgets(

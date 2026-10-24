@@ -20,7 +20,10 @@ class AuthFeatureTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 9, vertical: verticalPadding ?? 9),
+      padding: EdgeInsets.symmetric(
+        horizontal: 9,
+        vertical: verticalPadding ?? 9,
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(230),
         borderRadius: BorderRadius.circular(14),
@@ -44,11 +47,7 @@ class AuthFeatureTile extends StatelessWidget {
               color: iconBgColor,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 19,
-            ),
+            child: Icon(icon, color: Colors.white, size: 19),
           ),
           const SizedBox(width: 8),
 

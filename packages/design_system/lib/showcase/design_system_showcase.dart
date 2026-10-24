@@ -53,9 +53,15 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Rankearn Design System', style: AppTypography.displayMedium),
+            const Text(
+              'Rankearn Design System',
+              style: AppTypography.displayMedium,
+            ),
             const SizedBox(height: 4),
-            Text('Centralized UI Tokens & Components Showcase', style: AppTypography.bodyMedium),
+            Text(
+              'Centralized UI Tokens & Components Showcase',
+              style: AppTypography.bodyMedium,
+            ),
             const SizedBox(height: 24),
 
             // --- 1. Colors ---
@@ -66,7 +72,11 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
               children: [
                 _buildColorChip('Primary', AppColors.brandPrimary),
                 _buildColorChip('Primary Dark', AppColors.brandPrimaryDark),
-                _buildColorChip('Primary Light', AppColors.brandPrimaryLight, textColor: AppColors.brandPrimaryDark),
+                _buildColorChip(
+                  'Primary Light',
+                  AppColors.brandPrimaryLight,
+                  textColor: AppColors.brandPrimaryDark,
+                ),
                 _buildColorChip('Coin Gold', AppColors.coinGold),
                 _buildColorChip('Error Rose', AppColors.errorRose),
                 _buildColorChip('Slate Dark', AppColors.surfaceDark),
@@ -80,16 +90,34 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Display Bold (Heading 1)', style: AppTypography.displayMedium),
+                  Text(
+                    'Display Bold (Heading 1)',
+                    style: AppTypography.displayMedium,
+                  ),
                   SizedBox(height: 6),
-                  Text('Title Large / Exam Series Title', style: AppTypography.titleLarge),
+                  Text(
+                    'Title Large / Exam Series Title',
+                    style: AppTypography.titleLarge,
+                  ),
                   SizedBox(height: 6),
-                  Text('Body Regular: Comprehensive mock test series for BPSC & SSC.', style: AppTypography.bodyMedium),
+                  Text(
+                    'Body Regular: Comprehensive mock test series for BPSC & SSC.',
+                    style: AppTypography.bodyMedium,
+                  ),
                   SizedBox(height: 8),
-                  Text('हिन्दी प्रश्न: मौर्य साम्राज्य के संस्थापक कौन थे? (Hindi Devanagari Parity)',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  Text(
+                    'हिन्दी प्रश्न: मौर्य साम्राज्य के संस्थापक कौन थे? (Hindi Devanagari Parity)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                   SizedBox(height: 8),
-                  Text('MICRO TAG / STATUS PILL', style: AppTypography.microTag),
+                  Text(
+                    'MICRO TAG / STATUS PILL',
+                    style: AppTypography.microTag,
+                  ),
                 ],
               ),
             ),
@@ -144,7 +172,11 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
               children: [
                 AppButton(
                   label: 'Start Mock Test',
-                  leadingIcon: const Icon(Icons.play_arrow, color: Colors.white, size: 18),
+                  leadingIcon: const Icon(
+                    Icons.play_arrow,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   onPressed: () {},
                 ),
                 AppButton(
@@ -153,7 +185,9 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
                   onPressed: () {},
                 ),
                 AppButton(
-                  label: _isLoadingButton ? 'Verifying...' : 'Toggle Loading State',
+                  label: _isLoadingButton
+                      ? 'Verifying...'
+                      : 'Toggle Loading State',
                   variant: AppButtonVariant.secondary,
                   isLoading: _isLoadingButton,
                   onPressed: () {
@@ -173,36 +207,65 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
             const SizedBox(height: 28),
 
             // --- 6. Form Fields & Dropdowns ---
-            _buildSectionTitle('6. Form Fields & Centralized Dropdown Components'),
+            _buildSectionTitle(
+              '6. Form Fields & Centralized Dropdown Components',
+            ),
             const AppTextField(
               label: 'UTR / Transaction Reference (12 Digits)',
               hintText: 'Enter 12-digit UTR number',
-              prefixIcon: Icon(Icons.qr_code, color: AppColors.textMuted, size: 20),
+              prefixIcon: Icon(
+                Icons.qr_code,
+                color: AppColors.textMuted,
+                size: 20,
+              ),
             ),
             const SizedBox(height: 12),
             const AppTextField(
               label: 'Password',
               hintText: '••••••••',
               isPassword: true,
-              prefixIcon: Icon(Icons.lock_outline, color: AppColors.textMuted, size: 20),
+              prefixIcon: Icon(
+                Icons.lock_outline,
+                color: AppColors.textMuted,
+                size: 20,
+              ),
             ),
             const SizedBox(height: 12),
             AppDropdown<String>.simple(
               label: 'Class / Target Examination Goal',
               value: _selectedCategory,
               hint: 'Select target examination',
-              prefixIcon: const Icon(Icons.school_outlined, color: AppColors.textSecondary, size: 20),
-              items: const ['SSC CGL', 'UPSC Prelims', 'Banking PO', 'Railway RRB', 'Class 10th CBSE', 'Class 12th CBSE'],
+              prefixIcon: const Icon(
+                Icons.school_outlined,
+                color: AppColors.textSecondary,
+                size: 20,
+              ),
+              items: const [
+                'SSC CGL',
+                'UPSC Prelims',
+                'Banking PO',
+                'Railway RRB',
+                'Class 10th CBSE',
+                'Class 12th CBSE',
+              ],
               onChanged: (val) => setState(() => _selectedCategory = val),
             ),
             const SizedBox(height: 14),
             Row(
               children: [
-                const Text('Table Filter Component:', style: AppTypography.labelLarge),
+                const Text(
+                  'Table Filter Component:',
+                  style: AppTypography.labelLarge,
+                ),
                 const SizedBox(width: 10),
                 AppDropdownFilter<String>(
                   value: _selectedCategory ?? 'SSC CGL',
-                  items: const ['SSC CGL', 'UPSC Prelims', 'Banking PO', 'Railway RRB'],
+                  items: const [
+                    'SSC CGL',
+                    'UPSC Prelims',
+                    'Banking PO',
+                    'Railway RRB',
+                  ],
                   onChanged: (val) => setState(() => _selectedCategory = val),
                 ),
               ],
@@ -211,9 +274,7 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
 
             // --- 7. Loading Spinner ---
             _buildSectionTitle('7. Brand Logo Loader'),
-            const AppCard(
-              child: AppLogoLoader(fullScreen: false),
-            ),
+            const AppCard(child: AppLogoLoader(fullScreen: false)),
             const SizedBox(height: 32),
           ],
         ),
@@ -226,12 +287,18 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Text(
         title,
-        style: AppTypography.titleMedium.copyWith(color: AppColors.brandPrimaryDark),
+        style: AppTypography.titleMedium.copyWith(
+          color: AppColors.brandPrimaryDark,
+        ),
       ),
     );
   }
 
-  Widget _buildColorChip(String label, Color color, {Color textColor = Colors.white}) {
+  Widget _buildColorChip(
+    String label,
+    Color color, {
+    Color textColor = Colors.white,
+  }) {
     return Container(
       width: 105,
       padding: const EdgeInsets.all(10),
@@ -243,7 +310,14 @@ class _DesignSystemShowcaseState extends State<DesignSystemShowcase> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 11)),
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             '#${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}',

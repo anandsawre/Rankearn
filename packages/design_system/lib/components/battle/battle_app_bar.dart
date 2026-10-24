@@ -23,9 +23,7 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: AppColors.battleHeaderGradient,
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.battleHeaderGradient),
       child: SafeArea(
         bottom: false,
         child: SizedBox(
@@ -36,10 +34,17 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 // Back Button
                 IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   onPressed: onBack,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                   tooltip: 'Back',
                 ),
 
@@ -110,11 +115,17 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
 
                 // Gold Coin Balance Pill
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4.5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withAlpha(50),
                     borderRadius: AppRadii.borderPill,
-                    border: Border.all(color: Colors.white.withAlpha(50), width: 1),
+                    border: Border.all(
+                      color: Colors.white.withAlpha(50),
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

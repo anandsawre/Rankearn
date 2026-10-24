@@ -152,11 +152,7 @@ class BattlePlayerCard extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Icon(
-          Icons.military_tech_rounded,
-          color: badgeColor,
-          size: 26,
-        ),
+        Icon(Icons.military_tech_rounded, color: badgeColor, size: 26),
         Positioned(
           top: 3,
           child: Text(

@@ -36,13 +36,7 @@ class WaveBackground extends StatelessWidget {
       return background;
     }
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        background,
-        child!,
-      ],
-    );
+    return Stack(fit: StackFit.expand, children: [background, child!]);
   }
 }
 
@@ -105,16 +99,8 @@ class _MultiLayerWavePainter extends CustomPainter {
     // -------------------------------------------------------------------------
     final path1 = Path();
     path1.moveTo(0, h * 0.65);
-    path1.cubicTo(
-      w * 0.22, h * 0.52,
-      w * 0.42, h * 0.76,
-      w * 0.68, h * 0.62,
-    );
-    path1.cubicTo(
-      w * 0.84, h * 0.53,
-      w * 0.94, h * 0.60,
-      w, h * 0.56,
-    );
+    path1.cubicTo(w * 0.22, h * 0.52, w * 0.42, h * 0.76, w * 0.68, h * 0.62);
+    path1.cubicTo(w * 0.84, h * 0.53, w * 0.94, h * 0.60, w, h * 0.56);
     path1.lineTo(w, h);
     path1.lineTo(0, h);
     path1.close();
@@ -141,16 +127,8 @@ class _MultiLayerWavePainter extends CustomPainter {
     // -------------------------------------------------------------------------
     final path2 = Path();
     path2.moveTo(0, h * 0.78);
-    path2.cubicTo(
-      w * 0.28, h * 0.88,
-      w * 0.55, h * 0.68,
-      w * 0.78, h * 0.82,
-    );
-    path2.cubicTo(
-      w * 0.90, h * 0.89,
-      w * 0.96, h * 0.82,
-      w, h * 0.80,
-    );
+    path2.cubicTo(w * 0.28, h * 0.88, w * 0.55, h * 0.68, w * 0.78, h * 0.82);
+    path2.cubicTo(w * 0.90, h * 0.89, w * 0.96, h * 0.82, w, h * 0.80);
     path2.lineTo(w, h);
     path2.lineTo(0, h);
     path2.close();
@@ -178,11 +156,7 @@ class _MultiLayerWavePainter extends CustomPainter {
     final path3 = Path();
     path3.moveTo(0, 0);
     path3.lineTo(w * 0.58, 0);
-    path3.cubicTo(
-      w * 0.44, h * 0.22,
-      w * 0.22, h * 0.28,
-      0, h * 0.38,
-    );
+    path3.cubicTo(w * 0.44, h * 0.22, w * 0.22, h * 0.28, 0, h * 0.38);
     path3.close();
 
     final shader3 = LinearGradient(
@@ -208,15 +182,14 @@ class _MultiLayerWavePainter extends CustomPainter {
     final ribbonPath = Path();
     ribbonPath.moveTo(0, h * 0.68);
     ribbonPath.cubicTo(
-      w * 0.24, h * 0.55,
-      w * 0.45, h * 0.78,
-      w * 0.72, h * 0.65,
+      w * 0.24,
+      h * 0.55,
+      w * 0.45,
+      h * 0.78,
+      w * 0.72,
+      h * 0.65,
     );
-    ribbonPath.cubicTo(
-      w * 0.86, h * 0.58,
-      w * 0.95, h * 0.63,
-      w, h * 0.60,
-    );
+    ribbonPath.cubicTo(w * 0.86, h * 0.58, w * 0.95, h * 0.63, w, h * 0.60);
 
     final ribbonPaint = Paint()
       ..shader = LinearGradient(

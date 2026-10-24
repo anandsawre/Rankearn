@@ -186,7 +186,8 @@ class TodayGoalCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      subtitle ?? 'Complete $target tests today to earn 50 coins!',
+                      subtitle ??
+                          'Complete $target tests today to earn 50 coins!',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

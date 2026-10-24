@@ -12,9 +12,7 @@ class AuthBackgroundWaves extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: CustomPaint(
-        painter: _AuthBackgroundWavesPainter(),
-      ),
+      child: CustomPaint(painter: _AuthBackgroundWavesPainter()),
     );
   }
 }
@@ -52,8 +50,8 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
       ..shader = RadialGradient(
         radius: 0.90,
         colors: [
-          const Color(0xFF6366F1).withAlpha(65),  // Indigo core
-          const Color(0xFF8B5CF6).withAlpha(40),  // Violet halo
+          const Color(0xFF6366F1).withAlpha(65), // Indigo core
+          const Color(0xFF8B5CF6).withAlpha(40), // Violet halo
           const Color(0xFFC4B5FD).withAlpha(15),
           Colors.transparent,
         ],
@@ -67,8 +65,8 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
       ..shader = RadialGradient(
         radius: 0.80,
         colors: [
-          const Color(0xFF38BDF8).withAlpha(50),  // Neon sky blue
-          const Color(0xFF818CF8).withAlpha(30),  // Soft periwinkle
+          const Color(0xFF38BDF8).withAlpha(50), // Neon sky blue
+          const Color(0xFF818CF8).withAlpha(30), // Soft periwinkle
           Colors.transparent,
         ],
         stops: const [0.0, 0.55, 1.0],
@@ -80,10 +78,7 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     final blGlowPaint = Paint()
       ..shader = RadialGradient(
         radius: 0.70,
-        colors: [
-          const Color(0xFFA5B4FC).withAlpha(45),
-          Colors.transparent,
-        ],
+        colors: [const Color(0xFFA5B4FC).withAlpha(45), Colors.transparent],
       ).createShader(Rect.fromCircle(center: blGlowCenter, radius: w * 0.28));
     canvas.drawCircle(blGlowCenter, w * 0.28, blGlowPaint);
 
@@ -93,11 +88,7 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     // Outer Arc Wave
     final topArc1 = Path()
       ..moveTo(w * 0.62, 0)
-      ..cubicTo(
-        w * 0.70, h * 0.12,
-        w * 0.82, h * 0.22,
-        w, h * 0.26,
-      )
+      ..cubicTo(w * 0.70, h * 0.12, w * 0.82, h * 0.22, w, h * 0.26)
       ..lineTo(w, 0)
       ..close();
 
@@ -115,11 +106,7 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     // Inner Sleek Accent Arc
     final topArc2 = Path()
       ..moveTo(w * 0.76, 0)
-      ..cubicTo(
-        w * 0.82, h * 0.08,
-        w * 0.90, h * 0.14,
-        w, h * 0.16,
-      )
+      ..cubicTo(w * 0.82, h * 0.08, w * 0.90, h * 0.14, w, h * 0.16)
       ..lineTo(w, 0)
       ..close();
 
@@ -137,11 +124,7 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     // Top Arc Crest Hairline
     final topArcStroke = Path()
       ..moveTo(w * 0.62, 0)
-      ..cubicTo(
-        w * 0.70, h * 0.12,
-        w * 0.82, h * 0.22,
-        w, h * 0.26,
-      );
+      ..cubicTo(w * 0.70, h * 0.12, w * 0.82, h * 0.22, w, h * 0.26);
     final topArcStrokePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
@@ -159,16 +142,8 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     // =========================================================================
     final wave1 = Path()
       ..moveTo(0, h * 0.52)
-      ..cubicTo(
-        w * 0.22, h * 0.44,
-        w * 0.42, h * 0.60,
-        w * 0.68, h * 0.50,
-      )
-      ..cubicTo(
-        w * 0.84, h * 0.43,
-        w * 0.94, h * 0.54,
-        w, h * 0.48,
-      )
+      ..cubicTo(w * 0.22, h * 0.44, w * 0.42, h * 0.60, w * 0.68, h * 0.50)
+      ..cubicTo(w * 0.84, h * 0.43, w * 0.94, h * 0.54, w, h * 0.48)
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();
@@ -178,7 +153,7 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFFC7D2FE).withAlpha(70),  // Light indigo mist
+          const Color(0xFFC7D2FE).withAlpha(70), // Light indigo mist
           const Color(0xFFE0E7FF).withAlpha(120),
           const Color(0xFFF1F5F9).withAlpha(180),
         ],
@@ -212,16 +187,8 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     // =========================================================================
     final wave2 = Path()
       ..moveTo(0, h * 0.66)
-      ..cubicTo(
-        w * 0.16, h * 0.54,
-        w * 0.36, h * 0.50,
-        w * 0.58, h * 0.64,
-      )
-      ..cubicTo(
-        w * 0.74, h * 0.74,
-        w * 0.88, h * 0.62,
-        w, h * 0.70,
-      )
+      ..cubicTo(w * 0.16, h * 0.54, w * 0.36, h * 0.50, w * 0.58, h * 0.64)
+      ..cubicTo(w * 0.74, h * 0.74, w * 0.88, h * 0.62, w, h * 0.70)
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();
@@ -232,7 +199,7 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
         end: Alignment.bottomRight,
         colors: [
           const Color(0xFF818CF8).withAlpha(120), // Periwinkle wave
-          const Color(0xFF6366F1).withAlpha(80),  // Indigo body
+          const Color(0xFF6366F1).withAlpha(80), // Indigo body
           const Color(0xFFC7D2FE).withAlpha(110), // Soft base
         ],
         stops: const [0.0, 0.55, 1.0],
@@ -242,16 +209,8 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     // Wave 2 Crest Sheen
     final wave2Stroke = Path()
       ..moveTo(0, h * 0.66)
-      ..cubicTo(
-        w * 0.16, h * 0.54,
-        w * 0.36, h * 0.50,
-        w * 0.58, h * 0.64,
-      )
-      ..cubicTo(
-        w * 0.74, h * 0.74,
-        w * 0.88, h * 0.62,
-        w, h * 0.70,
-      );
+      ..cubicTo(w * 0.16, h * 0.54, w * 0.36, h * 0.50, w * 0.58, h * 0.64)
+      ..cubicTo(w * 0.74, h * 0.74, w * 0.88, h * 0.62, w, h * 0.70);
     final wave2StrokePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4
@@ -270,16 +229,8 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     // =========================================================================
     final wave3 = Path()
       ..moveTo(0, h * 0.78)
-      ..cubicTo(
-        w * 0.14, h * 0.72,
-        w * 0.32, h * 0.79,
-        w * 0.52, h * 0.74,
-      )
-      ..cubicTo(
-        w * 0.72, h * 0.68,
-        w * 0.88, h * 0.82,
-        w, h * 0.78,
-      )
+      ..cubicTo(w * 0.14, h * 0.72, w * 0.32, h * 0.79, w * 0.52, h * 0.74)
+      ..cubicTo(w * 0.72, h * 0.68, w * 0.88, h * 0.82, w, h * 0.78)
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();
@@ -302,21 +253,9 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     // =========================================================================
     final wave4 = Path()
       ..moveTo(0, h * 0.68)
-      ..cubicTo(
-        w * 0.08, h * 0.67,
-        w * 0.15, h * 0.75,
-        w * 0.28, h * 0.77,
-      )
-      ..cubicTo(
-        w * 0.44, h * 0.79,
-        w * 0.60, h * 0.94,
-        w * 0.82, h * 0.90,
-      )
-      ..cubicTo(
-        w * 0.92, h * 0.88,
-        w * 0.98, h * 0.96,
-        w, h * 0.95,
-      )
+      ..cubicTo(w * 0.08, h * 0.67, w * 0.15, h * 0.75, w * 0.28, h * 0.77)
+      ..cubicTo(w * 0.44, h * 0.79, w * 0.60, h * 0.94, w * 0.82, h * 0.90)
+      ..cubicTo(w * 0.92, h * 0.88, w * 0.98, h * 0.96, w, h * 0.95)
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();
@@ -338,16 +277,8 @@ class _AuthBackgroundWavesPainter extends CustomPainter {
     // Wave 4 Ultra-Crisp Crest Highlight (Neon Luminous Sheen)
     final wave4Highlight = Path()
       ..moveTo(0, h * 0.68)
-      ..cubicTo(
-        w * 0.08, h * 0.67,
-        w * 0.15, h * 0.75,
-        w * 0.28, h * 0.77,
-      )
-      ..cubicTo(
-        w * 0.44, h * 0.79,
-        w * 0.60, h * 0.94,
-        w * 0.82, h * 0.90,
-      );
+      ..cubicTo(w * 0.08, h * 0.67, w * 0.15, h * 0.75, w * 0.28, h * 0.77)
+      ..cubicTo(w * 0.44, h * 0.79, w * 0.60, h * 0.94, w * 0.82, h * 0.90);
     final wave4HighlightPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0

@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../tokens/radii.dart';
 
-enum DailyTaskActionType {
-  goNow,
-  progressPill,
-  claim,
-  completed,
-}
+enum DailyTaskActionType { goNow, progressPill, claim, completed }
 
 /// Single Daily Task Card for the Rewards Tab matching the reference UI.
 class DailyTaskCard extends StatelessWidget {
@@ -40,10 +35,7 @@ class DailyTaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadii.borderLg,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.1,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x06000000),
@@ -71,10 +63,7 @@ class DailyTaskCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildCoinBadge(),
-                    _buildActionButton(),
-                  ],
+                  children: [_buildCoinBadge(), _buildActionButton()],
                 ),
               ],
             );
@@ -87,9 +76,7 @@ class DailyTaskCard extends StatelessWidget {
               const SizedBox(width: 14),
 
               // 2. Title & Subtitle
-              Expanded(
-                child: _buildTextContent(),
-              ),
+              Expanded(child: _buildTextContent()),
               const SizedBox(width: 12),
 
               // 3. Coin Reward Pill
@@ -120,13 +107,7 @@ class DailyTaskCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(
-        child: Icon(
-          icon,
-          color: iconColor,
-          size: 22,
-        ),
-      ),
+      child: Center(child: Icon(icon, color: iconColor, size: 22)),
     );
   }
 
@@ -260,10 +241,7 @@ class DailyTaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 0.8,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
       ),
       child: Center(
         child: Text(

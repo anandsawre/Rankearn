@@ -15,6 +15,7 @@ import 'features/wallet/wallet_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/rewards/rewards_hub_screen.dart';
 import 'features/auth/user_auth_screen.dart';
+import 'features/leaderboard/leaderboard_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,11 +34,7 @@ void main() async {
     debugPrint('Supabase initialization: $e');
   }
 
-  runApp(
-    const ProviderScope(
-      child: RankearnUserApp(showAuthInitially: true),
-    ),
-  );
+  runApp(const ProviderScope(child: RankearnUserApp(showAuthInitially: true)));
 }
 
 class RankearnUserApp extends StatefulWidget {
@@ -118,7 +115,8 @@ class _UserAppShellState extends State<UserAppShell> {
   @override
   void initState() {
     super.initState();
-    _profile = widget.initialProfile ??
+    _profile =
+        widget.initialProfile ??
         UserProfile(
           id: 'usr_vikram_70',
           name: 'Vikram Singh',
@@ -151,8 +149,10 @@ class _UserAppShellState extends State<UserAppShell> {
       id: 'q_01',
       testId: 'test_bpsc_01',
       questionNumber: 1,
-      questionTextEnglish: 'When was the state of Bihar carved out from the Bengal Presidency?',
-      questionTextHindi: 'बिहार राज्य को बंगाल प्रेसीडेंसी से कब अलग किया गया था?',
+      questionTextEnglish:
+          'When was the state of Bihar carved out from the Bengal Presidency?',
+      questionTextHindi:
+          'बिहार राज्य को बंगाल प्रेसीडेंसी से कब अलग किया गया था?',
       options: [
         QuestionOption(textEnglish: '1912', textHindi: '1912'),
         QuestionOption(textEnglish: '1905', textHindi: '1905'),
@@ -160,14 +160,17 @@ class _UserAppShellState extends State<UserAppShell> {
         QuestionOption(textEnglish: '1947', textHindi: '1947'),
       ],
       correctAnswer: 0,
-      explanationEnglish: 'Bihar was carved out of the Bengal Presidency on 22 March 1912 (celebrated as Bihar Diwas).',
+      explanationEnglish:
+          'Bihar was carved out of the Bengal Presidency on 22 March 1912 (celebrated as Bihar Diwas).',
     ),
     QuestionModel(
       id: 'q_02',
       testId: 'test_bpsc_01',
       questionNumber: 2,
-      questionTextEnglish: 'Which river is historically known as the "Sorrow of Bihar"?',
-      questionTextHindi: 'किस नदी को ऐतिहासिक रूप से "बिहार का शोक" कहा जाता है?',
+      questionTextEnglish:
+          'Which river is historically known as the "Sorrow of Bihar"?',
+      questionTextHindi:
+          'किस नदी को ऐतिहासिक रूप से "बिहार का शोक" कहा जाता है?',
       options: [
         QuestionOption(textEnglish: 'Gandak River', textHindi: 'गंडक नदी'),
         QuestionOption(textEnglish: 'Kosi River', textHindi: 'कोसी नदी'),
@@ -175,14 +178,17 @@ class _UserAppShellState extends State<UserAppShell> {
         QuestionOption(textEnglish: 'Ghaghara River', textHindi: 'घाघरा नदी'),
       ],
       correctAnswer: 1,
-      explanationEnglish: 'The Kosi river is called the Sorrow of Bihar due to its frequent course shifts and devastating floods.',
+      explanationEnglish:
+          'The Kosi river is called the Sorrow of Bihar due to its frequent course shifts and devastating floods.',
     ),
     QuestionModel(
       id: 'q_03',
       testId: 'test_bpsc_01',
       questionNumber: 3,
-      questionTextEnglish: 'What is the minimum age required to become the Governor of an Indian state?',
-      questionTextHindi: 'भारत के किसी राज्य का राज्यपाल बनने के लिए न्यूनतम आयु क्या है?',
+      questionTextEnglish:
+          'What is the minimum age required to become the Governor of an Indian state?',
+      questionTextHindi:
+          'भारत के किसी राज्य का राज्यपाल बनने के लिए न्यूनतम आयु क्या है?',
       options: [
         QuestionOption(textEnglish: '25 Years', textHindi: '25 वर्ष'),
         QuestionOption(textEnglish: '30 Years', textHindi: '30 वर्ष'),
@@ -190,29 +196,38 @@ class _UserAppShellState extends State<UserAppShell> {
         QuestionOption(textEnglish: '40 Years', textHindi: '40 वर्ष'),
       ],
       correctAnswer: 2,
-      explanationEnglish: 'Under Article 157 of the Indian Constitution, the minimum age is 35 years.',
+      explanationEnglish:
+          'Under Article 157 of the Indian Constitution, the minimum age is 35 years.',
     ),
     QuestionModel(
       id: 'q_04',
       testId: 'test_bpsc_01',
       questionNumber: 4,
-      questionTextEnglish: 'Who founded the Nalanda Mahavihara in ancient India?',
-      questionTextHindi: 'प्राचीन भारत में नालंदा महाविहार की स्थापना किसने की थी?',
+      questionTextEnglish:
+          'Who founded the Nalanda Mahavihara in ancient India?',
+      questionTextHindi:
+          'प्राचीन भारत में नालंदा महाविहार की स्थापना किसने की थी?',
       options: [
         QuestionOption(textEnglish: 'Harshavardhana', textHindi: 'हर्षवर्धन'),
-        QuestionOption(textEnglish: 'Kumaragupta I', textHindi: 'कुमारगुप्त प्रथम'),
+        QuestionOption(
+          textEnglish: 'Kumaragupta I',
+          textHindi: 'कुमारगुप्त प्रथम',
+        ),
         QuestionOption(textEnglish: 'Samudragupta', textHindi: 'समुद्रगुप्त'),
         QuestionOption(textEnglish: 'Ashoka', textHindi: 'अशोक'),
       ],
       correctAnswer: 1,
-      explanationEnglish: 'Nalanda was founded during the 5th century CE by Gupta Emperor Kumaragupta I.',
+      explanationEnglish:
+          'Nalanda was founded during the 5th century CE by Gupta Emperor Kumaragupta I.',
     ),
     QuestionModel(
       id: 'q_05',
       testId: 'test_bpsc_01',
       questionNumber: 5,
-      questionTextEnglish: 'In the Indian Rupee coin system on Rankearn, how many coins equal ₹1.00?',
-      questionTextHindi: 'Rankearn के कॉइन सिस्टम में कितने कॉइन ₹1.00 के बराबर होते हैं?',
+      questionTextEnglish:
+          'In the Indian Rupee coin system on Rankearn, how many coins equal ₹1.00?',
+      questionTextHindi:
+          'Rankearn के कॉइन सिस्टम में कितने कॉइन ₹1.00 के बराबर होते हैं?',
       options: [
         QuestionOption(textEnglish: '10 Coins', textHindi: '10 कॉइन'),
         QuestionOption(textEnglish: '20 Coins', textHindi: '20 कॉइन'),
@@ -220,7 +235,8 @@ class _UserAppShellState extends State<UserAppShell> {
         QuestionOption(textEnglish: '100 Coins', textHindi: '100 कॉइन'),
       ],
       correctAnswer: 1,
-      explanationEnglish: 'On Rankearn, 20 Coins equal ₹1.00 for withdrawal and test entries.',
+      explanationEnglish:
+          'On Rankearn, 20 Coins equal ₹1.00 for withdrawal and test entries.',
     ),
   ];
 
@@ -235,7 +251,9 @@ class _UserAppShellState extends State<UserAppShell> {
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Quiz submitted! Score: $score | Accuracy: ${accuracy.toStringAsFixed(1)}%'),
+                content: Text(
+                  'Quiz submitted! Score: $score | Accuracy: ${accuracy.toStringAsFixed(1)}%',
+                ),
                 backgroundColor: AppColors.primary,
                 duration: const Duration(seconds: 4),
               ),
@@ -285,7 +303,10 @@ class _UserAppShellState extends State<UserAppShell> {
                 children: [
                   Row(
                     children: const [
-                      Icon(Icons.notifications_active, color: AppColors.primary),
+                      Icon(
+                        Icons.notifications_active,
+                        color: AppColors.primary,
+                      ),
                       SizedBox(width: 8),
                       Text('Notifications', style: AppTypography.titleLarge),
                     ],
@@ -305,11 +326,23 @@ class _UserAppShellState extends State<UserAppShell> {
                     color: AppColors.primarySubtle,
                     borderRadius: AppRadii.borderMd,
                   ),
-                  child: const Icon(Icons.emoji_events, color: AppColors.primary),
+                  child: const Icon(
+                    Icons.emoji_events,
+                    color: AppColors.primary,
+                  ),
                 ),
-                title: const Text('BPSC Grand League Winner!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: const Text('You won 250 Coins in the 70th BPSC Prelims Mega Contest.', style: TextStyle(fontSize: 12)),
-                trailing: const Text('2h ago', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                title: const Text(
+                  'BPSC Grand League Winner!',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                subtitle: const Text(
+                  'You won 250 Coins in the 70th BPSC Prelims Mega Contest.',
+                  style: TextStyle(fontSize: 12),
+                ),
+                trailing: const Text(
+                  '2h ago',
+                  style: TextStyle(fontSize: 10, color: AppColors.textMuted),
+                ),
               ),
               const Divider(),
               ListTile(
@@ -322,9 +355,18 @@ class _UserAppShellState extends State<UserAppShell> {
                   ),
                   child: const Icon(Icons.bolt, color: Color(0xFFD97706)),
                 ),
-                title: const Text('Live Battle Challenge', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: const Text('New 1v1 Arena is live with 2x coin multiplier.', style: TextStyle(fontSize: 12)),
-                trailing: const Text('5h ago', style: TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                title: const Text(
+                  'Live Battle Challenge',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                subtitle: const Text(
+                  'New 1v1 Arena is live with 2x coin multiplier.',
+                  style: TextStyle(fontSize: 12),
+                ),
+                trailing: const Text(
+                  '5h ago',
+                  style: TextStyle(fontSize: 10, color: AppColors.textMuted),
+                ),
               ),
               const SizedBox(height: 16),
               AppButton(
@@ -349,7 +391,10 @@ class _UserAppShellState extends State<UserAppShell> {
             children: const [
               Icon(Icons.chat_bubble_outline, color: AppColors.primary),
               SizedBox(width: 8),
-              Text('Support Chat', style: TextStyle(fontWeight: FontWeight.w900)),
+              Text(
+                'Support Chat',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
             ],
           ),
           content: Column(
@@ -361,7 +406,10 @@ class _UserAppShellState extends State<UserAppShell> {
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
               SizedBox(height: 12),
-              Text('📧 Email: support@rankearn.in\n💬 Telegram: @RankearnSupport\n⏰ Hours: 9:00 AM - 9:00 PM IST', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+              Text(
+                '📧 Email: support@rankearn.in\n💬 Telegram: @RankearnSupport\n⏰ Hours: 9:00 AM - 9:00 PM IST',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+              ),
             ],
           ),
           actions: [
@@ -370,14 +418,23 @@ class _UserAppShellState extends State<UserAppShell> {
               child: const Text('Close'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Support ticket created. Our team will contact you shortly!')),
+                  const SnackBar(
+                    content: Text(
+                      'Support ticket created. Our team will contact you shortly!',
+                    ),
+                  ),
                 );
               },
-              child: const Text('Submit Ticket', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Submit Ticket',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -394,17 +451,29 @@ class _UserAppShellState extends State<UserAppShell> {
             children: const [
               Icon(Icons.star_outline, color: Color(0xFFF59E0B)),
               SizedBox(width: 8),
-              Text('Give Feedback', style: TextStyle(fontWeight: FontWeight.w900)),
+              Text(
+                'Give Feedback',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('How would you rate your mock test experience on Rankearn?'),
+              const Text(
+                'How would you rate your mock test experience on Rankearn?',
+              ),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) => const Icon(Icons.star, color: Color(0xFFF59E0B), size: 28)),
+                children: List.generate(
+                  5,
+                  (index) => const Icon(
+                    Icons.star,
+                    color: Color(0xFFF59E0B),
+                    size: 28,
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -422,14 +491,21 @@ class _UserAppShellState extends State<UserAppShell> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Thank you for your valuable feedback!')),
+                  const SnackBar(
+                    content: Text('Thank you for your valuable feedback!'),
+                  ),
                 );
               },
-              child: const Text('Submit', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Submit',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -511,8 +587,10 @@ class _UserAppShellState extends State<UserAppShell> {
                 onTabSelected: (tab) => setState(() => _activeTab = tab),
                 onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
                 onNotificationTap: _openNotificationsModal,
-                onCoinsTap: () => setState(() => _activeTab = UserNavTab.wallet),
-                onProfileTap: () => setState(() => _activeTab = UserNavTab.profile),
+                onCoinsTap: () =>
+                    setState(() => _activeTab = UserNavTab.wallet),
+                onProfileTap: () =>
+                    setState(() => _activeTab = UserNavTab.profile),
               ),
         bottomNavigationBar: isDesktop
             ? null
@@ -522,36 +600,59 @@ class _UserAppShellState extends State<UserAppShell> {
               ),
         body: switch (_activeTab) {
           UserNavTab.home => DashboardScreen(
-              profile: _profile,
-              onStartTest: () => _startQuiz(_defaultMockTest),
-              onExploreTests: () => setState(() => _activeTab = UserNavTab.tests),
-              onJoinContest: () => setState(() => _activeTab = UserNavTab.live),
-              onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
-              onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
-              onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
-            ),
-        UserNavTab.tests => TestSeriesScreen(
+            profile: _profile,
+            onStartTest: () => _startQuiz(_defaultMockTest),
+            onExploreTests: () => setState(() => _activeTab = UserNavTab.tests),
+            onJoinContest: () => setState(() => _activeTab = UserNavTab.live),
+            onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
+            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
+            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
+          ),
+          UserNavTab.categories => TestSeriesScreen(
             userCoins: _profile.coins,
             onStartTest: (test) => _startQuiz(test),
             initialTests: widget.initialTests,
             onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
             onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
             onOpenLive: () => setState(() => _activeTab = UserNavTab.live),
-            onOpenLeaderboard: () => setState(() => _activeTab = UserNavTab.home),
+            onOpenLeaderboard: () =>
+                setState(() => _activeTab = UserNavTab.leaderboard),
           ),
-        UserNavTab.live => LiveTestsScreen(
+          UserNavTab.tests => TestSeriesScreen(
+            userCoins: _profile.coins,
+            onStartTest: (test) => _startQuiz(test),
+            initialTests: widget.initialTests,
+            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
+            onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
+            onOpenLive: () => setState(() => _activeTab = UserNavTab.live),
+            onOpenLeaderboard: () =>
+                setState(() => _activeTab = UserNavTab.leaderboard),
+          ),
+          UserNavTab.live => LiveTestsScreen(
             userCoins: _profile.coins,
             onStartTest: (test) => _startQuiz(test),
             onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
-            onOpenLeaderboard: () => setState(() => _activeTab = UserNavTab.home),
-            onExploreSeries: () => setState(() => _activeTab = UserNavTab.tests),
+            onOpenLeaderboard: () =>
+                setState(() => _activeTab = UserNavTab.leaderboard),
+            onExploreSeries: () =>
+                setState(() => _activeTab = UserNavTab.tests),
           ),
-        UserNavTab.earn => EarnScreen(
+          UserNavTab.leaderboard => LeaderboardScreen(
+            profile: _profile,
+            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
+            onOpenProfile: () =>
+                setState(() => _activeTab = UserNavTab.profile),
+            onOpenTests: () => setState(() => _activeTab = UserNavTab.tests),
+            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
+            onOpenRewards: () =>
+                setState(() => _activeTab = UserNavTab.rewards),
+          ),
+          UserNavTab.earn => EarnScreen(
             userCoins: _profile.coins,
             onOpenBattle: () => _startBattle(20),
             onJoinContest: (title, fee) => _startBattle(fee),
           ),
-        UserNavTab.battle => BattleHubScreen(
+          UserNavTab.battle => BattleHubScreen(
             userCoins: _profile.coins,
             profile: _profile,
             onCoinUpdate: (delta) {
@@ -561,7 +662,7 @@ class _UserAppShellState extends State<UserAppShell> {
             },
             onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
           ),
-        UserNavTab.rewards => RewardsHubScreen(
+          UserNavTab.rewards => RewardsHubScreen(
             userCoins: _profile.coins,
             profile: _profile,
             onCoinUpdate: (delta) {
@@ -574,7 +675,7 @@ class _UserAppShellState extends State<UserAppShell> {
             onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
             onOpenSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
           ),
-        UserNavTab.spin => LuckyWheelScreen(
+          UserNavTab.spin => LuckyWheelScreen(
             currentCoins: _profile.coins,
             onBack: () => setState(() => _activeTab = UserNavTab.rewards),
             onRewardClaimed: (coinsWon) {
@@ -584,11 +685,11 @@ class _UserAppShellState extends State<UserAppShell> {
             },
             onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
           ),
-        UserNavTab.wallet => WalletScreen(
+          UserNavTab.wallet => WalletScreen(
             profile: _profile,
             onCoinsUpdated: () => setState(() {}),
           ),
-        UserNavTab.profile => ProfileScreen(
+          UserNavTab.profile => ProfileScreen(
             profile: _profile,
             onUpdateProfile: (updated) => setState(() => _profile = updated),
             onLogout: _handleLogout,
@@ -596,7 +697,7 @@ class _UserAppShellState extends State<UserAppShell> {
             onOpenFeedback: _openFeedbackDialog,
             onNavigateToTab: (tab) => setState(() => _activeTab = tab),
           ),
-      },
+        },
       ),
     );
   }
@@ -625,7 +726,10 @@ class _UserAppShellState extends State<UserAppShell> {
                       color: Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withAlpha(30), blurRadius: 8),
+                        BoxShadow(
+                          color: Colors.black.withAlpha(30),
+                          blurRadius: 8,
+                        ),
                       ],
                     ),
                     child: const Center(
@@ -669,7 +773,10 @@ class _UserAppShellState extends State<UserAppShell> {
             // Scrollable List of Navigation items
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 children: [
                   _buildDrawerNavItem(
                     icon: Icons.home_rounded,
@@ -690,6 +797,11 @@ class _UserAppShellState extends State<UserAppShell> {
                     icon: Icons.sports_kabaddi_rounded,
                     label: '1v1 Quiz Battle',
                     tab: UserNavTab.battle,
+                  ),
+                  _buildDrawerNavItem(
+                    icon: Icons.emoji_events_outlined,
+                    label: 'Leaderboard Rankings',
+                    tab: UserNavTab.leaderboard,
                   ),
                   _buildDrawerNavItem(
                     icon: Icons.card_giftcard_rounded,
@@ -726,16 +838,26 @@ class _UserAppShellState extends State<UserAppShell> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.bolt, color: Color(0xFFF59E0B), size: 16),
+                                const Icon(
+                                  Icons.bolt,
+                                  color: Color(0xFFF59E0B),
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${_profile.coins} Coins',
-                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primarySubtle,
                                 borderRadius: BorderRadius.circular(6),
@@ -757,7 +879,9 @@ class _UserAppShellState extends State<UserAppShell> {
                           child: const LinearProgressIndicator(
                             value: 0.68,
                             backgroundColor: AppColors.border,
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFFF59E0B),
+                            ),
                             minHeight: 6,
                           ),
                         ),
@@ -799,7 +923,9 @@ class _UserAppShellState extends State<UserAppShell> {
                     onTap: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Reach us at support@rankearn.in')),
+                        const SnackBar(
+                          content: Text('Reach us at support@rankearn.in'),
+                        ),
                       );
                     },
                   ),
@@ -809,7 +935,9 @@ class _UserAppShellState extends State<UserAppShell> {
                     onTap: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Opening Platform Privacy Policy...')),
+                        const SnackBar(
+                          content: Text('Opening Platform Privacy Policy...'),
+                        ),
                       );
                     },
                   ),
@@ -819,7 +947,9 @@ class _UserAppShellState extends State<UserAppShell> {
                     onTap: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Opening Terms of Use...')),
+                        const SnackBar(
+                          content: Text('Opening Terms of Use...'),
+                        ),
                       );
                     },
                   ),
@@ -833,8 +963,13 @@ class _UserAppShellState extends State<UserAppShell> {
               child: Column(
                 children: [
                   ListTile(
-                    shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
-                    leading: const Icon(Icons.login_rounded, color: AppColors.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadii.borderMd,
+                    ),
+                    leading: const Icon(
+                      Icons.login_rounded,
+                      color: AppColors.primary,
+                    ),
                     title: const Text(
                       'Sign In / Switch Account',
                       style: TextStyle(
@@ -849,7 +984,9 @@ class _UserAppShellState extends State<UserAppShell> {
                     },
                   ),
                   ListTile(
-                    shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadii.borderMd,
+                    ),
                     leading: const Icon(Icons.logout, color: Color(0xFFE11D48)),
                     title: const Text(
                       'Logout',

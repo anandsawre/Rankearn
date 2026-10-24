@@ -51,4 +51,8 @@ class AppShadows {
       offset: Offset(0, 6),
     ),
   ];
+
+  static const List<BoxShadow> leaderboardCard = [
+    BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 2)),
+  ];
 }

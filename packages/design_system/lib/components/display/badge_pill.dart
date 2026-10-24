@@ -64,7 +64,11 @@ class AppCoinPill extends StatelessWidget {
                       ),
                     ),
                     child: Center(
-                      child: Icon(Icons.monetization_on, color: Colors.white, size: compact ? 13 : 16),
+                      child: Icon(
+                        Icons.monetization_on,
+                        color: Colors.white,
+                        size: compact ? 13 : 16,
+                      ),
                     ),
                   ),
                   SizedBox(width: compact ? 4 : 6),
@@ -165,23 +169,29 @@ class AppStatusPill extends StatelessWidget {
     required this.fg,
   });
 
-  factory AppStatusPill.active({String label = 'Active'}) =>
-      AppStatusPill(label: label, bg: AppColors.brandPrimaryLight, fg: AppColors.brandPrimaryDark);
+  factory AppStatusPill.active({String label = 'Active'}) => AppStatusPill(
+    label: label,
+    bg: AppColors.brandPrimaryLight,
+    fg: AppColors.brandPrimaryDark,
+  );
 
-  factory AppStatusPill.pending({String label = 'Pending'}) =>
-      AppStatusPill(label: label, bg: AppColors.coinGoldLight, fg: const Color(0xFFB45309));
+  factory AppStatusPill.pending({String label = 'Pending'}) => AppStatusPill(
+    label: label,
+    bg: AppColors.coinGoldLight,
+    fg: const Color(0xFFB45309),
+  );
 
-  factory AppStatusPill.rejected({String label = 'Rejected'}) =>
-      AppStatusPill(label: label, bg: AppColors.errorRoseLight, fg: AppColors.errorRose);
+  factory AppStatusPill.rejected({String label = 'Rejected'}) => AppStatusPill(
+    label: label,
+    bg: AppColors.errorRoseLight,
+    fg: AppColors.errorRose,
+  );
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: AppRadii.borderPill,
-      ),
+      decoration: BoxDecoration(color: bg, borderRadius: AppRadii.borderPill),
       child: Text(
         label.toUpperCase(),
         style: AppTypography.microTag.copyWith(

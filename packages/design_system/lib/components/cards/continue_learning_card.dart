@@ -129,7 +129,10 @@ class ContinueLearningCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withAlpha(120),
                         borderRadius: BorderRadius.circular(4),

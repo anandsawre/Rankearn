@@ -70,9 +70,7 @@ class AppPromoCard extends StatelessWidget {
   });
 
   /// Factory preset for Live Test Series banner
-  factory AppPromoCard.liveTestSeries({
-    VoidCallback? onViewSeries,
-  }) {
+  factory AppPromoCard.liveTestSeries({VoidCallback? onViewSeries}) {
     return AppPromoCard(
       title: 'Live Test Series',
       badge: Container(
@@ -135,9 +133,7 @@ class AppPromoCard extends StatelessWidget {
   }
 
   /// Factory preset for Create a Live Test banner
-  factory AppPromoCard.createLiveTest({
-    VoidCallback? onCreateLiveTest,
-  }) {
+  factory AppPromoCard.createLiveTest({VoidCallback? onCreateLiveTest}) {
     return AppPromoCard(
       title: 'Create a Live Test',
       subtitle: 'Host tests, invite friends, compete together.',
@@ -319,16 +315,15 @@ class AppPromoCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: borderColor != null ? Border.all(color: borderColor!, width: 1.1) : null,
+        border: borderColor != null
+            ? Border.all(color: borderColor!, width: 1.1)
+            : null,
         boxShadow: boxShadow,
       ),
       child: Row(
         children: [
           // 1. Leading Graphic
-          if (leading != null) ...[
-            leading!,
-            const SizedBox(width: 12),
-          ],
+          if (leading != null) ...[leading!, const SizedBox(width: 12)],
 
           // 2. Title & Subtitle Column
           Expanded(
@@ -354,10 +349,7 @@ class AppPromoCard extends StatelessWidget {
                             fontWeight: FontWeight.w900,
                           ),
                         ),
-                      if (badge != null) ...[
-                        const SizedBox(width: 6),
-                        badge!,
-                      ],
+                      if (badge != null) ...[const SizedBox(width: 6), badge!],
                     ],
                   ),
                 ),
@@ -386,7 +378,10 @@ class AppPromoCard extends StatelessWidget {
               onTap: onCtaPressed,
               borderRadius: BorderRadius.circular(10),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: ctaColor,
                   borderRadius: BorderRadius.circular(10),
@@ -410,11 +405,7 @@ class AppPromoCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(
-                      ctaIcon,
-                      color: ctaTextColor,
-                      size: 13,
-                    ),
+                    Icon(ctaIcon, color: ctaTextColor, size: 13),
                   ],
                 ),
               ),

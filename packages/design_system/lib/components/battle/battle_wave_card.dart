@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Style variants for Match / Battle Card wave background
-enum BattleWaveStyle {
-  layeredWave,
-  subtleClean,
-}
+enum BattleWaveStyle { layeredWave, subtleClean }
 
 /// Premium Reusable Match Card with Layered Wave Background.
 /// Integrates a multi-layer organic wave background matching the Rankearn reference specification.
@@ -40,14 +37,18 @@ class BattleWaveCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // 28px rounded corners matching the reference image perfectly
     final effectiveRadius = borderRadius ?? BorderRadius.circular(28.0);
-    final effectiveBorder = border ?? Border.all(color: const Color(0xFFE2E8F0).withAlpha(160), width: 1.0);
-    final effectiveShadow = boxShadow ?? const [
-      BoxShadow(
-        color: Color(0x0A000000),
-        blurRadius: 16,
-        offset: Offset(0, 4),
-      ),
-    ];
+    final effectiveBorder =
+        border ??
+        Border.all(color: const Color(0xFFE2E8F0).withAlpha(160), width: 1.0);
+    final effectiveShadow =
+        boxShadow ??
+        const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 16,
+            offset: Offset(0, 4),
+          ),
+        ];
 
     return Container(
       decoration: BoxDecoration(
@@ -72,10 +73,7 @@ class BattleWaveCard extends StatelessWidget {
               ),
             ),
             if (padding != null)
-              Padding(
-                padding: padding!,
-                child: child,
-              )
+              Padding(padding: padding!, child: child)
             else
               child,
           ],
@@ -116,22 +114,38 @@ class MatchCardWavePainter extends CustomPainter {
     // -------------------------------------------------------------------------
     final leftHalo = Paint()
       ..isAntiAlias = true
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF34D399).withAlpha((20 * intensity).round().clamp(0, 255)),
-          const Color(0xFF34D399).withAlpha(0),
-        ],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.20, h * 0.32), radius: w * 0.26));
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(
+                0xFF34D399,
+              ).withAlpha((20 * intensity).round().clamp(0, 255)),
+              const Color(0xFF34D399).withAlpha(0),
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(w * 0.20, h * 0.32),
+              radius: w * 0.26,
+            ),
+          );
     canvas.drawCircle(Offset(w * 0.20, h * 0.32), w * 0.26, leftHalo);
 
     final rightHalo = Paint()
       ..isAntiAlias = true
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFFB7185).withAlpha((18 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFB7185).withAlpha(0),
-        ],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.80, h * 0.32), radius: w * 0.26));
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(
+                0xFFFB7185,
+              ).withAlpha((18 * intensity).round().clamp(0, 255)),
+              const Color(0xFFFB7185).withAlpha(0),
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(w * 0.80, h * 0.32),
+              radius: w * 0.26,
+            ),
+          );
     canvas.drawCircle(Offset(w * 0.80, h * 0.32), w * 0.26, rightHalo);
 
     // -------------------------------------------------------------------------
@@ -140,20 +154,22 @@ class MatchCardWavePainter extends CustomPainter {
     final leftWave1 = Path();
     leftWave1.moveTo(0, h * 0.38);
     leftWave1.cubicTo(
-      w * 0.10, h * 0.48,
-      w * 0.20, h * 0.72,
-      w * 0.34, h * 0.76,
+      w * 0.10,
+      h * 0.48,
+      w * 0.20,
+      h * 0.72,
+      w * 0.34,
+      h * 0.76,
     );
     leftWave1.cubicTo(
-      w * 0.44, h * 0.80,
-      w * 0.52, h * 0.86,
-      w * 0.62, h * 0.92,
+      w * 0.44,
+      h * 0.80,
+      w * 0.52,
+      h * 0.86,
+      w * 0.62,
+      h * 0.92,
     );
-    leftWave1.cubicTo(
-      w * 0.70, h * 0.96,
-      w * 0.82, h * 0.98,
-      w, h * 0.98,
-    );
+    leftWave1.cubicTo(w * 0.70, h * 0.96, w * 0.82, h * 0.98, w, h * 0.98);
     leftWave1.lineTo(w, h);
     leftWave1.lineTo(0, h);
     leftWave1.close();
@@ -162,9 +178,15 @@ class MatchCardWavePainter extends CustomPainter {
       ..isAntiAlias = true
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFFD1FAE5).withAlpha((145 * intensity).round().clamp(0, 255)),
-          const Color(0xFFA7F3D0).withAlpha((100 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFEF08A).withAlpha((50 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFD1FAE5,
+          ).withAlpha((145 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFA7F3D0,
+          ).withAlpha((100 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFEF08A,
+          ).withAlpha((50 * intensity).round().clamp(0, 255)),
           const Color(0xFFFEF08A).withAlpha(0),
         ],
         stops: const [0.0, 0.35, 0.70, 1.0],
@@ -179,20 +201,22 @@ class MatchCardWavePainter extends CustomPainter {
     final rightWave1 = Path();
     rightWave1.moveTo(w, h * 0.24);
     rightWave1.cubicTo(
-      w * 0.90, h * 0.36,
-      w * 0.80, h * 0.66,
-      w * 0.66, h * 0.76,
+      w * 0.90,
+      h * 0.36,
+      w * 0.80,
+      h * 0.66,
+      w * 0.66,
+      h * 0.76,
     );
     rightWave1.cubicTo(
-      w * 0.54, h * 0.84,
-      w * 0.44, h * 0.90,
-      w * 0.32, h * 0.94,
+      w * 0.54,
+      h * 0.84,
+      w * 0.44,
+      h * 0.90,
+      w * 0.32,
+      h * 0.94,
     );
-    rightWave1.cubicTo(
-      w * 0.20, h * 0.97,
-      w * 0.10, h * 0.98,
-      0, h * 0.98,
-    );
+    rightWave1.cubicTo(w * 0.20, h * 0.97, w * 0.10, h * 0.98, 0, h * 0.98);
     rightWave1.lineTo(0, h);
     rightWave1.lineTo(w, h);
     rightWave1.close();
@@ -201,9 +225,15 @@ class MatchCardWavePainter extends CustomPainter {
       ..isAntiAlias = true
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFFFFCCD5).withAlpha((150 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFFE4E6).withAlpha((100 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFED7AA).withAlpha((50 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFFCCD5,
+          ).withAlpha((150 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFFE4E6,
+          ).withAlpha((100 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFED7AA,
+          ).withAlpha((50 * intensity).round().clamp(0, 255)),
           const Color(0xFFFED7AA).withAlpha(0),
         ],
         stops: const [0.0, 0.35, 0.70, 1.0],
@@ -217,14 +247,24 @@ class MatchCardWavePainter extends CustomPainter {
     // -------------------------------------------------------------------------
     final centerBlend = Paint()
       ..isAntiAlias = true
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFFDE047).withAlpha((105 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFED7AA).withAlpha((60 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFFF7ED).withAlpha(0),
-        ],
-        stops: const [0.0, 0.50, 1.0],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.50, h * 0.90), radius: w * 0.28));
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(
+                0xFFFDE047,
+              ).withAlpha((105 * intensity).round().clamp(0, 255)),
+              const Color(
+                0xFFFED7AA,
+              ).withAlpha((60 * intensity).round().clamp(0, 255)),
+              const Color(0xFFFFF7ED).withAlpha(0),
+            ],
+            stops: const [0.0, 0.50, 1.0],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(w * 0.50, h * 0.90),
+              radius: w * 0.28,
+            ),
+          );
     canvas.drawCircle(Offset(w * 0.50, h * 0.90), w * 0.28, centerBlend);
 
     // -------------------------------------------------------------------------
@@ -233,20 +273,22 @@ class MatchCardWavePainter extends CustomPainter {
     final leftWave2 = Path();
     leftWave2.moveTo(0, h * 0.52);
     leftWave2.cubicTo(
-      w * 0.08, h * 0.62,
-      w * 0.18, h * 0.82,
-      w * 0.30, h * 0.84,
+      w * 0.08,
+      h * 0.62,
+      w * 0.18,
+      h * 0.82,
+      w * 0.30,
+      h * 0.84,
     );
     leftWave2.cubicTo(
-      w * 0.40, h * 0.86,
-      w * 0.48, h * 0.94,
-      w * 0.56, h * 0.96,
+      w * 0.40,
+      h * 0.86,
+      w * 0.48,
+      h * 0.94,
+      w * 0.56,
+      h * 0.96,
     );
-    leftWave2.cubicTo(
-      w * 0.64, h * 0.98,
-      w * 0.72, h * 1.0,
-      w * 0.80, h * 1.0,
-    );
+    leftWave2.cubicTo(w * 0.64, h * 0.98, w * 0.72, h * 1.0, w * 0.80, h * 1.0);
     leftWave2.lineTo(w * 0.80, h);
     leftWave2.lineTo(0, h);
     leftWave2.close();
@@ -255,9 +297,15 @@ class MatchCardWavePainter extends CustomPainter {
       ..isAntiAlias = true
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFF6EE7B7).withAlpha((135 * intensity).round().clamp(0, 255)),
-          const Color(0xFFA7F3D0).withAlpha((85 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFEF08A).withAlpha((40 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFF6EE7B7,
+          ).withAlpha((135 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFA7F3D0,
+          ).withAlpha((85 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFEF08A,
+          ).withAlpha((40 * intensity).round().clamp(0, 255)),
           const Color(0xFFFEF08A).withAlpha(0),
         ],
         stops: const [0.0, 0.40, 0.80, 1.0],
@@ -270,14 +318,20 @@ class MatchCardWavePainter extends CustomPainter {
     final leftHighlight = Path();
     leftHighlight.moveTo(0, h * 0.52);
     leftHighlight.cubicTo(
-      w * 0.08, h * 0.62,
-      w * 0.18, h * 0.82,
-      w * 0.30, h * 0.84,
+      w * 0.08,
+      h * 0.62,
+      w * 0.18,
+      h * 0.82,
+      w * 0.30,
+      h * 0.84,
     );
     leftHighlight.cubicTo(
-      w * 0.40, h * 0.86,
-      w * 0.48, h * 0.94,
-      w * 0.56, h * 0.96,
+      w * 0.40,
+      h * 0.86,
+      w * 0.48,
+      h * 0.94,
+      w * 0.56,
+      h * 0.96,
     );
     final leftHighlightPaint = Paint()
       ..isAntiAlias = true
@@ -302,19 +356,28 @@ class MatchCardWavePainter extends CustomPainter {
     final rightWave2 = Path();
     rightWave2.moveTo(w, h * 0.44);
     rightWave2.cubicTo(
-      w * 0.91, h * 0.56,
-      w * 0.82, h * 0.78,
-      w * 0.70, h * 0.82,
+      w * 0.91,
+      h * 0.56,
+      w * 0.82,
+      h * 0.78,
+      w * 0.70,
+      h * 0.82,
     );
     rightWave2.cubicTo(
-      w * 0.60, h * 0.86,
-      w * 0.52, h * 0.94,
-      w * 0.44, h * 0.96,
+      w * 0.60,
+      h * 0.86,
+      w * 0.52,
+      h * 0.94,
+      w * 0.44,
+      h * 0.96,
     );
     rightWave2.cubicTo(
-      w * 0.36, h * 0.98,
-      w * 0.28, h * 1.0,
-      w * 0.20, h * 1.0,
+      w * 0.36,
+      h * 0.98,
+      w * 0.28,
+      h * 1.0,
+      w * 0.20,
+      h * 1.0,
     );
     rightWave2.lineTo(w * 0.20, h);
     rightWave2.lineTo(w, h);
@@ -324,9 +387,15 @@ class MatchCardWavePainter extends CustomPainter {
       ..isAntiAlias = true
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFFFDA4AF).withAlpha((135 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFFCCD5).withAlpha((85 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFED7AA).withAlpha((40 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFDA4AF,
+          ).withAlpha((135 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFFCCD5,
+          ).withAlpha((85 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFED7AA,
+          ).withAlpha((40 * intensity).round().clamp(0, 255)),
           const Color(0xFFFED7AA).withAlpha(0),
         ],
         stops: const [0.0, 0.40, 0.80, 1.0],
@@ -339,14 +408,20 @@ class MatchCardWavePainter extends CustomPainter {
     final rightHighlight = Path();
     rightHighlight.moveTo(w, h * 0.44);
     rightHighlight.cubicTo(
-      w * 0.91, h * 0.56,
-      w * 0.82, h * 0.78,
-      w * 0.70, h * 0.82,
+      w * 0.91,
+      h * 0.56,
+      w * 0.82,
+      h * 0.78,
+      w * 0.70,
+      h * 0.82,
     );
     rightHighlight.cubicTo(
-      w * 0.60, h * 0.86,
-      w * 0.52, h * 0.94,
-      w * 0.44, h * 0.96,
+      w * 0.60,
+      h * 0.86,
+      w * 0.52,
+      h * 0.94,
+      w * 0.44,
+      h * 0.96,
     );
     final rightHighlightPaint = Paint()
       ..isAntiAlias = true
@@ -371,15 +446,14 @@ class MatchCardWavePainter extends CustomPainter {
     final leftWave3 = Path();
     leftWave3.moveTo(0, h * 0.68);
     leftWave3.cubicTo(
-      w * 0.08, h * 0.78,
-      w * 0.16, h * 0.92,
-      w * 0.28, h * 0.96,
+      w * 0.08,
+      h * 0.78,
+      w * 0.16,
+      h * 0.92,
+      w * 0.28,
+      h * 0.96,
     );
-    leftWave3.cubicTo(
-      w * 0.36, h * 0.98,
-      w * 0.42, h * 1.0,
-      w * 0.48, h * 1.0,
-    );
+    leftWave3.cubicTo(w * 0.36, h * 0.98, w * 0.42, h * 1.0, w * 0.48, h * 1.0);
     leftWave3.lineTo(w * 0.48, h);
     leftWave3.lineTo(0, h);
     leftWave3.close();
@@ -388,8 +462,12 @@ class MatchCardWavePainter extends CustomPainter {
       ..isAntiAlias = true
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFF34D399).withAlpha((105 * intensity).round().clamp(0, 255)),
-          const Color(0xFF6EE7B7).withAlpha((55 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFF34D399,
+          ).withAlpha((105 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFF6EE7B7,
+          ).withAlpha((55 * intensity).round().clamp(0, 255)),
           Colors.transparent,
         ],
         begin: Alignment.bottomLeft,
@@ -403,14 +481,20 @@ class MatchCardWavePainter extends CustomPainter {
     final rightWave3 = Path();
     rightWave3.moveTo(w, h * 0.62);
     rightWave3.cubicTo(
-      w * 0.92, h * 0.74,
-      w * 0.84, h * 0.90,
-      w * 0.72, h * 0.95,
+      w * 0.92,
+      h * 0.74,
+      w * 0.84,
+      h * 0.90,
+      w * 0.72,
+      h * 0.95,
     );
     rightWave3.cubicTo(
-      w * 0.64, h * 0.98,
-      w * 0.58, h * 1.0,
-      w * 0.52, h * 1.0,
+      w * 0.64,
+      h * 0.98,
+      w * 0.58,
+      h * 1.0,
+      w * 0.52,
+      h * 1.0,
     );
     rightWave3.lineTo(w * 0.52, h);
     rightWave3.lineTo(w, h);
@@ -420,8 +504,12 @@ class MatchCardWavePainter extends CustomPainter {
       ..isAntiAlias = true
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFFFB7185).withAlpha((105 * intensity).round().clamp(0, 255)),
-          const Color(0xFFFDA4AF).withAlpha((55 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFB7185,
+          ).withAlpha((105 * intensity).round().clamp(0, 255)),
+          const Color(
+            0xFFFDA4AF,
+          ).withAlpha((55 * intensity).round().clamp(0, 255)),
           Colors.transparent,
         ],
         begin: Alignment.bottomRight,

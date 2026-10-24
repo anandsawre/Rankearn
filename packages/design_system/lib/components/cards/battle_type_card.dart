@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum BattleType {
-  quick,
-  ranked,
-  friends,
-}
+enum BattleType { quick, ranked, friends }
 
 /// BattleTypeCard matching the "Choose Battle Type" section in the Rankearn reference.
 class BattleTypeCard extends StatelessWidget {
@@ -257,10 +253,7 @@ class BattleTypeCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 15,
-                    ),
+                    const Icon(Icons.arrow_forward_rounded, size: 15),
                   ],
                 ),
               ),

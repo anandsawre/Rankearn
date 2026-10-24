@@ -36,13 +36,7 @@ class AuthFeatureItem extends StatelessWidget {
               ),
             ],
           ),
-          child: Center(
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
+          child: Center(child: Icon(icon, color: Colors.white, size: 20)),
         ),
         const SizedBox(width: 12),
 

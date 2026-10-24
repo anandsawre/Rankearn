@@ -34,10 +34,7 @@ class TestCategoryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardBackgroundColor ?? Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x06000000),
@@ -77,11 +74,7 @@ class TestCategoryCard extends StatelessWidget {
                         ],
                       ),
                       child: Center(
-                        child: Icon(
-                          icon,
-                          color: Colors.white,
-                          size: 22,
-                        ),
+                        child: Icon(icon, color: Colors.white, size: 22),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -141,7 +134,10 @@ class TestCategoryCard extends StatelessWidget {
 
                 // Inset Divider / Metadata Row
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(10),

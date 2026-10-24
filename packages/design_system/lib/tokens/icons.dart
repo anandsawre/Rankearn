@@ -9,7 +9,8 @@ class AppIcons {
   static const IconData home = Icons.home_rounded;
   static const IconData tests = Icons.description_outlined;
   static const IconData live = Icons.sensors_rounded;
-  static const IconData battle = Icons.sports_kabaddi_rounded; // or crossed swords
+  static const IconData battle =
+      Icons.sports_kabaddi_rounded; // or crossed swords
   static const IconData rewards = Icons.card_giftcard_rounded;
   static const IconData profile = Icons.person_outline_rounded;
   static const IconData menu = Icons.menu_rounded;

@@ -210,7 +210,10 @@ class AppSegmentedFilterNav<T> extends StatelessWidget {
     final textColor = isSelected ? activeTextColor : inactiveTextColor;
     final itemIconColor = isSelected
         ? activeTextColor
-        : (item.iconColor ?? (style == AppFilterNavStyle.chipPills ? const Color(0xFF1E293B) : inactiveTextColor));
+        : (item.iconColor ??
+              (style == AppFilterNavStyle.chipPills
+                  ? const Color(0xFF1E293B)
+                  : inactiveTextColor));
 
     return Row(
       mainAxisSize: MainAxisSize.min,

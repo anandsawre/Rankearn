@@ -77,14 +77,19 @@ class _AppTextFieldState extends State<AppTextField> {
           onChanged: widget.onChanged,
           onFieldSubmitted: widget.onSubmitted,
           validator: widget.validator,
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary, fontSize: 14),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+          ),
           decoration: InputDecoration(
             hintText: widget.hintText,
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
-                      _obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscured
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: AppColors.textMuted,
                       size: 20,
                     ),
@@ -92,8 +97,13 @@ class _AppTextFieldState extends State<AppTextField> {
                   )
                 : widget.suffixIcon,
             filled: true,
-            fillColor: widget.enabled ? AppColors.surfaceSubtle : AppColors.surfaceSubtle.withAlpha(128),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            fillColor: widget.enabled
+                ? AppColors.surfaceSubtle
+                : AppColors.surfaceSubtle.withAlpha(128),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             border: OutlineInputBorder(
               borderRadius: AppRadii.borderMd,
               borderSide: const BorderSide(color: AppColors.borderSubtle),
@@ -104,7 +114,10 @@ class _AppTextFieldState extends State<AppTextField> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: AppRadii.borderMd,
-              borderSide: const BorderSide(color: AppColors.brandPrimary, width: 2),
+              borderSide: const BorderSide(
+                color: AppColors.brandPrimary,
+                width: 2,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: AppRadii.borderMd,

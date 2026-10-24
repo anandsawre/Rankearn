@@ -7,11 +7,7 @@ class TopRewardsCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Function(String rewardType)? onRewardTap;
 
-  const TopRewardsCard({
-    super.key,
-    this.onTap,
-    this.onRewardTap,
-  });
+  const TopRewardsCard({super.key, this.onTap, this.onRewardTap});
 
   @override
   Widget build(BuildContext context) {
@@ -223,11 +219,7 @@ class _RewardTileState extends State<_RewardTile> {
                   ],
                 ),
                 child: Center(
-                  child: Icon(
-                    widget.icon,
-                    color: Colors.white,
-                    size: 19,
-                  ),
+                  child: Icon(widget.icon, color: Colors.white, size: 19),
                 ),
               ),
               const SizedBox(height: 7),

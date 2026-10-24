@@ -38,10 +38,7 @@ class LiveTestCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x08000000),
@@ -77,20 +74,20 @@ class LiveTestCard extends StatelessWidget {
                         : null,
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: thumbnail ??
+                  child:
+                      thumbnail ??
                       Stack(
                         alignment: Alignment.center,
                         children: [
-                          Icon(
-                            thumbnailIcon,
-                            color: Colors.white,
-                            size: 34,
-                          ),
+                          Icon(thumbnailIcon, color: Colors.white, size: 34),
                           if (thumbnailBadgeText != null)
                             Positioned(
                               bottom: 4,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 1,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withAlpha(140),
                                   borderRadius: BorderRadius.circular(4),
@@ -120,7 +117,10 @@ class LiveTestCard extends StatelessWidget {
                         children: [
                           // LIVE pill badge
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF43F5E),
                               borderRadius: BorderRadius.circular(6),
@@ -128,7 +128,11 @@ class LiveTestCard extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: const [
-                                Icon(Icons.play_arrow_rounded, color: Colors.white, size: 11),
+                                Icon(
+                                  Icons.play_arrow_rounded,
+                                  color: Colors.white,
+                                  size: 11,
+                                ),
                                 SizedBox(width: 2),
                                 Text(
                                   'LIVE',
@@ -150,7 +154,10 @@ class LiveTestCard extends StatelessWidget {
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerRight,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(6),
@@ -158,7 +165,11 @@ class LiveTestCard extends StatelessWidget {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.people_alt_rounded, color: Color(0xFF64748B), size: 10),
+                                    const Icon(
+                                      Icons.people_alt_rounded,
+                                      color: Color(0xFF64748B),
+                                      size: 10,
+                                    ),
                                     const SizedBox(width: 3),
                                     Text(
                                       participants,
@@ -269,11 +280,20 @@ class LiveTestCard extends StatelessWidget {
 
           // 3. Full-width Join Now Button
           Padding(
-            padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12, top: 4),
+            padding: const EdgeInsets.only(
+              left: 12,
+              right: 12,
+              bottom: 12,
+              top: 4,
+            ),
             child: AppButton(
               label: 'Join Now',
               size: AppButtonSize.medium,
-              trailingIcon: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 15),
+              trailingIcon: const Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 15,
+              ),
               backgroundColor: AppColors.brandGreen,
               foregroundColor: Colors.white,
               borderRadius: BorderRadius.circular(10),
@@ -286,10 +306,7 @@ class LiveTestCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMetaItem({
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _buildMetaItem({required IconData icon, required String label}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

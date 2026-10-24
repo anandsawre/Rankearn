@@ -27,7 +27,9 @@ class BattleMissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ratio = targetProgress > 0 ? (currentProgress / targetProgress).clamp(0.0, 1.0) : 0.0;
+    final ratio = targetProgress > 0
+        ? (currentProgress / targetProgress).clamp(0.0, 1.0)
+        : 0.0;
     final isCompleted = currentProgress >= targetProgress;
 
     return Container(
@@ -64,13 +66,7 @@ class BattleMissionCard extends StatelessWidget {
                   color: iconBgColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Center(
-                  child: Icon(
-                    icon,
-                    size: 17,
-                    color: iconColor,
-                  ),
-                ),
+                child: Center(child: Icon(icon, size: 17, color: iconColor)),
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -150,7 +146,10 @@ class BattleMissionCard extends StatelessWidget {
                 GestureDetector(
                   onTap: onClaim,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF10B981),
                       borderRadius: BorderRadius.circular(8),

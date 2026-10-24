@@ -20,11 +20,7 @@ class QuickActionsRewardsCard extends StatelessWidget {
         // Section Header Row: Lightning Icon + Title
         Row(
           children: const [
-            Icon(
-              Icons.bolt_rounded,
-              color: Color(0xFFF59E0B),
-              size: 22,
-            ),
+            Icon(Icons.bolt_rounded, color: Color(0xFFF59E0B), size: 22),
             SizedBox(width: 8),
             Expanded(
               child: Text(

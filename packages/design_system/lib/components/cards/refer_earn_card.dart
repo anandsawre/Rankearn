@@ -20,7 +20,11 @@ class ReferEarnCard extends StatelessWidget {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
             const SizedBox(width: 8),
             Text('Referral code "$referralCode" copied to clipboard!'),
           ],
@@ -37,19 +41,12 @@ class ReferEarnCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFE8FDF3),
-            Color(0xFFDCFCE7),
-            Color(0xFFE2FBE9),
-          ],
+          colors: [Color(0xFFE8FDF3), Color(0xFFDCFCE7), Color(0xFFE2FBE9)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFBBF7D0),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFBBF7D0), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A00B96B),
@@ -85,7 +82,12 @@ class ReferEarnCard extends StatelessWidget {
                   ] else ...[
                     Row(
                       children: [
-                        Expanded(child: _buildReferralCodeBox(context, isFullWidth: true)),
+                        Expanded(
+                          child: _buildReferralCodeBox(
+                            context,
+                            isFullWidth: true,
+                          ),
+                        ),
                         const SizedBox(width: 10),
                         _buildInviteButton(),
                       ],
@@ -105,9 +107,7 @@ class ReferEarnCard extends StatelessWidget {
                 const SizedBox(width: 16),
 
                 // Text Content
-                Expanded(
-                  child: _buildTextContent(),
-                ),
+                Expanded(child: _buildTextContent()),
                 const SizedBox(width: 14),
 
                 // Referral Code Box
@@ -181,16 +181,16 @@ class ReferEarnCard extends StatelessWidget {
     );
   }
 
-  Widget _buildReferralCodeBox(BuildContext context, {bool isFullWidth = false}) {
+  Widget _buildReferralCodeBox(
+    BuildContext context, {
+    bool isFullWidth = false,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF86EFAC),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF86EFAC), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x05000000),
@@ -201,7 +201,9 @@ class ReferEarnCard extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
-        mainAxisAlignment: isFullWidth ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
+        mainAxisAlignment: isFullWidth
+            ? MainAxisAlignment.spaceBetween
+            : MainAxisAlignment.start,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,7 +267,9 @@ class ReferEarnCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
-            mainAxisAlignment: isFullWidth ? MainAxisAlignment.center : MainAxisAlignment.start,
+            mainAxisAlignment: isFullWidth
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.start,
             children: const [
               Text(
                 'Invite Now',
@@ -276,11 +280,7 @@ class ReferEarnCard extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 4),
-              Icon(
-                Icons.arrow_forward_rounded,
-                size: 15,
-                color: Colors.white,
-              ),
+              Icon(Icons.arrow_forward_rounded, size: 15, color: Colors.white),
             ],
           ),
         ),

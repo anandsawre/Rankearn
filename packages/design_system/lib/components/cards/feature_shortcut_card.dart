@@ -24,8 +24,10 @@ class FeatureShortcutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveCardBg = cardBackgroundColor ?? iconBackgroundColor.withAlpha(14);
-    final effectiveBorderColor = cardBorderColor ?? iconBackgroundColor.withAlpha(40);
+    final effectiveCardBg =
+        cardBackgroundColor ?? iconBackgroundColor.withAlpha(14);
+    final effectiveBorderColor =
+        cardBorderColor ?? iconBackgroundColor.withAlpha(40);
 
     return Container(
       decoration: BoxDecoration(
@@ -67,11 +69,7 @@ class FeatureShortcutCard extends StatelessWidget {
                     ],
                   ),
                   child: Center(
-                    child: Icon(
-                      icon,
-                      color: Colors.white,
-                      size: iconSize,
-                    ),
+                    child: Icon(icon, color: Colors.white, size: iconSize),
                   ),
                 ),
                 const SizedBox(height: 8),

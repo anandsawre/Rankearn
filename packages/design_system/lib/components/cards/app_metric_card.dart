@@ -112,11 +112,13 @@ class AppMetricCard extends StatelessWidget {
                     height: 38,
                     decoration: BoxDecoration(
                       color: effectiveIconBg,
-                      borderRadius: iconBorderRadius ?? BorderRadius.circular(10),
+                      borderRadius:
+                          iconBorderRadius ?? BorderRadius.circular(10),
                       boxShadow: iconShadow,
                     ),
                     child: Center(
-                      child: iconWidget ??
+                      child:
+                          iconWidget ??
                           Icon(
                             icon ?? Icons.analytics_rounded,
                             color: iconColor,
@@ -135,7 +137,8 @@ class AppMetricCard extends StatelessWidget {
                     children: [
                       Text(
                         label,
-                        style: labelStyle ??
+                        style:
+                            labelStyle ??
                             const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -147,7 +150,8 @@ class AppMetricCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         value,
-                        style: valueStyle ??
+                        style:
+                            valueStyle ??
                             const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w900,

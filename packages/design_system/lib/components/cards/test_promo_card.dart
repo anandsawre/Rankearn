@@ -8,7 +8,8 @@ class TestPromoCard extends StatelessWidget {
   final String description;
   final String ctaText;
   final VoidCallback onCtaPressed;
-  final bool isDarkPurple; // True for Test Series, false for Create Your Own Test
+  final bool
+  isDarkPurple; // True for Test Series, false for Create Your Own Test
 
   const TestPromoCard({
     super.key,
@@ -128,7 +129,10 @@ class TestPromoCard extends StatelessWidget {
                     onTap: onCtaPressed,
                     borderRadius: AppRadii.borderPill,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFD633),
                         borderRadius: AppRadii.borderPill,
@@ -173,19 +177,12 @@ class TestPromoCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFE8FDF3),
-            Color(0xFFD1FBE5),
-            Color(0xFFE0FAF0),
-          ],
+          colors: [Color(0xFFE8FDF3), Color(0xFFD1FBE5), Color(0xFFE0FAF0)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFA7F3D0),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFA7F3D0), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0C10B981),
@@ -283,11 +280,17 @@ class TestPromoCard extends StatelessWidget {
                   onTap: onCtaPressed,
                   borderRadius: AppRadii.borderPill,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: AppRadii.borderPill,
-                      border: Border.all(color: const Color(0xFF10B981).withAlpha(80), width: 1),
+                      border: Border.all(
+                        color: const Color(0xFF10B981).withAlpha(80),
+                        width: 1,
+                      ),
                       boxShadow: const [
                         BoxShadow(
                           color: Color(0x10000000),

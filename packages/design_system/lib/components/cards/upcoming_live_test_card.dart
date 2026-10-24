@@ -49,10 +49,7 @@ class UpcomingLiveTestCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE8EEF8),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFE8EEF8), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x06101A3A),
@@ -95,11 +92,7 @@ class UpcomingLiveTestCard extends StatelessWidget {
           const SizedBox(width: 16),
 
           // 3. Vertical Divider Line
-          Container(
-            width: 1,
-            height: 42,
-            color: const Color(0xFFE2E8F0),
-          ),
+          Container(width: 1, height: 42, color: const Color(0xFFE2E8F0)),
           const SizedBox(width: 20),
 
           // 4. Starts In Countdown (Starts in / 2h 15m)
@@ -143,10 +136,7 @@ class UpcomingLiveTestCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE8EEF8),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFE8EEF8), width: 1.2),
         boxShadow: const [
           BoxShadow(
             color: Color(0x06101A3A),
@@ -341,16 +331,22 @@ class UpcomingLiveTestCard extends StatelessWidget {
             vertical: isCompact ? 7 : 11,
           ),
           decoration: BoxDecoration(
-            color: isNotified ? const Color(0xFFECFDF5) : const Color(0xFFF0F6FE),
+            color: isNotified
+                ? const Color(0xFFECFDF5)
+                : const Color(0xFFF0F6FE),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                isNotified ? Icons.check_circle_rounded : Icons.notifications_none_rounded,
+                isNotified
+                    ? Icons.check_circle_rounded
+                    : Icons.notifications_none_rounded,
                 size: isCompact ? 16 : 20,
-                color: isNotified ? const Color(0xFF10B981) : const Color(0xFF2587F8),
+                color: isNotified
+                    ? const Color(0xFF10B981)
+                    : const Color(0xFF2587F8),
               ),
               const SizedBox(width: 8),
               Text(
@@ -358,7 +354,9 @@ class UpcomingLiveTestCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isCompact ? 11.5 : 13.5,
                   fontWeight: FontWeight.w800,
-                  color: isNotified ? const Color(0xFF10B981) : const Color(0xFF2587F8),
+                  color: isNotified
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFF2587F8),
                 ),
               ),
             ],

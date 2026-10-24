@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_segmented_filter_nav.dart';
 
-enum BattleNavTab {
-  oneVOne,
-  twoPlayers,
-  customRoom,
-  history,
-}
+enum BattleNavTab { oneVOne, twoPlayers, customRoom, history }
 
 /// Segmented tab navigation for the 1v1 Battle Tab
 /// (1v1 Battle, 2 Players, Custom Room, History)

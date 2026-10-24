@@ -60,25 +60,37 @@ class LiveContestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveAccent = accentColor ?? (isLive ? AppColors.liveRed : AppColors.brandBlue);
-    final effectiveAccentLight = accentLightColor ?? (isLive ? AppColors.liveRedLight : AppColors.infoBlueLight);
-    final effectiveAccentBorder = accentBorderColor ?? (isLive ? AppColors.liveRedBorder : AppColors.infoBlueBorder);
-    final effectiveIcon = icon ?? (isLive ? AppIcons.live : Icons.emoji_events_rounded);
+    final effectiveAccent =
+        accentColor ?? (isLive ? AppColors.liveRed : AppColors.brandBlue);
+    final effectiveAccentLight =
+        accentLightColor ??
+        (isLive ? AppColors.liveRedLight : AppColors.infoBlueLight);
+    final effectiveAccentBorder =
+        accentBorderColor ??
+        (isLive ? AppColors.liveRedBorder : AppColors.infoBlueBorder);
+    final effectiveIcon =
+        icon ?? (isLive ? AppIcons.live : Icons.emoji_events_rounded);
     final effectiveStatus = statusLabel ?? (isLive ? 'LIVE NOW' : 'UPCOMING');
     final effectiveCountdown = countdownTime ?? endsIn ?? '210:06:33';
-    final effectiveCountdownLabel = countdownLabel ?? (isLive ? 'ENDS IN' : 'STARTS IN');
-    final effectivePrimaryLabel = primaryButtonLabel ?? (isLive ? 'JOIN & WIN COINS' : 'NOTIFY ME');
-    final effectivePrimaryIcon = primaryButtonLeadingIcon ??
-        (isLive ? null : const Icon(Icons.notifications_none_rounded, size: 15, color: Colors.white));
+    final effectiveCountdownLabel =
+        countdownLabel ?? (isLive ? 'ENDS IN' : 'STARTS IN');
+    final effectivePrimaryLabel =
+        primaryButtonLabel ?? (isLive ? 'JOIN & WIN COINS' : 'NOTIFY ME');
+    final effectivePrimaryIcon =
+        primaryButtonLeadingIcon ??
+        (isLive
+            ? null
+            : const Icon(
+                Icons.notifications_none_rounded,
+                size: 15,
+                color: Colors.white,
+              ));
 
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.borderXl,
-        border: Border.all(
-          color: AppColors.border,
-          width: 1.2,
-        ),
+        border: Border.all(color: AppColors.border, width: 1.2),
         boxShadow: AppShadows.card,
       ),
       clipBehavior: Clip.antiAlias,
@@ -151,8 +163,12 @@ class LiveContestCard extends StatelessWidget {
                           Row(
                             children: [
                               Icon(
-                                isLive ? AppIcons.trendingUp : Icons.stars_rounded,
-                                color: isLive ? AppColors.brandOrange : effectiveAccent,
+                                isLive
+                                    ? AppIcons.trendingUp
+                                    : Icons.stars_rounded,
+                                color: isLive
+                                    ? AppColors.brandOrange
+                                    : effectiveAccent,
                                 size: 14,
                               ),
                               const SizedBox(width: AppSpacing.xs),
@@ -273,15 +289,17 @@ class LiveContestCard extends StatelessWidget {
                                   ),
                                   const SizedBox(width: AppSpacing.xs),
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         prizePool,
-                                        style: AppTypography.metricValue.copyWith(
-                                          fontSize: 20,
-                                          color: effectiveAccent,
-                                          height: 1.0,
-                                        ),
+                                        style: AppTypography.metricValue
+                                            .copyWith(
+                                              fontSize: 20,
+                                              color: effectiveAccent,
+                                              height: 1.0,
+                                            ),
                                       ),
                                       Text(
                                         'COINS',
@@ -300,11 +318,7 @@ class LiveContestCard extends StatelessWidget {
                       ),
 
                       // Divider 1
-                      Container(
-                        width: 1,
-                        height: 36,
-                        color: AppColors.border,
-                      ),
+                      Container(width: 1, height: 36, color: AppColors.border),
 
                       // Column 2: ENTRY FEE
                       Expanded(
@@ -346,11 +360,7 @@ class LiveContestCard extends StatelessWidget {
                       ),
 
                       // Divider 2
-                      Container(
-                        width: 1,
-                        height: 36,
-                        color: AppColors.border,
-                      ),
+                      Container(width: 1, height: 36, color: AppColors.border),
 
                       // Column 3: ENDS IN / STARTS IN
                       Expanded(
@@ -464,11 +474,7 @@ class LiveContestCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.circle,
-                              color: effectiveAccent,
-                              size: 6,
-                            ),
+                            Icon(Icons.circle, color: effectiveAccent, size: 6),
                             const SizedBox(width: AppSpacing.xs),
                             Text(
                               effectiveStatus,
@@ -536,11 +542,7 @@ class LiveContestCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          icon,
-          color: accentColor,
-          size: 14,
-        ),
+        Icon(icon, color: accentColor, size: 14),
         const SizedBox(width: AppSpacing.xs),
         Flexible(
           child: Text(
@@ -573,12 +575,7 @@ class _CornerAccentPainter extends CustomPainter {
     final path = Path()
       ..moveTo(0, 0)
       ..lineTo(size.width, 0)
-      ..quadraticBezierTo(
-        size.width * 0.35,
-        size.height * 0.20,
-        0,
-        size.height,
-      )
+      ..quadraticBezierTo(size.width * 0.35, size.height * 0.20, 0, size.height)
       ..close();
 
     canvas.drawPath(path, paint);

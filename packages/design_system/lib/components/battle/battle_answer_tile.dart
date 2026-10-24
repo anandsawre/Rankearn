@@ -29,7 +29,8 @@ class AnswerOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isSelected = state == AnswerTileState.selected || state == AnswerTileState.submitted;
+    final isSelected =
+        state == AnswerTileState.selected || state == AnswerTileState.submitted;
     final isCorrect = state == AnswerTileState.correct;
     final isIncorrect = state == AnswerTileState.incorrect;
     final isDisabled = state == AnswerTileState.disabled;
@@ -116,8 +117,12 @@ class AnswerOptionTile extends StatelessWidget {
                     text,
                     style: TextStyle(
                       fontSize: 15.5,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected ? const Color(0xFF008C52) : AppColors.battleNavy,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
+                      color: isSelected
+                          ? const Color(0xFF008C52)
+                          : AppColors.battleNavy,
                       fontFamily: 'Inter',
                     ),
                     maxLines: 2,
@@ -135,12 +140,24 @@ class AnswerOptionTile extends StatelessWidget {
     );
   }
 
-  Widget _buildRadioIndicator(bool isSelected, bool isCorrect, bool isIncorrect) {
+  Widget _buildRadioIndicator(
+    bool isSelected,
+    bool isCorrect,
+    bool isIncorrect,
+  ) {
     if (isCorrect) {
-      return const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 24);
+      return const Icon(
+        Icons.check_circle_rounded,
+        color: Color(0xFF10B981),
+        size: 24,
+      );
     }
     if (isIncorrect) {
-      return const Icon(Icons.cancel_rounded, color: Color(0xFFEF4444), size: 24);
+      return const Icon(
+        Icons.cancel_rounded,
+        color: Color(0xFFEF4444),
+        size: 24,
+      );
     }
 
     return Container(

@@ -29,10 +29,7 @@ class SubjectCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: AppRadii.borderLg,
-        border: Border.all(
-          color: accentColor.withAlpha(50),
-          width: 1,
-        ),
+        border: Border.all(color: accentColor.withAlpha(50), width: 1),
       ),
       child: InkWell(
         onTap: onTap,
@@ -46,11 +43,7 @@ class SubjectCard extends StatelessWidget {
                 // Subject Icon
                 Flexible(
                   flex: 3,
-                  child: Icon(
-                    icon,
-                    size: 24,
-                    color: accentColor,
-                  ),
+                  child: Icon(icon, size: 24, color: accentColor),
                 ),
 
                 // Subject Title

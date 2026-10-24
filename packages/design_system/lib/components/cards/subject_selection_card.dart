@@ -76,11 +76,7 @@ class SubjectSelectionCard extends StatelessWidget {
                     ],
                   ),
                   child: Center(
-                    child: Icon(
-                      icon,
-                      color: accentColor,
-                      size: 22,
-                    ),
+                    child: Icon(icon, color: accentColor, size: 22),
                   ),
                 ),
                 const SizedBox(height: 6),
