@@ -478,53 +478,64 @@ class _UserAppShellState extends State<UserAppShell> {
   Widget build(BuildContext context) {
     final isPro = _profile.subscriptionStatus == 'premium';
     final isDesktop = MediaQuery.of(context).size.width >= 850;
+    final isSpinTab = _activeTab == UserNavTab.spin;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
+      value: isSpinTab
+          ? const SystemUiOverlayStyle(
+              statusBarColor: Color(0xFF00B96B),
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.dark,
+              systemNavigationBarColor: Colors.white,
+              systemNavigationBarIconBrightness: Brightness.dark,
+            )
+          : const SystemUiOverlayStyle(
+              statusBarColor: Colors.white,
+              statusBarIconBrightness: Brightness.dark,
+              statusBarBrightness: Brightness.light,
+              systemNavigationBarColor: Colors.white,
+              systemNavigationBarIconBrightness: Brightness.dark,
+            ),
       child: Scaffold(
         key: _scaffoldKey,
-      drawer: isDesktop ? null : _buildDrawer(),
-      appBar: AppHeader(
-        coins: _profile.coins,
-        userName: _profile.name,
-        isPro: isPro,
-        unreadNotifications: _unreadNotifications,
-        showMenuButton: !isDesktop,
-        currentTab: _activeTab,
-        onTabSelected: (tab) => setState(() => _activeTab = tab),
-        onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
-        onNotificationTap: _openNotificationsModal,
-        onCoinsTap: () => setState(() => _activeTab = UserNavTab.wallet),
-        onProfileTap: () => setState(() => _activeTab = UserNavTab.profile),
-      ),
-      bottomNavigationBar: isDesktop
-          ? null
-          : AppBottomNav(
-              currentTab: _activeTab,
-              onTabSelected: (tab) => setState(() => _activeTab = tab),
+        drawer: isDesktop ? null : _buildDrawer(),
+        appBar: isSpinTab
+            ? null
+            : AppHeader(
+                coins: _profile.coins,
+                userName: _profile.name,
+                isPro: isPro,
+                unreadNotifications: _unreadNotifications,
+                showMenuButton: !isDesktop,
+                currentTab: _activeTab,
+                onTabSelected: (tab) => setState(() => _activeTab = tab),
+                onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+                onNotificationTap: _openNotificationsModal,
+                onCoinsTap: () => setState(() => _activeTab = UserNavTab.wallet),
+                onProfileTap: () => setState(() => _activeTab = UserNavTab.profile),
+              ),
+        bottomNavigationBar: isDesktop
+            ? null
+            : AppBottomNav(
+                currentTab: _activeTab,
+                onTabSelected: (tab) => setState(() => _activeTab = tab),
+              ),
+        body: switch (_activeTab) {
+          UserNavTab.home => DashboardScreen(
+              profile: _profile,
+              onStartTest: () => _startQuiz(_defaultMockTest),
+              onExploreTests: () => setState(() => _activeTab = UserNavTab.tests),
+              onJoinContest: () => setState(() => _activeTab = UserNavTab.live),
+              onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
+              onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
+              onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
             ),
-      body: switch (_activeTab) {
-        UserNavTab.home => DashboardScreen(
-            profile: _profile,
-            onStartTest: () => _startQuiz(_defaultMockTest),
-            onExploreTests: () => setState(() => _activeTab = UserNavTab.tests),
-            onJoinContest: () => setState(() => _activeTab = UserNavTab.live),
-            onSpinWheel: () => setState(() => _activeTab = UserNavTab.rewards),
-            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
-            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
-          ),
         UserNavTab.tests => TestSeriesScreen(
             userCoins: _profile.coins,
             onStartTest: (test) => _startQuiz(test),
             initialTests: widget.initialTests,
             onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
-            onSpinWheel: () => setState(() => _activeTab = UserNavTab.rewards),
+            onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
             onOpenLive: () => setState(() => _activeTab = UserNavTab.live),
             onOpenLeaderboard: () => setState(() => _activeTab = UserNavTab.home),
           ),
@@ -571,6 +582,7 @@ class _UserAppShellState extends State<UserAppShell> {
                 _profile = _profile.copyWith(coins: _profile.coins + coinsWon);
               });
             },
+            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
           ),
         UserNavTab.wallet => WalletScreen(
             profile: _profile,

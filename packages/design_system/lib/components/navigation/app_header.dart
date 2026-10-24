@@ -74,7 +74,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
                 padding: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? 24.0 : (isVeryCompact ? 6.0 : (isCompact ? 10.0 : 12.0)),
+                  horizontal: isDesktop
+                      ? 24.0
+                      : (isVeryCompact ? 6.0 : (isCompact ? 10.0 : 12.0)),
                 ),
                 child: Row(
                   children: [
@@ -88,7 +90,10 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                         ),
                         onPressed: onMenuTap,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
                         tooltip: 'Open Menu',
                       ),
                       SizedBox(width: isVeryCompact ? 4 : (isCompact ? 6 : 8)),
@@ -209,6 +214,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                                 label: 'Rewards',
                                 tab: UserNavTab.rewards,
                               ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
+                                icon: Icons.person_outline_rounded,
+                                label: 'Profile',
+                                tab: UserNavTab.profile,
+                              ),
                             ],
                           ),
                         ),
@@ -223,8 +234,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                width: isVeryCompact ? 22 : (isCompact ? 26 : 28),
-                                height: isVeryCompact ? 22 : (isCompact ? 26 : 28),
+                                width: isVeryCompact
+                                    ? 22
+                                    : (isCompact ? 26 : 28),
+                                height: isVeryCompact
+                                    ? 22
+                                    : (isCompact ? 26 : 28),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFFF9E6),
                                   borderRadius: AppRadii.borderMd,
@@ -233,7 +248,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                                 child: Icon(
                                   Icons.emoji_events_rounded,
                                   color: const Color(0xFFF59E0B),
-                                  size: isVeryCompact ? 14 : (isCompact ? 16 : 18),
+                                  size: isVeryCompact
+                                      ? 14
+                                      : (isCompact ? 16 : 18),
                                 ),
                               ),
                               SizedBox(width: isVeryCompact ? 4 : 6),
@@ -263,7 +280,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                                             text: 'Rank',
                                             style: TextStyle(
                                               color: const Color(0xFF101A3A),
-                                              fontSize: isVeryCompact ? 14 : (isCompact ? 16 : 18),
+                                              fontSize: isVeryCompact
+                                                  ? 14
+                                                  : (isCompact ? 16 : 18),
                                               fontWeight: FontWeight.w900,
                                               letterSpacing: -0.4,
                                               fontFamily: 'Inter',
@@ -273,7 +292,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                                             text: 'earn',
                                             style: TextStyle(
                                               color: const Color(0xFF10B981),
-                                              fontSize: isVeryCompact ? 14 : (isCompact ? 16 : 18),
+                                              fontSize: isVeryCompact
+                                                  ? 14
+                                                  : (isCompact ? 16 : 18),
                                               fontWeight: FontWeight.w900,
                                               letterSpacing: -0.4,
                                               fontFamily: 'Inter',
@@ -303,7 +324,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                                           maxWidth: 0,
                                           minHeight: 0,
                                           maxHeight: 0,
-                                          child: Text('Learn • Practice • Earn'),
+                                          child: Text(
+                                            'Learn • Practice • Earn',
+                                          ),
                                         ),
                                       ),
                                   ],
@@ -338,23 +361,37 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                           ),
                           onPressed: onNotificationTap,
                           padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
                         ),
                         if (unreadNotifications > 0)
                           Positioned(
                             right: 2,
                             top: 2,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.errorRose,
                                 borderRadius: AppRadii.borderPill,
-                                border: Border.all(color: Colors.white, width: 1.5),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 1.5,
+                                ),
                               ),
-                              constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                              constraints: const BoxConstraints(
+                                minWidth: 14,
+                                minHeight: 14,
+                              ),
                               alignment: Alignment.center,
                               child: Text(
-                                unreadNotifications > 9 ? '9+' : '$unreadNotifications',
+                                unreadNotifications > 9
+                                    ? '9+'
+                                    : '$unreadNotifications',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 8,
@@ -378,16 +415,28 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                             padding: const EdgeInsets.all(1.5),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.borderStrong, width: 1.5),
+                              border: Border.all(
+                                color: AppColors.borderStrong,
+                                width: 1.5,
+                              ),
                             ),
                             child: CircleAvatar(
-                              radius: isVeryCompact ? 12 : (isCompact ? 14 : 16),
+                              radius: isVeryCompact
+                                  ? 12
+                                  : (isCompact ? 14 : 16),
                               backgroundColor: const Color(0xFFDCEBFE),
-                              backgroundImage: userPhotoUrl != null && userPhotoUrl!.isNotEmpty
+                              backgroundImage:
+                                  userPhotoUrl != null &&
+                                      userPhotoUrl!.isNotEmpty
                                   ? NetworkImage(userPhotoUrl!)
                                   : null,
-                              child: userPhotoUrl == null || userPhotoUrl!.isEmpty
-                                  ? Icon(Icons.person, color: AppColors.brandBlueDark, size: isCompact ? 15 : 18)
+                              child:
+                                  userPhotoUrl == null || userPhotoUrl!.isEmpty
+                                  ? Icon(
+                                      Icons.person,
+                                      color: AppColors.brandBlueDark,
+                                      size: isCompact ? 15 : 18,
+                                    )
                                   : null,
                             ),
                           ),
@@ -436,10 +485,19 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
   bool _isTabActive(UserNavTab tab) {
-    if (currentTab == null) return false;
-    if (currentTab == tab) return true;
-    if (tab == UserNavTab.live && currentTab == UserNavTab.earn) return true;
-    if (tab == UserNavTab.rewards && (currentTab == UserNavTab.spin || currentTab == UserNavTab.wallet)) return true;
+    if (currentTab == null) {
+      return false;
+    }
+    if (currentTab == tab) {
+      return true;
+    }
+    if (tab == UserNavTab.live && currentTab == UserNavTab.earn) {
+      return true;
+    }
+    if (tab == UserNavTab.rewards &&
+        (currentTab == UserNavTab.spin || currentTab == UserNavTab.wallet)) {
+      return true;
+    }
     return false;
   }
 
