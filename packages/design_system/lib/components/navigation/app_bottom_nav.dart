@@ -38,8 +38,7 @@ class AppBottomNav extends StatelessWidget {
     if (tab == UserNavTab.live && currentTab == UserNavTab.earn) {
       return true;
     }
-    if (tab == UserNavTab.rewards &&
-        (currentTab == UserNavTab.spin || currentTab == UserNavTab.wallet)) {
+    if (tab == UserNavTab.rewards && currentTab == UserNavTab.spin) {
       return true;
     }
     if (tab == UserNavTab.tests && currentTab == UserNavTab.categories) {
@@ -68,11 +67,22 @@ class AppBottomNav extends StatelessWidget {
       (UserNavTab.rewards, Icons.card_giftcard_rounded, 'Rewards'),
     ];
 
+    final walletItems = [
+      (UserNavTab.home, Icons.home_rounded, 'Home'),
+      (UserNavTab.categories, Icons.grid_view_rounded, 'Categories'),
+      (UserNavTab.tests, Icons.feed_outlined, 'Tests'),
+      (UserNavTab.live, Icons.sensors_rounded, 'Live'),
+      (UserNavTab.leaderboard, Icons.emoji_events_rounded, 'Leaderboard'),
+      (UserNavTab.wallet, Icons.account_balance_wallet_rounded, 'Wallet'),
+    ];
+
     final items =
         customItems ??
-        (currentTab == UserNavTab.leaderboard
-            ? leaderboardItems
-            : defaultDashboardItems);
+        (currentTab == UserNavTab.wallet
+            ? walletItems
+            : (currentTab == UserNavTab.leaderboard
+                  ? leaderboardItems
+                  : defaultDashboardItems));
 
     return Container(
       height: 68,

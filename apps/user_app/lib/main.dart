@@ -688,6 +688,12 @@ class _UserAppShellState extends State<UserAppShell> {
           UserNavTab.wallet => WalletScreen(
             profile: _profile,
             onCoinsUpdated: () => setState(() {}),
+            onNavigateToTab: (tab) => setState(() => _activeTab = tab),
+            onCoinUpdate: (delta) {
+              setState(() {
+                _profile = _profile.copyWith(coins: _profile.coins + delta);
+              });
+            },
           ),
           UserNavTab.profile => ProfileScreen(
             profile: _profile,

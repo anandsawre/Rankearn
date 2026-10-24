@@ -32,7 +32,6 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
   List<BattlePlayerModel> _topPlayers = [];
   List<BattleMissionModel> _missions = [];
   List<BattleHistoryItemModel> _history = [];
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -52,7 +51,6 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
       if (playersRes is Success<List<BattlePlayerModel>>) _topPlayers = playersRes.data;
       if (missionsRes is Success<List<BattleMissionModel>>) _missions = missionsRes.data;
       if (historyRes is Success<List<BattleHistoryItemModel>>) _history = historyRes.data;
-      _isLoading = false;
     });
   }
 
@@ -519,16 +517,6 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
         final mainContent = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Loading Indicator if refreshing
-            if (_isLoading) ...[
-              const LinearProgressIndicator(
-                color: AppColors.primary,
-                backgroundColor: Colors.transparent,
-                minHeight: 2,
-              ),
-              const SizedBox(height: 8),
-            ],
-
             // 1. Hero Banner
             BattleHeroBanner(
               borderRadius: BorderRadius.circular(12),

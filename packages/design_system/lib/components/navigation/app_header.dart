@@ -192,6 +192,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                               ),
                               const SizedBox(width: 4),
                               _buildDesktopNavItem(
+                                icon: Icons.grid_view_rounded,
+                                label: 'Categories',
+                                tab: UserNavTab.categories,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
                                 icon: Icons.feed_outlined,
                                 label: 'Tests',
                                 tab: UserNavTab.tests,
@@ -210,21 +216,21 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                               ),
                               const SizedBox(width: 4),
                               _buildDesktopNavItem(
-                                icon: Icons.card_giftcard_rounded,
-                                label: 'Rewards',
-                                tab: UserNavTab.rewards,
-                              ),
-                              const SizedBox(width: 4),
-                              _buildDesktopNavItem(
                                 icon: Icons.leaderboard_rounded,
                                 label: 'Leaderboard',
                                 tab: UserNavTab.leaderboard,
                               ),
                               const SizedBox(width: 4),
                               _buildDesktopNavItem(
-                                icon: Icons.person_outline_rounded,
-                                label: 'Profile',
-                                tab: UserNavTab.profile,
+                                icon: Icons.account_balance_wallet_rounded,
+                                label: 'Wallet',
+                                tab: UserNavTab.wallet,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
+                                icon: Icons.card_giftcard_rounded,
+                                label: 'Rewards',
+                                tab: UserNavTab.rewards,
                               ),
                             ],
                           ),
@@ -500,8 +506,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     if (tab == UserNavTab.live && currentTab == UserNavTab.earn) {
       return true;
     }
-    if (tab == UserNavTab.rewards &&
-        (currentTab == UserNavTab.spin || currentTab == UserNavTab.wallet)) {
+    if (tab == UserNavTab.rewards && currentTab == UserNavTab.spin) {
       return true;
     }
     return false;
@@ -513,13 +518,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     required UserNavTab tab,
   }) {
     final active = _isTabActive(tab);
-    final isGreen = tab == UserNavTab.leaderboard;
-    final activeBg = isGreen
-        ? const Color(0xFFE8FDF5)
-        : const Color(0xFFEEF2FF);
-    final activeColor = isGreen
-        ? const Color(0xFF00B96B)
-        : AppColors.brandPurple;
+    const activeBg = Color(0xFFEEF2FF);
+    const activeColor = AppColors.brandPurple;
 
     return InkWell(
       onTap: () => onTabSelected?.call(tab),

@@ -255,4 +255,27 @@ class AppColors {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
+
+  // --- Wallet Design System Tokens ---
+  static const Color walletPrimaryGreen = Color(0xFF00B96B);
+  static const Color walletDarkGreen = Color(0xFF008C52);
+  static const Color walletNavy = Color(0xFF10194F);
+  static const Color walletBackground = Color(0xFFF2F8FF);
+  static const Color walletCardBg = Color(0xFFFFFFFF);
+  static const Color walletGold = Color(0xFFFFC928);
+  static const Color walletGoldDark = Color(0xFFE6A700);
+  static const Color walletSecondaryText = Color(0xFF586B9B);
+  static const Color walletBorder = Color(0xFFE2ECFA);
+  static const Color walletBorderSubtle = Color(0xFFEDF4FD);
+  static const Color walletErrorRed = Color(0xFFF52245);
+  static const Color walletMintBg = Color(0xFFE8FDF2);
+  static const Color walletMintBorder = Color(0xFFC6F0DC);
+  static const Color walletPurple = Color(0xFF8B5CF6);
+  static const Color walletPurpleBg = Color(0xFFF5F3FF);
+
+  static const LinearGradient walletHeroGradient = LinearGradient(
+    colors: [Color(0xFFE8FDF2), Color(0xFFD6F8E7)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
