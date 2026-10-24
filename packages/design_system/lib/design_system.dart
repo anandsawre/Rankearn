@@ -91,6 +91,7 @@ export 'components/battle/battle_answer_tile.dart';
 export 'components/battle/battle_button.dart';
 export 'components/battle/battle_victory_banner.dart';
 export 'components/battle/battle_reward_card.dart';
+export 'components/battle/battle_wave_card.dart';
 export 'components/battle/battle_leave_dialog.dart';
 
 // Showcase

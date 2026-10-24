@@ -172,8 +172,11 @@ class AppButton extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                 ] else if (leadingIcon != null) ...[
-                  leadingIcon!,
-                  const SizedBox(width: 6),
+                  IconTheme.merge(
+                    data: IconThemeData(color: fg, size: size == AppButtonSize.small ? 16 : 18),
+                    child: leadingIcon!,
+                  ),
+                  const SizedBox(width: 8),
                 ],
                 Flexible(
                   child: FittedBox(
@@ -186,8 +189,11 @@ class AppButton extends StatelessWidget {
                   ),
                 ),
                 if (!isLoading && trailingIcon != null) ...[
-                  const SizedBox(width: 6),
-                  trailingIcon!,
+                  const SizedBox(width: 8),
+                  IconTheme.merge(
+                    data: IconThemeData(color: fg, size: size == AppButtonSize.small ? 16 : 18),
+                    child: trailingIcon!,
+                  ),
                 ],
               ],
             ),

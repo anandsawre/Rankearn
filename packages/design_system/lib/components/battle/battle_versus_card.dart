@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
-import '../../tokens/shadows.dart';
+import 'battle_wave_card.dart';
 
 /// 1v1 Battle Arena Player Versus Card
 /// Features side-by-side players with crowns, score pills, round dots,
@@ -41,14 +41,8 @@ class BattleVersusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return BattleWaveCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF6),
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFD6F5E3), width: 1.5),
-        boxShadow: AppShadows.subtle,
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -307,3 +301,4 @@ class BattleVersusCard extends StatelessWidget {
     );
   }
 }
+

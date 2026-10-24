@@ -9,8 +9,9 @@ class BattleQuestionCard extends StatelessWidget {
   final int totalRounds;
   final int stakeCoins;
   final String subject;
-  final int timeLimitSeconds;
+  final int? timeLimitSeconds;
   final String questionText;
+  final VoidCallback? onHintTap;
 
   const BattleQuestionCard({
     super.key,
@@ -20,6 +21,7 @@ class BattleQuestionCard extends StatelessWidget {
     this.subject = 'General Science',
     this.timeLimitSeconds = 12,
     required this.questionText,
+    this.onHintTap,
   });
 
   @override
@@ -118,85 +120,55 @@ class BattleQuestionCard extends StatelessWidget {
 
         // 2. Question Card Surface
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: AppRadii.borderXl,
             boxShadow: AppShadows.subtle,
             border: Border.all(color: AppColors.battleBorder),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Top Row: Subject Badge + Question Timer Badge
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Subject Chip (e.g. 📖 General Science)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD1FAE5),
-                      borderRadius: AppRadii.borderPill,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('📖', style: TextStyle(fontSize: 13)),
-                        const SizedBox(width: 5),
-                        Text(
-                          subject,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF047857),
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
-                    ),
+              // Yellow Bulb Hint Icon (Left of Question)
+              GestureDetector(
+                onTap: onHintTap,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFFDE68A), width: 1.2),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x14F59E0B),
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
-
-                  // Timer Badge (e.g. ⏱️ 12s)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF3C7),
-                      borderRadius: AppRadii.borderPill,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('⏱️', style: TextStyle(fontSize: 13)),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${timeLimitSeconds}s',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFFB45309),
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: const Icon(
+                    Icons.lightbulb_rounded,
+                    color: Color(0xFFF59E0B),
+                    size: 20,
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(width: 14),
 
               // Question Text
-              Text(
-                questionText,
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.battleNavy,
-                  height: 1.35,
-                  letterSpacing: -0.2,
-                  fontFamily: 'Inter',
+              Expanded(
+                child: Text(
+                  questionText,
+                  style: const TextStyle(
+                    fontSize: 17.5,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.battleNavy,
+                    height: 1.35,
+                    letterSpacing: -0.2,
+                    fontFamily: 'Inter',
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),

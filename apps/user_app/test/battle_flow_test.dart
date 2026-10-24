@@ -120,8 +120,8 @@ void main() {
       expect(find.text('Stake: 100 Coins'), findsOneWidget);
 
       // 3. Question Card
-      expect(find.text('General Science'), findsOneWidget);
       expect(find.text('Which is the largest organ in the human body?'), findsOneWidget);
+      expect(find.byIcon(Icons.lightbulb_rounded), findsOneWidget);
 
       // 4. Four Options: A Liver, B Heart, C Skin, D Lungs
       expect(find.text('A'), findsOneWidget);

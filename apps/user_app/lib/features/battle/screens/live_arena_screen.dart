@@ -239,7 +239,6 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                           totalRounds: _session.totalRounds,
                           stakeCoins: _session.entryFee,
                           subject: currentQ.subject,
-                          timeLimitSeconds: _turnSeconds,
                           questionText: currentQ.questionText,
                         ),
                         const SizedBox(height: 18),
