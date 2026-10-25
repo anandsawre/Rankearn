@@ -102,6 +102,7 @@ void main() {
       expect(find.text('Create Your Account'), findsOneWidget);
       expect(find.text('Full Name'), findsOneWidget);
       expect(find.text('Class / Exam Goal (Optional)'), findsOneWidget);
+      expect(find.text('Referral Code (Optional)'), findsOneWidget);
       expect(find.text('Already have an account? '), findsOneWidget);
 
       // Tap Login to switch back
@@ -189,6 +190,7 @@ void main() {
       expect(find.text('Email Address'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
       expect(find.text('Class / Exam Goal (Optional)'), findsOneWidget);
+      expect(find.text('Referral Code (Optional)'), findsOneWidget);
 
       // 5. Terms Checkbox
       expect(find.textContaining('I agree to the'), findsOneWidget);

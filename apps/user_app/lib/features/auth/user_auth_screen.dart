@@ -44,6 +44,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   final _phoneController = TextEditingController(text: '9876543210');
   final _emailController = TextEditingController(text: 'vikram.singh@rankearn.in');
   final _passwordController = TextEditingController(text: 'Rankearn2026!');
+  final _referralController = TextEditingController();
   final _phoneFocusNode = FocusNode();
   String? _selectedExamGoal;
 
@@ -78,6 +79,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _referralController.dispose();
     _phoneFocusNode.dispose();
     super.dispose();
   }
@@ -146,12 +148,14 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         }
       } else {
         // Sign Up Mode
+        final referralCode = _referralController.text.trim();
         final res = await _authRepository.signUp(
           email: email,
           password: password,
           name: name,
           phone: phone,
           examGoal: _selectedExamGoal,
+          referralCode: referralCode.isNotEmpty ? referralCode.toUpperCase() : null,
         );
 
         if (res is Success<UserProfile>) {
@@ -168,6 +172,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               subscriptionStatus: 'free',
               examPreparingFor: _selectedExamGoal ?? 'Competitive Aspirant',
               state: 'India',
+              referralCode: referralCode.isNotEmpty ? referralCode.toUpperCase() : null,
               createdAt: DateTime.now(),
             );
             _handleSuccess(newProfile);
@@ -632,23 +637,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   // 1. Top Hero Section with Brand, Heading & Student Mascot
                   _buildMobileHeroHeader(isLogin: isLogin, maxWidth: maxWidth),
 
-                  // 2. White Sheet with Rounded Top Corners (Matches Reference Design)
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(32),
-                        topRight: Radius.circular(32),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0x0C000000),
-                          blurRadius: 18,
-                          offset: Offset(0, -6),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.fromLTRB(20, 26, 20, 20),
+                  // 2. Mobile Form Content (Seamless on ambient background, zero white card)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                     child: _buildAuthCard(fillHeight: false, isMobile: true),
                   ),
                 ],
@@ -664,126 +655,41 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     final isVeryNarrow = maxWidth < 340;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(isVeryNarrow ? 14 : 20, 14, isVeryNarrow ? 14 : 16, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: EdgeInsets.fromLTRB(isVeryNarrow ? 14 : 20, 16, isVeryNarrow ? 14 : 20, 4),
+      child: Row(
         children: [
-          // Top Navigation & Brand Logo Row
-          Row(
-            children: [
-              if (widget.onBackToHome != null || Navigator.canPop(context)) ...[
-                InkWell(
-                  onTap: widget.onBackToHome ?? () {
-                    if (Navigator.canPop(context)) Navigator.pop(context);
-                  },
+          if (widget.onBackToHome != null || Navigator.canPop(context)) ...[
+            InkWell(
+              onTap: widget.onBackToHome ?? () {
+                if (Navigator.canPop(context)) Navigator.pop(context);
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x06000000),
-                          blurRadius: 4,
-                          offset: Offset(0, 1),
-                        ),
-                      ],
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x06000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
                     ),
-                    child: const Icon(
-                      Icons.arrow_back_rounded,
-                      size: 18,
-                      color: Color(0xFF10194F),
-                    ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-              ],
-              Expanded(
-                child: _buildBrandLogo(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Main Header Content: Heading & Student Mascot
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Left: Heading & Subtitle
-              Expanded(
-                flex: 12,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RichText(
-                        text: TextSpan(
-                          style: AppTypography.displayMedium.copyWith(
-                            fontSize: isVeryNarrow ? 22 : 26,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF0F172A),
-                            height: 1.12,
-                            letterSpacing: -0.6,
-                          ),
-                          children: isLogin
-                              ? const [
-                                  TextSpan(text: 'Good\nTo See You\n'),
-                                  TextSpan(
-                                    text: 'Again!',
-                                    style: TextStyle(color: Color(0xFF00B96B)),
-                                  ),
-                                ]
-                              : const [
-                                  TextSpan(text: 'Create\nYour Account\n'),
-                                  TextSpan(
-                                    text: 'Today!',
-                                    style: TextStyle(color: Color(0xFF00B96B)),
-                                  ),
-                                ],
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      CustomPaint(
-                        size: const Size(54, 7),
-                        painter: _YellowSwooshPainter(),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 32,
-                        child: Text(
-                          isLogin
-                              ? 'Login to continue your learning journey and keep earning rewards.'
-                              : 'Join Rankearn and start your learning journey today!',
-                          maxLines: 2,
-                          style: AppTypography.authSubtitle,
-                        ),
-                      ),
-                    ],
-                  ),
+                child: const Icon(
+                  Icons.arrow_back_rounded,
+                  size: 18,
+                  color: Color(0xFF10194F),
                 ),
               ),
-              const SizedBox(width: 4),
-
-              // Right: Student Mascot Artwork (Laptop, books, floating caps/coins)
-              Expanded(
-                flex: 13,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: isVeryNarrow ? 140 : 175,
-                  ),
-                  child: Image.asset(
-                    'assets/images/user_auth_mascot.png',
-                    fit: BoxFit.contain,
-                    alignment: Alignment.bottomRight,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-                  ),
-                ),
-              ),
-            ],
+            ),
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: _buildBrandLogo(),
           ),
         ],
       ),
@@ -1222,6 +1128,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 focusedBorderColor: const Color(0xFF00B96B),
                 onChanged: (val) => setState(() => _selectedExamGoal = val),
               ),
+              const SizedBox(height: 18),
+
+              // Referral Code (Optional)
+              _buildReferralFieldSection(),
               const SizedBox(height: 14),
 
               // Sign Up Terms Checkbox
@@ -1531,6 +1441,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       controller: _passwordController,
       label: 'Password',
       isPassword: true,
+      fillColor: Colors.white,
       prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your password';
@@ -1567,6 +1478,20 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         if (digits.length < 10) return 'Enter a valid 10-digit mobile number';
         return null;
       },
+    );
+  }
+
+  Widget _buildReferralFieldSection() {
+    return AppTextField.floating(
+      controller: _referralController,
+      label: 'Referral Code (Optional)',
+      prefixIcon: const Icon(Icons.card_giftcard_rounded, size: 18, color: Color(0xFF00B96B)),
+      fillColor: Colors.white,
+      textCapitalization: TextCapitalization.characters,
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(12),
+        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+      ],
     );
   }
 }
@@ -1742,25 +1667,6 @@ class _MobileAttractiveWavePainter extends CustomPainter {
     path.quadraticBezierTo(center.dx, center.dy, center.dx - radius, center.dy);
     path.quadraticBezierTo(center.dx, center.dy, center.dx, center.dy - radius);
     path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _YellowSwooshPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFF59E0B)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.8
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    path.moveTo(2, size.height * 0.35);
-    path.quadraticBezierTo(size.width * 0.5, size.height, size.width - 2, size.height * 0.25);
     canvas.drawPath(path, paint);
   }
 

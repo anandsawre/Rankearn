@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 import '../../tokens/typography.dart';
@@ -12,6 +13,8 @@ class AppTextField extends StatefulWidget {
   final TextEditingController? controller;
   final bool isPassword;
   final TextInputType keyboardType;
+  final TextCapitalization textCapitalization;
+  final List<TextInputFormatter>? inputFormatters;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final String? prefixText;
@@ -41,6 +44,8 @@ class AppTextField extends StatefulWidget {
     this.controller,
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
+    this.textCapitalization = TextCapitalization.none,
+    this.inputFormatters,
     this.prefixIcon,
     this.suffixIcon,
     this.prefixText,
@@ -73,6 +78,8 @@ class AppTextField extends StatefulWidget {
     this.controller,
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
+    this.textCapitalization = TextCapitalization.none,
+    this.inputFormatters,
     this.prefixIcon,
     this.suffixIcon,
     this.prefixText,
@@ -129,12 +136,16 @@ class _AppTextFieldState extends State<AppTextField> {
       focusNode: widget.focusNode,
       obscureText: _obscured,
       keyboardType: widget.keyboardType,
+      textCapitalization: widget.textCapitalization,
+      inputFormatters: widget.inputFormatters,
       enabled: widget.enabled,
       maxLength: widget.maxLength,
       maxLines: widget.isPassword ? 1 : widget.maxLines,
       onChanged: widget.onChanged,
       onFieldSubmitted: widget.onSubmitted,
       validator: widget.validator,
+      enableSuggestions: !widget.isPassword,
+      autocorrect: !widget.isPassword,
       style: effectiveStyle,
       decoration: InputDecoration(
         labelText: widget.label,
@@ -218,12 +229,16 @@ class _AppTextFieldState extends State<AppTextField> {
           focusNode: widget.focusNode,
           obscureText: _obscured,
           keyboardType: widget.keyboardType,
+          textCapitalization: widget.textCapitalization,
+          inputFormatters: widget.inputFormatters,
           enabled: widget.enabled,
           maxLength: widget.maxLength,
           maxLines: widget.isPassword ? 1 : widget.maxLines,
           onChanged: widget.onChanged,
           onFieldSubmitted: widget.onSubmitted,
           validator: widget.validator,
+          enableSuggestions: !widget.isPassword,
+          autocorrect: !widget.isPassword,
           style: widget.style ??
               AppTypography.bodyMedium.copyWith(
                 color: AppColors.textPrimary,

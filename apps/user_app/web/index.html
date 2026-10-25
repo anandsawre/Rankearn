@@ -31,6 +31,22 @@
 
   <title>user_app</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Prevent Chrome / browser from giving HTML input overlays grey (#F5F5F5) backgrounds or autofill tints */
+    input, textarea, select {
+      background-color: transparent !important;
+      background: transparent !important;
+    }
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 1000px white inset !important;
+      -webkit-text-fill-color: inherit !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+  </style>
 </head>
 <body>
   <!--
