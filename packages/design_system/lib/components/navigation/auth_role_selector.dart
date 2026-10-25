@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../tokens/typography.dart';
 
 enum AuthUserRole { student, teacher }
 
@@ -98,7 +99,7 @@ class AuthRoleSelector extends StatelessWidget {
               Flexible(
                 child: Text(
                   label,
-                  style: TextStyle(
+                  style: AppTypography.labelLarge.copyWith(
                     fontSize: 12.5,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     color: isSelected

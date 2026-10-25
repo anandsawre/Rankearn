@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../tokens/colors.dart';
+import '../../tokens/typography.dart';
 
 /// Soft lavender security notice at the bottom of the auth card
 class AuthSecurityNotice extends StatelessWidget {
@@ -55,21 +57,19 @@ class AuthSecurityNotice extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: AppTypography.cardHeading.copyWith(
                     fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
                     height: 1.15,
+                    color: AppColors.surfaceDark,
                   ),
                 ),
                 const SizedBox(height: 1),
                 Text(
                   description,
-                  style: const TextStyle(
+                  style: AppTypography.bodySmall.copyWith(
                     fontSize: 9.5,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF64748B),
                     height: 1.25,
+                    color: AppColors.textSecondary,
                   ),
                   maxLines: 2,
                 ),

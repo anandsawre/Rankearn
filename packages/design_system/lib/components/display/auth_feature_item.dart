@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../tokens/typography.dart';
 
 /// Reusable educational feature bullet for the Authentication Hero section
 class AuthFeatureItem extends StatelessWidget {
@@ -6,6 +7,8 @@ class AuthFeatureItem extends StatelessWidget {
   final Color iconBgColor;
   final String title;
   final String description;
+  final Color? titleColor;
+  final Color? descriptionColor;
 
   const AuthFeatureItem({
     super.key,
@@ -13,6 +16,8 @@ class AuthFeatureItem extends StatelessWidget {
     required this.iconBgColor,
     required this.title,
     required this.description,
+    this.titleColor,
+    this.descriptionColor,
   });
 
   @override
@@ -48,10 +53,10 @@ class AuthFeatureItem extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 13.5,
+                style: AppTypography.titleSmall.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF10194F),
+                  fontSize: 13.5,
+                  color: titleColor ?? iconBgColor,
                   letterSpacing: -0.2,
                 ),
                 maxLines: 1,
@@ -60,10 +65,9 @@ class AuthFeatureItem extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 description,
-                style: const TextStyle(
-                  fontSize: 11.5,
+                style: AppTypography.authSubtitle.copyWith(
+                  color: descriptionColor ?? Colors.black,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF64748B),
                   letterSpacing: -0.1,
                 ),
                 maxLines: 1,

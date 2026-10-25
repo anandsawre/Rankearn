@@ -216,10 +216,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.phone_android_rounded), findsWidgets);
 
-      // Typing email address updates icon to alternate_email
+      // Typing email address updates icon to mail_outline_rounded
       await tester.enterText(inputFinder, 'vikram@rankearn.in');
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.alternate_email_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.mail_outline_rounded), findsOneWidget);
     });
 
     testWidgets('Shows error if email or phone is invalid on Login', (WidgetTester tester) async {

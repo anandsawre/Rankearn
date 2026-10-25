@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../tokens/colors.dart';
+import '../../tokens/typography.dart';
 
 /// Reusable 3-metric statistics banner for Authentication Hero
 class AuthStatsCard extends StatelessWidget {
@@ -130,22 +132,20 @@ class AuthStatsCard extends StatelessWidget {
                 value,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: AppTypography.metricValue.copyWith(
                   fontSize: 13.5,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF10194F),
                   letterSpacing: -0.3,
+                  color: AppColors.textPrimary,
                 ),
               ),
               Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: AppTypography.metricLabel.copyWith(
                   fontSize: 10.0,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF64748B),
                   letterSpacing: -0.1,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],

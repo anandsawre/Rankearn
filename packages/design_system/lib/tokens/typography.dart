@@ -38,6 +38,14 @@ class AppTypography {
     fontFamilyFallback: fontFallbacks,
   );
 
+  static const TextStyle displaySmall = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.4,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
   // --- Headings ---
   static const TextStyle pageHeading = TextStyle(
     fontSize: 24,
@@ -168,6 +176,75 @@ class AppTypography {
     fontWeight: FontWeight.w800,
     letterSpacing: 0.3,
     color: AppColors.textOnPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  // --- Form & Input Tokens ---
+  static const TextStyle formLabel = TextStyle(
+    fontSize: 12.5,
+    fontWeight: FontWeight.w500,
+    color: Color(0xFF94A3B8),
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle formFloatingLabel = TextStyle(
+    fontSize: 12.5,
+    fontWeight: FontWeight.w700,
+    color: AppColors.brandPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle formInput = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle formHint = TextStyle(
+    fontSize: 12.5,
+    fontWeight: FontWeight.w500,
+    color: Color(0xFF94A3B8),
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle formError = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.error,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  // --- Auth Specialized Typography Tokens ---
+  static const TextStyle authHeroHeading = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.6,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle authCardHeading = TextStyle(
+    fontSize: 19,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.3,
+    color: Color(0xFF0F172A),
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle authSubtitle = TextStyle(
+    fontSize: 11.5,
+    fontWeight: FontWeight.w500,
+    color: Color(0xFF64748B),
+    height: 1.25,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle authPillBadge = TextStyle(
+    fontSize: 10.5,
+    fontWeight: FontWeight.w800,
+    color: Color(0xFF008C52),
+    letterSpacing: -0.1,
     fontFamilyFallback: fontFallbacks,
   );
 }

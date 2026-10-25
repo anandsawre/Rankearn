@@ -47,7 +47,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   final _phoneFocusNode = FocusNode();
   String? _selectedExamGoal;
 
-  bool _obscurePassword = true;
   bool _rememberMe = true;
   bool _agreeToTerms = true;
   bool _isLoading = false;
@@ -230,10 +229,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
-              children: const [
-                Icon(Icons.phone_iphone_rounded, color: Color(0xFF00B96B)),
-                SizedBox(width: 8),
-                Text('Continue with Phone', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF10194F))),
+              children: [
+                const Icon(Icons.phone_iphone_rounded, color: Color(0xFF00B96B)),
+                const SizedBox(width: 8),
+                Text('Continue with Phone', style: AppTypography.titleMedium.copyWith(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
               ],
             ),
             content: SizedBox(
@@ -246,33 +245,23 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     otpSent
                         ? 'Enter the 6-digit OTP sent to ${phoneController.text}'
                         : 'Enter your mobile number to receive a secure login OTP.',
-                    style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
+                    style: AppTypography.bodySmall.copyWith(fontSize: 12.5),
                   ),
                   const SizedBox(height: 16),
                   if (!otpSent)
-                    TextField(
+                    AppTextField.floating(
                       controller: phoneController,
+                      label: 'Mobile Number',
                       keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        labelText: 'Mobile Number',
-                        prefixIcon: const Icon(Icons.phone_rounded, color: Color(0xFF00B96B)),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
-                      ),
+                      prefixIcon: const Icon(Icons.phone_rounded, color: Color(0xFF00B96B)),
                     )
                   else
-                    TextField(
+                    AppTextField.floating(
                       controller: otpController,
+                      label: '6-Digit OTP',
                       keyboardType: TextInputType.number,
                       maxLength: 6,
-                      decoration: InputDecoration(
-                        labelText: '6-Digit OTP',
-                        prefixIcon: const Icon(Icons.security_rounded, color: Color(0xFF00B96B)),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
-                      ),
+                      prefixIcon: const Icon(Icons.security_rounded, color: Color(0xFF00B96B)),
                     ),
                 ],
               ),
@@ -280,7 +269,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+                child: Text('Cancel', style: AppTypography.labelLarge.copyWith(color: AppColors.textMuted)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -345,12 +334,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Reset Your Password',
-                      style: TextStyle(
+                      style: AppTypography.titleMedium.copyWith(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF10194F),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     IconButton(
@@ -360,21 +349,16 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Enter your registered email address. We will send you a password recovery link.',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                  style: AppTypography.bodyMedium,
                 ),
                 const SizedBox(height: 16),
-                TextField(
+                AppTextField.floating(
                   controller: resetEmailController,
+                  label: 'Registered Email Address',
                   keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: 'Registered Email Address',
-                    prefixIcon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF00B96B)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                  ),
+                  prefixIcon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF00B96B)),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -403,7 +387,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                           },
                     child: isSending
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Send Reset Link', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        : Text('Send Reset Link', style: AppTypography.buttonText),
                   ),
                 ),
               ],
@@ -420,11 +404,11 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF10194F))),
+        title: Text(title, style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         content: SizedBox(
           width: 360,
           child: SingleChildScrollView(
-            child: Text(content, style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.4)),
+            child: Text(content, style: AppTypography.bodyMedium.copyWith(color: const Color(0xFF475569))),
           ),
         ),
         actions: [
@@ -435,7 +419,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
+            child: Text('Close', style: AppTypography.buttonText),
           ),
         ],
       ),
@@ -560,15 +544,14 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               RichText(
-                text: const TextSpan(
-                  style: TextStyle(
+                text: TextSpan(
+                  style: AppTypography.displaySmall.copyWith(
                     fontSize: 21,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF10194F),
+                    color: AppColors.textPrimary,
                     letterSpacing: -0.5,
-                    fontFamily: 'Inter',
                   ),
-                  children: [
+                  children: const [
                     TextSpan(text: 'Rank'),
                     TextSpan(
                       text: 'earn',
@@ -577,14 +560,14 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ],
                 ),
               ),
-              const Text(
+              Text(
                 'Learn • Practice • Play • Earn',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: AppTypography.microTag.copyWith(
                   fontSize: 9.5,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
                   letterSpacing: 0.1,
                 ),
               ),
@@ -739,13 +722,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     children: [
                       RichText(
                         text: TextSpan(
-                          style: TextStyle(
+                          style: AppTypography.displayMedium.copyWith(
                             fontSize: isVeryNarrow ? 22 : 26,
                             fontWeight: FontWeight.w900,
                             color: const Color(0xFF0F172A),
                             height: 1.12,
                             letterSpacing: -0.6,
-                            fontFamily: 'Inter',
                           ),
                           children: isLogin
                               ? const [
@@ -777,12 +759,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                               ? 'Login to continue your learning journey and keep earning rewards.'
                               : 'Join Rankearn and start your learning journey today!',
                           maxLines: 2,
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF64748B),
-                            height: 1.25,
-                          ),
+                          style: AppTypography.authSubtitle,
                         ),
                       ),
                     ],
@@ -832,13 +809,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         // 2. Main Large Heading
         RichText(
           text: TextSpan(
-            style: TextStyle(
+            style: AppTypography.authHeroHeading.copyWith(
               fontSize: isDesktop ? 28 : 24,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF10194F),
               height: 1.14,
-              letterSpacing: -0.6,
-              fontFamily: 'Inter',
             ),
             children: isLogin
                 ? const [
@@ -861,32 +834,64 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
         // 3. Subtitle / Supporting text
         if (isLogin) ...[
-          const Text(
+          Text(
             'Practice Tests • Compete Live • Earn Coins',
-            style: TextStyle(
+            style: AppTypography.titleSmall.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF10194F),
+              color: AppColors.textPrimary,
               letterSpacing: -0.2,
             ),
           ),
-          const SizedBox(height: 3),
-          const Text(
-            'Same account. More learning. Bigger rewards.',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF64748B),
+          Text.rich(
+            TextSpan(
+              style: AppTypography.bodySmall.copyWith(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+              children: const [
+                TextSpan(
+                  text: 'Same account',
+                  style: TextStyle(
+                    color: Color(0xFF2563EB),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                TextSpan(
+                  text: '. ',
+                  style: TextStyle(color: Color(0xFF94A3B8)),
+                ),
+                TextSpan(
+                  text: 'More learning',
+                  style: TextStyle(
+                    color: Color(0xFF00B96B),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                TextSpan(
+                  text: '. ',
+                  style: TextStyle(color: Color(0xFF94A3B8)),
+                ),
+                TextSpan(
+                  text: 'Bigger rewards',
+                  style: TextStyle(
+                    color: Color(0xFFD97706),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                TextSpan(
+                  text: '.',
+                  style: TextStyle(color: Color(0xFF94A3B8)),
+                ),
+              ],
             ),
           ),
         ] else ...[
-          const Text(
+          Text(
             'Take tests, improve your skills and earn real coins with Rankearn.',
-            style: TextStyle(
+            style: AppTypography.authSubtitle.copyWith(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
-              height: 1.25,
             ),
           ),
         ],
@@ -1009,15 +1014,15 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.school_rounded, color: Color(0xFF00B96B), size: 48),
-                    SizedBox(height: 8),
+                  children: [
+                    const Icon(Icons.school_rounded, color: Color(0xFF00B96B), size: 48),
+                    const SizedBox(height: 8),
                     Text(
                       'Small Steps\nBig Results!',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: AppTypography.titleMedium.copyWith(
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF064E3B),
+                        color: const Color(0xFF064E3B),
                         fontSize: 16,
                       ),
                     ),
@@ -1095,18 +1100,18 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text.rich(
-                    const TextSpan(
+                    TextSpan(
                       children: [
                         TextSpan(
                           text: 'Rank',
-                          style: TextStyle(
+                          style: AppTypography.displaySmall.copyWith(
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFF101A3A),
+                            color: AppColors.textPrimary,
                             letterSpacing: -0.4,
                           ),
                         ),
-                        TextSpan(
+                        const TextSpan(
                           text: 'earn',
                           style: TextStyle(
                             fontSize: 22,
@@ -1133,12 +1138,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   ),
                   child: const Text(
                     'Good To See You Again!',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF008C52),
-                      letterSpacing: -0.1,
-                    ),
+                    style: AppTypography.authPillBadge,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -1149,12 +1149,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               // Centered Heading
               Text(
                 isLogin ? 'Welcome Back!' : 'Create Your Account',
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
-                  letterSpacing: -0.3,
-                ),
+                style: AppTypography.authCardHeading,
               ),
               const SizedBox(height: 3),
 
@@ -1164,12 +1159,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     ? 'Login to your Rankearn account and continue learning, practicing and earning.'
                     : 'Join Rankearn and start your learning journey today!',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF64748B),
-                  height: 1.25,
-                ),
+                style: AppTypography.authSubtitle,
               ),
               const SizedBox(height: 12),
             ],
@@ -1191,11 +1181,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     Expanded(
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFB91C1C),
-                        ),
+                        style: AppTypography.formError.copyWith(color: const Color(0xFFB91C1C)),
                       ),
                     ),
                     InkWell(
@@ -1257,26 +1243,26 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     child: Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           'I agree to the ',
-                          style: TextStyle(fontSize: 11.5, color: Color(0xFF475569), fontWeight: FontWeight.w500),
+                          style: AppTypography.bodySmall.copyWith(fontSize: 11.5, color: const Color(0xFF475569), fontWeight: FontWeight.w500),
                         ),
                         InkWell(
                           onTap: () => _openLegalModal('Terms of Service', 'Welcome to Rankearn. By accessing our mock tests, quiz battles, and reward system, you agree to our standard terms of use, fair play policies, and academic integrity guidelines.'),
-                          child: const Text(
+                          child: Text(
                             'Terms of Service',
-                            style: TextStyle(fontSize: 11.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
+                            style: AppTypography.bodySmall.copyWith(fontSize: 11.5, color: const Color(0xFF00B96B), fontWeight: FontWeight.w700),
                           ),
                         ),
-                        const Text(
+                        Text(
                           ' and ',
-                          style: TextStyle(fontSize: 11.5, color: Color(0xFF475569), fontWeight: FontWeight.w500),
+                          style: AppTypography.bodySmall.copyWith(fontSize: 11.5, color: const Color(0xFF475569), fontWeight: FontWeight.w500),
                         ),
                         InkWell(
                           onTap: () => _openLegalModal('Privacy Policy', 'At Rankearn, your personal data and test analytics are encrypted and securely safeguarded. We never sell your personal information.'),
-                          child: const Text(
+                          child: Text(
                             'Privacy Policy',
-                            style: TextStyle(fontSize: 11.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
+                            style: AppTypography.bodySmall.copyWith(fontSize: 11.5, color: const Color(0xFF00B96B), fontWeight: FontWeight.w700),
                           ),
                         ),
                       ],
@@ -1318,23 +1304,23 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Text(
+                        Text(
                           'Keep me logged in',
-                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
+                          style: AppTypography.supporting.copyWith(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
                         ),
                       ],
                     ),
                     InkWell(
                       onTap: _openForgotPasswordModal,
                       borderRadius: BorderRadius.circular(6),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
                         child: Text(
                           'Forgot Password?',
-                          style: TextStyle(
+                          style: AppTypography.supporting.copyWith(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF00B96B),
+                            color: const Color(0xFF00B96B),
                           ),
                         ),
                       ),
@@ -1380,7 +1366,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                             const SizedBox(width: 8),
                             Text(
                               isLogin ? 'Login' : 'Register',
-                              style: const TextStyle(
+                              style: AppTypography.buttonText.copyWith(
                                 fontSize: 14.5,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.2,
@@ -1401,10 +1387,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 children: [
                   Text(
                     isLogin ? "Don't have an account? " : "Already have an account? ",
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF64748B),
+                    style: AppTypography.formHint.copyWith(
+                      color: const Color(0xFF64748B),
                     ),
                   ),
                   InkWell(
@@ -1417,10 +1401,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                         children: [
                           Text(
                             isLogin ? 'Sign Up' : 'Login',
-                            style: const TextStyle(
-                              fontSize: 12.5,
+                            style: AppTypography.formHint.copyWith(
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF00B96B),
+                              color: const Color(0xFF00B96B),
                             ),
                           ),
                           if (isMobile) ...[
@@ -1442,20 +1425,20 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
             // Divider With Label "OR"
             Row(
-              children: const [
-                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
+              children: [
+                const Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(
                     'OR',
-                    style: TextStyle(
+                    style: AppTypography.captionBold.copyWith(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF94A3B8),
+                      color: const Color(0xFF94A3B8),
                     ),
                   ),
                 ),
-                Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
+                const Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
               ],
             ),
             const SizedBox(height: 12),
@@ -1498,29 +1481,15 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     final text = _emailController.text.trim();
     final isPhoneInput = text.isNotEmpty && RegExp(r'^[+0-9\s\-]+$').hasMatch(text);
 
-    return TextFormField(
+    return AppTextField.floating(
       controller: _emailController,
+      label: 'Email Address or Mobile Number',
       keyboardType: TextInputType.emailAddress,
       onChanged: (_) => setState(() {}),
-      decoration: InputDecoration(
-        labelText: 'Email Address or Mobile Number',
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
-        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
-        prefixIcon: Icon(
-          isPhoneInput ? Icons.phone_android_rounded : Icons.alternate_email_rounded,
-          size: 18,
-          color: const Color(0xFF00B96B),
-        ),
-        filled: true,
-        isDense: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
+      prefixIcon: Icon(
+        isPhoneInput ? Icons.phone_android_rounded : Icons.mail_outline_rounded,
+        size: 18,
+        color: const Color(0xFF00B96B),
       ),
       validator: (val) {
         if (val == null || val.trim().isEmpty) {
@@ -1544,25 +1513,11 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 
   Widget _buildEmailFieldSection({required bool isLogin}) {
-    return TextFormField(
+    return AppTextField.floating(
       controller: _emailController,
+      label: 'Email Address',
       keyboardType: TextInputType.emailAddress,
-      decoration: InputDecoration(
-        labelText: 'Email Address',
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
-        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
-        prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF00B96B)),
-        filled: true,
-        isDense: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
-      ),
+      prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your email address';
         if (!val.contains('@') || !val.contains('.')) return 'Please enter a valid email address';
@@ -1572,33 +1527,11 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 
   Widget _buildPasswordFieldSection({required bool isLogin}) {
-    return TextFormField(
+    return AppTextField.floating(
       controller: _passwordController,
-      obscureText: _obscurePassword,
-      decoration: InputDecoration(
-        labelText: 'Password',
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
-        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
-        prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF00B96B)),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            size: 18,
-            color: const Color(0xFF94A3B8),
-          ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-        ),
-        filled: true,
-        isDense: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
-      ),
+      label: 'Password',
+      isPassword: true,
+      prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your password';
         if (val.length < 6) return 'Password must be at least 6 characters';
@@ -1608,24 +1541,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 
   Widget _buildNameFieldSection() {
-    return TextFormField(
+    return AppTextField.floating(
       controller: _nameController,
-      decoration: InputDecoration(
-        labelText: 'Full Name',
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
-        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
-        prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF00B96B)),
-        filled: true,
-        isDense: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
-      ),
+      label: 'Full Name',
+      prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your full name';
         return null;
@@ -1635,28 +1554,13 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   Widget _buildPhoneFieldSection({required bool isLogin}) {
     final showPrefix = _phoneFocusNode.hasFocus || _phoneController.text.isNotEmpty;
-    return TextFormField(
+    return AppTextField.floating(
       controller: _phoneController,
       focusNode: _phoneFocusNode,
+      label: 'Mobile Number',
       keyboardType: TextInputType.phone,
-      decoration: InputDecoration(
-        labelText: 'Mobile Number',
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-        labelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
-        floatingLabelStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF00B96B), fontWeight: FontWeight.w700),
-        prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF00B96B)),
-        prefixText: showPrefix ? '+91 ' : null,
-        prefixStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF10194F)),
-        filled: true,
-        isDense: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF00B96B), width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2)),
-        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
-      ),
+      prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF00B96B)),
+      prefixText: showPrefix ? '+91 ' : null,
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your mobile number';
         final digits = val.replaceAll(RegExp(r'\D'), '');

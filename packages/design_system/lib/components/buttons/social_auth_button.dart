@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../tokens/colors.dart';
+import '../../tokens/typography.dart';
 import '../display/google_logo.dart';
 
 enum SocialAuthType { google, phone }
@@ -108,10 +110,9 @@ class SocialAuthButton extends StatelessWidget {
                     displayLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: AppTypography.labelLarge.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF10194F),
+                      color: AppColors.textPrimary,
                       letterSpacing: -0.2,
                     ),
                   ),
