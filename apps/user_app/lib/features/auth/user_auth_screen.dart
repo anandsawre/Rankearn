@@ -617,12 +617,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           child: Stack(
             clipBehavior: Clip.hardEdge,
             children: [
-              // 1. Stylish Attractive Fluid Wave Background (Ambient Aura, Flowing Ribbons & Stars)
+              // 1. Premium Professional Blended Ambient Background (Diffused Aura Mesh & Smooth Arcs)
               const Positioned.fill(
                 child: IgnorePointer(
                   child: RepaintBoundary(
                     child: CustomPaint(
-                      painter: _MobileAttractiveWavePainter(),
+                      painter: _MobileProfessionalBlendedPainter(),
                       size: Size.infinite,
                     ),
                   ),
@@ -656,40 +656,84 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(isVeryNarrow ? 14 : 20, 16, isVeryNarrow ? 14 : 20, 4),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (widget.onBackToHome != null || Navigator.canPop(context)) ...[
-            InkWell(
-              onTap: widget.onBackToHome ?? () {
-                if (Navigator.canPop(context)) Navigator.pop(context);
-              },
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white,
+          Row(
+            children: [
+              if (widget.onBackToHome != null || Navigator.canPop(context)) ...[
+                InkWell(
+                  onTap: widget.onBackToHome ?? () {
+                    if (Navigator.canPop(context)) Navigator.pop(context);
+                  },
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x06000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 1),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x06000000),
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
                     ),
-                  ],
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 18,
+                      color: Color(0xFF10194F),
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.arrow_back_rounded,
-                  size: 18,
-                  color: Color(0xFF10194F),
-                ),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: _buildBrandLogo(),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Header Text above form
+          RichText(
+            text: TextSpan(
+              style: AppTypography.displayMedium.copyWith(
+                fontSize: isVeryNarrow ? 21 : 25,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF0F172A),
+                height: 1.15,
+                letterSpacing: -0.5,
+              ),
+              children: isLogin
+                  ? const [
+                      TextSpan(text: 'Welcome '),
+                      TextSpan(
+                        text: 'Back!',
+                        style: TextStyle(color: Color(0xFF00B96B)),
+                      ),
+                    ]
+                  : const [
+                      TextSpan(text: 'Create Your Account '),
+                      TextSpan(
+                        text: 'Today!',
+                        style: TextStyle(color: Color(0xFF00B96B)),
+                      ),
+                    ],
             ),
-            const SizedBox(width: 10),
-          ],
-          Expanded(
-            child: _buildBrandLogo(),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isLogin
+                ? 'Login to continue your learning journey and keep earning rewards.'
+                : 'Join Rankearn and start your learning journey today!',
+            style: AppTypography.authSubtitle.copyWith(
+              fontSize: 12.5,
+              color: const Color(0xFF64748B),
+            ),
           ),
         ],
       ),
@@ -1497,177 +1541,112 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 }
 
 /// Modern stylish fluid wave background painter for mobile & tablet auth screens.
-/// Features top fluid wave ribbons, radiant mascot glow, floating golden sparkle stars,
-/// and smooth bottom waves behind the 4-pillar features strip.
-class _MobileAttractiveWavePainter extends CustomPainter {
-  const _MobileAttractiveWavePainter();
+/// Modern executive blended ambient background painter for mobile auth screen.
+/// Features diffused luminous mint auras, smooth ambient horizon glows,
+/// and delicate geometric blended curves that melt seamlessly into the canvas.
+class _MobileProfessionalBlendedPainter extends CustomPainter {
+  const _MobileProfessionalBlendedPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
 
-    // -------------------------------------------------------------------------
-    // 1. Top-Right Ambient Luminous Glow (Behind Student Mascot & Lightbulb)
-    // -------------------------------------------------------------------------
-    final auraRect = Rect.fromCircle(
-      center: Offset(w * 0.78, 120),
-      radius: (w * 0.55).clamp(160.0, 260.0),
+    // 1. Top-Right Soft Ambient Mint Glow (Diffused Aura)
+    final topAuraRect = Rect.fromCircle(
+      center: Offset(w * 0.85, 40),
+      radius: (w * 0.60).clamp(160.0, 280.0),
     );
-    final auraPaint = Paint()
+    final topAuraPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF00B96B).withValues(alpha: 0.18),
-          const Color(0xFF34D399).withValues(alpha: 0.07),
+          const Color(0xFF00B96B).withValues(alpha: 0.14),
+          const Color(0xFF10B981).withValues(alpha: 0.05),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.55, 1.0],
+      ).createShader(topAuraRect);
+    canvas.drawCircle(topAuraRect.center, topAuraRect.width / 2, topAuraPaint);
+
+    // 2. Center-Left Ambient Pulse Aura
+    final midAuraRect = Rect.fromCircle(
+      center: Offset(w * 0.05, h * 0.45),
+      radius: (w * 0.50).clamp(140.0, 220.0),
+    );
+    final midAuraPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF34D399).withValues(alpha: 0.09),
+          const Color(0xFF00B96B).withValues(alpha: 0.03),
           Colors.transparent,
         ],
         stops: const [0.0, 0.60, 1.0],
-      ).createShader(auraRect);
-    canvas.drawCircle(auraRect.center, auraRect.width / 2, auraPaint);
+      ).createShader(midAuraRect);
+    canvas.drawCircle(midAuraRect.center, midAuraRect.width / 2, midAuraPaint);
 
-    // -------------------------------------------------------------------------
-    // 2. Layer 1: Top Dynamic Fluid Wave Ribbon (Mint & Teal Gradient)
-    // -------------------------------------------------------------------------
-    final topWave1 = Path();
-    topWave1.moveTo(0, 0);
-    topWave1.lineTo(w, 0);
-    topWave1.lineTo(w, 130);
-    topWave1.cubicTo(
-      w * 0.70, 175,
-      w * 0.35, 105,
-      0, 150,
+    // 3. Bottom Broad Luminous Ambient Glow (Smooth Diffusion, Zero Harsh Edges)
+    final bottomAuraRect = Rect.fromCenter(
+      center: Offset(w * 0.5, h),
+      width: w * 1.4,
+      height: (h * 0.40).clamp(200.0, 360.0),
     );
-    topWave1.close();
-
-    final topShader1 = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        const Color(0xFFD1FAE5).withValues(alpha: 0.60),
-        const Color(0xFFE6FBF2).withValues(alpha: 0.35),
-        const Color(0xFFF1FCF6).withValues(alpha: 0.0),
-      ],
-      stops: const [0.0, 0.70, 1.0],
-    ).createShader(Rect.fromLTWH(0, 0, w, 180));
-
-    final topPaint1 = Paint()
-      ..shader = topShader1
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-    canvas.drawPath(topWave1, topPaint1);
-
-    // -------------------------------------------------------------------------
-    // 3. Layer 2: Top Accent Flow Wave
-    // -------------------------------------------------------------------------
-    final topWave2 = Path();
-    topWave2.moveTo(0, 0);
-    topWave2.lineTo(w, 0);
-    topWave2.lineTo(w, 85);
-    topWave2.cubicTo(
-      w * 0.65, 125,
-      w * 0.28, 60,
-      0, 105,
-    );
-    topWave2.close();
-
-    final topShader2 = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        const Color(0xFF00B96B).withValues(alpha: 0.16),
-        const Color(0xFF10B981).withValues(alpha: 0.05),
-        Colors.transparent,
-      ],
-    ).createShader(Rect.fromLTWH(0, 0, w, 130));
-
-    final topPaint2 = Paint()
-      ..shader = topShader2
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-    canvas.drawPath(topWave2, topPaint2);
-
-    // -------------------------------------------------------------------------
-    // 4. Sparkling Gold Stars (Matching reference design near mascot)
-    // -------------------------------------------------------------------------
-    _drawSparkleStar(canvas, Offset(w * 0.42, 100), 7, const Color(0xFFF59E0B).withValues(alpha: 0.80));
-    _drawSparkleStar(canvas, Offset(w * 0.49, 118), 4.5, const Color(0xFFF59E0B).withValues(alpha: 0.65));
-
-    // -------------------------------------------------------------------------
-    // 5. Layer 3: Bottom Fluid Waves behind/around 4-Pillar Features Strip
-    // -------------------------------------------------------------------------
-    if (h > 400) {
-      final bottomWave1 = Path();
-      bottomWave1.moveTo(0, h - 85);
-      bottomWave1.cubicTo(
-        w * 0.28, h - 110,
-        w * 0.65, h - 65,
-        w, h - 90,
-      );
-      bottomWave1.lineTo(w, h);
-      bottomWave1.lineTo(0, h);
-      bottomWave1.close();
-
-      final bottomShader1 = LinearGradient(
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
+    final bottomAuraPaint = Paint()
+      ..shader = RadialGradient(
         colors: [
-          const Color(0xFFD1FAE5).withValues(alpha: 0.85),
-          const Color(0xFFE8FBF2).withValues(alpha: 0.45),
+          const Color(0xFF00B96B).withValues(alpha: 0.12),
+          const Color(0xFF10B981).withValues(alpha: 0.05),
           Colors.transparent,
         ],
-        stops: const [0.0, 0.65, 1.0],
-      ).createShader(Rect.fromLTWH(0, h - 110, w, 110));
+        stops: const [0.0, 0.50, 1.0],
+      ).createShader(bottomAuraRect);
+    canvas.drawOval(bottomAuraRect, bottomAuraPaint);
 
-      final bottomPaint1 = Paint()
-        ..shader = bottomShader1
-        ..style = PaintingStyle.fill
-        ..isAntiAlias = true;
-      canvas.drawPath(bottomWave1, bottomPaint1);
+    // 4. Elegant Blended Geometric Arcs (Subtle modern fintech/ed-tech aesthetic)
+    final arcPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          const Color(0xFF00B96B).withValues(alpha: 0.20),
+          const Color(0xFF10B981).withValues(alpha: 0.08),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, w, h));
 
-      // Bottom Layer 2 Crest
-      final bottomWave2 = Path();
-      bottomWave2.moveTo(0, h - 50);
-      bottomWave2.cubicTo(
-        w * 0.35, h - 35,
-        w * 0.70, h - 60,
-        w, h - 45,
-      );
-      bottomWave2.lineTo(w, h);
-      bottomWave2.lineTo(0, h);
-      bottomWave2.close();
+    // Gentle top accent concentric arc
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(w * 0.9, 0), radius: w * 0.45),
+      0,
+      math.pi,
+      false,
+      arcPaint,
+    );
 
-      final bottomShader2 = LinearGradient(
+    // Smooth blended bottom arc
+    final bottomArcPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0
+      ..shader = LinearGradient(
         begin: Alignment.bottomLeft,
         end: Alignment.topRight,
         colors: [
-          const Color(0xFF34D399).withValues(alpha: 0.22),
-          const Color(0xFF00B96B).withValues(alpha: 0.08),
+          Colors.transparent,
+          const Color(0xFF00B96B).withValues(alpha: 0.15),
           Colors.transparent,
         ],
-      ).createShader(Rect.fromLTWH(0, h - 60, w, 60));
+      ).createShader(Rect.fromLTWH(0, h - 160, w, 160));
 
-      final bottomPaint2 = Paint()
-        ..shader = bottomShader2
-        ..style = PaintingStyle.fill
-        ..isAntiAlias = true;
-      canvas.drawPath(bottomWave2, bottomPaint2);
-    }
-  }
+    final bottomCurve = Path();
+    bottomCurve.moveTo(0, h - 40);
+    bottomCurve.quadraticBezierTo(w * 0.5, h - 110, w, h - 50);
+    canvas.drawPath(bottomCurve, bottomArcPaint);
 
-  void _drawSparkleStar(Canvas canvas, Offset center, double radius, Color color) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
-
-    final path = Path();
-    path.moveTo(center.dx, center.dy - radius);
-    path.quadraticBezierTo(center.dx, center.dy, center.dx + radius, center.dy);
-    path.quadraticBezierTo(center.dx, center.dy, center.dx, center.dy + radius);
-    path.quadraticBezierTo(center.dx, center.dy, center.dx - radius, center.dy);
-    path.quadraticBezierTo(center.dx, center.dy, center.dx, center.dy - radius);
-    path.close();
-    canvas.drawPath(path, paint);
+    final bottomCurve2 = Path();
+    bottomCurve2.moveTo(0, h - 15);
+    bottomCurve2.quadraticBezierTo(w * 0.45, h - 75, w, h - 25);
+    canvas.drawPath(bottomCurve2, bottomArcPaint);
   }
 
   @override
