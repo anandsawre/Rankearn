@@ -1122,25 +1122,29 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               ),
               const SizedBox(height: 6),
 
-              // Centered Pill Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE4FFF0),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF86EFAC), width: 0.8),
-                ),
-                child: Text(
-                  isLogin ? 'Good To See You Again!' : "It's Free to Join!",
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF008C52),
-                    letterSpacing: -0.1,
+              // Centered Pill Badge (Shown on Login only; removed from Sign Up per user request)
+              if (isLogin) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE4FFF0),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF86EFAC), width: 0.8),
+                  ),
+                  child: const Text(
+                    'Good To See You Again!',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF008C52),
+                      letterSpacing: -0.1,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
+              ] else ...[
+                const SizedBox(height: 4),
+              ],
 
               // Centered Heading
               Text(
@@ -1456,13 +1460,21 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Social Logins (Google & Phone)
-            SocialAuthButton.google(
-              onPressed: _handleGoogleLogin,
-            ),
-            const SizedBox(height: 8),
-            SocialAuthButton.phone(
-              onPressed: _handlePhoneLogin,
+            // Social Logins (Google & Phone) - Side by Side
+            Row(
+              children: [
+                Expanded(
+                  child: SocialAuthButton.google(
+                    onPressed: _handleGoogleLogin,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: SocialAuthButton.phone(
+                    onPressed: _handlePhoneLogin,
+                  ),
+                ),
+              ],
             ),
 
             // Security Notice Box (Shown on Desktop Card only; removed on Mobile Screen)

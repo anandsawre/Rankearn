@@ -9,6 +9,7 @@ class SocialAuthButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final bool showChevron;
+  final String? label;
 
   const SocialAuthButton({
     super.key,
@@ -16,6 +17,7 @@ class SocialAuthButton extends StatelessWidget {
     required this.onPressed,
     this.isLoading = false,
     this.showChevron = false,
+    this.label,
   });
 
   factory SocialAuthButton.google({
@@ -23,6 +25,7 @@ class SocialAuthButton extends StatelessWidget {
     required VoidCallback? onPressed,
     bool isLoading = false,
     bool showChevron = false,
+    String? label,
   }) {
     return SocialAuthButton(
       key: key,
@@ -30,6 +33,7 @@ class SocialAuthButton extends StatelessWidget {
       onPressed: onPressed,
       isLoading: isLoading,
       showChevron: showChevron,
+      label: label,
     );
   }
 
@@ -38,6 +42,7 @@ class SocialAuthButton extends StatelessWidget {
     required VoidCallback? onPressed,
     bool isLoading = false,
     bool showChevron = false,
+    String? label,
   }) {
     return SocialAuthButton(
       key: key,
@@ -45,19 +50,20 @@ class SocialAuthButton extends StatelessWidget {
       onPressed: onPressed,
       isLoading: isLoading,
       showChevron: showChevron,
+      label: label,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final isGoogle = type == SocialAuthType.google;
-    final label = isGoogle ? 'Continue with Google' : 'Continue with Phone';
+    final displayLabel = label ?? (isGoogle ? 'Continue with Google' : 'Continue with Phone');
 
     return Container(
-      height: 46,
+      height: 44,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
         boxShadow: const [
           BoxShadow(
@@ -71,9 +77,9 @@ class SocialAuthButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: isLoading ? null : onPressed,
-          borderRadius: BorderRadius.circular(12),
-            child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -89,21 +95,21 @@ class SocialAuthButton extends StatelessWidget {
                     ),
                   )
                 else if (isGoogle)
-                  const GoogleLogo(size: 20)
+                  const GoogleLogo(size: 19)
                 else
                   const Icon(
                     Icons.phone_rounded,
                     color: Color(0xFF1677FF),
-                    size: 20,
+                    size: 19,
                   ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    label,
+                    displayLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 13.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF10194F),
                       letterSpacing: -0.2,

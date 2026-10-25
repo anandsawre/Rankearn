@@ -100,7 +100,6 @@ void main() {
 
       // Now we should be in Sign Up mode
       expect(find.text('Create Your Account'), findsOneWidget);
-      expect(find.text("It's Free to Join!"), findsOneWidget);
       expect(find.text('Full Name'), findsOneWidget);
       expect(find.text('Class / Exam Goal (Optional)'), findsOneWidget);
       expect(find.text('Already have an account? '), findsOneWidget);
@@ -182,7 +181,6 @@ void main() {
 
       // 2. Auth Card Header & Badge
       expect(find.text('Create Your Account'), findsOneWidget);
-      expect(find.text("It's Free to Join!"), findsOneWidget);
       expect(find.text('Join Rankearn and start your learning journey today!'), findsOneWidget);
 
       // 3. Form Fields
