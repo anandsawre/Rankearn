@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:data_layer/data_layer.dart';
 import '../models/test_series_item.dart';
 
 class CreateTestSeriesDialog extends StatefulWidget {
@@ -24,6 +25,8 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
   late TextEditingController _questionsCountController;
   late TextEditingController _priceController;
 
+  late String _examCategoryId;
+  late String _testMode;
   late String _subject;
   late TestSeriesStatus _status;
 
@@ -46,8 +49,29 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
     _testsCountController = TextEditingController(text: item?.totalTests.toString() ?? '20');
     _questionsCountController = TextEditingController(text: item?.totalQuestions.toString() ?? '2000');
     _priceController = TextEditingController(text: item?.priceInr.toString() ?? '149');
+    _examCategoryId = item?.examCategoryId ?? 'bpsc';
+    _testMode = item?.testMode ?? 'mock';
     _subject = item?.subject ?? 'General Science';
     _status = item?.status ?? TestSeriesStatus.published;
+
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      client.from('categories').select('name').then((res) {
+        if (res.isNotEmpty && mounted) {
+          final names = (res as List)
+              .map((r) => r['name']?.toString() ?? '')
+              .where((n) => n.isNotEmpty)
+              .toList();
+          if (names.isNotEmpty) {
+            setState(() {
+              for (final n in names) {
+                if (!_subjects.contains(n)) _subjects.add(n);
+              }
+            });
+          }
+        }
+      }).catchError((_) {});
+    }
   }
 
   @override
@@ -64,10 +88,12 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     final item = TestSeriesItem(
-      id: widget.initialItem?.id ?? 'ts-${DateTime.now().millisecondsSinceEpoch}',
+      id: widget.initialItem?.id ?? 'test-${DateTime.now().millisecondsSinceEpoch}',
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
       subject: _subject,
+      examCategoryId: _examCategoryId,
+      testMode: _testMode,
       totalTests: int.tryParse(_testsCountController.text.trim()) ?? 20,
       totalQuestions: int.tryParse(_questionsCountController.text.trim()) ?? 2000,
       priceInr: int.tryParse(_priceController.text.trim()) ?? 149,
@@ -175,6 +201,58 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                   maxLines: 2,
                   style: const TextStyle(fontSize: 12),
                   decoration: _inputDecoration('e.g. Complete test series with detailed solutions'),
+                ),
+                // Target Exam & Test Mode
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Target Exam', style: _labelStyle),
+                          const SizedBox(height: 4),
+                          DropdownButtonFormField<String>(
+                            initialValue: _examCategoryId,
+                            style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
+                            decoration: _inputDecoration(''),
+                            items: const [
+                              DropdownMenuItem(value: 'bpsc', child: Text('BPSC & State PCS')),
+                              DropdownMenuItem(value: 'ssc', child: Text('SSC CGL & CHSL')),
+                              DropdownMenuItem(value: 'upsc', child: Text('UPSC Civil Services')),
+                              DropdownMenuItem(value: 'railway', child: Text('Railway RRB NTPC')),
+                              DropdownMenuItem(value: 'banking', child: Text('Banking IBPS / SBI')),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) setState(() => _examCategoryId = val);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Test Mode', style: _labelStyle),
+                          const SizedBox(height: 4),
+                          DropdownButtonFormField<String>(
+                            initialValue: _testMode,
+                            style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
+                            decoration: _inputDecoration(''),
+                            items: const [
+                              DropdownMenuItem(value: 'mock', child: Text('Mock Test')),
+                              DropdownMenuItem(value: 'sectional', child: Text('Sectional Test')),
+                              DropdownMenuItem(value: 'previous-year', child: Text('Previous Year Paper')),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) setState(() => _testMode = val);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
 

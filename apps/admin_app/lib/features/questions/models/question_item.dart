@@ -179,21 +179,70 @@ class QuestionItem {
           parsedOpts.add(QuestionOptionItem(label: lbl, text: opt));
         }
       }
+    } else {
+      // Check for flat option_a, option_b, option_c, option_d keys
+      for (final lbl in ['A', 'B', 'C', 'D']) {
+        final key = 'option_${lbl.toLowerCase()}';
+        if (map[key] != null && map[key].toString().isNotEmpty) {
+          parsedOpts.add(QuestionOptionItem(label: lbl, text: map[key].toString()));
+        }
+      }
     }
 
-    final cIdx = (map['correct_answer'] as num?)?.toInt() ?? 0;
     final defaultLabels = ['A', 'B', 'C', 'D'];
-    final cChar = map['correct_answer_char']?.toString() ??
-        (cIdx < defaultLabels.length ? defaultLabels[cIdx] : 'A');
+    int cIdx = 0;
+    String cChar = 'A';
+
+    final rawAns = map['correct_answer'] ?? map['correct_answer_char'] ?? map['answer'];
+    if (rawAns is num) {
+      cIdx = rawAns.toInt();
+      cChar = cIdx >= 0 && cIdx < defaultLabels.length ? defaultLabels[cIdx] : '$cIdx';
+    } else if (rawAns != null) {
+      final str = rawAns.toString().trim().toUpperCase();
+      final idxInLabels = defaultLabels.indexOf(str);
+      if (idxInLabels >= 0) {
+        cIdx = idxInLabels;
+        cChar = str;
+      } else {
+        final parsedNum = int.tryParse(str);
+        if (parsedNum != null) {
+          cIdx = parsedNum;
+          cChar = cIdx >= 0 && cIdx < defaultLabels.length ? defaultLabels[cIdx] : str;
+        } else {
+          cChar = str;
+          cIdx = 0;
+        }
+      }
+    }
 
     DateTime dt = DateTime.now();
     if (map['created_at'] != null) {
       dt = DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now();
     }
 
+    final qNum = (map['question_number'] is num)
+        ? (map['question_number'] as num).toInt()
+        : (int.tryParse(map['question_number']?.toString() ?? '') ?? defaultNumber);
+
+    final marksVal = (map['marks'] is num)
+        ? (map['marks'] as num).toDouble()
+        : (double.tryParse(map['marks']?.toString() ?? '') ?? 1.0);
+
+    final negMarksVal = (map['negative_marks'] is num)
+        ? (map['negative_marks'] as num).toDouble()
+        : (double.tryParse(map['negative_marks']?.toString() ?? '') ?? 0.25);
+
+    final usageVal = (map['usage_count'] is num)
+        ? (map['usage_count'] as num).toInt()
+        : (int.tryParse(map['usage_count']?.toString() ?? '') ?? 0);
+
+    final diffStr = map['difficulty_level']?.toString() ??
+        map['difficulty']?.toString() ??
+        'medium';
+
     return QuestionItem(
       id: map['id']?.toString() ?? 'q-${DateTime.now().millisecondsSinceEpoch}',
-      questionNumber: (map['question_number'] as num?)?.toInt() ?? defaultNumber,
+      questionNumber: qNum,
       questionText: map['question_text_english']?.toString() ??
           map['question_text']?.toString() ??
           map['text']?.toString() ??
@@ -206,43 +255,42 @@ class QuestionItem {
       testId: map['test_id']?.toString(),
       questionSet: map['question_set']?.toString() ?? 'Set A',
       questionType: map['question_type']?.toString() ?? 'MCQ',
-      difficulty: QuestionDifficulty.fromString(map['difficulty_level']?.toString() ?? 'medium'),
+      difficulty: QuestionDifficulty.fromString(diffStr),
       options: parsedOpts,
       correctAnswerIndex: cIdx,
       correctAnswerChar: cChar,
-      usageCount: (map['usage_count'] as num?)?.toInt() ?? 0,
+      usageCount: usageVal,
       status: QuestionStatus.fromString(map['status']?.toString() ?? 'published'),
       createdAt: dt,
       explanation: map['explanation_english']?.toString() ?? map['explanation']?.toString(),
-      marks: (map['marks'] as num?)?.toDouble() ?? 1.0,
-      negativeMarks: (map['negative_marks'] as num?)?.toDouble() ?? 0.25,
+      marks: marksVal,
+      negativeMarks: negMarksVal,
       tags: map['tags'] is List ? List<String>.from(map['tags']) : const [],
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    String diffLevel = difficulty.label.toLowerCase();
+    if (diffLevel != 'easy' && diffLevel != 'medium' && diffLevel != 'hard') {
+      diffLevel = 'hard';
+    }
+
+    final map = <String, dynamic>{
       'id': id,
       'question_number': questionNumber,
       'question_text_english': questionText,
-      'question_text_hindi': questionTextHindi,
+      if (questionTextHindi != null && questionTextHindi!.isNotEmpty)
+        'question_text_hindi': questionTextHindi,
       'subject': subject,
-      'test_series_title': testSeriesTitle,
-      'test_id': testId,
-      'question_set': questionSet,
-      'question_type': questionType,
-      'difficulty_level': difficulty.label,
+      if (testId != null && testId!.isNotEmpty) 'test_id': testId,
+      'difficulty_level': diffLevel,
       'options': options.map((o) => o.toMap()).toList(),
-      'correct_answer': correctAnswerIndex,
-      'correct_answer_char': correctAnswerChar,
-      'usage_count': usageCount,
-      'status': status.name,
-      'explanation_english': explanation,
-      'marks': marks,
-      'negative_marks': negativeMarks,
-      'tags': tags,
+      'correct_answer': correctAnswerIndex.clamp(0, 3),
+      if (explanation != null && explanation!.isNotEmpty)
+        'explanation_english': explanation,
       'created_at': createdAt.toIso8601String(),
     };
+    return map;
   }
 
   // Visual Styling Helpers matching reference screenshot exactly

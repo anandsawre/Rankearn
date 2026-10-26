@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
@@ -28,12 +29,18 @@ class TestSeriesScreen extends StatefulWidget {
 
 class _TestSeriesScreenState extends State<TestSeriesScreen> {
   int _selectedTypeIndex = 0; // 0: All Tests, 1: Daily Test, 2: Mock Tests, 3: PYQ, 4: Chapter Wise, 5: My Tests
+  String? _selectedExamId; // null or 'all' = All Exams, or 'bpsc', 'ssc', etc.
   String? _selectedSubject;
+  CategoryModel? _selectedCategory;
+  String? _selectedTopic;
   final String _searchQuery = '';
   bool _isLoading = true;
   List<TestModel> _tests = [];
+  List<ExamCategoryModel> _examCategories = [];
+  List<CategoryModel> _allCategories = [];
+  StreamSubscription<List<CategoryModel>>? _categoriesSub;
 
-  final List<({String title, String questionCount, IconData icon, Color color, Color bg})> _subjects = const [
+  List<({String title, String questionCount, IconData icon, Color color, Color bg})> _subjects = const [
     (
       title: 'General Science',
       questionCount: '1200+ Qs',
@@ -161,9 +168,125 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     }
   }
 
+  IconData _resolveCategoryIcon(String iconName) {
+    switch (iconName.toLowerCase()) {
+      case 'science':
+        return Icons.science_rounded;
+      case 'calculate':
+        return Icons.calculate_rounded;
+      case 'psychology':
+        return Icons.psychology_rounded;
+      case 'menu_book':
+        return Icons.menu_book_rounded;
+      case 'newspaper':
+        return Icons.newspaper_rounded;
+      case 'biotech':
+        return Icons.biotech_rounded;
+      case 'eco':
+        return Icons.eco_rounded;
+      case 'school':
+        return Icons.school_rounded;
+      case 'assignment':
+        return Icons.assignment_rounded;
+      case 'public':
+        return Icons.public_rounded;
+      case 'history':
+      case 'auto_stories':
+        return Icons.auto_stories_rounded;
+      case 'code':
+        return Icons.code_rounded;
+      default:
+        return Icons.folder_rounded;
+    }
+  }
+
+  Color _resolveCategoryColor(String hex, [Color fallback = const Color(0xFF2587F8)]) {
+    try {
+      final clean = hex.replaceAll('#', '').trim();
+      if (clean.length == 6) {
+        return Color(int.parse('FF$clean', radix: 16));
+      }
+      return fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  void _applyCategories([List<CategoryModel>? categories]) {
+    final source = categories ?? _allCategories;
+    if (source.isEmpty) return;
+    
+    final filtered = (_selectedExamId == null || _selectedExamId == 'all')
+        ? source
+        : source.where((c) => c.examCategoryId == null || c.examCategoryId == _selectedExamId).toList();
+
+    final mapped = filtered.map((c) {
+      final accent = _resolveCategoryColor(c.iconColor);
+      final countText = c.totalQuestions > 0
+          ? '${c.totalQuestions}+ Qs'
+          : (c.topics.isNotEmpty ? '${c.topics.length} Chapters' : 'Practice Qs');
+      return (
+        title: c.name,
+        questionCount: countText,
+        icon: _resolveCategoryIcon(c.iconName),
+        color: accent,
+        bg: accent.withAlpha(25),
+      );
+    }).toList();
+
+    setState(() {
+      _subjects = mapped.isNotEmpty ? mapped : _subjects;
+    });
+  }
+
+  void _onSelectExam(String? examId) {
+    setState(() {
+      if (_selectedExamId == examId) {
+        _selectedExamId = null;
+      } else {
+        _selectedExamId = examId;
+      }
+      _selectedSubject = null;
+      _selectedCategory = null;
+      _selectedTopic = null;
+      _applyCategories();
+    });
+  }
+
+  void _onSelectSubject(String title) {
+    setState(() {
+      if (_selectedSubject == title) {
+        _selectedSubject = null;
+        _selectedCategory = null;
+        _selectedTopic = null;
+      } else {
+        _selectedSubject = title;
+        _selectedCategory = _allCategories.cast<CategoryModel?>().firstWhere(
+          (c) => c != null && c.name.toLowerCase() == title.toLowerCase(),
+          orElse: () => null,
+        );
+        _selectedTopic = null;
+      }
+    });
+  }
+
+  void _onSelectTopic(String? topic) {
+    setState(() {
+      if (_selectedTopic == topic) {
+        _selectedTopic = null;
+      } else {
+        _selectedTopic = topic;
+      }
+    });
+  }
+
   Future<void> _loadTests() async {
     setState(() => _isLoading = true);
-    final res = await TestsRepository().getTests();
+    final testsRepo = TestsRepository();
+    final res = await testsRepo.getTests();
+    final catRes = await testsRepo.getCategories();
+    final examRes = await testsRepo.getExamCategoryList();
+
     if (!mounted) return;
     setState(() {
       _isLoading = false;
@@ -172,7 +295,28 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       } else {
         _tests = _getFallbackTests();
       }
+      if (examRes is Success<List<ExamCategoryModel>>) {
+        _examCategories = examRes.data;
+      }
     });
+
+    if (catRes is Success<List<CategoryModel>>) {
+      _allCategories = catRes.data;
+      _applyCategories(catRes.data);
+    }
+
+    _categoriesSub ??= testsRepo.streamCategories().listen((updated) {
+      if (mounted && updated.isNotEmpty) {
+        _allCategories = updated;
+        _applyCategories(updated);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _categoriesSub?.cancel();
+    super.dispose();
   }
 
   List<TestModel> _getFallbackTests() {
@@ -274,13 +418,49 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           !test.title.toLowerCase().contains(_searchQuery.toLowerCase())) {
         return false;
       }
-      if (_selectedSubject != null && _selectedSubject != 'All') {
-        final subName = _selectedSubject!.replaceAll('\n', ' ');
-        if (!test.title.toLowerCase().contains(subName.toLowerCase()) &&
-            (test.categoryId == null || !test.categoryId!.toLowerCase().contains(subName.toLowerCase()))) {
+
+      // 1. Exam category filter
+      if (_selectedExamId != null && _selectedExamId != 'all') {
+        final examQuery = _selectedExamId!.toLowerCase();
+        final matchesTitle = test.title.toLowerCase().contains(examQuery);
+        final matchesCategory = test.categoryId != null && test.categoryId!.toLowerCase().contains(examQuery);
+        
+        final testCat = _allCategories.cast<CategoryModel?>().firstWhere(
+          (c) => c != null && (c.id == test.categoryId || c.name.toLowerCase() == test.categoryId?.toLowerCase()),
+          orElse: () => null,
+        );
+        final matchesExamCat = testCat != null && (testCat.examCategoryId == null || testCat.examCategoryId == _selectedExamId);
+
+        if (!matchesTitle && !matchesCategory && !matchesExamCat) {
           return false;
         }
       }
+
+      // 2. Subject filter
+      if (_selectedCategory != null) {
+        final catName = _selectedCategory!.name.toLowerCase();
+        final catId = _selectedCategory!.id.toLowerCase();
+        final matchesCat = (test.categoryId != null && (test.categoryId!.toLowerCase() == catId || test.categoryId!.toLowerCase() == catName)) ||
+            test.title.toLowerCase().contains(catName);
+        if (!matchesCat) return false;
+      } else if (_selectedSubject != null && _selectedSubject != 'All') {
+        final subName = _selectedSubject!.replaceAll('\n', ' ').toLowerCase();
+        if (!test.title.toLowerCase().contains(subName) &&
+            (test.categoryId == null || !test.categoryId!.toLowerCase().contains(subName))) {
+          return false;
+        }
+      }
+
+      // 3. Topic filter
+      if (_selectedTopic != null && _selectedTopic != 'All') {
+        final topicQuery = _selectedTopic!.toLowerCase();
+        if (!test.title.toLowerCase().contains(topicQuery) &&
+            (test.categoryId == null || !test.categoryId!.toLowerCase().contains(topicQuery))) {
+          return false;
+        }
+      }
+
+      // 4. Test mode filter
       if (_selectedTypeIndex > 0) {
         switch (_selectedTypeIndex) {
           case 1: // Daily Test
@@ -293,7 +473,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             if (test.testMode != 'previous-year') return false;
             break;
           case 4: // Chapter Wise
-            if (test.testMode != 'chapter') return false;
+            if (test.testMode != 'chapter' && test.testMode != 'topic') return false;
             break;
           case 5: // My Tests
             if (test.unlockPriceCoins > 0 && !test.isProOnly) return false;
@@ -691,7 +871,14 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                           _buildStatisticsGrid(isDesktop, isTablet),
                           const SizedBox(height: 18),
 
-                          // 3. Test-Type Navigation Bar
+                          // 3. Exam Category Selector (Level 1 Drill-Down)
+                          _buildExamCategorySelector(isDesktop, isTablet),
+                          const SizedBox(height: 14),
+
+                          // Active Filter Breadcrumb Bar
+                          _buildBreadcrumbBar(),
+
+                          // 4. Test-Type Navigation Bar
                           TestTypeNavigation(
                             selectedIndex: _selectedTypeIndex,
                             onSelect: (index) {
@@ -702,19 +889,22 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                           ),
                           const SizedBox(height: 22),
 
-                          // 4. Select Subject Section (6 cards row)
+                          // 5. Select Subject Section (Level 2 Drill-Down)
                           _buildSelectSubjectSection(isDesktop: true),
+
+                          // 6. Topics & Chapters Drill-down (Level 3 Drill-Down)
+                          _buildTopicChipsSection(),
                           const SizedBox(height: 22),
 
-                          // 5. Test Categories Section (2 columns)
+                          // 7. Test Categories Section (2 columns)
                           _buildTestCategoriesSection(isDesktop, isTablet),
                           const SizedBox(height: 22),
 
-                          // 6. Bottom Promotional Banners ("Test Series" & "Create Your Own Test")
+                          // 8. Bottom Promotional Banners ("Test Series" & "Create Your Own Test")
                           _buildPromotionalBanners(isDesktop, isTablet),
                           const SizedBox(height: 24),
 
-                          // 7. Filtered Tests Catalog List (Interactive drill-down)
+                          // 9. Filtered Tests Catalog List (Interactive Level 4 tests)
                           _buildFilteredCatalogSection(),
                           const SizedBox(height: 32),
                         ],
@@ -772,15 +962,22 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               ),
               const SizedBox(height: 18),
 
-              // 2. Upcoming Tests (Mobile: directly below Hero Section)
-              _buildUpcomingTestsSection(),
-              const SizedBox(height: 20),
-
-              // 3. Four User Statistics Cards
+              // 2. Four User Statistics Cards
               _buildStatisticsGrid(isDesktop, isTablet),
               const SizedBox(height: 18),
 
-              // 4. Test-Type Navigation Bar
+              // 3. Exam Category Selector (Level 1 Drill-Down)
+              _buildExamCategorySelector(isDesktop, isTablet),
+              const SizedBox(height: 14),
+
+              // Active Filter Breadcrumb Bar
+              _buildBreadcrumbBar(),
+
+              // 4. Upcoming Tests (Mobile: directly below Hero Section)
+              _buildUpcomingTestsSection(),
+              const SizedBox(height: 20),
+
+              // 5. Test-Type Navigation Bar
               TestTypeNavigation(
                 selectedIndex: _selectedTypeIndex,
                 onSelect: (index) {
@@ -791,31 +988,34 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               ),
               const SizedBox(height: 22),
 
-              // 5. Select Subject Section
+              // 6. Select Subject Section (Level 2 Drill-Down)
               _buildSelectSubjectSection(isDesktop: false),
+
+              // 7. Topics & Chapters Drill-down (Level 3 Drill-Down)
+              _buildTopicChipsSection(),
               const SizedBox(height: 22),
 
-              // 6. Test Categories Section
+              // 8. Test Categories Section
               _buildTestCategoriesSection(isDesktop, isTablet),
               const SizedBox(height: 22),
 
-              // 7. Bottom Promotional Banners
+              // 9. Bottom Promotional Banners
               _buildPromotionalBanners(isDesktop, isTablet),
               const SizedBox(height: 24),
 
-              // 8. Today's Goal
+              // 10. Today's Goal
               _buildTodaysGoalSection(),
               const SizedBox(height: 20),
 
-              // 9. Quick Actions & Rewards
+              // 11. Quick Actions & Rewards
               _buildQuickActionsCard(),
               const SizedBox(height: 20),
 
-              // 10. Top Performers
+              // 12. Top Performers
               _buildTopPerformersSection(),
               const SizedBox(height: 24),
 
-              // 11. Filtered Tests Catalog List
+              // 13. Filtered Tests Catalog List
               _buildFilteredCatalogSection(),
               const SizedBox(height: 32),
             ],
@@ -874,6 +1074,315 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     );
   }
 
+  // --- Exam Category Selector Bar ---
+  Widget _buildExamCategorySelector(bool isDesktop, bool isTablet) {
+    final exams = _examCategories.isNotEmpty
+        ? _examCategories
+        : const [
+            ExamCategoryModel(
+              id: 'bpsc',
+              name: 'BPSC & State PCS',
+              normalizedName: 'bpsc',
+              iconUrl: '🏛️',
+              totalTests: 35,
+              totalMocks: 15,
+              totalSectional: 20,
+            ),
+            ExamCategoryModel(
+              id: 'ssc',
+              name: 'SSC CGL & CHSL',
+              normalizedName: 'ssc',
+              iconUrl: '📋',
+              totalTests: 45,
+              totalMocks: 20,
+              totalSectional: 25,
+            ),
+            ExamCategoryModel(
+              id: 'upsc',
+              name: 'UPSC Civil Services',
+              normalizedName: 'upsc',
+              iconUrl: '🇮🇳',
+              totalTests: 25,
+              totalMocks: 10,
+              totalSectional: 15,
+            ),
+            ExamCategoryModel(
+              id: 'railway',
+              name: 'RRB NTPC & Group D',
+              normalizedName: 'railway',
+              iconUrl: '🚆',
+              totalTests: 30,
+              totalMocks: 12,
+              totalSectional: 18,
+            ),
+            ExamCategoryModel(
+              id: 'banking',
+              name: 'Banking & Insurance',
+              normalizedName: 'banking',
+              iconUrl: '🏦',
+              totalTests: 28,
+              totalMocks: 14,
+              totalSectional: 14,
+            ),
+          ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: const [
+                Icon(Icons.explore_rounded, color: Color(0xFF10B981), size: 19),
+                SizedBox(width: 8),
+                Text(
+                  'Target Exam Category',
+                  style: TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            if (_selectedExamId != null)
+              InkWell(
+                onTap: () => _onSelectExam(null),
+                child: const Text(
+                  'View All Exams',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF10B981)),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              _buildExamCard(
+                id: 'all',
+                name: 'All Exams',
+                iconUrl: '🌐',
+                badgeText: 'All Mocks & Sectionals',
+                isSelected: _selectedExamId == null || _selectedExamId == 'all',
+                onTap: () => _onSelectExam('all'),
+              ),
+              const SizedBox(width: 10),
+              for (final exam in exams) ...[
+                _buildExamCard(
+                  id: exam.id,
+                  name: exam.name,
+                  iconUrl: exam.iconUrl ?? '🎯',
+                  badgeText: '${exam.totalMocks} Mocks • ${exam.totalSectional} Sectional',
+                  isSelected: _selectedExamId == exam.id,
+                  onTap: () => _onSelectExam(exam.id),
+                ),
+                const SizedBox(width: 10),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExamCard({
+    required String id,
+    required String name,
+    required String iconUrl,
+    required String badgeText,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final bg = isSelected ? const Color(0xFFF0FDF4) : Colors.white;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      width: 168,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? const Color(0xFF10B981) : const Color(0xFFE2E8F0),
+          width: isSelected ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isSelected ? const Color(0x1A10B981) : const Color(0x06000000),
+            blurRadius: isSelected ? 10 : 4,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFF10B981).withAlpha(25) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        iconUrl,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    if (isSelected)
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF10B981),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.check_rounded, color: Colors.white, size: 12),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12.5,
+                    color: isSelected ? const Color(0xFF065F46) : AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  badgeText,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? const Color(0xFF047857) : AppColors.textMuted,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Active Multi-Tier Breadcrumb Navigation Bar ---
+  Widget _buildBreadcrumbBar() {
+    if ((_selectedExamId == null || _selectedExamId == 'all') && _selectedSubject == null && _selectedTopic == null) {
+      return const SizedBox.shrink();
+    }
+
+    final examName = _examCategories.cast<ExamCategoryModel?>().firstWhere(
+          (e) => e != null && e.id == _selectedExamId,
+          orElse: () => null,
+        )?.name ??
+        _selectedExamId?.toUpperCase() ??
+        'All Exams';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF86EFAC)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.filter_alt_rounded, size: 16, color: Color(0xFF15803D)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  if (_selectedExamId != null && _selectedExamId != 'all') ...[
+                    Text(
+                      examName,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF15803D)),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      child: Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF15803D)),
+                    ),
+                  ],
+                  if (_selectedSubject != null) ...[
+                    Text(
+                      _selectedSubject!,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF15803D)),
+                    ),
+                    if (_selectedTopic != null)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 6),
+                        child: Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF15803D)),
+                      ),
+                  ],
+                  if (_selectedTopic != null) ...[
+                    Text(
+                      _selectedTopic!,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF047857)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () {
+              setState(() {
+                _selectedExamId = null;
+                _selectedSubject = null;
+                _selectedCategory = null;
+                _selectedTopic = null;
+                _applyCategories();
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF86EFAC)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.close_rounded, size: 12, color: Color(0xFF15803D)),
+                  SizedBox(width: 4),
+                  Text(
+                    'Clear Filter',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF15803D)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // --- 4. Select Subject Section ---
   Widget _buildSelectSubjectSection({required bool isDesktop}) {
     return Column(
@@ -905,7 +1414,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             InkWell(
               onTap: () {
                 setState(() {
-                  _selectedSubject = null; // Clear subject filter
+                  _selectedSubject = null;
+                  _selectedCategory = null;
+                  _selectedTopic = null;
                 });
               },
               child: Row(
@@ -946,15 +1457,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                     backgroundColor: _subjects[i].bg,
                     width: null,
                     isSelected: _selectedSubject == _subjects[i].title,
-                    onTap: () {
-                      setState(() {
-                        if (_selectedSubject == _subjects[i].title) {
-                          _selectedSubject = null;
-                        } else {
-                          _selectedSubject = _subjects[i].title;
-                        }
-                      });
-                    },
+                    onTap: () => _onSelectSubject(_subjects[i].title),
                   ),
                 ),
               ],
@@ -975,21 +1478,115 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                     accentColor: _subjects[i].color,
                     backgroundColor: _subjects[i].bg,
                     isSelected: _selectedSubject == _subjects[i].title,
-                    onTap: () {
-                      setState(() {
-                        if (_selectedSubject == _subjects[i].title) {
-                          _selectedSubject = null;
-                        } else {
-                          _selectedSubject = _subjects[i].title;
-                        }
-                      });
-                    },
+                    onTap: () => _onSelectSubject(_subjects[i].title),
                   ),
                 ],
               ],
             ),
           ),
       ],
+    );
+  }
+
+  // --- Topic & Chapter Drill-down Chips ---
+  Widget _buildTopicChipsSection() {
+    final activeCat = _selectedCategory ??
+        (_selectedSubject != null
+            ? _allCategories.cast<CategoryModel?>().firstWhere(
+                  (c) => c != null && c.name.toLowerCase() == _selectedSubject!.toLowerCase(),
+                  orElse: () => null,
+                )
+            : null);
+
+    if (activeCat == null || activeCat.topics.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final topics = activeCat.topics;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.bookmarks_rounded, size: 16, color: Color(0xFF7C3AED)),
+                const SizedBox(width: 8),
+                Text(
+                  '${activeCat.name} Chapters & Topics',
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${topics.length} Chapters',
+                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      selected: _selectedTopic == null,
+                      label: const Text('All Topics'),
+                      onSelected: (_) => _onSelectTopic(null),
+                      backgroundColor: Colors.white,
+                      selectedColor: const Color(0xFF7C3AED),
+                      labelStyle: TextStyle(
+                        color: _selectedTopic == null ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11.5,
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      side: BorderSide(
+                        color: _selectedTopic == null ? const Color(0xFF7C3AED) : const Color(0xFFCBD5E1),
+                      ),
+                    ),
+                  ),
+                  for (final t in topics) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        selected: _selectedTopic == t,
+                        label: Text(t),
+                        onSelected: (_) => _onSelectTopic(t),
+                        backgroundColor: Colors.white,
+                        selectedColor: const Color(0xFF7C3AED),
+                        labelStyle: TextStyle(
+                          color: _selectedTopic == t ? Colors.white : AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11.5,
+                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        side: BorderSide(
+                          color: _selectedTopic == t ? const Color(0xFF7C3AED) : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1873,9 +2470,13 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           children: [
             Expanded(
               child: Text(
-                _selectedSubject != null
-                    ? '${_selectedSubject!.replaceAll('\n', ' ')} Tests (${_filteredTests.length})'
-                    : 'Recommended Tests (${_filteredTests.length})',
+                _selectedTopic != null
+                    ? '${_selectedTopic!} Practice Tests (${_filteredTests.length})'
+                    : (_selectedSubject != null
+                        ? '${_selectedSubject!.replaceAll('\n', ' ')} Tests (${_filteredTests.length})'
+                        : (_selectedExamId != null && _selectedExamId != 'all'
+                            ? '${_selectedExamId!.toUpperCase()} Mocks & Tests (${_filteredTests.length})'
+                            : 'Recommended Tests (${_filteredTests.length})')),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -1884,12 +2485,19 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (_selectedSubject != null || _selectedTypeIndex > 0)
+            if ((_selectedExamId != null && _selectedExamId != 'all') ||
+                _selectedSubject != null ||
+                _selectedTopic != null ||
+                _selectedTypeIndex > 0)
               TextButton.icon(
                 onPressed: () {
                   setState(() {
+                    _selectedExamId = null;
                     _selectedSubject = null;
+                    _selectedCategory = null;
+                    _selectedTopic = null;
                     _selectedTypeIndex = 0;
+                    _applyCategories();
                   });
                 },
                 icon: const Icon(Icons.clear_rounded, size: 14),
@@ -1929,8 +2537,12 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                     borderRadius: AppRadii.borderMd,
                     onPressed: () {
                       setState(() {
+                        _selectedExamId = null;
                         _selectedSubject = null;
+                        _selectedCategory = null;
+                        _selectedTopic = null;
                         _selectedTypeIndex = 0;
+                        _applyCategories();
                       });
                     },
                   ),

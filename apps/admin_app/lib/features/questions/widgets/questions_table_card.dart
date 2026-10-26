@@ -113,6 +113,7 @@ class _QuestionsTableCardState extends State<QuestionsTableCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints(minHeight: 520),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.borderLg,

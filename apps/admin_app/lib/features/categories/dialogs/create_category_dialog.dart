@@ -21,6 +21,8 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
   late final TextEditingController _slugCtrl;
   late final TextEditingController _descCtrl;
   late final TextEditingController _orderCtrl;
+  late final TextEditingController _topicsCtrl;
+  String? _selectedExamId;
   late CategoryStatus _status;
   late String _iconName;
   late String _iconColor;
@@ -57,6 +59,8 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
     _slugCtrl = TextEditingController(text: item?.slug ?? '');
     _descCtrl = TextEditingController(text: item?.description ?? '');
     _orderCtrl = TextEditingController(text: (item?.displayOrder ?? 1).toString());
+    _topicsCtrl = TextEditingController(text: item?.topics.join(', ') ?? '');
+    _selectedExamId = item?.examCategoryId;
     _status = item?.status ?? CategoryStatus.active;
     _iconName = item?.iconName ?? 'school';
     _iconColor = item?.iconColor ?? '#3B82F6';
@@ -77,11 +81,18 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
     _slugCtrl.dispose();
     _descCtrl.dispose();
     _orderCtrl.dispose();
+    _topicsCtrl.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+
+    final rawTopics = _topicsCtrl.text
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
 
     final item = (widget.itemToEdit ?? CategoryItem(
       id: 'cat-${DateTime.now().millisecondsSinceEpoch}',
@@ -92,6 +103,8 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
       createdAt: DateTime.now(),
     )).copyWith(
       name: _nameCtrl.text.trim(),
+      examCategoryId: _selectedExamId,
+      topics: rawTopics,
       slug: _slugCtrl.text.trim().isEmpty
           ? _nameCtrl.text.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')
           : _slugCtrl.text.trim(),
@@ -173,8 +186,35 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
                         const SizedBox(height: 6),
                         TextFormField(
                           controller: _nameCtrl,
-                          decoration: _inputDec('e.g. Competitive Exams'),
+                          decoration: _inputDec('e.g. Indian History, General Science'),
                           validator: (v) => (v == null || v.trim().isEmpty) ? 'Category name is required' : null,
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Target Exam Category
+                        const Text('Target Exam Category', style: _labelStyle),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          initialValue: _selectedExamId,
+                          decoration: _inputDec('Select Exam (e.g. BPSC, SSC)'),
+                          items: const [
+                            DropdownMenuItem(value: null, child: Text('All Exams / General Subject')),
+                            DropdownMenuItem(value: 'bpsc', child: Text('BPSC (Bihar Public Service Commission)')),
+                            DropdownMenuItem(value: 'ssc', child: Text('SSC CGL & CHSL')),
+                            DropdownMenuItem(value: 'upsc', child: Text('UPSC Civil Services')),
+                            DropdownMenuItem(value: 'railway', child: Text('Railway RRB NTPC')),
+                            DropdownMenuItem(value: 'banking', child: Text('Banking IBPS / SBI')),
+                          ],
+                          onChanged: (val) => setState(() => _selectedExamId = val),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Topics / Chapters
+                        const Text('Topics / Chapters (Comma Separated)', style: _labelStyle),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _topicsCtrl,
+                          decoration: _inputDec('e.g. Ancient India, Medieval India, Modern India'),
                         ),
                         const SizedBox(height: 14),
 

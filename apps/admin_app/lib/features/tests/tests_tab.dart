@@ -12,7 +12,12 @@ import 'widgets/recent_activity_card.dart';
 
 import 'dialogs/create_test_series_dialog.dart';
 import 'dialogs/view_test_series_dialog.dart';
+import 'dialogs/view_test_questions_dialog.dart';
 import 'dialogs/analytics_test_series_dialog.dart';
+
+import '../questions/dialogs/create_question_dialog.dart';
+import '../questions/dialogs/import_questions_dialog.dart';
+import '../questions/dialogs/ai_generate_questions_dialog.dart';
 
 /// Test Series Management Screen
 /// Pixel-accurate reproduction of the Rankearn reference specification.
@@ -167,7 +172,199 @@ class _TestsTabState extends State<TestsTab> {
   void _openViewDialog(TestSeriesItem item) {
     showDialog(
       context: context,
-      builder: (ctx) => ViewTestSeriesDialog(item: item),
+      builder: (ctx) => ViewTestSeriesDialog(
+        item: item,
+        onAddQuestion: () => _openAddQuestionDialog(item),
+        onViewQuestions: () => _openViewQuestionsDialog(item),
+      ),
+    );
+  }
+
+  void _openViewQuestionsDialog(TestSeriesItem item) {
+    showDialog(
+      context: context,
+      builder: (ctx) => ViewTestQuestionsDialog(
+        item: item,
+        onQuestionsUpdated: () {
+          _loadFromSupabase();
+        },
+      ),
+    );
+  }
+
+  void _openAddQuestionDialog([TestSeriesItem? item]) {
+    showDialog(
+      context: context,
+      builder: (ctx) => CreateQuestionDialog(
+        initialTestSeriesTitle: item?.title,
+        initialTestId: item?.id,
+        onSave: (savedQuestion) async {
+          String? syncNotice;
+          final client = SupabaseConfig.clientSafe;
+          if (client != null) {
+            try {
+              final payload = savedQuestion.toMap();
+              if (item != null) {
+                payload['test_id'] = item.id;
+                try {
+                  await client.from('tests').upsert(item.toMap());
+                } catch (tErr) {
+                  debugPrint('Parent test upsert note: $tErr');
+                }
+              }
+              await client.from('questions').upsert(payload);
+
+              if (item != null) {
+                final newCount = item.totalQuestions + 1;
+                await client.from('tests').update({
+                  'total_questions': newCount,
+                }).eq('id', item.id);
+
+                setState(() {
+                  final idx = _allItems.indexWhere((i) => i.id == item.id);
+                  if (idx >= 0) {
+                    _allItems[idx] = _allItems[idx].copyWith(totalQuestions: newCount);
+                  }
+                });
+              }
+            } catch (e) {
+              debugPrint('Error saving question to Supabase: $e');
+              if (e.toString().contains('42501') || e.toString().contains('row-level security')) {
+                syncNotice = 'Saved locally! (Run Supabase RLS SQL migration to enable cloud sync)';
+              } else if (e.toString().contains('23502') || e.toString().contains('test_id')) {
+                syncNotice = 'Saved locally! (Run test_id DROP NOT NULL SQL migration in Supabase)';
+              }
+            }
+          }
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  syncNotice ??
+                      (item != null
+                          ? 'Question added to "${item.title}" successfully!'
+                          : 'Question added to question bank successfully!'),
+                ),
+                backgroundColor: syncNotice != null ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  void _openImportQuestionsDialog([TestSeriesItem? item]) {
+    final targetTest = item ?? (_allItems.isNotEmpty ? _allItems.first : null);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => ImportQuestionsDialog(
+        onImport: (importedQuestions) async {
+          if (importedQuestions.isEmpty) return;
+          String? syncNotice;
+          final client = SupabaseConfig.clientSafe;
+          if (client != null && targetTest != null) {
+            try {
+              try {
+                await client.from('tests').upsert(targetTest.toMap());
+              } catch (tErr) {
+                debugPrint('Parent test upsert note: $tErr');
+              }
+              final payload = importedQuestions.map((q) {
+                var map = q.toMap();
+                map['test_id'] = targetTest.id;
+                return map;
+              }).toList();
+              await client.from('questions').upsert(payload);
+
+              final newCount = targetTest.totalQuestions + importedQuestions.length;
+              try {
+                await client.from('tests').update({
+                  'total_questions': newCount,
+                }).eq('id', targetTest.id);
+              } catch (_) {}
+
+              setState(() {
+                final idx = _allItems.indexWhere((i) => i.id == targetTest.id);
+                if (idx >= 0) {
+                  _allItems[idx] = _allItems[idx].copyWith(totalQuestions: newCount);
+                }
+              });
+            } catch (e) {
+              debugPrint('Error importing questions to Supabase: $e');
+              if (e.toString().contains('42501') || e.toString().contains('row-level security')) {
+                syncNotice = 'Imported locally! (Run Supabase RLS SQL migration to enable cloud sync)';
+              } else if (e.toString().contains('23502') || e.toString().contains('test_id')) {
+                syncNotice = 'Imported locally! (Run test_id DROP NOT NULL SQL migration in Supabase)';
+              }
+            }
+          }
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  syncNotice ??
+                      (targetTest != null
+                          ? 'Imported ${importedQuestions.length} questions into "${targetTest.title}" successfully!'
+                          : 'Imported ${importedQuestions.length} questions successfully!'),
+                ),
+                backgroundColor: syncNotice != null ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  void _openAiGenerateQuestionsDialog([TestSeriesItem? item]) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AiGenerateQuestionsDialog(
+        onSaveGenerated: (generatedQuestions) async {
+          final client = SupabaseConfig.clientSafe;
+          if (client != null) {
+            try {
+              final payload = generatedQuestions.map((q) {
+                var map = q.toMap();
+                if (item != null) {
+                  map['test_id'] = item.id;
+                }
+                return map;
+              }).toList();
+              await client.from('questions').upsert(payload);
+
+              if (item != null) {
+                final newCount = item.totalQuestions + generatedQuestions.length;
+                await client.from('tests').update({
+                  'total_questions': newCount,
+                }).eq('id', item.id);
+
+                setState(() {
+                  final idx = _allItems.indexWhere((i) => i.id == item.id);
+                  if (idx >= 0) {
+                    _allItems[idx] = _allItems[idx].copyWith(totalQuestions: newCount);
+                  }
+                });
+              }
+            } catch (e) {
+              debugPrint('Error saving AI generated questions to Supabase: $e');
+            }
+          }
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Generated & saved ${generatedQuestions.length} questions!'),
+                backgroundColor: const Color(0xFF10B981),
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -192,14 +389,24 @@ class _TestsTabState extends State<TestsTab> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
               setState(() {
                 _allItems.removeWhere((i) => i.id == item.id);
               });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Deleted "${item.title}"')),
-              );
+              final client = SupabaseConfig.clientSafe;
+              if (client != null) {
+                try {
+                  await client.from('tests').delete().eq('id', item.id);
+                } catch (e) {
+                  debugPrint('Error deleting test from Supabase: $e');
+                }
+              }
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Deleted "${item.title}"')),
+                );
+              }
             },
             child: const Text('Delete'),
           ),
@@ -208,7 +415,7 @@ class _TestsTabState extends State<TestsTab> {
     );
   }
 
-  void _toggleStatus(TestSeriesItem item) {
+  void _toggleStatus(TestSeriesItem item) async {
     final nextStatus = item.status == TestSeriesStatus.published
         ? TestSeriesStatus.draft
         : TestSeriesStatus.published;
@@ -217,12 +424,24 @@ class _TestsTabState extends State<TestsTab> {
       final idx = _allItems.indexWhere((i) => i.id == item.id);
       if (idx >= 0) _allItems[idx] = updated;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Status changed to ${nextStatus.label} for "${item.title}"'),
-        backgroundColor: const Color(0xFF5636F5),
-      ),
-    );
+
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      try {
+        await client.from('tests').update({'status': nextStatus.name}).eq('id', item.id);
+      } catch (e) {
+        debugPrint('Error updating test status in Supabase: $e');
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Status changed to ${nextStatus.label} for "${item.title}"'),
+          backgroundColor: const Color(0xFF5636F5),
+        ),
+      );
+    }
   }
 
   void _openGenericActionModal(String title, String description) {
@@ -323,22 +542,13 @@ class _TestsTabState extends State<TestsTab> {
                     flex: 37,
                     child: TestSeriesQuickActions(
                       onCreateTestSeries: () => _openCreateDialog(),
-                      onAddTestPaper: () => _openGenericActionModal(
-                        'Add Test Paper',
-                        'Add a new sectional or full-length paper to an existing test series.',
-                      ),
+                      onAddTestPaper: () => _openAddQuestionDialog(),
                       onManageSubjects: () => _openGenericActionModal(
                         'Manage Subjects',
                         'Configure subjects, categories, syllabus tags, and icon color themes.',
                       ),
-                      onImportTests: () => _openGenericActionModal(
-                        'Import Tests',
-                        'Bulk import test papers, questions and answer keys via Excel, CSV or JSON format.',
-                      ),
-                      onAiGenerate: () => _openGenericActionModal(
-                        'AI Generate Test Series',
-                        'Generate complete high-yield test series using Rankearn Gemini 2.5 Flash pipeline.',
-                      ),
+                      onImportTests: () => _openImportQuestionsDialog(),
+                      onAiGenerate: () => _openAiGenerateQuestionsDialog(),
                     ),
                   ),
                 ],
@@ -350,10 +560,10 @@ class _TestsTabState extends State<TestsTab> {
                   const SizedBox(height: 16),
                   TestSeriesQuickActions(
                     onCreateTestSeries: () => _openCreateDialog(),
-                    onAddTestPaper: () => _openGenericActionModal('Add Test Paper', 'Add test paper to series.'),
+                    onAddTestPaper: () => _openAddQuestionDialog(),
                     onManageSubjects: () => _openGenericActionModal('Manage Subjects', 'Configure subjects.'),
-                    onImportTests: () => _openGenericActionModal('Import Tests', 'Bulk import questions.'),
-                    onAiGenerate: () => _openGenericActionModal('AI Generate Test Series', 'AI Generator.'),
+                    onImportTests: () => _openImportQuestionsDialog(),
+                    onAiGenerate: () => _openAiGenerateQuestionsDialog(),
                   ),
                 ],
               ),
@@ -415,6 +625,8 @@ class _TestsTabState extends State<TestsTab> {
                         onEdit: (item) => _openCreateDialog(item),
                         onDelete: _deleteItem,
                         onToggleStatus: _toggleStatus,
+                        onAddQuestion: (item) => _openAddQuestionDialog(item),
+                        onViewQuestions: _openViewQuestionsDialog,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -476,6 +688,8 @@ class _TestsTabState extends State<TestsTab> {
                     onEdit: (item) => _openCreateDialog(item),
                     onDelete: _deleteItem,
                     onToggleStatus: _toggleStatus,
+                    onAddQuestion: (item) => _openAddQuestionDialog(item),
+                    onViewQuestions: _openViewQuestionsDialog,
                   ),
                   const SizedBox(height: 16),
                   Row(

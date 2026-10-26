@@ -72,8 +72,7 @@ class RecentActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activityList = Column(
-      mainAxisSize: (height != null || fillHeight) ? MainAxisSize.max : MainAxisSize.min,
-      mainAxisAlignment: (height != null || fillHeight) ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: activities.map((item) => _buildActivityRow(item)).toList(),
     );
 
@@ -147,7 +146,12 @@ class RecentActivityCard extends StatelessWidget {
 
           // 5 Activity Items
           if (height != null || fillHeight)
-            Expanded(child: activityList)
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: activityList,
+              ),
+            )
           else
             activityList,
         ],

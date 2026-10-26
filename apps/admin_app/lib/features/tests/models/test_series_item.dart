@@ -32,6 +32,8 @@ class TestSeriesItem {
   final String title;
   final String description;
   final String subject;
+  final String? examCategoryId;
+  final String testMode;
   final int totalTests;
   final int totalQuestions;
   final int priceInr;
@@ -46,6 +48,8 @@ class TestSeriesItem {
     required this.title,
     required this.description,
     required this.subject,
+    this.examCategoryId = 'bpsc',
+    this.testMode = 'mock',
     required this.totalTests,
     required this.totalQuestions,
     required this.priceInr,
@@ -61,6 +65,8 @@ class TestSeriesItem {
     String? title,
     String? description,
     String? subject,
+    String? examCategoryId,
+    String? testMode,
     int? totalTests,
     int? totalQuestions,
     int? priceInr,
@@ -75,6 +81,8 @@ class TestSeriesItem {
       title: title ?? this.title,
       description: description ?? this.description,
       subject: subject ?? this.subject,
+      examCategoryId: examCategoryId ?? this.examCategoryId,
+      testMode: testMode ?? this.testMode,
       totalTests: totalTests ?? this.totalTests,
       totalQuestions: totalQuestions ?? this.totalQuestions,
       priceInr: priceInr ?? this.priceInr,
@@ -91,7 +99,8 @@ class TestSeriesItem {
       'id': id,
       'title': title,
       'syllabus': description,
-      'category_id': subject,
+      'test_mode': testMode,
+      'duration_minutes': totalTests > 0 ? totalTests : 60,
       'total_questions': totalQuestions,
       'unlock_price_coins': priceInr,
       'total_participants': enrollments,
@@ -100,11 +109,13 @@ class TestSeriesItem {
     };
   }
 
+
+
   factory TestSeriesItem.fromMap(Map<String, dynamic> map, int fallbackIndex) {
     final statusStr = map['status']?.toString() ?? 'published';
-    final sub = map['category_id']?.toString() ??
-        map['exam_category_id']?.toString() ??
-        'General Science';
+    final examCat = map['exam_category_id']?.toString() ?? 'bpsc';
+    final mode = map['test_mode']?.toString() ?? 'mock';
+    final sub = map['category_id']?.toString() ?? 'General Science';
 
     final (icon, color) = _getIconAndColorForSubject(sub, fallbackIndex);
 
@@ -115,6 +126,8 @@ class TestSeriesItem {
           map['description']?.toString() ??
           'Complete test series with solutions',
       subject: sub,
+      examCategoryId: examCat,
+      testMode: mode,
       totalTests: (map['duration_minutes'] as num?)?.toInt() ?? 20,
       totalQuestions: (map['total_questions'] as num?)?.toInt() ?? 2000,
       priceInr: (map['unlock_price_coins'] as num?)?.toInt() ?? 149,

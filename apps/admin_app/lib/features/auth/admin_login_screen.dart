@@ -459,108 +459,125 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   // BLOCK 2: MIDDLE (FEATURE GRID + 3D SCENE)
   // ==========================================
   Widget _buildMiddleBlock(double hFactor, double Function(double, double) vScale) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // 2-Column x 3-Row Feature Grid
-        SizedBox(
-          width: vScale(435, 465),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: AuthFeatureTile(
-                      icon: Icons.description_rounded,
-                      iconBgColor: const Color(0xFFF43F5E),
-                      title: 'Test Series',
-                      description: 'Create & manage test series',
-                      verticalPadding: vScale(7, 11),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: AuthFeatureTile(
-                      icon: Icons.help_outline_rounded,
-                      iconBgColor: const Color(0xFF0284C7),
-                      title: 'Question Bank',
-                      description: 'Add, edit and organize questions',
-                      verticalPadding: vScale(7, 11),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: vScale(6, 11)),
-              Row(
-                children: [
-                  Expanded(
-                    child: AuthFeatureTile(
-                      icon: Icons.people_alt_rounded,
-                      iconBgColor: const Color(0xFF10B981),
-                      title: 'User Management',
-                      description: 'Manage users and enrollments',
-                      verticalPadding: vScale(7, 11),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: AuthFeatureTile(
-                      icon: Icons.emoji_events_rounded,
-                      iconBgColor: const Color(0xFFF59E0B),
-                      title: 'Live Quiz & Tournaments',
-                      description: 'Schedule and manage events',
-                      verticalPadding: vScale(7, 11),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: vScale(6, 11)),
-              Row(
-                children: [
-                  Expanded(
-                    child: AuthFeatureTile(
-                      icon: Icons.bar_chart_rounded,
-                      iconBgColor: const Color(0xFF8B5CF6),
-                      title: 'Analytics',
-                      description: 'Track performance and growth',
-                      verticalPadding: vScale(7, 11),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: AuthFeatureTile(
-                      icon: Icons.settings_rounded,
-                      iconBgColor: const Color(0xFF0EA5E9),
-                      title: 'Platform Settings',
-                      description: 'Configure and customize your platform',
-                      verticalPadding: vScale(7, 11),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 14),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final showIllustration = availableWidth >= 620;
 
-        // 3D Education Character Illustration (Zoomed in & enlarged)
-        Expanded(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: vScale(300, 420),
+        final grid = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: AuthFeatureTile(
+                    icon: Icons.description_rounded,
+                    iconBgColor: const Color(0xFFF43F5E),
+                    title: 'Test Series',
+                    description: 'Create & manage test series',
+                    verticalPadding: vScale(7, 11),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AuthFeatureTile(
+                    icon: Icons.help_outline_rounded,
+                    iconBgColor: const Color(0xFF0284C7),
+                    title: 'Question Bank',
+                    description: 'Add, edit and organize questions',
+                    verticalPadding: vScale(7, 11),
+                  ),
+                ),
+              ],
             ),
-            child: Transform.scale(
-              scale: vScale(1.12, 1.24),
-              alignment: Alignment.center,
-              child: Image.memory(
-                kAdminLoginHeroBytes,
-                fit: BoxFit.contain,
+            SizedBox(height: vScale(6, 11)),
+            Row(
+              children: [
+                Expanded(
+                  child: AuthFeatureTile(
+                    icon: Icons.people_alt_rounded,
+                    iconBgColor: const Color(0xFF10B981),
+                    title: 'User Management',
+                    description: 'Manage users and enrollments',
+                    verticalPadding: vScale(7, 11),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AuthFeatureTile(
+                    icon: Icons.emoji_events_rounded,
+                    iconBgColor: const Color(0xFFF59E0B),
+                    title: 'Live Quiz & Tournaments',
+                    description: 'Schedule and manage events',
+                    verticalPadding: vScale(7, 11),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: vScale(6, 11)),
+            Row(
+              children: [
+                Expanded(
+                  child: AuthFeatureTile(
+                    icon: Icons.bar_chart_rounded,
+                    iconBgColor: const Color(0xFF8B5CF6),
+                    title: 'Analytics',
+                    description: 'Track performance and growth',
+                    verticalPadding: vScale(7, 11),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AuthFeatureTile(
+                    icon: Icons.settings_rounded,
+                    iconBgColor: const Color(0xFF0EA5E9),
+                    title: 'Platform Settings',
+                    description: 'Configure and customize your platform',
+                    verticalPadding: vScale(7, 11),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+
+        if (!showIllustration) {
+          return SizedBox(
+            width: double.infinity,
+            child: grid,
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 2-Column x 3-Row Feature Grid
+            Expanded(
+              flex: 58,
+              child: grid,
+            ),
+            const SizedBox(width: 14),
+
+            // 3D Education Character Illustration
+            Expanded(
+              flex: 42,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: vScale(300, 420),
+                ),
+                child: Transform.scale(
+                  scale: vScale(1.05, 1.20),
+                  alignment: Alignment.center,
+                  child: Image.memory(
+                    kAdminLoginHeroBytes,
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 

@@ -289,8 +289,8 @@ class _TournamentsMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      height: 78,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.borderLg,
@@ -325,6 +325,7 @@ class _TournamentsMetricCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   title,

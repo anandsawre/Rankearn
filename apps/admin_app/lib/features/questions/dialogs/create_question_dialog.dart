@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 import '../models/question_item.dart';
+import 'import_questions_dialog.dart';
 
 class CreateQuestionDialog extends StatefulWidget {
   final QuestionItem? initialItem;
+  final String? initialTestSeriesTitle;
+  final String? initialTestId;
   final ValueChanged<QuestionItem> onSave;
 
   const CreateQuestionDialog({
     super.key,
     this.initialItem,
+    this.initialTestSeriesTitle,
+    this.initialTestId,
     required this.onSave,
   });
 
@@ -38,6 +43,7 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
   bool _showPreview = false;
 
   final List<String> _subjects = [
+    'General Science',
     'Physics',
     'General Awareness',
     'Mathematics',
@@ -56,6 +62,8 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
     'Reasoning Special Series',
     'Current Affairs Monthly Series',
   ];
+
+  final Map<String, String> _testTitleToId = {};
 
   final List<String> _questionTypes = [
     'MCQ',
@@ -84,12 +92,65 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
     });
 
     _selectedCorrectIndex = item?.correctAnswerIndex ?? 0;
-    _selectedSubject = item?.subject ?? _subjects.first;
-    _selectedTestSeries = item?.testSeriesTitle.replaceAll('\n', ' ') ?? _testSeriesList.first;
+
+    final subj = item?.subject.trim();
+    if (subj != null && subj.isNotEmpty) {
+      if (!_subjects.contains(subj)) _subjects.insert(0, subj);
+      _selectedSubject = subj;
+    } else {
+      _selectedSubject = _subjects.first;
+    }
+
+    final testTitle = widget.initialTestSeriesTitle?.trim() ?? item?.testSeriesTitle.replaceAll('\n', ' ').trim();
+    if (testTitle != null && testTitle.isNotEmpty) {
+      if (!_testSeriesList.contains(testTitle)) _testSeriesList.insert(0, testTitle);
+      _selectedTestSeries = testTitle;
+    } else {
+      _selectedTestSeries = _testSeriesList.first;
+    }
+
+    if (widget.initialTestId != null && widget.initialTestId!.isNotEmpty) {
+      _testTitleToId[_selectedTestSeries] = widget.initialTestId!;
+    }
+
     _selectedQuestionSet = item?.questionSet ?? 'Set A';
-    _selectedType = item?.questionType ?? 'MCQ';
+
+    final qType = item?.questionType.trim();
+    if (qType != null && qType.isNotEmpty) {
+      if (!_questionTypes.contains(qType)) _questionTypes.add(qType);
+      _selectedType = qType;
+    } else {
+      _selectedType = 'MCQ';
+    }
+
     _selectedDifficulty = item?.difficulty ?? QuestionDifficulty.easy;
     _selectedStatus = item?.status ?? QuestionStatus.published;
+
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      client.from('tests').select('id, title').then((res) {
+        if (res.isNotEmpty && mounted) {
+          final titles = <String>[];
+          for (final r in res as List) {
+            final tId = r['id']?.toString() ?? '';
+            final tTitle = r['title']?.toString() ?? '';
+            if (tTitle.isNotEmpty) {
+              titles.add(tTitle);
+              if (tId.isNotEmpty) {
+                _testTitleToId[tTitle] = tId;
+              }
+            }
+          }
+          if (titles.isNotEmpty) {
+            setState(() {
+              for (final t in titles) {
+                if (!_testSeriesList.contains(t)) _testSeriesList.add(t);
+              }
+            });
+          }
+        }
+      }).catchError((_) {});
+    }
   }
 
   @override
@@ -118,6 +179,9 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
     });
 
     final defaultChar = _selectedCorrectIndex < labels.length ? labels[_selectedCorrectIndex] : 'A';
+    final targetTestId = widget.initialTestId ??
+        widget.initialItem?.testId ??
+        _testTitleToId[_selectedTestSeries];
 
     final savedItem = QuestionItem(
       id: widget.initialItem?.id ?? 'q-${DateTime.now().millisecondsSinceEpoch}',
@@ -128,6 +192,7 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
           : null,
       subject: _selectedSubject,
       testSeriesTitle: _selectedTestSeries,
+      testId: targetTestId,
       questionSet: _selectedQuestionSet,
       questionType: _selectedType,
       difficulty: _selectedDifficulty,
@@ -148,214 +213,492 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
     Navigator.of(context).pop();
   }
 
+  void _openImportDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => ImportQuestionsDialog(
+        onImport: (importedList) async {
+          if (importedList.isEmpty) return;
+
+          final targetTestId = widget.initialTestId ?? _testTitleToId[_selectedTestSeries];
+          final client = SupabaseConfig.clientSafe;
+          if (client != null) {
+            try {
+              final payload = importedList.map((q) {
+                final m = q.toMap();
+                if (targetTestId != null && targetTestId.isNotEmpty) {
+                  m['test_id'] = targetTestId;
+                }
+                return m;
+              }).toList();
+              await client.from('questions').upsert(payload);
+            } catch (e) {
+              debugPrint('Bulk import Supabase sync: $e');
+            }
+          }
+
+          for (final q in importedList) {
+            final itemWithTest = (targetTestId != null && targetTestId.isNotEmpty)
+                ? q.copyWith(testId: targetTestId)
+                : q;
+            widget.onSave(itemWithTest);
+          }
+
+          if (mounted) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Successfully imported ${importedList.length} questions!'),
+                backgroundColor: const Color(0xFF10B981),
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.initialItem != null;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 700;
 
-    return Dialog(
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderXl),
-      backgroundColor: Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680, maxHeight: 720),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Modal Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF5636F5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      isEdit ? Icons.edit_rounded : Icons.add_circle_outline_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+    if (isMobile) {
+      return Dialog.fullscreen(
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            titleSpacing: 0,
+            title: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5636F5),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  const SizedBox(width: 10),
-                  Text(
+                  alignment: Alignment.center,
+                  child: Icon(
+                    isEdit ? Icons.edit_rounded : Icons.post_add_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
                     isEdit ? 'Edit Question' : 'Add New Question',
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
                       color: Color(0xFF101A3A),
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const Spacer(),
-                  // Toggle Preview Button
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    icon: Icon(
-                      _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
-                      size: 15,
-                      color: const Color(0xFF5636F5),
-                    ),
-                    label: Text(
-                      _showPreview ? 'Edit Form' : 'Live Preview',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF5636F5)),
-                    ),
-                    onPressed: () => setState(() => _showPreview = !_showPreview),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-
-            // Form Body / Preview Body
-            Expanded(
-              child: _showPreview ? _buildPreviewBody() : _buildFormBody(),
-            ),
-
-            // Footer
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-                border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
+                  size: 20,
+                  color: const Color(0xFF5636F5),
+                ),
+                tooltip: _showPreview ? 'Edit Form' : 'Preview',
+                onPressed: () => setState(() => _showPreview = !_showPreview),
               ),
+              IconButton(
+                icon: const Icon(Icons.cloud_upload_outlined, size: 20, color: Color(0xFF0284C7)),
+                tooltip: 'Import Questions',
+                onPressed: _openImportDialog,
+              ),
+              const SizedBox(width: 4),
+            ],
+            bottom: const PreferredSize(
+              preferredSize: Size.fromHeight(1),
+              child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+            ),
+          ),
+          body: _showPreview ? _buildPreviewBody() : _buildFormBody(true),
+          bottomNavigationBar: Container(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
+            ),
+            child: SafeArea(
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                    ),
                   ),
                   const SizedBox(width: 10),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5636F5),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5636F5),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      icon: const Icon(Icons.check_rounded, size: 16),
+                      label: Text(
+                        isEdit ? 'Save Changes' : 'Create Question',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      onPressed: _submit,
                     ),
-                    icon: const Icon(Icons.check_rounded, size: 16),
-                    label: Text(isEdit ? 'Save Changes' : 'Create Question'),
-                    onPressed: _submit,
                   ),
                 ],
               ),
             ),
-          ],
+          ),
+        ),
+      );
+    }
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      clipBehavior: Clip.antiAlias,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 720,
+          maxHeight: (MediaQuery.of(context).size.height * 0.90).clamp(450.0, 720.0),
+        ),
+        child: Container(
+          width: 720,
+          color: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5636F5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            isEdit ? Icons.edit_rounded : Icons.post_add_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          isEdit ? 'Edit Question' : 'Add New Question',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF101A3A),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          icon: Icon(
+                            _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
+                            size: 15,
+                            color: const Color(0xFF5636F5),
+                          ),
+                          label: Text(
+                            _showPreview ? 'Edit Form' : 'Live Preview',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF5636F5)),
+                          ),
+                          onPressed: () => setState(() => _showPreview = !_showPreview),
+                        ),
+                        const SizedBox(width: 6),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            side: const BorderSide(color: Color(0xFFE2E8F0)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          icon: const Icon(
+                            Icons.cloud_upload_outlined,
+                            size: 15,
+                            color: Color(0xFF0284C7),
+                          ),
+                          label: const Text(
+                            'Import',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF0284C7),
+                            ),
+                          ),
+                          onPressed: _openImportDialog,
+                        ),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+
+              // Content
+              Expanded(
+                child: _showPreview ? _buildPreviewBody() : _buildFormBody(false),
+              ),
+
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+
+              // Footer
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 18),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12)),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5636F5),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      icon: const Icon(Icons.check_rounded, size: 16),
+                      label: Text(
+                        isEdit ? 'Save Changes' : 'Create Question',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                      ),
+                      onPressed: _submit,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFormBody() {
+  Widget _buildFormBody(bool isMobile) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row 1: Subject, Test Series, Question Set
-            Row(
-              children: [
-                Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Subject',
-                    child: DropdownButtonFormField<String>(
-                      isExpanded: true,
-                      initialValue: _selectedSubject,
-                      items: _subjects
-                          .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                          .toList(),
-                      onChanged: (val) => setState(() => _selectedSubject = val!),
-                      decoration: _inputDecoration(),
+            // Row 1: Subject, Test Series
+            if (isMobile) ...[
+              _buildFormFieldLabel(
+                label: 'Subject',
+                child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  initialValue: _selectedSubject,
+                  items: _subjects
+                      .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                      .toList(),
+                  onChanged: (val) => setState(() => _selectedSubject = val!),
+                  decoration: _inputDecoration(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildFormFieldLabel(
+                label: 'Test Series',
+                child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  initialValue: _selectedTestSeries,
+                  items: _testSeriesList
+                      .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                      .toList(),
+                  onChanged: (val) => setState(() => _selectedTestSeries = val!),
+                  decoration: _inputDecoration(),
+                ),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildFormFieldLabel(
+                      label: 'Subject',
+                      child: DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        initialValue: _selectedSubject,
+                        items: _subjects
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedSubject = val!),
+                        decoration: _inputDecoration(),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Test Series',
-                    child: DropdownButtonFormField<String>(
-                      isExpanded: true,
-                      initialValue: _selectedTestSeries,
-                      items: _testSeriesList
-                          .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                          .toList(),
-                      onChanged: (val) => setState(() => _selectedTestSeries = val!),
-                      decoration: _inputDecoration(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildFormFieldLabel(
+                      label: 'Test Series',
+                      child: DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        initialValue: _selectedTestSeries,
+                        items: _testSeriesList
+                            .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedTestSeries = val!),
+                        decoration: _inputDecoration(),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
             const SizedBox(height: 12),
 
             // Row 2: Type, Difficulty, Status
-            Row(
-              children: [
-                Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Question Type',
-                    child: DropdownButtonFormField<String>(
-                      isExpanded: true,
-                      initialValue: _selectedType,
-                      items: _questionTypes
-                          .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                          .toList(),
-                      onChanged: (val) => setState(() => _selectedType = val!),
-                      decoration: _inputDecoration(),
+            if (isMobile) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildFormFieldLabel(
+                      label: 'Question Type',
+                      child: DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        initialValue: _selectedType,
+                        items: _questionTypes
+                            .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedType = val!),
+                        decoration: _inputDecoration(),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Difficulty Level',
-                    child: DropdownButtonFormField<QuestionDifficulty>(
-                      isExpanded: true,
-                      initialValue: _selectedDifficulty,
-                      items: QuestionDifficulty.values
-                          .map((d) => DropdownMenuItem(value: d, child: Text(d.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                          .toList(),
-                      onChanged: (val) => setState(() => _selectedDifficulty = val!),
-                      decoration: _inputDecoration(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildFormFieldLabel(
+                      label: 'Difficulty',
+                      child: DropdownButtonFormField<QuestionDifficulty>(
+                        isExpanded: true,
+                        initialValue: _selectedDifficulty,
+                        items: QuestionDifficulty.values
+                            .map((d) => DropdownMenuItem(value: d, child: Text(d.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedDifficulty = val!),
+                        decoration: _inputDecoration(),
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildFormFieldLabel(
+                label: 'Status',
+                child: DropdownButtonFormField<QuestionStatus>(
+                  isExpanded: true,
+                  initialValue: _selectedStatus,
+                  items: QuestionStatus.values
+                      .map((s) => DropdownMenuItem(value: s, child: Text(s.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                      .toList(),
+                  onChanged: (val) => setState(() => _selectedStatus = val!),
+                  decoration: _inputDecoration(),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Status',
-                    child: DropdownButtonFormField<QuestionStatus>(
-                      isExpanded: true,
-                      initialValue: _selectedStatus,
-                      items: QuestionStatus.values
-                          .map((s) => DropdownMenuItem(value: s, child: Text(s.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                          .toList(),
-                      onChanged: (val) => setState(() => _selectedStatus = val!),
-                      decoration: _inputDecoration(),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildFormFieldLabel(
+                      label: 'Question Type',
+                      child: DropdownButtonFormField<String>(
+                        isExpanded: true,
+                        initialValue: _selectedType,
+                        items: _questionTypes
+                            .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedType = val!),
+                        decoration: _inputDecoration(),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildFormFieldLabel(
+                      label: 'Difficulty Level',
+                      child: DropdownButtonFormField<QuestionDifficulty>(
+                        isExpanded: true,
+                        initialValue: _selectedDifficulty,
+                        items: QuestionDifficulty.values
+                            .map((d) => DropdownMenuItem(value: d, child: Text(d.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedDifficulty = val!),
+                        decoration: _inputDecoration(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildFormFieldLabel(
+                      label: 'Status',
+                      child: DropdownButtonFormField<QuestionStatus>(
+                        isExpanded: true,
+                        initialValue: _selectedStatus,
+                        items: QuestionStatus.values
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedStatus = val!),
+                        decoration: _inputDecoration(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
             const SizedBox(height: 14),
 
             // Question Text (English)

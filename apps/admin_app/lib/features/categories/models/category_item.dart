@@ -24,6 +24,8 @@ class CategoryItem {
   final String id;
   final int index;
   final String name;
+  final String? examCategoryId;
+  final List<String> topics;
   final String slug;
   final String description;
   final String iconName;
@@ -41,6 +43,8 @@ class CategoryItem {
     required this.id,
     required this.index,
     required this.name,
+    this.examCategoryId,
+    this.topics = const [],
     required this.slug,
     required this.description,
     this.iconName = 'school',
@@ -102,6 +106,8 @@ class CategoryItem {
     String? id,
     int? index,
     String? name,
+    String? examCategoryId,
+    List<String>? topics,
     String? slug,
     String? description,
     String? iconName,
@@ -119,6 +125,8 @@ class CategoryItem {
       id: id ?? this.id,
       index: index ?? this.index,
       name: name ?? this.name,
+      examCategoryId: examCategoryId ?? this.examCategoryId,
+      topics: topics ?? this.topics,
       slug: slug ?? this.slug,
       description: description ?? this.description,
       iconName: iconName ?? this.iconName,
@@ -138,6 +146,8 @@ class CategoryItem {
     return {
       'id': id,
       'name': name,
+      if (examCategoryId != null) 'exam_category_id': examCategoryId,
+      'topics': topics,
       'slug': slug,
       'description': description,
       'icon_name': iconName,
@@ -164,6 +174,10 @@ class CategoryItem {
       id: map['id']?.toString() ?? 'cat-$fallbackIndex',
       index: fallbackIndex,
       name: map['name']?.toString() ?? 'Untitled Category',
+      examCategoryId: map['exam_category_id']?.toString(),
+      topics: (map['topics'] is List)
+          ? (map['topics'] as List).map((e) => e.toString()).toList()
+          : [],
       slug: map['slug']?.toString() ?? '',
       description: map['description']?.toString() ?? '',
       iconName: map['icon_name']?.toString() ?? 'school',

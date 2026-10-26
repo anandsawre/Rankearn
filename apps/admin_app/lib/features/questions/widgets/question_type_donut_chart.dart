@@ -22,9 +22,9 @@ class QuestionTypeDonutChartCard extends StatelessWidget {
       totalCount: totalCount,
       totalLabel: 'Total',
       fillHeight: fillHeight,
-      height: fillHeight ? null : 145,
-      chartSize: 92,
-      strokeWidth: 13.5,
+      height: fillHeight ? null : 160,
+      chartSize: 84,
+      strokeWidth: 12,
       strokeCap: StrokeCap.round,
       slices: const [
         DonutSlice(label: 'MCQ', percentage: 68, color: Color(0xFF3B82F6)),

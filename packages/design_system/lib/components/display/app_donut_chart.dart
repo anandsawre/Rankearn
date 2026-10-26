@@ -174,13 +174,13 @@ class AppDonutChart extends StatelessWidget {
         donutVisual,
         SizedBox(width: legendSpacing),
         Expanded(
-          child: Column(
-            mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
-            mainAxisAlignment: fillHeight
-                ? MainAxisAlignment.spaceEvenly
-                : legendAlignment,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: legendItems,
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: legendItems,
+            ),
           ),
         ),
       ],

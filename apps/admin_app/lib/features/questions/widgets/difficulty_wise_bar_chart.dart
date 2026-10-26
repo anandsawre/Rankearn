@@ -61,57 +61,60 @@ class DifficultyWiseBarChartCard extends StatelessWidget {
           const SizedBox(height: 8),
 
           // 4 Vertical Bars
-          Builder(
-            builder: (context) {
-              final maxCount = [easyCount, mediumCount, hardCount, expertCount]
-                  .reduce((a, b) => a > b ? a : b);
-              const availableHeight = 44.0;
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxCount = [easyCount, mediumCount, hardCount, expertCount]
+                    .reduce((a, b) => a > b ? a : b);
+                // Calculate available bar height dynamically based on constraints
+                final availableHeight = (constraints.maxHeight - 38).clamp(16.0, 60.0);
 
-              return Padding(
-                padding: const EdgeInsets.only(top: 6, bottom: 2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildBar(
-                      label: 'Easy',
-                      count: easyCount,
-                      maxCount: maxCount,
-                      availableHeight: availableHeight,
-                      color: const Color(0xFF10B981),
-                    ),
-                    _buildBar(
-                      label: 'Medium',
-                      count: mediumCount,
-                      maxCount: maxCount,
-                      availableHeight: availableHeight,
-                      color: const Color(0xFFF59E0B),
-                    ),
-                    _buildBar(
-                      label: 'Hard',
-                      count: hardCount,
-                      maxCount: maxCount,
-                      availableHeight: availableHeight,
-                      color: const Color(0xFFF43F5E),
-                    ),
-                    _buildBar(
-                      label: 'Expert',
-                      count: expertCount,
-                      maxCount: maxCount,
-                      availableHeight: availableHeight,
-                      color: const Color(0xFF8B5CF6),
-                    ),
-                  ],
-                ),
-              );
-            },
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildBar(
+                        label: 'Easy',
+                        count: easyCount,
+                        maxCount: maxCount,
+                        availableHeight: availableHeight,
+                        color: const Color(0xFF10B981),
+                      ),
+                      _buildBar(
+                        label: 'Medium',
+                        count: mediumCount,
+                        maxCount: maxCount,
+                        availableHeight: availableHeight,
+                        color: const Color(0xFFF59E0B),
+                      ),
+                      _buildBar(
+                        label: 'Hard',
+                        count: hardCount,
+                        maxCount: maxCount,
+                        availableHeight: availableHeight,
+                        color: const Color(0xFFF43F5E),
+                      ),
+                      _buildBar(
+                        label: 'Expert',
+                        count: expertCount,
+                        maxCount: maxCount,
+                        availableHeight: availableHeight,
+                        color: const Color(0xFF8B5CF6),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
     );
 
     if (fillHeight) return content;
-    return SizedBox(height: 125, child: content);
+    return SizedBox(height: 160, child: content);
   }
 
   Widget _buildBar({

@@ -41,9 +41,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   // Form Controllers & Focus Nodes
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController(text: '9876543210');
-  final _emailController = TextEditingController(text: 'vikram.singh@rankearn.in');
-  final _passwordController = TextEditingController(text: 'Rankearn2026!');
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _referralController = TextEditingController();
   final _phoneFocusNode = FocusNode();
   String? _selectedExamGoal;
@@ -126,8 +126,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           _handleSuccess(res.data);
           return;
         } else if (res is Failure) {
-          // Graceful fallback for demo or unseeded testing environments
-          if (password.length >= 6) {
+          final isDbOffline = !SupabaseConfig.isInitialized || SupabaseConfig.clientSafe == null;
+          if (isDbOffline && password.length >= 6) {
             final mockProfile = UserProfile(
               id: 'usr_authenticated_session',
               name: isPhone ? 'Student Aspirant' : 'Vikram Singh',
@@ -143,7 +143,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             return;
           }
           setState(() {
-            _errorMessage = res.errorOrNull ?? 'Failed to sign in. Please verify your credentials.';
+            _errorMessage = _formatAuthError((res as Failure).message);
           });
         }
       } else {
@@ -162,7 +162,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           _handleSuccess(res.data);
           return;
         } else if (res is Failure) {
-          if (email.contains('@') && password.length >= 6) {
+          final isDbOffline = !SupabaseConfig.isInitialized || SupabaseConfig.clientSafe == null;
+          if (isDbOffline && email.contains('@') && password.length >= 6) {
             final newProfile = UserProfile(
               id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
               name: name,
@@ -179,7 +180,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             return;
           }
           setState(() {
-            _errorMessage = res.errorOrNull ?? 'Failed to create account. Please try again.';
+            _errorMessage = _formatAuthError((res as Failure).message);
           });
         }
       }
@@ -192,6 +193,32 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  String _formatAuthError(String? raw) {
+    if (raw == null || raw.trim().isEmpty) {
+      return 'Authentication failed. Please verify your credentials.';
+    }
+    final lower = raw.toLowerCase();
+    if (lower.contains('invalid login credentials') || lower.contains('invalid_credentials')) {
+      return 'Invalid email/phone or password. Please verify and try again.';
+    }
+    if (lower.contains('user already registered') || lower.contains('already in use') || lower.contains('duplicate key') || lower.contains('already registered')) {
+      return 'An account with this email or mobile number already exists. Please login.';
+    }
+    if (lower.contains('email not confirmed')) {
+      return 'Please verify your email address before logging in.';
+    }
+    if (lower.contains('password should be at least 6 characters') || lower.contains('weak_password')) {
+      return 'Password must be at least 6 characters.';
+    }
+    if (lower.contains('rate limit')) {
+      return 'Too many login attempts. Please wait a minute and try again.';
+    }
+    if (lower.contains('database not connected') || lower.contains('socketexception') || lower.contains('failed host lookup')) {
+      return 'Unable to connect to server. Please check your internet connection.';
+    }
+    return raw;
   }
 
   void _handleSuccess(UserProfile profile) {
@@ -208,13 +235,29 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 
   // --- Social Logins ---
-  void _handleGoogleLogin() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Redirecting to Google Secure Authentication...'),
-        backgroundColor: Color(0xFF10194F),
-      ),
-    );
+  Future<void> _handleGoogleLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final success = await _authRepository.signInWithGoogleOAuth();
+      if (!success && mounted) {
+        setState(() {
+          _errorMessage = 'Google sign in could not be initiated. Please verify your connection.';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Google sign in error: $e';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _handlePhoneLogin() {
@@ -226,6 +269,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     final phoneController = TextEditingController(text: '+91 ');
     final otpController = TextEditingController();
     bool otpSent = false;
+    bool isSubmitting = false;
+    String? modalError;
 
     showDialog(
       context: context,
@@ -253,6 +298,22 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     style: AppTypography.bodySmall.copyWith(fontSize: 12.5),
                   ),
                   const SizedBox(height: 16),
+                  if (modalError != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF2F2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFFECACA)),
+                      ),
+                      child: Text(
+                        modalError!,
+                        style: const TextStyle(fontSize: 11.5, color: Color(0xFFDC2626)),
+                      ),
+                    ),
+                  ],
                   if (!otpSent)
                     AppTextField.floating(
                       controller: phoneController,
@@ -282,26 +343,68 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                onPressed: () {
-                  if (!otpSent) {
-                    if (phoneController.text.length >= 10) {
-                      setModalState(() => otpSent = true);
-                    }
-                  } else {
-                    Navigator.pop(ctx);
-                    final phoneProfile = UserProfile(
-                      id: 'usr_phone_${DateTime.now().millisecondsSinceEpoch}',
-                      name: 'Student Aspirant',
-                      email: '${phoneController.text.replaceAll(' ', '')}@phone.rankearn.in',
-                      phone: phoneController.text,
-                      coins: 1250,
-                      subscriptionStatus: 'active',
-                      createdAt: DateTime.now(),
-                    );
-                    _handleSuccess(phoneProfile);
-                  }
-                },
-                child: Text(otpSent ? 'Verify OTP' : 'Send OTP'),
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        final rawPhone = phoneController.text.trim();
+                        final digits = rawPhone.replaceAll(RegExp(r'\D'), '');
+                        if (!otpSent) {
+                          if (digits.length < 10) {
+                            setModalState(() => modalError = 'Please enter a valid 10-digit mobile number');
+                            return;
+                          }
+                          setModalState(() {
+                            isSubmitting = true;
+                            modalError = null;
+                          });
+                          final res = await _authRepository.sendPhoneOtp(rawPhone);
+                          setModalState(() => isSubmitting = false);
+                          if (res is Success) {
+                            setModalState(() => otpSent = true);
+                          } else {
+                            if (!SupabaseConfig.isInitialized || SupabaseConfig.clientSafe == null) {
+                              setModalState(() => otpSent = true);
+                            } else {
+                              setModalState(() => modalError = (res as Failure).message);
+                            }
+                          }
+                        } else {
+                          final otp = otpController.text.trim();
+                          if (otp.length < 6) {
+                            setModalState(() => modalError = 'Enter the 6-digit OTP code');
+                            return;
+                          }
+                          setModalState(() {
+                            isSubmitting = true;
+                            modalError = null;
+                          });
+                          final verifyRes = await _authRepository.verifyPhoneOtp(phone: rawPhone, token: otp);
+                          setModalState(() => isSubmitting = false);
+                          if (verifyRes is Success<UserProfile>) {
+                            if (ctx.mounted) Navigator.pop(ctx);
+                            _handleSuccess(verifyRes.data);
+                          } else {
+                            if (!SupabaseConfig.isInitialized || SupabaseConfig.clientSafe == null) {
+                              if (ctx.mounted) Navigator.pop(ctx);
+                              final phoneProfile = UserProfile(
+                                id: 'usr_phone_${DateTime.now().millisecondsSinceEpoch}',
+                                name: 'Student Aspirant',
+                                email: '$digits@phone.rankearn.in',
+                                phone: rawPhone,
+                                coins: 1250,
+                                subscriptionStatus: 'active',
+                                createdAt: DateTime.now(),
+                              );
+                              _handleSuccess(phoneProfile);
+                            } else {
+                              setModalState(() => modalError = (verifyRes as Failure).message);
+                            }
+                          }
+                        }
+                      },
+                child: isSubmitting
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text(otpSent ? 'Verify OTP' : 'Send OTP'),
               ),
             ],
           );
@@ -378,16 +481,36 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     onPressed: isSending
                         ? null
                         : () async {
-                            setSheetState(() => isSending = true);
-                            await _authRepository.sendPasswordResetEmail(resetEmailController.text.trim());
-                            if (ctx.mounted) {
-                              Navigator.pop(ctx);
+                            final email = resetEmailController.text.trim();
+                            if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Password reset instructions dispatched to your email!'),
-                                  backgroundColor: Color(0xFF00B96B),
+                                  content: Text('Please enter a valid registered email address'),
+                                  backgroundColor: Color(0xFFDC2626),
                                 ),
                               );
+                              return;
+                            }
+                            setSheetState(() => isSending = true);
+                            final res = await _authRepository.sendPasswordResetEmail(email);
+                            if (ctx.mounted) {
+                              Navigator.pop(ctx);
+                              if (res is Success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Password recovery instructions sent to your email!'),
+                                    backgroundColor: Color(0xFF00B96B),
+                                  ),
+                                );
+                              } else {
+                                final err = (res as Failure).message;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(err),
+                                    backgroundColor: const Color(0xFFDC2626),
+                                  ),
+                                );
+                              }
                             }
                           },
                     child: isSending

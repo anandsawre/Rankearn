@@ -36,6 +36,8 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   List<TestModel> _popularTests = [];
   List<TestModel> _tournaments = [];
+  List<CategoryModel> _liveCategories = [];
+  StreamSubscription<List<CategoryModel>>? _categoriesSub;
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadDashboardData() async {
     final testsRes = await TestsRepository().getTests();
     final tourRes = await ContestsRepository().getTournaments();
+    final catRes = await TestsRepository().getCategories();
 
     if (!mounted) return;
     setState(() {
@@ -55,7 +58,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (tourRes is Success<List<TestModel>>) {
         _tournaments = tourRes.data;
       }
+      if (catRes is Success<List<CategoryModel>> && catRes.data.isNotEmpty) {
+        _liveCategories = catRes.data;
+      }
     });
+
+    _categoriesSub ??= TestsRepository().streamCategories().listen((updated) {
+      if (mounted && updated.isNotEmpty) {
+        setState(() {
+          _liveCategories = updated;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _categoriesSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -462,52 +482,112 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  IconData _resolveCategoryIcon(String iconName) {
+    switch (iconName.toLowerCase()) {
+      case 'science':
+        return Icons.science_rounded;
+      case 'calculate':
+        return Icons.calculate_rounded;
+      case 'psychology':
+        return Icons.psychology_rounded;
+      case 'menu_book':
+        return Icons.menu_book_rounded;
+      case 'newspaper':
+        return Icons.newspaper_rounded;
+      case 'biotech':
+        return Icons.biotech_rounded;
+      case 'eco':
+        return Icons.eco_rounded;
+      case 'school':
+        return Icons.school_rounded;
+      case 'assignment':
+        return Icons.assignment_rounded;
+      case 'public':
+        return Icons.public_rounded;
+      case 'history':
+      case 'auto_stories':
+        return Icons.auto_stories_rounded;
+      case 'code':
+        return Icons.code_rounded;
+      default:
+        return Icons.folder_rounded;
+    }
+  }
+
+  Color _resolveCategoryColor(String hex, [Color fallback = const Color(0xFF2587F8)]) {
+    try {
+      final clean = hex.replaceAll('#', '').trim();
+      if (clean.length == 6) {
+        return Color(int.parse('FF$clean', radix: 16));
+      }
+      return fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
   // --- 5. Explore by Subject ---
   Widget _buildExploreBySubjectSection() {
-    final subjects = [
-      (
-        title: 'General\nScience',
-        count: '1200+ Qs',
-        icon: Icons.science_rounded,
-        accent: const Color(0xFF2587F8),
-        bg: const Color(0xFFF0F7FF),
-      ),
-      (
-        title: 'Mathematics',
-        count: '800+ Qs',
-        icon: Icons.calculate_rounded,
-        accent: const Color(0xFFF59E0B),
-        bg: const Color(0xFFFFFBEB),
-      ),
-      (
-        title: 'Reasoning',
-        count: '700+ Qs',
-        icon: Icons.psychology_rounded,
-        accent: const Color(0xFFF43F5E),
-        bg: const Color(0xFFFFF1F2),
-      ),
-      (
-        title: 'Current Affairs',
-        count: '500+ Qs',
-        icon: Icons.newspaper_rounded,
-        accent: const Color(0xFF8B5CF6),
-        bg: const Color(0xFFF5F3FF),
-      ),
-      (
-        title: 'Chemistry',
-        count: '600+ Qs',
-        icon: Icons.biotech_rounded,
-        accent: const Color(0xFF06B6D4),
-        bg: const Color(0xFFECFEFF),
-      ),
-      (
-        title: 'Biology',
-        count: '550+ Qs',
-        icon: Icons.eco_rounded,
-        accent: const Color(0xFF10B981),
-        bg: const Color(0xFFECFDF5),
-      ),
-    ];
+    final List<({String title, String count, IconData icon, Color accent, Color bg})> subjects;
+
+    if (_liveCategories.isNotEmpty) {
+      subjects = _liveCategories.map((c) {
+        final accent = _resolveCategoryColor(c.iconColor);
+        final countText = c.totalQuestions > 0 ? '${c.totalQuestions}+ Qs' : 'Practice Qs';
+        return (
+          title: c.name,
+          count: countText,
+          icon: _resolveCategoryIcon(c.iconName),
+          accent: accent,
+          bg: accent.withAlpha(20),
+        );
+      }).toList();
+    } else {
+      subjects = const [
+        (
+          title: 'General\nScience',
+          count: '1200+ Qs',
+          icon: Icons.science_rounded,
+          accent: Color(0xFF2587F8),
+          bg: Color(0xFFF0F7FF),
+        ),
+        (
+          title: 'Mathematics',
+          count: '800+ Qs',
+          icon: Icons.calculate_rounded,
+          accent: Color(0xFFF59E0B),
+          bg: Color(0xFFFFFBEB),
+        ),
+        (
+          title: 'Reasoning',
+          count: '700+ Qs',
+          icon: Icons.psychology_rounded,
+          accent: Color(0xFFF43F5E),
+          bg: Color(0xFFFFF1F2),
+        ),
+        (
+          title: 'Current Affairs',
+          count: '500+ Qs',
+          icon: Icons.newspaper_rounded,
+          accent: Color(0xFF8B5CF6),
+          bg: Color(0xFFF5F3FF),
+        ),
+        (
+          title: 'Chemistry',
+          count: '600+ Qs',
+          icon: Icons.biotech_rounded,
+          accent: Color(0xFF06B6D4),
+          bg: Color(0xFFECFEFF),
+        ),
+        (
+          title: 'Biology',
+          count: '550+ Qs',
+          icon: Icons.eco_rounded,
+          accent: Color(0xFF10B981),
+          bg: Color(0xFFECFDF5),
+        ),
+      ];
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

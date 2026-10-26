@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,17 +35,19 @@ void main() async {
     debugPrint('Supabase initialization: $e');
   }
 
-  runApp(const ProviderScope(child: RankearnUserApp(showAuthInitially: true)));
+  runApp(const ProviderScope(child: RankearnUserApp(autoCheckSession: true)));
 }
 
 class RankearnUserApp extends StatefulWidget {
   final List<TestModel>? initialTests;
-  final bool showAuthInitially;
+  final bool? showAuthInitially;
+  final bool autoCheckSession;
 
   const RankearnUserApp({
     super.key,
     this.initialTests,
-    this.showAuthInitially = false,
+    this.showAuthInitially,
+    this.autoCheckSession = false,
   });
 
   @override
@@ -52,17 +55,167 @@ class RankearnUserApp extends StatefulWidget {
 }
 
 class _RankearnUserAppState extends State<RankearnUserApp> {
+  final AuthRepository _authRepository = AuthRepository();
+  StreamSubscription<dynamic>? _authSubscription;
   late bool _showAuth;
+  bool _isCheckingSession = false;
   UserProfile? _currentUser;
 
   @override
   void initState() {
     super.initState();
-    _showAuth = widget.showAuthInitially;
+    if (widget.showAuthInitially != null) {
+      _showAuth = widget.showAuthInitially!;
+    } else if (widget.autoCheckSession) {
+      _showAuth = false;
+      _isCheckingSession = true;
+      _checkSession();
+    } else {
+      _showAuth = false;
+    }
+
+    if (widget.autoCheckSession) {
+      _subscribeAuth();
+    }
+  }
+
+  Future<void> _checkSession() async {
+    try {
+      if (_authRepository.isAuthenticated) {
+        final user = _authRepository.currentUser;
+        if (user != null) {
+          final res = await _authRepository.getProfile(user.id);
+          if (mounted) {
+            if (res case Success(:final data)) {
+              setState(() {
+                _currentUser = data;
+                _showAuth = false;
+                _isCheckingSession = false;
+              });
+              return;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Session check error: $e');
+    }
+    if (mounted) {
+      setState(() {
+        _currentUser = null;
+        _showAuth = true;
+        _isCheckingSession = false;
+      });
+    }
+  }
+
+  void _subscribeAuth() {
+    _authSubscription = _authRepository.authStateChanges.listen((authState) async {
+      final session = authState.session;
+      if (session != null) {
+        final res = await _authRepository.getProfile(session.user.id);
+        if (mounted) {
+          if (res case Success(:final data)) {
+            setState(() {
+              _currentUser = data;
+              _showAuth = false;
+            });
+          }
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _currentUser = null;
+            _showAuth = true;
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingSession) {
+      return MaterialApp(
+        title: 'Rankearn',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: Scaffold(
+          backgroundColor: Colors.white,
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF059669), Color(0xFF10B981)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF059669).withAlpha(60),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'R',
+                      style: TextStyle(
+                        fontSize: 38,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Rankearn',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Learn • Practice • Earn',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                const SizedBox(
+                  width: 26,
+                  height: 26,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return MaterialApp(
       title: 'Rankearn',
       debugShowCheckedModeBanner: false,
@@ -80,11 +233,18 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
           : UserAppShell(
               initialTests: widget.initialTests,
               initialProfile: _currentUser,
-              onLogout: () {
-                setState(() {
-                  _showAuth = true;
-                  _currentUser = null;
-                });
+              onLogout: () async {
+                try {
+                  await _authRepository.signOut();
+                } catch (e) {
+                  debugPrint('Logout error: $e');
+                }
+                if (mounted) {
+                  setState(() {
+                    _showAuth = true;
+                    _currentUser = null;
+                  });
+                }
               },
             ),
     );
@@ -128,6 +288,17 @@ class _UserAppShellState extends State<UserAppShell> {
           state: 'Bihar, India',
           createdAt: DateTime(2026, 10, 1),
         );
+  }
+
+  @override
+  void didUpdateWidget(covariant UserAppShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialProfile != null &&
+        widget.initialProfile != oldWidget.initialProfile) {
+      setState(() {
+        _profile = widget.initialProfile!;
+      });
+    }
   }
 
   int _unreadNotifications = 2;

@@ -75,34 +75,37 @@ class QuestionsRecentActivityCard extends StatelessWidget {
 
           // 4 Activity Items
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: const [
-                _ActivityRow(
-                  icon: Icons.check_rounded,
-                  iconBg: Color(0xFF10B981),
-                  text: 'New question added: What is the SI unit of force?',
-                  time: '5 minutes ago',
-                ),
-                _ActivityRow(
-                  icon: Icons.edit_rounded,
-                  iconBg: Color(0xFFF59E0B),
-                  text: 'Question updated: Find the missing number?',
-                  time: '18 minutes ago',
-                ),
-                _ActivityRow(
-                  icon: Icons.file_upload_outlined,
-                  iconBg: Color(0xFF0284C7),
-                  text: '50 questions imported from CSV',
-                  time: '1 hour ago',
-                ),
-                _ActivityRow(
-                  icon: Icons.inventory_2_outlined,
-                  iconBg: Color(0xFFF43F5E),
-                  text: 'Question archived: Old current affairs set',
-                  time: '2 hours ago',
-                ),
-              ],
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  _ActivityRow(
+                    icon: Icons.check_rounded,
+                    iconBg: Color(0xFF10B981),
+                    text: 'New question added: What is the SI unit of force?',
+                    time: '5 minutes ago',
+                  ),
+                  _ActivityRow(
+                    icon: Icons.edit_rounded,
+                    iconBg: Color(0xFFF59E0B),
+                    text: 'Question updated: Find the missing number?',
+                    time: '18 minutes ago',
+                  ),
+                  _ActivityRow(
+                    icon: Icons.file_upload_outlined,
+                    iconBg: Color(0xFF0284C7),
+                    text: '50 questions imported from CSV',
+                    time: '1 hour ago',
+                  ),
+                  _ActivityRow(
+                    icon: Icons.inventory_2_outlined,
+                    iconBg: Color(0xFFF43F5E),
+                    text: 'Question archived: Old current affairs set',
+                    time: '2 hours ago',
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -110,7 +113,7 @@ class QuestionsRecentActivityCard extends StatelessWidget {
     );
 
     if (fillHeight) return content;
-    return SizedBox(height: 140, child: content);
+    return SizedBox(height: 170, child: content);
   }
 }
 

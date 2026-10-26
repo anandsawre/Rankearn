@@ -22,6 +22,8 @@ class TestSeriesTableCard extends StatefulWidget {
   final Function(TestSeriesItem) onEdit;
   final Function(TestSeriesItem) onDelete;
   final Function(TestSeriesItem) onToggleStatus;
+  final Function(TestSeriesItem)? onAddQuestion;
+  final Function(TestSeriesItem)? onViewQuestions;
 
   const TestSeriesTableCard({
     super.key,
@@ -41,6 +43,8 @@ class TestSeriesTableCard extends StatefulWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onToggleStatus,
+    this.onAddQuestion,
+    this.onViewQuestions,
   });
 
   @override
@@ -98,6 +102,7 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
         widget.items.every((i) => _selectedIds.contains(i.id));
 
     return Container(
+      constraints: const BoxConstraints(minHeight: 520),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.borderLg,
@@ -443,12 +448,30 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
                           ),
                           // Total Questions
                           DataCell(
-                            Text(
-                              _formatNumber(item.totalQuestions),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                            InkWell(
+                              onTap: widget.onViewQuestions != null ? () => widget.onViewQuestions!(item) : null,
+                              borderRadius: BorderRadius.circular(4),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _formatNumber(item.totalQuestions),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: widget.onViewQuestions != null ? const Color(0xFF5636F5) : AppColors.textPrimary,
+                                        decoration: widget.onViewQuestions != null ? TextDecoration.underline : null,
+                                        decorationColor: const Color(0xFF5636F5).withValues(alpha: 0.35),
+                                      ),
+                                    ),
+                                    if (widget.onViewQuestions != null) ...[
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.open_in_new_rounded, size: 12, color: Color(0xFF5636F5)),
+                                    ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -487,7 +510,7 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
                               ),
                             ),
                           ),
-                          // Actions (View, Analytics, Edit, More)
+                          // Actions (View, Analytics, Edit, View Questions, Add Questions, More)
                           DataCell(
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -516,18 +539,67 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
                                   tooltip: 'Edit Series',
                                   onPressed: () => widget.onEdit(item),
                                 ),
+                                if (widget.onViewQuestions != null)
+                                  IconButton(
+                                    icon: const Icon(Icons.format_list_bulleted_rounded, size: 16),
+                                    color: const Color(0xFF0084FF),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                                    tooltip: 'View Questions',
+                                    onPressed: () => widget.onViewQuestions!(item),
+                                  ),
+                                if (widget.onAddQuestion != null)
+                                  IconButton(
+                                    icon: const Icon(Icons.post_add_rounded, size: 16),
+                                    color: const Color(0xFF5636F5),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                                    tooltip: 'Add Questions',
+                                    onPressed: () => widget.onAddQuestion!(item),
+                                  ),
                                 PopupMenuButton<String>(
                                   icon: const Icon(Icons.more_vert_rounded, size: 16, color: AppColors.textSecondary),
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
                                   onSelected: (val) {
-                                    if (val == 'toggle_status') {
+                                    if (val == 'view_questions') {
+                                      widget.onViewQuestions?.call(item);
+                                    } else if (val == 'add_question') {
+                                      widget.onAddQuestion?.call(item);
+                                    } else if (val == 'toggle_status') {
                                       widget.onToggleStatus(item);
                                     } else if (val == 'delete') {
                                       widget.onDelete(item);
                                     }
                                   },
                                   itemBuilder: (ctx) => [
+                                    if (widget.onViewQuestions != null)
+                                      const PopupMenuItem(
+                                        value: 'view_questions',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.format_list_bulleted_rounded, size: 14, color: Color(0xFF0084FF)),
+                                            SizedBox(width: 8),
+                                            Text(
+                                              'View Questions',
+                                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0084FF)),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    const PopupMenuItem(
+                                      value: 'add_question',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.post_add_rounded, size: 14, color: Color(0xFF5636F5)),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Add Questions',
+                                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF5636F5)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                     PopupMenuItem(
                                       value: 'toggle_status',
                                       child: Text(
@@ -797,3 +869,4 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
     letterSpacing: 0.1,
   );
 }
+

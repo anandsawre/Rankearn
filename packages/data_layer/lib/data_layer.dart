@@ -11,6 +11,8 @@ export 'models/question_model.dart';
 export 'models/wallet_transaction_model.dart';
 export 'models/battle_models.dart';
 export 'models/reward_models.dart';
+export 'models/category_model.dart';
+export 'models/exam_category_model.dart';
 
 // Repositories
 export 'repositories/auth_repository.dart';

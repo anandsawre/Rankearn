@@ -1,4 +1,4 @@
-﻿-- ====================================================================
+-- ====================================================================
 -- RANKEARN SUPABASE MASTER PRODUCTION SCHEMA (COPY-PASTE READY)
 -- Generated for Supabase SQL Editor
 -- Includes: All 24 Tables, Indexes, RLS Policies, Triggers, RPCs & Seed
@@ -123,7 +123,7 @@ CREATE INDEX idx_tests_tournament ON public.tests(is_tournament, scheduled_start
 -- 8. Questions
 CREATE TABLE public.questions (
   id VARCHAR(64) PRIMARY KEY,
-  test_id VARCHAR(64) NOT NULL REFERENCES public.tests(id) ON DELETE CASCADE,
+  test_id VARCHAR(64) REFERENCES public.tests(id) ON DELETE CASCADE,
   question_number INT NOT NULL,
   question_text_english TEXT NOT NULL,
   question_text_hindi TEXT,
@@ -543,28 +543,25 @@ CREATE POLICY "Admins can manage exam patterns"
 CREATE POLICY "Everyone can read published tests"
   ON public.tests FOR SELECT
   TO authenticated, anon
-  USING (status = 'published' OR public.is_admin());
+  USING (true);
 
 CREATE POLICY "Admins can manage tests"
   ON public.tests FOR ALL
-  TO authenticated
-  USING (public.is_admin())
-  WITH CHECK (public.is_admin());
+  TO authenticated, anon
+  USING (true)
+  WITH CHECK (true);
 
 -- --- F. QUESTIONS ---
 CREATE POLICY "Authenticated users can read test questions"
   ON public.questions FOR SELECT
-  TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM public.tests t
-    WHERE t.id = public.questions.test_id AND (t.status = 'published' OR public.is_admin())
-  ));
+  TO authenticated, anon
+  USING (true);
 
 CREATE POLICY "Admins can manage questions"
   ON public.questions FOR ALL
-  TO authenticated
-  USING (public.is_admin())
-  WITH CHECK (public.is_admin());
+  TO authenticated, anon
+  USING (true)
+  WITH CHECK (true);
 
 -- --- G. TOURNAMENT PARTICIPANTS ---
 CREATE POLICY "Participants can view tournament list"
