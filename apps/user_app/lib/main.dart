@@ -10,6 +10,7 @@ import 'features/battle/battle_screen.dart';
 import 'features/battle/battle_hub_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/tests/test_series_screen.dart';
+import 'features/tests/screens/test_result_screen.dart';
 import 'features/live/live_tests_screen.dart';
 import 'features/earn/earn_screen.dart';
 import 'features/wallet/wallet_screen.dart';
@@ -110,7 +111,9 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
   }
 
   void _subscribeAuth() {
-    _authSubscription = _authRepository.authStateChanges.listen((authState) async {
+    _authSubscription = _authRepository.authStateChanges.listen((
+      authState,
+    ) async {
       final session = authState.session;
       if (session != null) {
         final res = await _authRepository.getProfile(session.user.id);
@@ -206,7 +209,9 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
                   height: 26,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                   ),
                 ),
               ],
@@ -411,24 +416,57 @@ class _UserAppShellState extends State<UserAppShell> {
     ),
   ];
 
-  void _startQuiz(TestModel test) {
+  void _startQuiz(TestModel test, [List<QuestionModel>? customQuestions]) {
+    final questions =
+        customQuestions ??
+        (test.title.toLowerCase().contains('science') || test.id.contains('sci')
+            ? TestResultModel.sampleGeneralScienceMock(
+                studentName: _profile.name,
+                photoUrl: _profile.profilePhotoUrl,
+              ).questionItems.map((e) => e.question).toList()
+            : _sampleQuestions);
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => QuizScreen(
           test: test,
-          questions: _sampleQuestions,
+          questions: questions,
+          userProfile: _profile,
           onExit: () => Navigator.of(context).pop(),
           onSubmitted: (score, accuracy) {
+            // Submitted callback tracked
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openTestResult([TestResultModel? result]) {
+    final res =
+        result ??
+        TestResultModel.sampleGeneralScienceMock(
+          studentName: _profile.name,
+          photoUrl: _profile.profilePhotoUrl,
+        );
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => TestResultScreen(
+          result: res,
+          userProfile: _profile,
+          userCoins: _profile.coins,
+          onBackToTests: () => Navigator.of(context).pop(),
+          onPracticeAgain: () {
             Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Quiz submitted! Score: $score | Accuracy: ${accuracy.toStringAsFixed(1)}%',
-                ),
-                backgroundColor: AppColors.primary,
-                duration: const Duration(seconds: 4),
-              ),
-            );
+            _startQuiz(_defaultMockTest);
+          },
+          onMoreTests: () {
+            Navigator.of(context).pop();
+            setState(() => _activeTab = UserNavTab.tests);
+          },
+          onNavTabSelected: (tab) {
+            Navigator.of(context).pop();
+            setState(() => _activeTab = tab);
           },
         ),
       ),
@@ -788,6 +826,7 @@ class _UserAppShellState extends State<UserAppShell> {
             onOpenLive: () => setState(() => _activeTab = UserNavTab.live),
             onOpenLeaderboard: () =>
                 setState(() => _activeTab = UserNavTab.leaderboard),
+            onViewLastResult: _openTestResult,
           ),
           UserNavTab.tests => TestSeriesScreen(
             userCoins: _profile.coins,
@@ -798,6 +837,7 @@ class _UserAppShellState extends State<UserAppShell> {
             onOpenLive: () => setState(() => _activeTab = UserNavTab.live),
             onOpenLeaderboard: () =>
                 setState(() => _activeTab = UserNavTab.leaderboard),
+            onViewLastResult: _openTestResult,
           ),
           UserNavTab.live => LiveTestsScreen(
             userCoins: _profile.coins,

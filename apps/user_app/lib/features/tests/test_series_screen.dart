@@ -11,6 +11,7 @@ class TestSeriesScreen extends StatefulWidget {
   final VoidCallback? onSpinWheel;
   final VoidCallback? onOpenLive;
   final VoidCallback? onOpenLeaderboard;
+  final VoidCallback? onViewLastResult;
 
   const TestSeriesScreen({
     super.key,
@@ -21,6 +22,7 @@ class TestSeriesScreen extends StatefulWidget {
     this.onSpinWheel,
     this.onOpenLive,
     this.onOpenLeaderboard,
+    this.onViewLastResult,
   });
 
   @override
@@ -28,7 +30,8 @@ class TestSeriesScreen extends StatefulWidget {
 }
 
 class _TestSeriesScreenState extends State<TestSeriesScreen> {
-  int _selectedTypeIndex = 0; // 0: All Tests, 1: Daily Test, 2: Mock Tests, 3: PYQ, 4: Chapter Wise, 5: My Tests
+  int _selectedTypeIndex =
+      0; // 0: All Tests, 1: Daily Test, 2: Mock Tests, 3: PYQ, 4: Chapter Wise, 5: My Tests
   String? _selectedExamId; // null or 'all' = All Exams, or 'bpsc', 'ssc', etc.
   String? _selectedSubject;
   CategoryModel? _selectedCategory;
@@ -40,7 +43,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   List<CategoryModel> _allCategories = [];
   StreamSubscription<List<CategoryModel>>? _categoriesSub;
 
-  List<({String title, String questionCount, IconData icon, Color color, Color bg})> _subjects = const [
+  List<
+    ({String title, String questionCount, IconData icon, Color color, Color bg})
+  >
+  _subjects = const [
     (
       title: 'General Science',
       questionCount: '1200+ Qs',
@@ -85,16 +91,19 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     ),
   ];
 
-  final List<({
-    String title,
-    String description,
-    IconData icon,
-    Color color,
-    String testsCount,
-    String questionsCount,
-    IconData leftIcon,
-    IconData rightIcon,
-  })> _categories = const [
+  final List<
+    ({
+      String title,
+      String description,
+      IconData icon,
+      Color color,
+      String testsCount,
+      String questionsCount,
+      IconData leftIcon,
+      IconData rightIcon,
+    })
+  >
+  _categories = const [
     (
       title: 'Mock Tests',
       description: 'Full syllabus tests with real exam pattern.',
@@ -200,7 +209,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     }
   }
 
-  Color _resolveCategoryColor(String hex, [Color fallback = const Color(0xFF2587F8)]) {
+  Color _resolveCategoryColor(
+    String hex, [
+    Color fallback = const Color(0xFF2587F8),
+  ]) {
     try {
       final clean = hex.replaceAll('#', '').trim();
       if (clean.length == 6) {
@@ -215,16 +227,24 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   void _applyCategories([List<CategoryModel>? categories]) {
     final source = categories ?? _allCategories;
     if (source.isEmpty) return;
-    
+
     final filtered = (_selectedExamId == null || _selectedExamId == 'all')
         ? source
-        : source.where((c) => c.examCategoryId == null || c.examCategoryId == _selectedExamId).toList();
+        : source
+              .where(
+                (c) =>
+                    c.examCategoryId == null ||
+                    c.examCategoryId == _selectedExamId,
+              )
+              .toList();
 
     final mapped = filtered.map((c) {
       final accent = _resolveCategoryColor(c.iconColor);
       final countText = c.totalQuestions > 0
           ? '${c.totalQuestions}+ Qs'
-          : (c.topics.isNotEmpty ? '${c.topics.length} Chapters' : 'Practice Qs');
+          : (c.topics.isNotEmpty
+                ? '${c.topics.length} Chapters'
+                : 'Practice Qs');
       return (
         title: c.name,
         questionCount: countText,
@@ -423,13 +443,21 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       if (_selectedExamId != null && _selectedExamId != 'all') {
         final examQuery = _selectedExamId!.toLowerCase();
         final matchesTitle = test.title.toLowerCase().contains(examQuery);
-        final matchesCategory = test.categoryId != null && test.categoryId!.toLowerCase().contains(examQuery);
-        
+        final matchesCategory =
+            test.categoryId != null &&
+            test.categoryId!.toLowerCase().contains(examQuery);
+
         final testCat = _allCategories.cast<CategoryModel?>().firstWhere(
-          (c) => c != null && (c.id == test.categoryId || c.name.toLowerCase() == test.categoryId?.toLowerCase()),
+          (c) =>
+              c != null &&
+              (c.id == test.categoryId ||
+                  c.name.toLowerCase() == test.categoryId?.toLowerCase()),
           orElse: () => null,
         );
-        final matchesExamCat = testCat != null && (testCat.examCategoryId == null || testCat.examCategoryId == _selectedExamId);
+        final matchesExamCat =
+            testCat != null &&
+            (testCat.examCategoryId == null ||
+                testCat.examCategoryId == _selectedExamId);
 
         if (!matchesTitle && !matchesCategory && !matchesExamCat) {
           return false;
@@ -440,13 +468,17 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       if (_selectedCategory != null) {
         final catName = _selectedCategory!.name.toLowerCase();
         final catId = _selectedCategory!.id.toLowerCase();
-        final matchesCat = (test.categoryId != null && (test.categoryId!.toLowerCase() == catId || test.categoryId!.toLowerCase() == catName)) ||
+        final matchesCat =
+            (test.categoryId != null &&
+                (test.categoryId!.toLowerCase() == catId ||
+                    test.categoryId!.toLowerCase() == catName)) ||
             test.title.toLowerCase().contains(catName);
         if (!matchesCat) return false;
       } else if (_selectedSubject != null && _selectedSubject != 'All') {
         final subName = _selectedSubject!.replaceAll('\n', ' ').toLowerCase();
         if (!test.title.toLowerCase().contains(subName) &&
-            (test.categoryId == null || !test.categoryId!.toLowerCase().contains(subName))) {
+            (test.categoryId == null ||
+                !test.categoryId!.toLowerCase().contains(subName))) {
           return false;
         }
       }
@@ -455,7 +487,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       if (_selectedTopic != null && _selectedTopic != 'All') {
         final topicQuery = _selectedTopic!.toLowerCase();
         if (!test.title.toLowerCase().contains(topicQuery) &&
-            (test.categoryId == null || !test.categoryId!.toLowerCase().contains(topicQuery))) {
+            (test.categoryId == null ||
+                !test.categoryId!.toLowerCase().contains(topicQuery))) {
           return false;
         }
       }
@@ -473,7 +506,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             if (test.testMode != 'previous-year') return false;
             break;
           case 4: // Chapter Wise
-            if (test.testMode != 'chapter' && test.testMode != 'topic') return false;
+            if (test.testMode != 'chapter' && test.testMode != 'topic')
+              return false;
             break;
           case 5: // My Tests
             if (test.unlockPriceCoins > 0 && !test.isProOnly) return false;
@@ -535,7 +569,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               const SizedBox(height: 8),
               Text(
                 'Available ${categoryTitle.toLowerCase()} with official question patterns.',
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -567,12 +604,17 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           title: Row(
             children: const [
               Icon(Icons.add_task_rounded, color: Color(0xFF10B981)),
               SizedBox(width: 8),
-              Text('Create Your Own Test', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+              Text(
+                'Create Your Own Test',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -580,40 +622,52 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Customize questions, topics, and duration to target your weak areas.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                const Text(
+                  'Customize questions, topics, and duration to target your weak areas.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 16),
-                const Text('Select Subject:', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                const Text(
+                  'Select Subject:',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
-                  children: [
-                    'General Science',
-                    'Mathematics',
-                    'Reasoning',
-                    'Current Affairs',
-                    'Chemistry',
-                    'Biology',
-                  ].map((s) {
-                    final isSel = selectedSubject == s;
-                    return ChoiceChip(
-                      label: Text(s),
-                      selected: isSel,
-                      selectedColor: const Color(0xFF10B981),
-                      labelStyle: TextStyle(
-                        color: isSel ? Colors.white : AppColors.textPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      onSelected: (val) {
-                        if (val) setDialogState(() => selectedSubject = s);
-                      },
-                    );
-                  }).toList(),
+                  children:
+                      [
+                        'General Science',
+                        'Mathematics',
+                        'Reasoning',
+                        'Current Affairs',
+                        'Chemistry',
+                        'Biology',
+                      ].map((s) {
+                        final isSel = selectedSubject == s;
+                        return ChoiceChip(
+                          label: Text(s),
+                          selected: isSel,
+                          selectedColor: const Color(0xFF10B981),
+                          labelStyle: TextStyle(
+                            color: isSel ? Colors.white : AppColors.textPrimary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          onSelected: (val) {
+                            if (val) setDialogState(() => selectedSubject = s);
+                          },
+                        );
+                      }).toList(),
                 ),
                 const SizedBox(height: 16),
-                const Text('Number of Questions:', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                const Text(
+                  'Number of Questions:',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [10, 25, 50].map((count) {
@@ -629,13 +683,17 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                           fontWeight: FontWeight.w700,
                           fontSize: 11,
                         ),
-                        onSelected: (_) => setDialogState(() => questionCount = count),
+                        onSelected: (_) =>
+                            setDialogState(() => questionCount = count),
                       ),
                     );
                   }).toList(),
                 ),
                 const SizedBox(height: 16),
-                const Text('Difficulty Level:', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                const Text(
+                  'Difficulty Level:',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: ['Easy', 'Medium', 'Hard'].map((diff) {
@@ -651,7 +709,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                           fontWeight: FontWeight.w700,
                           fontSize: 11,
                         ),
-                        onSelected: (_) => setDialogState(() => difficulty = diff),
+                        onSelected: (_) =>
+                            setDialogState(() => difficulty = diff),
                       ),
                     );
                   }).toList(),
@@ -667,7 +726,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF10B981),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () {
                 Navigator.pop(ctx);
@@ -684,7 +745,13 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 );
                 widget.onStartTest(customTest);
               },
-              child: const Text('Generate & Start Test', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Generate & Start Test',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -701,7 +768,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           children: const [
             Icon(Icons.military_tech_rounded, color: Color(0xFFFFD633)),
             SizedBox(width: 8),
-            Text('Complete Test Series', style: TextStyle(fontWeight: FontWeight.w900)),
+            Text(
+              'Complete Test Series',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
           ],
         ),
         content: Column(
@@ -713,11 +783,20 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
-            _buildSeriesTile('70th BPSC Prelims 2026 Master Series', '30 Mocks • 4500 Qs • Bilingual'),
+            _buildSeriesTile(
+              '70th BPSC Prelims 2026 Master Series',
+              '30 Mocks • 4500 Qs • Bilingual',
+            ),
             const SizedBox(height: 10),
-            _buildSeriesTile('SSC CGL 2026 Tier 1 & 2 Champion Series', '50 Mocks • 7500 Qs • TCS Pattern'),
+            _buildSeriesTile(
+              'SSC CGL 2026 Tier 1 & 2 Champion Series',
+              '50 Mocks • 7500 Qs • TCS Pattern',
+            ),
             const SizedBox(height: 10),
-            _buildSeriesTile('RRB NTPC & Group D Super Series', '40 Mocks • 6000 Qs • Technical & Non-Tech'),
+            _buildSeriesTile(
+              'RRB NTPC & Group D Super Series',
+              '40 Mocks • 6000 Qs • Technical & Non-Tech',
+            ),
           ],
         ),
         actions: [
@@ -726,14 +805,22 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             child: const Text('Close'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5B21B6)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5B21B6),
+            ),
             onPressed: () {
               Navigator.pop(ctx);
               setState(() {
                 _selectedTypeIndex = 2; // Switch to Mock Tests
               });
             },
-            child: const Text('View All Series', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'View All Series',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -757,16 +844,33 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               color: const Color(0xFF7C3AED).withAlpha(30),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.assignment_turned_in_rounded, color: Color(0xFF7C3AED), size: 20),
+            child: const Icon(
+              Icons.assignment_turned_in_rounded,
+              color: Color(0xFF7C3AED),
+              size: 20,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary)),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -784,14 +888,20 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           children: const [
             Icon(Icons.lock_open_rounded, color: Color(0xFFF59E0B)),
             SizedBox(width: 8),
-            Text('Unlock Test Series', style: TextStyle(fontWeight: FontWeight.w900)),
+            Text(
+              'Unlock Test Series',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(test.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            Text(
+              test.title,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -806,13 +916,22 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   const Text('Price to Unlock:'),
                   Text(
                     '${test.unlockPriceCoins} Coins',
-                    style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFD97706)),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFD97706),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 10),
-            Text('Your current balance: ${widget.userCoins} Coins', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            Text(
+              'Your current balance: ${widget.userCoins} Coins',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -821,12 +940,20 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+            ),
             onPressed: () {
               Navigator.pop(ctx);
               widget.onStartTest(test);
             },
-            child: const Text('Unlock & Start', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Unlock & Start',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -838,108 +965,106 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 960;
-        final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 960;
+        final isTablet =
+            constraints.maxWidth >= 600 && constraints.maxWidth < 960;
 
         if (isDesktop) {
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 20,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Main Content Column (~72%)
-                    Expanded(
-                      flex: 72,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 1. Tests Hero Banner
-                          TestsHeroBanner(
-                            borderRadius: BorderRadius.circular(12),
-                            onStartPracticing: () {
-                              if (_filteredTests.isNotEmpty) {
-                                widget.onStartTest(_filteredTests.first);
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 18),
-
-                          // 2. Four User Statistics Cards
-                          _buildStatisticsGrid(isDesktop, isTablet),
-                          const SizedBox(height: 18),
-
-                          // 3. Exam Category Selector (Level 1 Drill-Down)
-                          _buildExamCategorySelector(isDesktop, isTablet),
-                          const SizedBox(height: 14),
-
-                          // Active Filter Breadcrumb Bar
-                          _buildBreadcrumbBar(),
-
-                          // 4. Test-Type Navigation Bar
-                          TestTypeNavigation(
-                            selectedIndex: _selectedTypeIndex,
-                            onSelect: (index) {
-                              setState(() {
-                                _selectedTypeIndex = index;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 22),
-
-                          // 5. Select Subject Section (Level 2 Drill-Down)
-                          _buildSelectSubjectSection(isDesktop: true),
-
-                          // 6. Topics & Chapters Drill-down (Level 3 Drill-Down)
-                          _buildTopicChipsSection(),
-                          const SizedBox(height: 22),
-
-                          // 7. Test Categories Section (2 columns)
-                          _buildTestCategoriesSection(isDesktop, isTablet),
-                          const SizedBox(height: 22),
-
-                          // 8. Bottom Promotional Banners ("Test Series" & "Create Your Own Test")
-                          _buildPromotionalBanners(isDesktop, isTablet),
-                          const SizedBox(height: 24),
-
-                          // 9. Filtered Tests Catalog List (Interactive Level 4 tests)
-                          _buildFilteredCatalogSection(),
-                          const SizedBox(height: 32),
-                        ],
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Main Content Column (~72%)
+                Expanded(
+                  flex: 72,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 1. Tests Hero Banner
+                      TestsHeroBanner(
+                        borderRadius: BorderRadius.circular(12),
+                        onStartPracticing: () {
+                          if (_filteredTests.isNotEmpty) {
+                            widget.onStartTest(_filteredTests.first);
+                          }
+                        },
                       ),
-                    ),
-                    const SizedBox(width: 24),
+                      const SizedBox(height: 18),
 
-                    // Right Sidebar Column (~28%)
-                    Expanded(
-                      flex: 28,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 1. Today's Goal
-                          _buildTodaysGoalSection(),
-                          const SizedBox(height: 20),
+                      // 2. Four User Statistics Cards
+                      _buildStatisticsGrid(isDesktop, isTablet),
+                      const SizedBox(height: 18),
 
-                          // 2. Quick Actions & Rewards
-                          _buildQuickActionsCard(),
-                          const SizedBox(height: 20),
+                      // 3. Exam Category Selector (Level 1 Drill-Down)
+                      _buildExamCategorySelector(isDesktop, isTablet),
+                      const SizedBox(height: 14),
 
-                          // 3. Upcoming Tests
-                          _buildUpcomingTestsSection(),
-                          const SizedBox(height: 20),
+                      // Active Filter Breadcrumb Bar
+                      _buildBreadcrumbBar(),
 
-                          // 4. Top Performers
-                          _buildTopPerformersSection(),
-                          const SizedBox(height: 32),
-                        ],
+                      // 4. Test-Type Navigation Bar
+                      TestTypeNavigation(
+                        selectedIndex: _selectedTypeIndex,
+                        onSelect: (index) {
+                          setState(() {
+                            _selectedTypeIndex = index;
+                          });
+                        },
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 22),
+
+                      // 5. Select Subject Section (Level 2 Drill-Down)
+                      _buildSelectSubjectSection(isDesktop: true),
+
+                      // 6. Topics & Chapters Drill-down (Level 3 Drill-Down)
+                      _buildTopicChipsSection(),
+                      const SizedBox(height: 22),
+
+                      // 7. Test Categories Section (2 columns)
+                      _buildTestCategoriesSection(isDesktop, isTablet),
+                      const SizedBox(height: 22),
+
+                      // 8. Bottom Promotional Banners ("Test Series" & "Create Your Own Test")
+                      _buildPromotionalBanners(isDesktop, isTablet),
+                      const SizedBox(height: 24),
+
+                      // 9. Filtered Tests Catalog List (Interactive Level 4 tests)
+                      _buildFilteredCatalogSection(),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
-              );
-            }
+                const SizedBox(width: 24),
+
+                // Right Sidebar Column (~28%)
+                Expanded(
+                  flex: 28,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 1. Today's Goal
+                      _buildTodaysGoalSection(),
+                      const SizedBox(height: 20),
+
+                      // 2. Quick Actions & Rewards
+                      _buildQuickActionsCard(),
+                      const SizedBox(height: 20),
+
+                      // 3. Upcoming Tests
+                      _buildUpcomingTestsSection(),
+                      const SizedBox(height: 20),
+
+                      // 4. Top Performers
+                      _buildTopPerformersSection(),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
 
         // Mobile & Tablet Layout (Single column stacking)
         return SingleChildScrollView(
@@ -1151,7 +1276,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 onTap: () => _onSelectExam(null),
                 child: const Text(
                   'View All Exams',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF10B981)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF10B981),
+                  ),
                 ),
               ),
           ],
@@ -1176,7 +1305,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   id: exam.id,
                   name: exam.name,
                   iconUrl: exam.iconUrl ?? '🎯',
-                  badgeText: '${exam.totalMocks} Mocks • ${exam.totalSectional} Sectional',
+                  badgeText:
+                      '${exam.totalMocks} Mocks • ${exam.totalSectional} Sectional',
                   isSelected: _selectedExamId == exam.id,
                   onTap: () => _onSelectExam(exam.id),
                 ),
@@ -1212,7 +1342,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: isSelected ? const Color(0x1A10B981) : const Color(0x06000000),
+            color: isSelected
+                ? const Color(0x1A10B981)
+                : const Color(0x06000000),
             blurRadius: isSelected ? 10 : 4,
             offset: const Offset(0, 3),
           ),
@@ -1236,7 +1368,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF10B981).withAlpha(25) : const Color(0xFFF1F5F9),
+                        color: isSelected
+                            ? const Color(0xFF10B981).withAlpha(25)
+                            : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       alignment: Alignment.center,
@@ -1252,7 +1386,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                           color: Color(0xFF10B981),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.check_rounded, color: Colors.white, size: 12),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 12,
+                        ),
                       ),
                   ],
                 ),
@@ -1262,7 +1400,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 12.5,
-                    color: isSelected ? const Color(0xFF065F46) : AppColors.textPrimary,
+                    color: isSelected
+                        ? const Color(0xFF065F46)
+                        : AppColors.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1273,7 +1413,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? const Color(0xFF047857) : AppColors.textMuted,
+                    color: isSelected
+                        ? const Color(0xFF047857)
+                        : AppColors.textMuted,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1288,14 +1430,20 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
   // --- Active Multi-Tier Breadcrumb Navigation Bar ---
   Widget _buildBreadcrumbBar() {
-    if ((_selectedExamId == null || _selectedExamId == 'all') && _selectedSubject == null && _selectedTopic == null) {
+    if ((_selectedExamId == null || _selectedExamId == 'all') &&
+        _selectedSubject == null &&
+        _selectedTopic == null) {
       return const SizedBox.shrink();
     }
 
-    final examName = _examCategories.cast<ExamCategoryModel?>().firstWhere(
-          (e) => e != null && e.id == _selectedExamId,
-          orElse: () => null,
-        )?.name ??
+    final examName =
+        _examCategories
+            .cast<ExamCategoryModel?>()
+            .firstWhere(
+              (e) => e != null && e.id == _selectedExamId,
+              orElse: () => null,
+            )
+            ?.name ??
         _selectedExamId?.toUpperCase() ??
         'All Exams';
 
@@ -1309,7 +1457,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.filter_alt_rounded, size: 16, color: Color(0xFF15803D)),
+          const Icon(
+            Icons.filter_alt_rounded,
+            size: 16,
+            color: Color(0xFF15803D),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: SingleChildScrollView(
@@ -1319,28 +1471,48 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   if (_selectedExamId != null && _selectedExamId != 'all') ...[
                     Text(
                       examName,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF15803D)),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF15803D),
+                      ),
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF15803D)),
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: Color(0xFF15803D),
+                      ),
                     ),
                   ],
                   if (_selectedSubject != null) ...[
                     Text(
                       _selectedSubject!,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF15803D)),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF15803D),
+                      ),
                     ),
                     if (_selectedTopic != null)
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 6),
-                        child: Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF15803D)),
+                        child: Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: Color(0xFF15803D),
+                        ),
                       ),
                   ],
                   if (_selectedTopic != null) ...[
                     Text(
                       _selectedTopic!,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF047857)),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF047857),
+                      ),
                     ),
                   ],
                 ],
@@ -1372,7 +1544,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   SizedBox(width: 4),
                   Text(
                     'Clear Filter',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF15803D)),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF15803D),
+                    ),
                   ),
                 ],
               ),
@@ -1394,7 +1570,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             Expanded(
               child: Row(
                 children: const [
-                  Icon(Icons.grid_view_rounded, color: Color(0xFF2587F8), size: 19),
+                  Icon(
+                    Icons.grid_view_rounded,
+                    color: Color(0xFF2587F8),
+                    size: 19,
+                  ),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1490,12 +1670,15 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
   // --- Topic & Chapter Drill-down Chips ---
   Widget _buildTopicChipsSection() {
-    final activeCat = _selectedCategory ??
+    final activeCat =
+        _selectedCategory ??
         (_selectedSubject != null
             ? _allCategories.cast<CategoryModel?>().firstWhere(
-                  (c) => c != null && c.name.toLowerCase() == _selectedSubject!.toLowerCase(),
-                  orElse: () => null,
-                )
+                (c) =>
+                    c != null &&
+                    c.name.toLowerCase() == _selectedSubject!.toLowerCase(),
+                orElse: () => null,
+              )
             : null);
 
     if (activeCat == null || activeCat.topics.isEmpty) {
@@ -1518,7 +1701,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.bookmarks_rounded, size: 16, color: Color(0xFF7C3AED)),
+                const Icon(
+                  Icons.bookmarks_rounded,
+                  size: 16,
+                  color: Color(0xFF7C3AED),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   '${activeCat.name} Chapters & Topics',
@@ -1531,7 +1718,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 const Spacer(),
                 Text(
                   '${topics.length} Chapters',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -1550,13 +1741,19 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                       backgroundColor: Colors.white,
                       selectedColor: const Color(0xFF7C3AED),
                       labelStyle: TextStyle(
-                        color: _selectedTopic == null ? Colors.white : AppColors.textPrimary,
+                        color: _selectedTopic == null
+                            ? Colors.white
+                            : AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                         fontSize: 11.5,
                       ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       side: BorderSide(
-                        color: _selectedTopic == null ? const Color(0xFF7C3AED) : const Color(0xFFCBD5E1),
+                        color: _selectedTopic == null
+                            ? const Color(0xFF7C3AED)
+                            : const Color(0xFFCBD5E1),
                       ),
                     ),
                   ),
@@ -1570,13 +1767,19 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                         backgroundColor: Colors.white,
                         selectedColor: const Color(0xFF7C3AED),
                         labelStyle: TextStyle(
-                          color: _selectedTopic == t ? Colors.white : AppColors.textPrimary,
+                          color: _selectedTopic == t
+                              ? Colors.white
+                              : AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                           fontSize: 11.5,
                         ),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         side: BorderSide(
-                          color: _selectedTopic == t ? const Color(0xFF7C3AED) : const Color(0xFFCBD5E1),
+                          color: _selectedTopic == t
+                              ? const Color(0xFF7C3AED)
+                              : const Color(0xFFCBD5E1),
                         ),
                       ),
                     ),
@@ -1674,98 +1877,100 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   // --- Right Sidebar: 1. Today's Goal ---
   Widget _buildTodaysGoalSection() {
     return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE3EAF7), width: 1.2),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x06101A3A),
-                blurRadius: 10,
-                offset: Offset(0, 3),
-              ),
-            ],
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE3EAF7), width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06101A3A),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  _buildDartboardTarget(),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              _buildDartboardTarget(),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Today's Goal",
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "Today's Goal",
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                        const Flexible(
+                          child: Text(
+                            '3/5 Tests',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Flexible(
-                              child: Text(
-                                '3/5 Tests',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.textPrimary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF10B981).withAlpha(25),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: Color(0xFF10B981),
                             ),
-                            Container(
-                              width: 26,
-                              height: 26,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFF10B981).withAlpha(25),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.chevron_right_rounded,
-                                  size: 18,
-                                  color: Color(0xFF10B981),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: const LinearProgressIndicator(
-                            value: 0.6,
-                            minHeight: 6,
-                            backgroundColor: Color(0xFFE2E8F0),
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Complete 5 tests today to earn 50 coins!',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: const LinearProgressIndicator(
+                        value: 0.6,
+                        minHeight: 6,
+                        backgroundColor: Color(0xFFE2E8F0),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF10B981),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-        );
+          const SizedBox(height: 12),
+          const Text(
+            'Complete 5 tests today to earn 50 coins!',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildDartboardTarget() {
@@ -1946,7 +2151,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               widget.onOpenBattle!();
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Entering 1v1 Quiz Battle Arena...')),
+                const SnackBar(
+                  content: Text('Entering 1v1 Quiz Battle Arena...'),
+                ),
               );
             }
           },
@@ -2009,6 +2216,77 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             ),
           ),
         ),
+        const SizedBox(height: 10),
+        // Action 3: Latest Test Result (General Science)
+        InkWell(
+          onTap: () {
+            if (widget.onViewLastResult != null) {
+              widget.onViewLastResult!();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Opening Test Result...')),
+              );
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8FAF2),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFB9F0DA), width: 1.2),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF00B96B).withAlpha(35),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.emoji_events_rounded,
+                      color: Color(0xFF008C52),
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'General Science (Score 42/50)',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF10194F),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        '84% Accuracy • Rank #12 • View Result',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF008C52),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFF008C52),
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -2024,7 +2302,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             Expanded(
               child: Row(
                 children: const [
-                  Icon(Icons.calendar_month_rounded, color: Color(0xFF2587F8), size: 20),
+                  Icon(
+                    Icons.calendar_month_rounded,
+                    color: Color(0xFF2587F8),
+                    size: 20,
+                  ),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -2061,7 +2343,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                     ),
                   ),
                   SizedBox(width: 2),
-                  Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF2587F8)),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: Color(0xFF2587F8),
+                  ),
                 ],
               ),
             ),
@@ -2169,7 +2455,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 Expanded(
                   child: Row(
                     children: const [
-                      Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 20),
+                      Icon(
+                        Icons.emoji_events_rounded,
+                        color: Color(0xFFF59E0B),
+                        size: 20,
+                      ),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -2192,7 +2482,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                       widget.onOpenLeaderboard!();
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Viewing All-India Leaderboard...')),
+                        const SnackBar(
+                          content: Text('Viewing All-India Leaderboard...'),
+                        ),
                       );
                     }
                   },
@@ -2208,7 +2500,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                         ),
                       ),
                       SizedBox(width: 2),
-                      Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF2587F8)),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 14,
+                        color: Color(0xFF2587F8),
+                      ),
                     ],
                   ),
                 ),
@@ -2223,109 +2519,109 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 _buildLeaderboardRow(
                   rank: 1,
                   name: 'Aarav Sharma',
-                coins: '3,420',
-                rankBgColor: const Color(0xFFFEF3C7),
-                rankTextColor: const Color(0xFFD97706),
-                avatarColor: const Color(0xFF3B82F6),
-                isUser: false,
-              ),
-              const Divider(height: 14, color: Color(0xFFF1F5F9)),
-              _buildLeaderboardRow(
-                rank: 2,
-                name: 'Priya Patel',
-                coins: '2,980',
-                rankBgColor: const Color(0xFFF1F5F9),
-                rankTextColor: const Color(0xFF64748B),
-                avatarColor: const Color(0xFFEC4899),
-                isUser: false,
-              ),
-              const Divider(height: 14, color: Color(0xFFF1F5F9)),
-              _buildLeaderboardRow(
-                rank: 3,
-                name: 'Vikram Singh (You)',
-                coins: '1,450',
-                rankBgColor: const Color(0xFFFFEDD5),
-                rankTextColor: const Color(0xFFB45309),
-                avatarColor: const Color(0xFF10B981),
-                isUser: true,
-              ),
-              const Divider(height: 14, color: Color(0xFFF1F5F9)),
-              _buildLeaderboardRow(
-                rank: 4,
-                name: 'Ananya Mishra',
-                coins: '1,320',
-                rankBgColor: const Color(0xFFF8FAFC),
-                rankTextColor: const Color(0xFF64748B),
-                avatarColor: const Color(0xFF8B5CF6),
-                isUser: false,
-              ),
-              const Divider(height: 14, color: Color(0xFFF1F5F9)),
-              _buildLeaderboardRow(
-                rank: 5,
-                name: 'Rohan Verma',
-                coins: '1,190',
-                rankBgColor: const Color(0xFFF8FAFC),
-                rankTextColor: const Color(0xFF64748B),
-                avatarColor: const Color(0xFFF59E0B),
-                isUser: false,
-              ),
-              const Divider(height: 14, color: Color(0xFFF1F5F9)),
-              _buildLeaderboardRow(
-                rank: 6,
-                name: 'Sneha Reddy',
-                coins: '1,050',
-                rankBgColor: const Color(0xFFF8FAFC),
-                rankTextColor: const Color(0xFF64748B),
-                avatarColor: const Color(0xFF06B6D4),
-                isUser: false,
-              ),
-              const Divider(height: 14, color: Color(0xFFF1F5F9)),
-              _buildLeaderboardRow(
-                rank: 7,
-                name: 'Rahul Kumar',
-                coins: '980',
-                rankBgColor: const Color(0xFFF8FAFC),
-                rankTextColor: const Color(0xFF64748B),
-                avatarColor: const Color(0xFF6366F1),
-                isUser: false,
-              ),
-              const Divider(height: 14, color: Color(0xFFF1F5F9)),
-              _buildLeaderboardRow(
-                rank: 8,
-                name: 'Pooja Gupta',
-                coins: '890',
-                rankBgColor: const Color(0xFFF8FAFC),
-                rankTextColor: const Color(0xFF64748B),
-                avatarColor: const Color(0xFFF43F5E),
-                isUser: false,
-              ),
-              const Divider(height: 14, color: Color(0xFFF1F5F9)),
-              _buildLeaderboardRow(
-                rank: 9,
-                name: 'Amit Deshmukh',
-                coins: '810',
-                rankBgColor: const Color(0xFFF8FAFC),
-                rankTextColor: const Color(0xFF64748B),
-                avatarColor: const Color(0xFF14B8A6),
-                isUser: false,
-              ),
-              const Divider(height: 14, color: Color(0xFFF1F5F9)),
-              _buildLeaderboardRow(
-                rank: 10,
-                name: 'Neha Joshi',
-                coins: '750',
-                rankBgColor: const Color(0xFFF8FAFC),
-                rankTextColor: const Color(0xFF64748B),
-                avatarColor: const Color(0xFF84CC16),
-                isUser: false,
-              ),
-            ],
+                  coins: '3,420',
+                  rankBgColor: const Color(0xFFFEF3C7),
+                  rankTextColor: const Color(0xFFD97706),
+                  avatarColor: const Color(0xFF3B82F6),
+                  isUser: false,
+                ),
+                const Divider(height: 14, color: Color(0xFFF1F5F9)),
+                _buildLeaderboardRow(
+                  rank: 2,
+                  name: 'Priya Patel',
+                  coins: '2,980',
+                  rankBgColor: const Color(0xFFF1F5F9),
+                  rankTextColor: const Color(0xFF64748B),
+                  avatarColor: const Color(0xFFEC4899),
+                  isUser: false,
+                ),
+                const Divider(height: 14, color: Color(0xFFF1F5F9)),
+                _buildLeaderboardRow(
+                  rank: 3,
+                  name: 'Vikram Singh (You)',
+                  coins: '1,450',
+                  rankBgColor: const Color(0xFFFFEDD5),
+                  rankTextColor: const Color(0xFFB45309),
+                  avatarColor: const Color(0xFF10B981),
+                  isUser: true,
+                ),
+                const Divider(height: 14, color: Color(0xFFF1F5F9)),
+                _buildLeaderboardRow(
+                  rank: 4,
+                  name: 'Ananya Mishra',
+                  coins: '1,320',
+                  rankBgColor: const Color(0xFFF8FAFC),
+                  rankTextColor: const Color(0xFF64748B),
+                  avatarColor: const Color(0xFF8B5CF6),
+                  isUser: false,
+                ),
+                const Divider(height: 14, color: Color(0xFFF1F5F9)),
+                _buildLeaderboardRow(
+                  rank: 5,
+                  name: 'Rohan Verma',
+                  coins: '1,190',
+                  rankBgColor: const Color(0xFFF8FAFC),
+                  rankTextColor: const Color(0xFF64748B),
+                  avatarColor: const Color(0xFFF59E0B),
+                  isUser: false,
+                ),
+                const Divider(height: 14, color: Color(0xFFF1F5F9)),
+                _buildLeaderboardRow(
+                  rank: 6,
+                  name: 'Sneha Reddy',
+                  coins: '1,050',
+                  rankBgColor: const Color(0xFFF8FAFC),
+                  rankTextColor: const Color(0xFF64748B),
+                  avatarColor: const Color(0xFF06B6D4),
+                  isUser: false,
+                ),
+                const Divider(height: 14, color: Color(0xFFF1F5F9)),
+                _buildLeaderboardRow(
+                  rank: 7,
+                  name: 'Rahul Kumar',
+                  coins: '980',
+                  rankBgColor: const Color(0xFFF8FAFC),
+                  rankTextColor: const Color(0xFF64748B),
+                  avatarColor: const Color(0xFF6366F1),
+                  isUser: false,
+                ),
+                const Divider(height: 14, color: Color(0xFFF1F5F9)),
+                _buildLeaderboardRow(
+                  rank: 8,
+                  name: 'Pooja Gupta',
+                  coins: '890',
+                  rankBgColor: const Color(0xFFF8FAFC),
+                  rankTextColor: const Color(0xFF64748B),
+                  avatarColor: const Color(0xFFF43F5E),
+                  isUser: false,
+                ),
+                const Divider(height: 14, color: Color(0xFFF1F5F9)),
+                _buildLeaderboardRow(
+                  rank: 9,
+                  name: 'Amit Deshmukh',
+                  coins: '810',
+                  rankBgColor: const Color(0xFFF8FAFC),
+                  rankTextColor: const Color(0xFF64748B),
+                  avatarColor: const Color(0xFF14B8A6),
+                  isUser: false,
+                ),
+                const Divider(height: 14, color: Color(0xFFF1F5F9)),
+                _buildLeaderboardRow(
+                  rank: 10,
+                  name: 'Neha Joshi',
+                  coins: '750',
+                  rankBgColor: const Color(0xFFF8FAFC),
+                  rankTextColor: const Color(0xFF64748B),
+                  avatarColor: const Color(0xFF84CC16),
+                  isUser: false,
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   Widget _buildLeaderboardRow({
     required int rank,
@@ -2342,10 +2638,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         Container(
           width: 24,
           height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: rankBgColor,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: rankBgColor),
           child: Center(
             child: Text(
               '$rank',
@@ -2473,10 +2766,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 _selectedTopic != null
                     ? '${_selectedTopic!} Practice Tests (${_filteredTests.length})'
                     : (_selectedSubject != null
-                        ? '${_selectedSubject!.replaceAll('\n', ' ')} Tests (${_filteredTests.length})'
-                        : (_selectedExamId != null && _selectedExamId != 'all'
-                            ? '${_selectedExamId!.toUpperCase()} Mocks & Tests (${_filteredTests.length})'
-                            : 'Recommended Tests (${_filteredTests.length})')),
+                          ? '${_selectedSubject!.replaceAll('\n', ' ')} Tests (${_filteredTests.length})'
+                          : (_selectedExamId != null && _selectedExamId != 'all'
+                                ? '${_selectedExamId!.toUpperCase()} Mocks & Tests (${_filteredTests.length})'
+                                : 'Recommended Tests (${_filteredTests.length})')),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -2525,9 +2818,16 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.menu_book_outlined, size: 40, color: AppColors.textMuted),
+                  const Icon(
+                    Icons.menu_book_outlined,
+                    size: 40,
+                    color: AppColors.textMuted,
+                  ),
                   const SizedBox(height: 8),
-                  const Text('No tests found matching criteria', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const Text(
+                    'No tests found matching criteria',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
                   const SizedBox(height: 12),
                   AppButton(
                     label: 'Show All Tests',
@@ -2588,7 +2888,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(8),
@@ -2604,7 +2907,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                     ),
                     if (test.isPremium || test.unlockPriceCoins > 0)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFFBEB),
                           borderRadius: BorderRadius.circular(8),
@@ -2612,25 +2918,40 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.monetization_on, size: 12, color: Color(0xFFF59E0B)),
+                            const Icon(
+                              Icons.monetization_on,
+                              size: 12,
+                              color: Color(0xFFF59E0B),
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               '${test.unlockPriceCoins} Coins',
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFD97706)),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFD97706),
+                              ),
                             ),
                           ],
                         ),
                       )
                     else
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFECFDF5),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
                           '100% Free',
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF059669),
+                          ),
                         ),
                       ),
                   ],
@@ -2640,11 +2961,19 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.schedule_rounded, size: 14, color: AppColors.textMuted),
+                  const Icon(
+                    Icons.schedule_rounded,
+                    size: 14,
+                    color: AppColors.textMuted,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     '${test.durationMinutes} mins',
-                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -2653,12 +2982,19 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           const SizedBox(height: 8),
           Text(
             test.title,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5, color: AppColors.textPrimary),
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 13.5,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             '${test.totalQuestions} Questions • -${test.negativeMarking} Negative • Mode: ${test.testMode.toUpperCase()}',
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -2672,7 +3008,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    color: test.isPremium ? const Color(0xFFD97706) : const Color(0xFF059669),
+                    color: test.isPremium
+                        ? const Color(0xFFD97706)
+                        : const Color(0xFF059669),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2682,7 +3020,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               AppButton(
                 label: test.isPremium ? 'Unlock Test' : 'Start Test',
                 size: AppButtonSize.small,
-                backgroundColor: test.isPremium ? const Color(0xFF7C3AED) : const Color(0xFF10B981),
+                backgroundColor: test.isPremium
+                    ? const Color(0xFF7C3AED)
+                    : const Color(0xFF10B981),
                 foregroundColor: Colors.white,
                 borderRadius: AppRadii.borderMd,
                 onPressed: () {

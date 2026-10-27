@@ -13,6 +13,7 @@ export 'models/battle_models.dart';
 export 'models/reward_models.dart';
 export 'models/category_model.dart';
 export 'models/exam_category_model.dart';
+export 'models/test_result_model.dart';
 
 // Repositories
 export 'repositories/auth_repository.dart';

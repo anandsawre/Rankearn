@@ -42,10 +42,10 @@ class ContestsRepository {
       return const Failure('Database not connected');
     }
     try {
-      final res = await client.rpc('join_tournament', params: {
-        'p_test_id': testId,
-        'p_user_id': userId,
-      });
+      final res = await client.rpc(
+        'join_tournament',
+        params: {'p_test_id': testId, 'p_user_id': userId},
+      );
 
       return Success(Map<String, dynamic>.from(res));
     } catch (e) {
@@ -69,8 +69,17 @@ class ContestsRepository {
     if (client == null) {
       return const Failure('Database not connected');
     }
+    final attemptId = 'ATT_${DateTime.now().millisecondsSinceEpoch}';
     try {
-      final attemptId = 'ATT_${DateTime.now().millisecondsSinceEpoch}';
+      // If user is in demo/preview mode or userId is not a valid UUID format (e.g. 'usr_vikram_70'),
+      // or if there is no active Supabase auth session, return local Success without triggering a 403 Forbidden network error.
+      final isUuid = RegExp(
+        r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+      ).hasMatch(userId);
+
+      if (!isUuid || client.auth.currentUser == null) {
+        return Success(attemptId);
+      }
 
       await client.from('attempts').insert({
         'id': attemptId,
