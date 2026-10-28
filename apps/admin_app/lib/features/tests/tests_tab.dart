@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
@@ -45,7 +46,7 @@ class _TestsTabState extends State<TestsTab> {
   @override
   void initState() {
     super.initState();
-    _allItems = widget.initialItems ?? List.from(TestSeriesItem.referenceData);
+    _allItems = widget.initialItems ?? [];
     _loadFromSupabase();
   }
 
@@ -59,18 +60,16 @@ class _TestsTabState extends State<TestsTab> {
           .select()
           .order('created_at', ascending: false);
 
-      if (res.isNotEmpty) {
-        if (!mounted) return;
-        setState(() {
-          _allItems = res
-              .asMap()
-              .entries
-              .map((e) => TestSeriesItem.fromMap(e.value, e.key + 1))
-              .toList();
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _allItems = res
+            .asMap()
+            .entries
+            .map((e) => TestSeriesItem.fromMap(e.value, e.key + 1))
+            .toList();
+      });
     } catch (e) {
-      debugPrint('TestsTab Supabase fetch (using robust fallback dataset): $e');
+      debugPrint('TestsTab Supabase fetch error: $e');
     }
   }
 
@@ -121,12 +120,64 @@ class _TestsTabState extends State<TestsTab> {
     return (count / _rowsPerPage).ceil();
   }
 
-  // Metric aggregates
-  int get _totalTestSeries => 42; // Matches reference header & chart
-  int get _publishedCount => _allItems.where((i) => i.status == TestSeriesStatus.published).length >= 5 ? 38 : _allItems.where((i) => i.status == TestSeriesStatus.published).length;
-  int get _draftsCount => _allItems.any((i) => i.status == TestSeriesStatus.draft) ? 3 : 0;
-  int get _totalTests => 428;
-  int get _totalEnrollments => 12458;
+  // Dynamic Metric aggregates
+  int get _totalTestSeries => _allItems.length;
+  int get _publishedCount =>
+      _allItems.where((i) => i.status == TestSeriesStatus.published).length;
+  int get _draftsCount =>
+      _allItems.where((i) => i.status == TestSeriesStatus.draft).length;
+  int get _totalTests =>
+      _allItems.fold<int>(0, (sum, i) => sum + i.totalTests);
+  int get _totalEnrollments =>
+      _allItems.fold<int>(0, (sum, i) => sum + i.enrollments);
+
+  // Dynamic Subject Slices for Donut Chart
+  List<DonutSlice> get _subjectSlices {
+    if (_allItems.isEmpty) return const [];
+    final Map<String, int> counts = {};
+    for (final item in _allItems) {
+      final sub = item.subject.trim().isEmpty ? 'General' : item.subject.trim();
+      counts[sub] = (counts[sub] ?? 0) + 1;
+    }
+    const colors = [
+      Color(0xFF3B82F6),
+      Color(0xFF8B5CF6),
+      Color(0xFFF59E0B),
+      Color(0xFF06B6D4),
+      Color(0xFFEC4899),
+      Color(0xFFEA580C),
+      Color(0xFF10B981),
+      Color(0xFF6366F1),
+    ];
+    int colorIdx = 0;
+    return counts.entries.map((entry) {
+      final pct = (entry.value / _allItems.length) * 100;
+      final color = colors[colorIdx % colors.length];
+      colorIdx++;
+      return DonutSlice(
+        label: entry.key,
+        percentage: pct.roundToDouble(),
+        color: color,
+        count: entry.value,
+      );
+    }).toList();
+  }
+
+  // Dynamic Recent Activity from test series items
+  List<ActivityItemData> get _recentActivities {
+    if (_allItems.isEmpty) return const [];
+    final items = _allItems.take(5).toList();
+    return items.map((item) {
+      final isPub = item.status == TestSeriesStatus.published;
+      return ActivityItemData(
+        icon: isPub ? Icons.check_circle_rounded : Icons.edit_note_rounded,
+        iconColor: isPub ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+        iconBgColor: isPub ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+        text: '${isPub ? "Published" : "Draft"}: ${item.title}',
+        timeAgo: '${item.totalQuestions} Questions',
+      );
+    }).toList();
+  }
 
   // Actions
   void _openCreateDialog([TestSeriesItem? itemToEdit]) {
@@ -198,6 +249,17 @@ class _TestsTabState extends State<TestsTab> {
       builder: (ctx) => CreateQuestionDialog(
         initialTestSeriesTitle: item?.title,
         initialTestId: item?.id,
+        onBulkSave: (importedQuestions) {
+          if (item != null) {
+            final newCount = item.totalQuestions + importedQuestions.length;
+            setState(() {
+              final idx = _allItems.indexWhere((i) => i.id == item.id);
+              if (idx >= 0) {
+                _allItems[idx] = _allItems[idx].copyWith(totalQuestions: newCount);
+              }
+            });
+          }
+        },
         onSave: (savedQuestion) async {
           String? syncNotice;
           final client = SupabaseConfig.clientSafe;
@@ -272,11 +334,20 @@ class _TestsTabState extends State<TestsTab> {
               } catch (tErr) {
                 debugPrint('Parent test upsert note: $tErr');
               }
-              final payload = importedQuestions.map((q) {
-                var map = q.toMap();
-                map['test_id'] = targetTest.id;
-                return map;
-              }).toList();
+              final seenIds = <String>{};
+              final payload = <Map<String, dynamic>>[];
+              for (int i = 0; i < importedQuestions.length; i++) {
+                final m = importedQuestions[i].toMap();
+                m['test_id'] = targetTest.id;
+                String qId = m['id']?.toString() ?? '';
+                if (qId.isEmpty || seenIds.contains(qId)) {
+                  qId = 'q_${DateTime.now().microsecondsSinceEpoch}_${i + 1}_${math.Random().nextInt(999999)}';
+                  m['id'] = qId;
+                }
+                seenIds.add(qId);
+                m['question_number'] = targetTest.totalQuestions + i + 1;
+                payload.add(m);
+              }
               await client.from('questions').upsert(payload);
 
               final newCount = targetTest.totalQuestions + importedQuestions.length;
@@ -635,15 +706,22 @@ class _TestsTabState extends State<TestsTab> {
                     SizedBox(
                       width: 295,
                       child: Column(
-                        children: const [
+                        children: [
                           Expanded(
                             flex: 46,
-                            child: SubjectWiseChartCard(fillHeight: true),
+                            child: SubjectWiseChartCard(
+                              fillHeight: true,
+                              totalCount: _totalTestSeries,
+                              slices: _subjectSlices,
+                            ),
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                           Expanded(
                             flex: 54,
-                            child: RecentActivityCard(fillHeight: true),
+                            child: RecentActivityCard(
+                              fillHeight: true,
+                              activities: _recentActivities,
+                            ),
                           ),
                         ],
                       ),
@@ -694,10 +772,19 @@ class _TestsTabState extends State<TestsTab> {
                   const SizedBox(height: 16),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Expanded(child: SubjectWiseChartCard()),
-                      SizedBox(width: 16),
-                      Expanded(child: RecentActivityCard()),
+                    children: [
+                      Expanded(
+                        child: SubjectWiseChartCard(
+                          totalCount: _totalTestSeries,
+                          slices: _subjectSlices,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: RecentActivityCard(
+                          activities: _recentActivities,
+                        ),
+                      ),
                     ],
                   ),
                 ],

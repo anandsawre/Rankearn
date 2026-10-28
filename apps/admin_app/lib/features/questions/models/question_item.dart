@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 enum QuestionStatus {
@@ -65,7 +66,12 @@ class QuestionOptionItem {
     return QuestionOptionItem(label: label, text: text);
   }
 
-  Map<String, dynamic> toMap() => {'label': label, 'text': text};
+  Map<String, dynamic> toMap() => {
+        'label': label,
+        'text': text,
+        'textEnglish': text,
+        'text_english': text,
+      };
 }
 
 class QuestionItem {
@@ -241,7 +247,9 @@ class QuestionItem {
         'medium';
 
     return QuestionItem(
-      id: map['id']?.toString() ?? 'q-${DateTime.now().millisecondsSinceEpoch}',
+      id: (map['id'] != null && map['id'].toString().trim().isNotEmpty)
+          ? map['id'].toString()
+          : 'q_${DateTime.now().microsecondsSinceEpoch}_${defaultNumber}_${math.Random().nextInt(999999)}',
       questionNumber: qNum,
       questionText: map['question_text_english']?.toString() ??
           map['question_text']?.toString() ??

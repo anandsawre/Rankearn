@@ -442,6 +442,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       // 1. Exam category filter
       if (_selectedExamId != null && _selectedExamId != 'all') {
         final examQuery = _selectedExamId!.toLowerCase();
+        final matchesExamId = test.examCategoryId != null &&
+            (test.examCategoryId!.toLowerCase() == examQuery ||
+                test.examCategoryId!.toLowerCase().contains(examQuery) ||
+                examQuery.contains(test.examCategoryId!.toLowerCase()));
         final matchesTitle = test.title.toLowerCase().contains(examQuery);
         final matchesCategory =
             test.categoryId != null &&
@@ -459,7 +463,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             (testCat.examCategoryId == null ||
                 testCat.examCategoryId == _selectedExamId);
 
-        if (!matchesTitle && !matchesCategory && !matchesExamCat) {
+        if (!matchesExamId && !matchesTitle && !matchesCategory && !matchesExamCat) {
           return false;
         }
       }
@@ -471,14 +475,17 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         final matchesCat =
             (test.categoryId != null &&
                 (test.categoryId!.toLowerCase() == catId ||
-                    test.categoryId!.toLowerCase() == catName)) ||
+                    test.categoryId!.toLowerCase() == catName ||
+                    test.categoryId!.toLowerCase().contains(catName) ||
+                    catName.contains(test.categoryId!.toLowerCase()))) ||
             test.title.toLowerCase().contains(catName);
         if (!matchesCat) return false;
       } else if (_selectedSubject != null && _selectedSubject != 'All') {
         final subName = _selectedSubject!.replaceAll('\n', ' ').toLowerCase();
         if (!test.title.toLowerCase().contains(subName) &&
             (test.categoryId == null ||
-                !test.categoryId!.toLowerCase().contains(subName))) {
+                (!test.categoryId!.toLowerCase().contains(subName) &&
+                    !subName.contains(test.categoryId!.toLowerCase())))) {
           return false;
         }
       }
@@ -506,8 +513,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             if (test.testMode != 'previous-year') return false;
             break;
           case 4: // Chapter Wise
-            if (test.testMode != 'chapter' && test.testMode != 'topic')
+            if (test.testMode != 'chapter' && test.testMode != 'topic') {
               return false;
+            }
             break;
           case 5: // My Tests
             if (test.unlockPriceCoins > 0 && !test.isProOnly) return false;
@@ -969,12 +977,16 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             constraints.maxWidth >= 600 && constraints.maxWidth < 960;
 
         if (isDesktop) {
-          return SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          return RefreshIndicator(
+            onRefresh: _loadTests,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 // Main Content Column (~72%)
                 Expanded(
                   flex: 72,
@@ -1063,19 +1075,24 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 ),
               ],
             ),
+          ),
           );
         }
 
         // Mobile & Tablet Layout (Single column stacking)
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.symmetric(
-            horizontal: isTablet ? 20 : 16,
-            vertical: 16,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        return RefreshIndicator(
+          onRefresh: _loadTests,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            padding: EdgeInsets.symmetric(
+              horizontal: isTablet ? 20 : 16,
+              vertical: 16,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // 1. Tests Hero Banner
               TestsHeroBanner(
                 borderRadius: BorderRadius.circular(12),
@@ -1145,6 +1162,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               const SizedBox(height: 32),
             ],
           ),
+        ),
         );
       },
     );

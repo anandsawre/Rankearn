@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import '../models/test_series_item.dart';
@@ -70,93 +71,15 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
       }
     }
 
-    // Fallback: Generate contextual realistic sample questions if DB has no records yet
+    // If DB has no questions for this test yet, show empty state instead of fake dummy questions
     if (!mounted) return;
     setState(() {
-      _questions = _generateFallbackQuestions();
+      _questions = [];
       _isLoading = false;
     });
   }
 
-  List<QuestionItem> _generateFallbackQuestions() {
-    final sub = widget.item.subject;
-    final title = widget.item.title;
 
-    return [
-      QuestionItem(
-        id: 'q-demo-1',
-        questionNumber: 1,
-        questionText: 'What is the primary objective of $title?',
-        questionTextHindi: '$title का प्राथमिक उद्देश्य क्या है?',
-        subject: sub,
-        testSeriesTitle: title,
-        testId: widget.item.id,
-        difficulty: QuestionDifficulty.easy,
-        correctAnswerIndex: 0,
-        correctAnswerChar: 'A',
-        options: const [
-          QuestionOptionItem(label: 'A', text: 'To assess conceptual clarity and exam-readiness.'),
-          QuestionOptionItem(label: 'B', text: 'To memorize facts without practical reasoning.'),
-          QuestionOptionItem(label: 'C', text: 'To focus exclusively on negative marking.'),
-          QuestionOptionItem(label: 'D', text: 'None of the above options.'),
-        ],
-        explanation: 'Test series are structured to enhance accuracy, time management, and conceptual mastery.',
-        marks: 1.0,
-        negativeMarks: 0.25,
-        status: QuestionStatus.published,
-        createdAt: DateTime.now(),
-        usageCount: 142,
-      ),
-      QuestionItem(
-        id: 'q-demo-2',
-        questionNumber: 2,
-        questionText: 'Which law or principle governs the core analytical framework of $sub?',
-        questionTextHindi: '$sub के विश्लेषणात्मक ढांचे को कौन सा सिद्धांत नियंत्रित करता है?',
-        subject: sub,
-        testSeriesTitle: title,
-        testId: widget.item.id,
-        difficulty: QuestionDifficulty.medium,
-        correctAnswerIndex: 1,
-        correctAnswerChar: 'B',
-        options: const [
-          QuestionOptionItem(label: 'A', text: 'Empirical Trial & Error model'),
-          QuestionOptionItem(label: 'B', text: 'Standard syllabus framework and foundational rules'),
-          QuestionOptionItem(label: 'C', text: 'Randomized probabilistic distribution'),
-          QuestionOptionItem(label: 'D', text: 'Non-deterministic qualitative matrix'),
-        ],
-        explanation: 'Core questions are calibrated according to the official curriculum and historical paper patterns.',
-        marks: 1.0,
-        negativeMarks: 0.25,
-        status: QuestionStatus.published,
-        createdAt: DateTime.now(),
-        usageCount: 98,
-      ),
-      QuestionItem(
-        id: 'q-demo-3',
-        questionNumber: 3,
-        questionText: 'In high-yield competitive assessments, what is the best strategy for solving multi-step questions?',
-        questionTextHindi: 'प्रतियोगी परीक्षाओं में बहु-चरणीय प्रश्नों को हल करने की सर्वोत्तम रणनीति क्या है?',
-        subject: sub,
-        testSeriesTitle: title,
-        testId: widget.item.id,
-        difficulty: QuestionDifficulty.hard,
-        correctAnswerIndex: 2,
-        correctAnswerChar: 'C',
-        options: const [
-          QuestionOptionItem(label: 'A', text: 'Guessing immediately based on intuition.'),
-          QuestionOptionItem(label: 'B', text: 'Skipping all medium difficulty problems entirely.'),
-          QuestionOptionItem(label: 'C', text: 'Eliminating impossible options and calculating systematically.'),
-          QuestionOptionItem(label: 'D', text: 'Spending over 5 minutes per question in round one.'),
-        ],
-        explanation: 'Elimination of implausible distractors improves probability of accurate scoring significantly.',
-        marks: 2.0,
-        negativeMarks: 0.50,
-        status: QuestionStatus.published,
-        createdAt: DateTime.now(),
-        usageCount: 65,
-      ),
-    ];
-  }
 
   List<QuestionItem> get _filteredQuestions {
     return _questions.where((q) {
@@ -186,6 +109,19 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
         initialItem: itemToEdit,
         initialTestSeriesTitle: widget.item.title,
         initialTestId: widget.item.id,
+        onBulkSave: (importedQuestions) {
+          final itemsToStore = importedQuestions.map((q) {
+            return (q.testId != null && q.testId!.isNotEmpty)
+                ? q
+                : q.copyWith(testId: widget.item.id);
+          }).toList();
+
+          setState(() {
+            _questions.insertAll(0, itemsToStore);
+          });
+
+          widget.onQuestionsUpdated?.call();
+        },
         onSave: (savedQuestion) async {
           final questionToStore = (savedQuestion.testId != null && savedQuestion.testId!.isNotEmpty)
               ? savedQuestion
@@ -270,12 +206,24 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
                 debugPrint('Parent test upsert notice: $e');
               }
 
-              // 2. Attach test_id to all imported questions
-              final payload = importedQuestions.map((q) {
-                final m = q.toMap();
+              // 2. Attach test_id and ensure strictly unique IDs and sequential question numbers
+              final seenIds = <String>{};
+              final currentMaxNumber = _questions.fold<int>(0, (max, q) => q.questionNumber > max ? q.questionNumber : max);
+              final payload = <Map<String, dynamic>>[];
+
+              for (int i = 0; i < importedQuestions.length; i++) {
+                final m = importedQuestions[i].toMap();
                 m['test_id'] = widget.item.id;
-                return m;
-              }).toList();
+
+                String qId = m['id']?.toString() ?? '';
+                if (qId.isEmpty || seenIds.contains(qId)) {
+                  qId = 'q_${DateTime.now().microsecondsSinceEpoch}_${i + 1}_${math.Random().nextInt(999999)}';
+                  m['id'] = qId;
+                }
+                seenIds.add(qId);
+                m['question_number'] = currentMaxNumber + i + 1;
+                payload.add(m);
+              }
 
               await client.from('questions').upsert(payload);
 
@@ -812,16 +760,34 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 14),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5636F5),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              ),
-              icon: const Icon(Icons.post_add_rounded, size: 16),
-              label: const Text('Add First Question', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-              onPressed: () => _openAddQuestionDialog(),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5636F5),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  ),
+                  icon: const Icon(Icons.post_add_rounded, size: 16),
+                  label: const Text('Add Question', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  onPressed: () => _openAddQuestionDialog(),
+                ),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF10B981),
+                    side: const BorderSide(color: Color(0xFF10B981)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  ),
+                  icon: const Icon(Icons.cloud_upload_rounded, size: 16),
+                  label: const Text('Import Questions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  onPressed: () => _openImportQuestionsDialog(),
+                ),
+              ],
             ),
           ],
         ),

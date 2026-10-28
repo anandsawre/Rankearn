@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import '../models/question_item.dart';
@@ -8,6 +9,7 @@ class CreateQuestionDialog extends StatefulWidget {
   final String? initialTestSeriesTitle;
   final String? initialTestId;
   final ValueChanged<QuestionItem> onSave;
+  final ValueChanged<List<QuestionItem>>? onBulkSave;
 
   const CreateQuestionDialog({
     super.key,
@@ -15,6 +17,7 @@ class CreateQuestionDialog extends StatefulWidget {
     this.initialTestSeriesTitle,
     this.initialTestId,
     required this.onSave,
+    this.onBulkSave,
   });
 
   @override
@@ -220,36 +223,108 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
         onImport: (importedList) async {
           if (importedList.isEmpty) return;
 
-          final targetTestId = widget.initialTestId ?? _testTitleToId[_selectedTestSeries];
+          // 1. Determine effective test ID and title
+          final selectedTitle = _selectedTestSeries.trim();
+          final rawTargetTestId = widget.initialTestId ?? _testTitleToId[selectedTitle];
+          final effectiveTestId = (rawTargetTestId != null && rawTargetTestId.isNotEmpty)
+              ? rawTargetTestId
+              : (selectedTitle.isNotEmpty && selectedTitle != 'All Test Series'
+                  ? 'test-${selectedTitle.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')}'
+                  : 'general-question-bank');
+          final effectiveTestTitle = widget.initialTestSeriesTitle ??
+              (selectedTitle.isNotEmpty ? selectedTitle : 'Question Bank');
+
           final client = SupabaseConfig.clientSafe;
+          String? syncNotice;
+
           if (client != null) {
+            // 2. Ensure parent test exists in `tests` table so foreign key constraint passes
             try {
-              final payload = importedList.map((q) {
-                final m = q.toMap();
-                if (targetTestId != null && targetTestId.isNotEmpty) {
-                  m['test_id'] = targetTestId;
+              await client.from('tests').upsert({
+                'id': effectiveTestId,
+                'title': effectiveTestTitle,
+                'test_mode': 'mock',
+                'duration_minutes': 60,
+                'total_questions': importedList.length,
+                'status': 'published',
+                'category_id': 'General Science',
+                'exam_category_id': 'bpsc',
+              });
+            } catch (tErr) {
+              debugPrint('Parent test ensure note: $tErr');
+            }
+
+            // 3. Prepare questions payload with test_id guaranteed
+            try {
+              final seenIds = <String>{};
+              final payload = <Map<String, dynamic>>[];
+              for (int i = 0; i < importedList.length; i++) {
+                final m = importedList[i].toMap();
+                m['test_id'] = effectiveTestId;
+                String qId = m['id']?.toString() ?? '';
+                if (qId.isEmpty || seenIds.contains(qId)) {
+                  qId = 'q_${DateTime.now().microsecondsSinceEpoch}_${i + 1}_${math.Random().nextInt(999999)}';
+                  m['id'] = qId;
                 }
-                return m;
-              }).toList();
+                seenIds.add(qId);
+                m['question_number'] = i + 1;
+                payload.add(m);
+              }
+
               await client.from('questions').upsert(payload);
+
+              // 4. Update parent test total_questions count in cloud
+              try {
+                await client.from('tests').update({
+                  'total_questions': importedList.length,
+                }).eq('id', effectiveTestId);
+              } catch (_) {}
             } catch (e) {
-              debugPrint('Bulk import Supabase sync: $e');
+              debugPrint('Bulk import Supabase sync error: $e');
+              final errStr = e.toString().toLowerCase();
+              if (errStr.contains('42501') || errStr.contains('row-level security')) {
+                syncNotice = 'Imported locally! (Run Supabase RLS SQL migration for cloud sync)';
+              } else if (errStr.contains('23502') || errStr.contains('test_id')) {
+                syncNotice = 'Imported locally! (Run test_id DROP NOT NULL SQL migration in Supabase)';
+              } else if (errStr.contains('23503') || errStr.contains('foreign key')) {
+                syncNotice = 'Imported locally! (Parent test foreign key missing in Supabase)';
+              } else {
+                syncNotice = 'Imported locally! (Cloud sync note: $e)';
+              }
             }
           }
 
-          for (final q in importedList) {
-            final itemWithTest = (targetTestId != null && targetTestId.isNotEmpty)
-                ? q.copyWith(testId: targetTestId)
-                : q;
-            widget.onSave(itemWithTest);
+          // 5. Update local state
+          final itemsWithTest = importedList.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final q = entry.value;
+            return q.copyWith(
+              testId: effectiveTestId,
+              testSeriesTitle: effectiveTestTitle,
+              questionNumber: idx + 1,
+            );
+          }).toList();
+
+          if (widget.onBulkSave != null) {
+            widget.onBulkSave!(itemsWithTest);
+          } else {
+            for (final q in itemsWithTest) {
+              widget.onSave(q);
+            }
           }
 
+          // 6. Dismiss CreateQuestionDialog & show success/notice SnackBar
           if (mounted) {
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Successfully imported ${importedList.length} questions!'),
-                backgroundColor: const Color(0xFF10B981),
+                content: Text(
+                  syncNotice ??
+                      'Successfully imported ${importedList.length} questions into "$effectiveTestTitle"!',
+                ),
+                backgroundColor: syncNotice != null
+                    ? const Color(0xFFF59E0B)
+                    : const Color(0xFF10B981),
               ),
             );
           }

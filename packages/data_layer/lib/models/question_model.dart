@@ -19,16 +19,23 @@ class QuestionOption {
 
   factory QuestionOption.fromMap(Map<String, dynamic> map) {
     return QuestionOption(
-      textEnglish: map['textEnglish']?.toString() ?? map['text_english']?.toString() ?? '',
-      textHindi: map['textHindi']?.toString() ?? map['text_hindi']?.toString(),
-      image: map['image']?.toString(),
+      textEnglish: map['text']?.toString() ??
+          map['textEnglish']?.toString() ??
+          map['text_english']?.toString() ??
+          '',
+      textHindi: map['textHindi']?.toString() ??
+          map['text_hindi']?.toString() ??
+          map['text_hi']?.toString(),
+      image: map['image']?.toString() ?? map['image_url']?.toString(),
     );
   }
 
   Map<String, dynamic> toMap() => {
+        'text': textEnglish,
         'textEnglish': textEnglish,
-        'textHindi': textHindi,
-        'image': image,
+        if (textHindi != null) 'textHindi': textHindi,
+        if (textHindi != null) 'text_hindi': textHindi,
+        if (image != null) 'image': image,
       };
 }
 
@@ -91,6 +98,21 @@ class QuestionModel {
       }
     }
 
+    int parsedCorrectAnswer = 0;
+    final rawCorrect = map['correct_answer'] ?? map['correctAnswer'];
+    if (rawCorrect is num) {
+      parsedCorrectAnswer = rawCorrect.toInt();
+    } else if (rawCorrect != null) {
+      final str = rawCorrect.toString().trim().toUpperCase();
+      const labels = ['A', 'B', 'C', 'D', 'E', 'F'];
+      final idx = labels.indexOf(str);
+      if (idx >= 0) {
+        parsedCorrectAnswer = idx;
+      } else {
+        parsedCorrectAnswer = int.tryParse(str) ?? 0;
+      }
+    }
+
     return QuestionModel(
       id: map['id']?.toString() ?? '',
       testId: map['test_id']?.toString() ?? map['testId']?.toString() ?? '',
@@ -98,7 +120,7 @@ class QuestionModel {
       questionTextEnglish: map['question_text_english']?.toString() ?? map['questionTextEnglish']?.toString() ?? '',
       questionTextHindi: map['question_text_hindi']?.toString() ?? map['questionTextHindi']?.toString(),
       options: parsedOptions,
-      correctAnswer: (map['correct_answer'] as num?)?.toInt() ?? (map['correctAnswer'] as num?)?.toInt() ?? 0,
+      correctAnswer: parsedCorrectAnswer,
       explanationEnglish: map['explanation_english']?.toString() ?? map['explanation']?.toString(),
       explanationHindi: map['explanation_hindi']?.toString() ?? map['explanationHindi']?.toString(),
       difficultyLevel: map['difficulty_level']?.toString() ?? map['difficultyLevel']?.toString() ?? 'medium',

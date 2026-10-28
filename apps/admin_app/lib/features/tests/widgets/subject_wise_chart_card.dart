@@ -15,16 +15,8 @@ class SubjectWiseChartCard extends StatelessWidget {
     super.key,
     this.height,
     this.fillHeight = false,
-    this.totalCount = 42,
-    this.slices = const [
-      DonutSlice(label: 'General Science', percentage: 24, color: Color(0xFF3B82F6)),
-      DonutSlice(label: 'Mathematics', percentage: 20, color: Color(0xFF8B5CF6)),
-      DonutSlice(label: 'Reasoning', percentage: 18, color: Color(0xFFF59E0B)),
-      DonutSlice(label: 'Current Affairs', percentage: 14, color: Color(0xFF06B6D4)),
-      DonutSlice(label: 'Chemistry', percentage: 10, color: Color(0xFFEC4899)),
-      DonutSlice(label: 'Biology', percentage: 8, color: Color(0xFFEA580C)),
-      DonutSlice(label: 'Others', percentage: 6, color: Color(0xFF94A3B8)),
-    ],
+    this.totalCount = 0,
+    this.slices = const [],
   });
 
   @override
@@ -35,7 +27,9 @@ class SubjectWiseChartCard extends StatelessWidget {
       iconBg: const Color(0xFF3B82F6),
       totalCount: totalCount,
       totalLabel: 'Total',
-      slices: slices,
+      slices: slices.isEmpty
+          ? const [DonutSlice(label: 'No Data', percentage: 100, color: Color(0xFFCBD5E1))]
+          : slices,
       height: height,
       fillHeight: fillHeight,
       chartSize: 92,

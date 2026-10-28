@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/question_item.dart';
 
@@ -120,7 +121,9 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
               errorList.add('Item #${i + 1} has empty question text.');
               continue;
             }
-            validList.add(QuestionItem.fromMap(map, i + 1));
+            final qItem = QuestionItem.fromMap(map, i + 1);
+            final safeId = 'imp_${DateTime.now().microsecondsSinceEpoch}_${i + 1}_${math.Random().nextInt(999999)}';
+            validList.add(qItem.copyWith(id: safeId, questionNumber: i + 1));
           }
         }
       } catch (e) {
@@ -183,7 +186,7 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
 
           validList.add(
             QuestionItem(
-              id: 'imp-${DateTime.now().millisecondsSinceEpoch}-$i',
+              id: 'imp_${DateTime.now().microsecondsSinceEpoch}_${i}_${math.Random().nextInt(999999)}',
               questionNumber: i,
               questionText: qText,
               subject: subject,

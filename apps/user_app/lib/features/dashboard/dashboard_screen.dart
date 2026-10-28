@@ -6,6 +6,7 @@ import 'package:data_layer/data_layer.dart';
 class DashboardScreen extends StatefulWidget {
   final UserProfile profile;
   final VoidCallback onStartTest;
+  final void Function(TestModel test)? onStartTestModel;
   final VoidCallback onExploreTests;
   final VoidCallback onJoinContest;
   final VoidCallback onSpinWheel;
@@ -19,6 +20,7 @@ class DashboardScreen extends StatefulWidget {
     super.key,
     required this.profile,
     required this.onStartTest,
+    this.onStartTestModel,
     required this.onExploreTests,
     required this.onJoinContest,
     required this.onSpinWheel,
@@ -76,6 +78,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void dispose() {
     _categoriesSub?.cancel();
     super.dispose();
+  }
+
+  void _triggerStartTest([TestModel? test]) {
+    final target = test ?? (_popularTests.isNotEmpty ? _popularTests.first : null);
+    if (widget.onStartTestModel != null && target != null) {
+      widget.onStartTestModel!(target);
+    } else {
+      widget.onStartTest();
+    }
   }
 
   @override
@@ -450,14 +461,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           subtitle: activeSubtitle,
           progress: 0.65,
           tag: activeTag,
-          onContinue: widget.onStartTest,
+          onContinue: () => _triggerStartTest(),
           onViewAll: widget.onExploreTests,
         );
 
         final goalCard = TodayGoalCard(
           completed: 3,
           target: 5,
-          onTap: widget.onStartTest,
+          onTap: () => _triggerStartTest(),
         );
 
         if (isWide) {
@@ -911,7 +922,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       subtitle: activeSubtitle,
       progress: 0.65,
       tag: activeTag,
-      onContinue: widget.onStartTest,
+      onContinue: () => _triggerStartTest(),
       onViewAll: widget.onExploreTests,
     );
   }

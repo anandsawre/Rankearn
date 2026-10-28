@@ -158,6 +158,11 @@ class _QuestionsTabState extends State<QuestionsTab> {
       context: context,
       builder: (ctx) => CreateQuestionDialog(
         initialItem: itemToEdit,
+        onBulkSave: (importedQuestions) {
+          setState(() {
+            _allItems.insertAll(0, importedQuestions);
+          });
+        },
         onSave: (savedItem) async {
           setState(() {
             final idx = _allItems.indexWhere((i) => i.id == savedItem.id);

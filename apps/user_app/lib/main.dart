@@ -416,15 +416,65 @@ class _UserAppShellState extends State<UserAppShell> {
     ),
   ];
 
-  void _startQuiz(TestModel test, [List<QuestionModel>? customQuestions]) {
-    final questions =
-        customQuestions ??
-        (test.title.toLowerCase().contains('science') || test.id.contains('sci')
-            ? TestResultModel.sampleGeneralScienceMock(
-                studentName: _profile.name,
-                photoUrl: _profile.profilePhotoUrl,
-              ).questionItems.map((e) => e.question).toList()
-            : _sampleQuestions);
+  Future<void> _startQuiz(TestModel test, [List<QuestionModel>? customQuestions]) async {
+    List<QuestionModel> questions = customQuestions ?? [];
+
+    if (questions.isEmpty) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(
+          child: Card(
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                  SizedBox(width: 16),
+                  Text(
+                    'Loading questions...',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      try {
+        final qRes = await TestsRepository().getQuestions(test.id);
+        if (qRes is Success<List<QuestionModel>> && qRes.data.isNotEmpty) {
+          questions = qRes.data;
+        }
+      } catch (e) {
+        debugPrint('Error loading questions: $e');
+      }
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
+
+    if (questions.isEmpty) {
+      questions = (test.title.toLowerCase().contains('science') || test.id.contains('sci')
+          ? TestResultModel.sampleGeneralScienceMock(
+              studentName: _profile.name,
+              photoUrl: _profile.profilePhotoUrl,
+            ).questionItems.map((e) => e.question).toList()
+          : _sampleQuestions);
+    }
+
+    if (!mounted) return;
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -811,6 +861,7 @@ class _UserAppShellState extends State<UserAppShell> {
           UserNavTab.home => DashboardScreen(
             profile: _profile,
             onStartTest: () => _startQuiz(_defaultMockTest),
+            onStartTestModel: (test) => _startQuiz(test),
             onExploreTests: () => setState(() => _activeTab = UserNavTab.tests),
             onJoinContest: () => setState(() => _activeTab = UserNavTab.live),
             onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),

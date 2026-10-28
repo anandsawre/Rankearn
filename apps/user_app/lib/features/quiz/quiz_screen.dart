@@ -133,8 +133,15 @@ class _QuizScreenState extends State<QuizScreen> {
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
-  int _getStatusCount(QuestionStatus status) {
-    return _statusMap.values.where((s) => s == status).length;
+  int _getStatusCount(QuestionStatus status, [String? section]) {
+    final targetSection = section ?? _activeSection;
+    if (targetSection == 'All') {
+      return _statusMap.values.where((s) => s == status).length;
+    }
+    return widget.questions.where((q) {
+      if ((q.subject ?? 'General') != targetSection) return false;
+      return (_statusMap[q.id] ?? QuestionStatus.notVisited) == status;
+    }).length;
   }
 
   List<String> get _sections {
@@ -708,14 +715,14 @@ class _QuizScreenState extends State<QuizScreen> {
   // ==========================================================================
   Future<void> _showSubmitConfirmation() async {
     final answered =
-        _getStatusCount(QuestionStatus.answered) +
-        _getStatusCount(QuestionStatus.answeredAndMarked);
+        _getStatusCount(QuestionStatus.answered, 'All') +
+        _getStatusCount(QuestionStatus.answeredAndMarked, 'All');
     final total = widget.questions.length;
-    final notAnswered = _getStatusCount(QuestionStatus.notAnswered);
+    final notAnswered = _getStatusCount(QuestionStatus.notAnswered, 'All');
     final marked =
-        _getStatusCount(QuestionStatus.markedForReview) +
-        _getStatusCount(QuestionStatus.answeredAndMarked);
-    final notVisited = _getStatusCount(QuestionStatus.notVisited);
+        _getStatusCount(QuestionStatus.markedForReview, 'All') +
+        _getStatusCount(QuestionStatus.answeredAndMarked, 'All');
+    final notVisited = _getStatusCount(QuestionStatus.notVisited, 'All');
 
     final shouldSubmit = await showDialog<bool>(
       context: context,
@@ -1009,7 +1016,7 @@ class _QuizScreenState extends State<QuizScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // Question Subheader
-                            _buildQuestionSubheader(),
+                            _buildQuestionSubheader(isDesktop),
 
                             // Scrollable Question & Options
                             Expanded(
@@ -1343,7 +1350,7 @@ class _QuizScreenState extends State<QuizScreen> {
   // ==========================================================================
   // Section 3: Question Subheader Bar (#F8F9FA)
   // ==========================================================================
-  Widget _buildQuestionSubheader() {
+  Widget _buildQuestionSubheader(bool isDesktop) {
     return Container(
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1429,27 +1436,36 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
           const SizedBox(width: 8),
 
-          // View Instructions Link
-          InkWell(
-            onTap: _showInstructionsDialog,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: Color(0xFF2563EB),
-                  size: 14,
+          // View Instructions Link (Icon only on mobile, Icon + Text on desktop)
+          Tooltip(
+            message: 'View Instructions',
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: _showInstructionsDialog,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: Color(0xFF2563EB),
+                      size: 18,
+                    ),
+                    if (isDesktop) ...[
+                      const SizedBox(width: 4),
+                      const Text(
+                        'View Instructions',
+                        style: TextStyle(
+                          color: Color(0xFF2563EB),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                SizedBox(width: 4),
-                Text(
-                  'View Instructions',
-                  style: TextStyle(
-                    color: Color(0xFF2563EB),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -1905,42 +1921,53 @@ class _QuizScreenState extends State<QuizScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
-                  child: GridView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 5,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          childAspectRatio: 1.0,
-                        ),
-                    itemCount: widget.questions.length,
-                    itemBuilder: (context, index) {
-                      final q = widget.questions[index];
-                      // Filter by active section if not 'All'
-                      if (_activeSection != 'All' &&
-                          (q.subject ?? 'General') != _activeSection) {
-                        return const SizedBox.shrink();
+                Builder(
+                  builder: (context) {
+                    final List<({int originalIndex, QuestionModel question})>
+                        filteredQuestions = [];
+                    for (int i = 0; i < widget.questions.length; i++) {
+                      final q = widget.questions[i];
+                      if (_activeSection == 'All' ||
+                          (q.subject ?? 'General') == _activeSection) {
+                        filteredQuestions.add((originalIndex: i, question: q));
                       }
+                    }
 
-                      final status =
-                          _statusMap[q.id] ?? QuestionStatus.notVisited;
-                      final isCurrent = index == _currentIndex;
+                    return Expanded(
+                      child: GridView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 5,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
+                              childAspectRatio: 1.0,
+                            ),
+                        itemCount: filteredQuestions.length,
+                        itemBuilder: (context, gridIndex) {
+                          final item = filteredQuestions[gridIndex];
+                          final index = item.originalIndex;
+                          final q = item.question;
 
-                      return _buildPaletteQuestionBox(
-                        questionIndex: index,
-                        status: status,
-                        isCurrent: isCurrent,
-                        onTap: () {
-                          _goToQuestion(index);
-                          if (isDrawer) {
-                            Navigator.of(context).pop();
-                          }
+                          final status =
+                              _statusMap[q.id] ?? QuestionStatus.notVisited;
+                          final isCurrent = index == _currentIndex;
+
+                          return _buildPaletteQuestionBox(
+                            questionIndex: index,
+                            status: status,
+                            isCurrent: isCurrent,
+                            onTap: () {
+                              _goToQuestion(index);
+                              if (isDrawer) {
+                                Navigator.of(context).pop();
+                              }
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

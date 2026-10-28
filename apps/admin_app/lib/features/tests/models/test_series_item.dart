@@ -105,6 +105,8 @@ class TestSeriesItem {
       'unlock_price_coins': priceInr,
       'total_participants': enrollments,
       'status': status.name,
+      'exam_category_id': (examCategoryId != null && examCategoryId!.isNotEmpty) ? examCategoryId : 'bpsc',
+      'category_id': subject.isNotEmpty ? subject : 'General Science',
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -128,10 +130,10 @@ class TestSeriesItem {
       subject: sub,
       examCategoryId: examCat,
       testMode: mode,
-      totalTests: (map['duration_minutes'] as num?)?.toInt() ?? 20,
-      totalQuestions: (map['total_questions'] as num?)?.toInt() ?? 2000,
-      priceInr: (map['unlock_price_coins'] as num?)?.toInt() ?? 149,
-      enrollments: (map['total_participants'] as num?)?.toInt() ?? 1200,
+      totalTests: (map['duration_minutes'] as num?)?.toInt() ?? 1,
+      totalQuestions: (map['total_questions'] as num?)?.toInt() ?? 0,
+      priceInr: (map['unlock_price_coins'] as num?)?.toInt() ?? 0,
+      enrollments: (map['total_participants'] as num?)?.toInt() ?? 0,
       status: TestSeriesStatus.fromString(statusStr),
       createdAt: map['created_at'] != null
           ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime(2026, 10, 10)

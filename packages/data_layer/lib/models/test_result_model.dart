@@ -77,6 +77,7 @@ class TestResultModel {
   final int correctCount;
   final int incorrectCount;
   final int unattemptedCount;
+  final double negativeMarks;
   final int totalQuestions;
   final double classAverageScore;
   final List<SubjectPerformance> subjectPerformances;
@@ -104,6 +105,7 @@ class TestResultModel {
     required this.correctCount,
     required this.incorrectCount,
     required this.unattemptedCount,
+    this.negativeMarks = 0.0,
     required this.totalQuestions,
     this.classAverageScore = 0.0,
     required this.subjectPerformances,
@@ -111,6 +113,23 @@ class TestResultModel {
     required this.insights,
     this.coinsEarned = 0,
   });
+
+  double get calculatedNegativeMarks {
+    if (negativeMarks > 0) return negativeMarks;
+    final markPerQ = totalQuestions > 0 ? maxScore / totalQuestions : 1.0;
+    final positiveScore = correctCount * markPerQ;
+    final diff = positiveScore - score;
+    return diff > 0 ? diff : 0.0;
+  }
+
+  String get formattedNegativeMarks {
+    final neg = calculatedNegativeMarks;
+    if (neg == 0) return '0';
+    return '-${neg % 1 == 0 ? neg.toInt() : neg.toStringAsFixed(2).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '')}';
+  }
+
+  String get formattedFinalScore =>
+      '${score % 1 == 0 ? score.toInt() : score.toStringAsFixed(1)}';
 
   String get formattedScore =>
       '${score % 1 == 0 ? score.toInt() : score.toStringAsFixed(1)} / ${maxScore.toInt()}';
@@ -326,6 +345,7 @@ class TestResultModel {
       correctCount: correct,
       incorrectCount: incorrect,
       unattemptedCount: unattempted,
+      negativeMarks: negativeScore,
       totalQuestions: totalQ,
       classAverageScore: (maxScore * 0.56).roundToDouble(),
       subjectPerformances: subjectPerformances,

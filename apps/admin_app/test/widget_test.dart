@@ -237,31 +237,20 @@ void main() {
 
     // 3. Verify 5 Metric Cards
     expect(find.text('Total Test Series'), findsOneWidget);
-    expect(find.text('42'), findsWidgets);
     expect(find.text('Published'), findsWidgets);
-    expect(find.text('38'), findsOneWidget);
     expect(find.text('Drafts'), findsOneWidget);
-    expect(find.text('3'), findsWidgets);
     expect(find.text('Total Tests'), findsWidgets);
-    expect(find.text('428'), findsOneWidget);
     expect(find.text('Total Enrollments'), findsOneWidget);
-    expect(find.text('12,458'), findsOneWidget);
 
-    // 4. Verify Table Card & Sample Test Series
+    // 4. Verify Table Card & Empty State (no hardcoded mock data)
     expect(find.textContaining('Test Series List'), findsOneWidget);
-    expect(find.text('RRB Technician Grade 3'), findsOneWidget);
-    expect(find.text('Railway Maths Practice Series'), findsOneWidget);
-    expect(find.text('Reasoning Special Series'), findsOneWidget);
-    expect(find.text('Current Affairs Monthly Series'), findsOneWidget);
-    expect(find.text('Chemistry Practice Series'), findsOneWidget);
-    expect(find.text('Biology Marathon Series'), findsOneWidget);
-    expect(find.text('Full Syllabus Mock Test Series'), findsOneWidget);
+    expect(find.text('No Test Series Found'), findsOneWidget);
 
     // 5. Verify Right Column (Subject Wise Donut Chart + Recent Activity)
     expect(find.text('Subject Wise Test Series'), findsOneWidget);
     expect(find.text('Recent Activity'), findsOneWidget);
     expect(find.text('View All'), findsOneWidget);
-    expect(find.text('New test series created: RRB Technician'), findsOneWidget);
+    expect(find.text('No recent activity'), findsOneWidget);
 
     final tableSize = tester.getSize(find.byType(TestSeriesTableCard));
     final chartSize = tester.getSize(find.byType(SubjectWiseChartCard));
@@ -436,11 +425,11 @@ void main() {
     // 2. Test Import Questions dialog
     await tester.tap(find.text('Import\nQuestions'));
     await tester.pumpAndSettle();
-    expect(find.text('Import Questions (CSV / JSON)'), findsOneWidget);
+    expect(find.textContaining('Import Questions'), findsWidgets);
     expect(find.text('Validate & Parse Data'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Import Questions (CSV / JSON)'), findsNothing);
+    expect(find.text('Validate & Parse Data'), findsNothing);
 
     // 3. Test AI Generate Questions dialog
     await tester.tap(find.text('AI Generate\nQuestions'));

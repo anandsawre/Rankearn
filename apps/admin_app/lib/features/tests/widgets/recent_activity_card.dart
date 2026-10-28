@@ -30,51 +30,29 @@ class RecentActivityCard extends StatelessWidget {
     this.height,
     this.fillHeight = false,
     this.onViewAll,
-    this.activities = const [
-      ActivityItemData(
-        icon: Icons.description_outlined,
-        iconColor: Color(0xFF0284C7),
-        iconBgColor: Color(0xFFE0F2FE),
-        text: 'New test series created: RRB Technician',
-        timeAgo: '2 minutes ago',
-      ),
-      ActivityItemData(
-        icon: Icons.check_circle_rounded,
-        iconColor: Color(0xFF10B981),
-        iconBgColor: Color(0xFFDCFCE7),
-        text: 'Test series published: Maths Practice',
-        timeAgo: '15 minutes ago',
-      ),
-      ActivityItemData(
-        icon: Icons.edit_rounded,
-        iconColor: Color(0xFFF43F5E),
-        iconBgColor: Color(0xFFFFE4E6),
-        text: 'Test series updated: Reasoning Special',
-        timeAgo: '1 hour ago',
-      ),
-      ActivityItemData(
-        icon: Icons.people_alt_rounded,
-        iconColor: Color(0xFF8B5CF6),
-        iconBgColor: Color(0xFFEDE9FE),
-        text: 'New enrollment: 5 users',
-        timeAgo: '2 hours ago',
-      ),
-      ActivityItemData(
-        icon: Icons.emoji_events_rounded,
-        iconColor: Color(0xFFF59E0B),
-        iconBgColor: Color(0xFFFEF3C7),
-        text: 'Test series completed: Current Affairs',
-        timeAgo: '3 hours ago',
-      ),
-    ],
+    this.activities = const [],
   });
 
   @override
   Widget build(BuildContext context) {
-    final activityList = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: activities.map((item) => _buildActivityRow(item)).toList(),
-    );
+    final activityList = activities.isEmpty
+        ? const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No recent activity',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ),
+          )
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: activities.map((item) => _buildActivityRow(item)).toList(),
+          );
 
     return Container(
       height: height,

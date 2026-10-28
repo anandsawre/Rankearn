@@ -630,6 +630,38 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
             },
           ),
 
+          if (widget.items.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.layers_clear_rounded, size: 22, color: Color(0xFF64748B)),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'No Test Series Found',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF1E293B)),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Create a new test series or import one to get started.',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                  ),
+                ],
+              ),
+            ),
+
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
 
           // 3. Table Footer: Showing text + Pagination

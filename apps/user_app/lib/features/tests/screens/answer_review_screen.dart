@@ -42,7 +42,9 @@ class _AnswerReviewScreenState extends State<AnswerReviewScreen> {
   List<QuestionAnalysisItem> get _filteredQuestions {
     return widget.result.questionItems.where((q) {
       if (_activeFilter == 'correct') return q.isCorrect;
-      if (_activeFilter == 'incorrect') return q.isIncorrect;
+      if (_activeFilter == 'incorrect' || _activeFilter == 'negative') {
+        return q.isIncorrect;
+      }
       if (_activeFilter == 'unattempted') return !q.isAttempted;
       return true;
     }).toList();
@@ -171,45 +173,432 @@ class _AnswerReviewScreenState extends State<AnswerReviewScreen> {
       body: currentItem == null
           ? const Center(child: Text('No questions available to review.'))
           : SafeArea(
-              child: Column(
-                children: [
-                  // Horizontal Question Number Strip / Jumper
-                  _buildQuestionJumperBar(),
-
-                  // Main Question & Options Body
-                  Expanded(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: isDesktop ? 960 : double.infinity,
-                        ),
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isDesktop ? 24 : 16,
-                            vertical: 16,
+              child: isDesktop
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Left Column: Persistent Question Palette Sidebar (Desktop)
+                        Container(
+                          width: 320,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF1F5F9),
+                            border: Border(
+                              right: BorderSide(
+                                color: Color(0xFFCBD5E1),
+                                width: 1.0,
+                              ),
+                            ),
                           ),
+                          child: _buildDesktopReviewPalette(),
+                        ),
+
+                        // Right Column: Scrollable Question Review & Bottom Controls
+                        Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _buildQuestionCard(currentItem),
-                              const SizedBox(height: 16),
-                              _buildOptionsList(currentItem),
-                              const SizedBox(height: 16),
-                              _buildExplanationCard(currentItem),
-                              const SizedBox(height: 24),
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  physics: const BouncingScrollPhysics(),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 32,
+                                    vertical: 24,
+                                  ),
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 880,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          _buildQuestionCard(currentItem),
+                                          const SizedBox(height: 16),
+                                          _buildOptionsList(currentItem),
+                                          const SizedBox(height: 16),
+                                          _buildExplanationCard(currentItem),
+                                          const SizedBox(height: 24),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              _buildBottomNavigationControls(),
                             ],
                           ),
                         ),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        // Mobile: Horizontal Question Number Strip / Jumper
+                        _buildQuestionJumperBar(),
+
+                        // Main Question & Options Body
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildQuestionCard(currentItem),
+                                const SizedBox(height: 16),
+                                _buildOptionsList(currentItem),
+                                const SizedBox(height: 16),
+                                _buildExplanationCard(currentItem),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Bottom Navigation Controls
+                        _buildBottomNavigationControls(),
+                      ],
+                    ),
+            ),
+    );
+  }
+
+  // ==========================================================================
+  // Desktop Question Palette Sidebar
+  // ==========================================================================
+  Widget _buildDesktopReviewPalette() {
+    return Column(
+      children: [
+        // 1. Performance Summary Header
+        Container(
+          padding: const EdgeInsets.all(14),
+          color: Colors.white,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'SUMMARY',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 11,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: 0.5,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                    ),
+                    child: Text(
+                      'Score: ${widget.result.score % 1 == 0 ? widget.result.score.toInt() : widget.result.score.toStringAsFixed(1)}/${widget.result.maxScore.toInt()}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1D4ED8),
                       ),
                     ),
                   ),
-
-                  // Bottom Navigation Controls
-                  _buildBottomNavigationControls(),
                 ],
               ),
+              const SizedBox(height: 12),
+
+              // Filter Badges Grid (Clickable)
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildPaletteFilterBadge(
+                      'all',
+                      const Color(0xFF2563EB),
+                      '${widget.result.questionItems.length}',
+                      'All',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildPaletteFilterBadge(
+                      'correct',
+                      const Color(0xFF16A34A),
+                      '${widget.result.correctCount}',
+                      'Correct',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildPaletteFilterBadge(
+                      'incorrect',
+                      const Color(0xFFDC2626),
+                      '${widget.result.incorrectCount}',
+                      'Incorrect',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildPaletteFilterBadge(
+                      'unattempted',
+                      const Color(0xFF64748B),
+                      '${widget.result.unattemptedCount}',
+                      'Unattempted',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildPaletteFilterBadge(
+                      'negative',
+                      const Color(0xFFEA580C),
+                      widget.result.formattedNegativeMarks,
+                      'Negative',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildPaletteFilterBadge(
+                      'final_score',
+                      const Color(0xFF7C3AED),
+                      widget.result.formattedFinalScore,
+                      'Final Score',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1, color: Color(0xFFCBD5E1)),
+
+        // 2. Question Numbers Grid
+        Expanded(
+          child: Container(
+            color: const Color(0xFFE1E4E8),
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'CHOOSE A QUESTION',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF475569),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    if (_activeFilter != 'all')
+                      InkWell(
+                        onTap: () => setState(() => _activeFilter = 'all'),
+                        child: const Text(
+                          'Show All',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2563EB),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: GridView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 5,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                          childAspectRatio: 1.0,
+                        ),
+                    itemCount: _filteredQuestions.length,
+                    itemBuilder: (context, index) {
+                      final item = _filteredQuestions[index];
+                      final isSelected =
+                          item.questionNumber - 1 == _currentIndex;
+
+                      Color bg;
+                      Color text;
+                      Color borderColor;
+
+                      if (!item.isAttempted) {
+                        bg = Colors.white;
+                        text = const Color(0xFF475569);
+                        borderColor = const Color(0xFF94A3B8);
+                      } else if (item.isCorrect) {
+                        bg = const Color(0xFF28A745);
+                        text = Colors.white;
+                        borderColor = const Color(0xFF28A745);
+                      } else {
+                        bg = const Color(0xFFDC3545);
+                        text = Colors.white;
+                        borderColor = const Color(0xFFDC3545);
+                      }
+
+                      return InkWell(
+                        onTap: () => _goToQuestion(item.questionNumber - 1),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: bg,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF0F172A)
+                                  : borderColor,
+                              width: isSelected ? 2.5 : 1.0,
+                            ),
+                            boxShadow: isSelected
+                                ? const [
+                                    BoxShadow(
+                                      color: Color(0x33000000),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '${item.questionNumber}',
+                            style: TextStyle(
+                              color: text,
+                              fontSize: 11,
+                              fontWeight: isSelected
+                                  ? FontWeight.w900
+                                  : FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
+          ),
+        ),
+
+        // 3. Bottom Sticky Action Button
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: const BoxDecoration(
+            color: Color(0xFFF8F9FA),
+            border: Border(
+              top: BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+            ),
+          ),
+          child: ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10194F),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              minimumSize: const Size.fromHeight(42),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'BACK TO RESULT',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaletteFilterBadge(
+    String filterKey,
+    Color color,
+    String count,
+    String label,
+  ) {
+    final isSelected = _activeFilter == filterKey;
+
+    return InkWell(
+      onTap: () => setState(() => _activeFilter = filterKey),
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.12) : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? color : const Color(0xFFE2E8F0),
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 24,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              alignment: Alignment.center,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                  child: Text(
+                    count,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      height: 1.0,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? color : const Color(0xFF475569),
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -220,28 +609,42 @@ class _AnswerReviewScreenState extends State<AnswerReviewScreen> {
       child: Column(
         children: [
           // Filter Chips Row
-          Row(
-            children: [
-              _buildFilterChip(
-                'all',
-                'All (${widget.result.questionItems.length})',
-              ),
-              const SizedBox(width: 6),
-              _buildFilterChip(
-                'correct',
-                'Correct (${widget.result.correctCount})',
-              ),
-              const SizedBox(width: 6),
-              _buildFilterChip(
-                'incorrect',
-                'Incorrect (${widget.result.incorrectCount})',
-              ),
-              const SizedBox(width: 6),
-              _buildFilterChip(
-                'unattempted',
-                'Unattempted (${widget.result.unattemptedCount})',
-              ),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                _buildFilterChip(
+                  'all',
+                  'All (${widget.result.questionItems.length})',
+                ),
+                const SizedBox(width: 6),
+                _buildFilterChip(
+                  'correct',
+                  'Correct (${widget.result.correctCount})',
+                ),
+                const SizedBox(width: 6),
+                _buildFilterChip(
+                  'incorrect',
+                  'Incorrect (${widget.result.incorrectCount})',
+                ),
+                const SizedBox(width: 6),
+                _buildFilterChip(
+                  'unattempted',
+                  'Unattempted (${widget.result.unattemptedCount})',
+                ),
+                const SizedBox(width: 6),
+                _buildFilterChip(
+                  'negative',
+                  'Negative (${widget.result.formattedNegativeMarks})',
+                ),
+                const SizedBox(width: 6),
+                _buildFilterChip(
+                  'final_score',
+                  'Score (${widget.result.formattedFinalScore}/${widget.result.maxScore.toInt()})',
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
 
