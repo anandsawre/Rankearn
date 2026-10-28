@@ -14,6 +14,7 @@ class PromoBannerCard extends StatelessWidget {
   final Widget? badge;
   final Color ctaColor;
   final Color ctaTextColor;
+  final IconData? watermarkIcon;
 
   const PromoBannerCard({
     super.key,
@@ -26,6 +27,7 @@ class PromoBannerCard extends StatelessWidget {
     this.badge,
     this.ctaColor = AppColors.brandYellow,
     this.ctaTextColor = AppColors.textPrimary,
+    this.watermarkIcon,
   });
 
   factory PromoBannerCard.dailyChallenge({
@@ -41,13 +43,14 @@ class PromoBannerCard extends StatelessWidget {
     return PromoBannerCard(
       title: card.title,
       subtitle: card.subtitle,
-      ctaLabel: '${card.ctaLabel} →',
+      ctaLabel: card.ctaLabel,
       leadingIllustration: card.leading!,
       gradient: card.gradient,
       onCtaPressed: onPlay,
       badge: card.badge,
       ctaColor: card.ctaColor,
       ctaTextColor: card.ctaTextColor,
+      watermarkIcon: card.watermarkIcon ?? Icons.assignment_rounded,
     );
   }
 
@@ -64,13 +67,14 @@ class PromoBannerCard extends StatelessWidget {
     return PromoBannerCard(
       title: card.title,
       subtitle: card.subtitle,
-      ctaLabel: '${card.ctaLabel} →',
+      ctaLabel: card.ctaLabel,
       leadingIllustration: card.leading!,
       gradient: card.gradient,
       onCtaPressed: onSpin,
       badge: card.badge,
       ctaColor: card.ctaColor,
       ctaTextColor: card.ctaTextColor,
+      watermarkIcon: card.watermarkIcon,
     );
   }
 
@@ -86,6 +90,8 @@ class PromoBannerCard extends StatelessWidget {
       badge: badge,
       ctaColor: ctaColor,
       ctaTextColor: ctaTextColor,
+      watermarkIcon: watermarkIcon,
+      ctaIcon: null,
     );
   }
 }

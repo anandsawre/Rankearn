@@ -10,6 +10,8 @@ class TodayGoalCard extends StatelessWidget {
   final String unitLabel;
   final VoidCallback onTap;
 
+  final Color accentColor;
+
   const TodayGoalCard({
     super.key,
     required this.completed,
@@ -17,6 +19,7 @@ class TodayGoalCard extends StatelessWidget {
     this.subtitle,
     this.unitLabel = 'Tests',
     required this.onTap,
+    this.accentColor = const Color(0xFF10B981),
   });
 
   @override
@@ -24,27 +27,105 @@ class TodayGoalCard extends StatelessWidget {
     final progress = target > 0 ? (completed / target).clamp(0.0, 1.0) : 0.0;
 
     return Container(
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(accentColor.withAlpha(20), Colors.white),
+            Colors.white,
+          ],
+        ),
         borderRadius: AppRadii.borderLg,
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: const [
+        border: Border.all(color: accentColor.withAlpha(45), width: 1.1),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x06000000),
+            color: accentColor.withAlpha(16),
             blurRadius: 10,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
+          ),
+          const BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: AppRadii.borderLg,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+      child: ClipRRect(
+        borderRadius: AppRadii.borderLg,
+        child: Stack(
+          children: [
+            // 1. Soft Halo Glow in Top Right
+            Positioned(
+              top: -25,
+              right: -25,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accentColor.withAlpha(20),
+                ),
+              ),
+            ),
+
+            // 2. Concentric Arc Ring
+            Positioned(
+              top: -35,
+              right: -35,
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: accentColor.withAlpha(18),
+                    width: 1.0,
+                  ),
+                ),
+              ),
+            ),
+
+            // 3. Dot-Matrix Tech Grid
+            Positioned(
+              right: 28,
+              top: 10,
+              child: IgnorePointer(
+                child: CustomPaint(
+                  size: const Size(40, 24),
+                  painter: _CardMiniDotPainter(color: accentColor.withAlpha(35)),
+                ),
+              ),
+            ),
+
+            // 4. Faint Target Bullseye Watermark Icon
+            Positioned(
+              right: 18,
+              bottom: -8,
+              child: IgnorePointer(
+                child: Transform.rotate(
+                  angle: -0.12,
+                  child: Icon(
+                    Icons.track_changes_rounded,
+                    size: 64,
+                    color: accentColor.withAlpha(20),
+                  ),
+                ),
+              ),
+            ),
+
+            // 5. Foreground Content
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: AppRadii.borderLg,
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
               // Target Dartboard Icon
               Container(
                 width: 60,
@@ -203,6 +284,42 @@ class TodayGoalCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
+          ],
+        ),
+      ),
     );
   }
+}
+
+/// CustomPainter for rendering subtle dot matrix grid on cards
+class _CardMiniDotPainter extends CustomPainter {
+  final Color color;
+
+  const _CardMiniDotPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const spacing = 8.0;
+    const dotRadius = 1.0;
+    const cols = 5;
+    const rows = 3;
+    final dotPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        canvas.drawCircle(
+          Offset(c * spacing, r * spacing),
+          dotRadius,
+          dotPaint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CardMiniDotPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

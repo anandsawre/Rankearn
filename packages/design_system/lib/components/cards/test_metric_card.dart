@@ -45,6 +45,8 @@ class TestMetricCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       showChevron: showChevron,
+      watermarkIcon: icon,
+      showDecorativeBackground: true,
       maxLabelLines: 2,
       labelStyle: const TextStyle(
         fontSize: 10.5,

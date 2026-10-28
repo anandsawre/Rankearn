@@ -242,6 +242,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final shortcuts = [
       (
         icon: Icons.feed_rounded,
+        customWidget: null as Widget?,
         label: 'Mock Tests',
         color: const Color(0xFF7C3AED), // Purple
         bg: const Color(0xFFF5F3FF),
@@ -250,6 +251,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       (
         icon: Icons.menu_book_rounded,
+        customWidget: null as Widget?,
         label: 'Previous\nYear Papers',
         color: const Color(0xFFF43F5E), // Pink / Red
         bg: const Color(0xFFFFF1F2),
@@ -258,6 +260,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       (
         icon: Icons.sensors_rounded,
+        customWidget: null as Widget?,
         label: 'Live Test',
         color: const Color(0xFF10B981), // Green
         bg: const Color(0xFFECFDF5),
@@ -266,6 +269,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       (
         icon: Icons.flash_on_rounded,
+        customWidget: null as Widget?,
         label: '1v1\nQuiz Battle',
         color: const Color(0xFFFF9F0A), // Orange
         bg: const Color(0xFFFFF7ED),
@@ -273,7 +277,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onTap: widget.onOpenBattle ?? widget.onJoinContest,
       ),
       (
-        icon: Icons.donut_large_rounded,
+        icon: Icons.circle,
+        customWidget: const FortuneWheelVectorIcon(size: 26) as Widget?,
         label: 'Fortune Wheel',
         color: const Color(0xFF2587F8), // Sky Blue
         bg: const Color(0xFFEFF6FF),
@@ -282,6 +287,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       (
         icon: Icons.emoji_events_rounded,
+        customWidget: null as Widget?,
         label: 'Tournaments',
         color: const Color(0xFF8B5CF6), // Violet
         bg: const Color(0xFFF5F3FF),
@@ -297,58 +303,132 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Widget buildSegment(int i) {
           final s = shortcuts[i];
           return Material(
-            color: s.bg,
+            color: Colors.transparent,
             child: InkWell(
               onTap: s.onTap,
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 116),
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: s.color,
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: s.color.withAlpha(70),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Icon(
-                          s.icon,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 32,
-                      child: Center(
-                        child: Text(
-                          s.label,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            height: 1.15,
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color.alphaBlend(s.color.withAlpha(24), Colors.white),
+                      Color.alphaBlend(s.color.withAlpha(10), Colors.white),
+                      s.bg,
+                    ],
+                  ),
+                ),
+                child: ClipRect(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // 1. Soft Halo Glow in Top Right
+                      Positioned(
+                        top: -16,
+                        right: -16,
+                        child: Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: s.color.withAlpha(18),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+
+                      // 2. Subtle Concentric Arc Ring
+                      Positioned(
+                        top: -24,
+                        right: -24,
+                        child: Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: s.color.withAlpha(16),
+                              width: 1.0,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // 3. Faint Watermark Icon
+                      Positioned(
+                        right: -4,
+                        bottom: 0,
+                        child: IgnorePointer(
+                          child: Transform.rotate(
+                            angle: -0.12,
+                            child: s.customWidget != null
+                                ? const SizedBox.shrink()
+                                : Icon(
+                                    s.icon,
+                                    size: 46,
+                                    color: s.color.withAlpha(20),
+                                  ),
+                          ),
+                        ),
+                      ),
+
+                      // 4. Foreground Interactive Content
+                      Container(
+                        constraints: const BoxConstraints(minHeight: 116),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 4,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: s.color,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: s.color.withAlpha(70),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: s.customWidget ??
+                                    Icon(
+                                      s.icon,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: 32,
+                              child: Center(
+                                child: Text(
+                                  s.label,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                    height: 1.15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1058,150 +1138,296 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required Color actionBg,
     required VoidCallback onTap,
   }) {
+    IconData watermarkIcon = Icons.calendar_month_rounded;
+    if (title.contains('Science') || title.contains('Mega')) {
+      watermarkIcon = Icons.emoji_events_rounded;
+    } else if (title.contains('Tournament') || title.contains('Quiz')) {
+      watermarkIcon = Icons.military_tech_rounded;
+    }
+
     return Container(
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(iconBg.withAlpha(18), Colors.white),
+            Colors.white,
+          ],
+        ),
         borderRadius: AppRadii.borderLg,
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: const [
+        border: Border.all(color: iconBg.withAlpha(45), width: 1.1),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x06000000),
+            color: iconBg.withAlpha(14),
             blurRadius: 10,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
+          ),
+          const BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(child: icon),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isLive) ...[
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFE4E6),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.circle, color: Color(0xFFE11D48), size: 5),
-                            SizedBox(width: 3),
-                            Text(
-                              'LIVE',
-                              style: TextStyle(
-                                color: Color(0xFFE11D48),
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                ],
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
+      child: ClipRRect(
+        borderRadius: AppRadii.borderLg,
+        child: Stack(
+          children: [
+            // 1. Soft Halo Glow in Top Right
+            Positioned(
+              top: -20,
+              right: -20,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: iconBg.withAlpha(18),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  dateTime,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                Text(
-                  questions,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: actionBg,
-                borderRadius: BorderRadius.circular(8),
               ),
+            ),
+
+            // 2. Concentric Arc Ring
+            Positioned(
+              top: -30,
+              right: -30,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: iconBg.withAlpha(16),
+                    width: 1.0,
+                  ),
+                ),
+              ),
+            ),
+
+            // 3. Faint Watermark Icon near right
+            Positioned(
+              right: 80,
+              bottom: -6,
+              child: IgnorePointer(
+                child: Transform.rotate(
+                  angle: -0.12,
+                  child: Icon(
+                    watermarkIcon,
+                    size: 56,
+                    color: iconBg.withAlpha(20),
+                  ),
+                ),
+              ),
+            ),
+
+            // 4. Foreground Content
+            Padding(
+              padding: const EdgeInsets.all(12),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (actionIcon != null) ...[
-                    Icon(actionIcon, size: 13, color: actionColor),
-                    const SizedBox(width: 4),
-                  ],
-                  Text(
-                    actionLabel,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: actionColor,
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: iconBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(child: icon),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isLive) ...[
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFE4E6),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(Icons.circle, color: Color(0xFFE11D48), size: 5),
+                                    SizedBox(width: 3),
+                                    Text(
+                                      'LIVE',
+                                      style: TextStyle(
+                                        color: Color(0xFFE11D48),
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                        ],
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          dateTime,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          questions,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: onTap,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: actionBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (actionIcon != null) ...[
+                            Icon(actionIcon, size: 13, color: actionColor),
+                            const SizedBox(width: 4),
+                          ],
+                          Text(
+                            actionLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: actionColor,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDesktopLeaderboardCard() {
+    const accentColor = Color(0xFFF59E0B);
+
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(accentColor.withAlpha(20), Colors.white),
+            Colors.white,
+            Colors.white,
+          ],
+        ),
         borderRadius: AppRadii.borderLg,
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: const [
+        border: Border.all(color: accentColor.withAlpha(45), width: 1.1),
+        boxShadow: [
           BoxShadow(
+            color: accentColor.withAlpha(14),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+          const BoxShadow(
             color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
+            blurRadius: 4,
+            offset: Offset(0, 1),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: ClipRRect(
+        borderRadius: AppRadii.borderLg,
+        child: Stack(
+          children: [
+            // 1. Soft Halo Glow in Top Right
+            Positioned(
+              top: -30,
+              right: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accentColor.withAlpha(18),
+                ),
+              ),
+            ),
+
+            // 2. Concentric Arc Ring
+            Positioned(
+              top: -45,
+              right: -45,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: accentColor.withAlpha(16),
+                    width: 1.0,
+                  ),
+                ),
+              ),
+            ),
+
+            // 3. Faint Trophy / Medal Watermark Icon in lower-right
+            Positioned(
+              right: 14,
+              bottom: 12,
+              child: IgnorePointer(
+                child: Transform.rotate(
+                  angle: -0.12,
+                  child: Icon(
+                    Icons.military_tech_rounded,
+                    size: 92,
+                    color: accentColor.withAlpha(18),
+                  ),
+                ),
+              ),
+            ),
+
+            // 4. Foreground Content
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1349,6 +1575,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               )),
         ],
+      ),
+    ),
+          ],
+        ),
       ),
     );
   }

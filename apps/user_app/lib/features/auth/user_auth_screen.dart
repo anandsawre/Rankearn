@@ -52,6 +52,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   bool _agreeToTerms = true;
   bool _isLoading = false;
   String? _errorMessage;
+  final ScrollController _scrollController = ScrollController();
 
   final List<String> _examGoals = const [
     '70th BPSC Prelims & Mains',
@@ -75,6 +76,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -89,6 +91,13 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       _mode = newMode;
       _errorMessage = null;
     });
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   // --- Submission Logic ---
@@ -575,18 +584,47 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             body: SafeArea(
             child: Stack(
               children: [
-                // Stylish Wave Background (Desktop Multi-Layer Wave only; Mobile uses Hero Banner)
+                // Background: Desktop Wave or Mobile Ambient Diffused Aura & Arcs (Fixed to Viewport)
                 if (isDesktop)
                   const Positioned.fill(
                     child: IgnorePointer(
                       child: WaveBackground(),
                     ),
+                  )
+                else ...[
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xFFE8FBF2),
+                              Color(0xFFF1FCF6),
+                              Color(0xFFF9FCFA),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          painter: _MobileProfessionalBlendedPainter(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
 
                 // Main Content Viewport
                 ScrollConfiguration(
                   behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
                   child: SingleChildScrollView(
+                    controller: _scrollController,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.symmetric(
                       horizontal: isDesktop
@@ -725,50 +763,19 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           maxWidth: isTablet ? 500 : double.infinity,
           minHeight: minHeight,
         ),
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFE8FBF2),
-                Color(0xFFF1FCF6),
-                Color(0xFFF9FCFA),
-              ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 1. Top Hero Section with Brand, Heading & Subtitle
+            _buildMobileHeroHeader(isLogin: isLogin, maxWidth: maxWidth),
+
+            // 2. Mobile Form Content (Seamless on fixed ambient background)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              child: _buildAuthCard(fillHeight: false, isMobile: true),
             ),
-          ),
-          child: Stack(
-            clipBehavior: Clip.hardEdge,
-            children: [
-              // 1. Premium Professional Blended Ambient Background (Diffused Aura Mesh & Smooth Arcs)
-              const Positioned.fill(
-                child: IgnorePointer(
-                  child: RepaintBoundary(
-                    child: CustomPaint(
-                      painter: _MobileProfessionalBlendedPainter(),
-                      size: Size.infinite,
-                    ),
-                  ),
-                ),
-              ),
-
-              // 2. Foreground Mobile Content Column
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 1. Top Hero Section with Brand, Heading & Student Mascot
-                  _buildMobileHeroHeader(isLogin: isLogin, maxWidth: maxWidth),
-
-                  // 2. Mobile Form Content (Seamless on ambient background, zero white card)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                    child: _buildAuthCard(fillHeight: false, isMobile: true),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -1411,7 +1418,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             // Primary Action Button (Login / Register) with Brand Green Gradient (No Shadow)
             SizedBox(
               width: double.infinity,
-              height: 42,
+              height: 48,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
@@ -1420,33 +1427,36 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       Color(0xFF059669),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: _isLoading ? null : _handleSubmit,
                   child: _isLoading
                       ? const SizedBox(
-                          width: 18,
-                          height: 18,
+                          width: 20,
+                          height: 20,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Icon(isLogin ? Icons.login_rounded : Icons.person_add_alt_1_rounded, size: 18),
+                            Icon(isLogin ? Icons.login_rounded : Icons.person_add_alt_1_rounded, size: 19),
                             const SizedBox(width: 8),
                             Text(
                               isLogin ? 'Login' : 'Register',
                               style: AppTypography.buttonText.copyWith(
-                                fontSize: 14.5,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.2,
+                                height: 1.2,
                               ),
                             ),
                           ],
@@ -1477,7 +1487,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            isLogin ? 'Sign Up' : 'Login',
+                            isLogin ? 'Register' : 'Login',
                             style: AppTypography.formHint.copyWith(
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFF00B96B),

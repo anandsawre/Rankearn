@@ -14,6 +14,8 @@ class LiveEventCard extends StatelessWidget {
   final LiveEventActionType actionType;
   final VoidCallback onAction;
 
+  final Color? accentColor;
+
   const LiveEventCard({
     super.key,
     required this.title,
@@ -23,109 +25,183 @@ class LiveEventCard extends StatelessWidget {
     this.isLive = false,
     required this.actionType,
     required this.onAction,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveAccent = accentColor ??
+        (isLive ? const Color(0xFFF43F5E) : const Color(0xFF2587F8));
+
     return Container(
       width: 250,
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(effectiveAccent.withAlpha(18), Colors.white),
+            Colors.white,
+          ],
+        ),
         borderRadius: AppRadii.borderLg,
-        border: Border.all(color: AppColors.border, width: 1),
-        boxShadow: const [
+        border: Border.all(color: effectiveAccent.withAlpha(45), width: 1.1),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x06000000),
+            color: effectiveAccent.withAlpha(14),
             blurRadius: 10,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
+          ),
+          const BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              icon,
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isLive) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1.5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFE4E6),
-                          borderRadius: AppRadii.borderPill,
-                        ),
-                        child: Row(
+      child: ClipRRect(
+        borderRadius: AppRadii.borderLg,
+        child: Stack(
+          children: [
+            // 1. Soft Halo Glow in Top Right
+            Positioned(
+              top: -20,
+              right: -20,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: effectiveAccent.withAlpha(18),
+                ),
+              ),
+            ),
+
+            // 2. Concentric Arc Ring
+            Positioned(
+              top: -30,
+              right: -30,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: effectiveAccent.withAlpha(16),
+                    width: 1.0,
+                  ),
+                ),
+              ),
+            ),
+
+            // 3. Faint Watermark Icon
+            Positioned(
+              right: 8,
+              bottom: 34,
+              child: IgnorePointer(
+                child: Transform.rotate(
+                  angle: -0.12,
+                  child: Icon(
+                    isLive ? Icons.calendar_month_rounded : Icons.emoji_events_rounded,
+                    size: 52,
+                    color: effectiveAccent.withAlpha(20),
+                  ),
+                ),
+              ),
+            ),
+
+            // 4. Foreground Content
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      icon,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(
-                              Icons.circle,
-                              color: Color(0xFFE11D48),
-                              size: 5,
-                            ),
-                            SizedBox(width: 3),
+                          children: [
+                            if (isLive) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFE4E6),
+                                  borderRadius: AppRadii.borderPill,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(
+                                      Icons.circle,
+                                      color: Color(0xFFE11D48),
+                                      size: 5,
+                                    ),
+                                    SizedBox(width: 3),
+                                    Text(
+                                      'LIVE',
+                                      style: TextStyle(
+                                        color: Color(0xFFE11D48),
+                                        fontSize: 8.5,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                            ],
                             Text(
-                              'LIVE',
-                              style: TextStyle(
-                                color: Color(0xFFE11D48),
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.w900,
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              dateTime,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              questionCount,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textMuted,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 2),
                     ],
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      dateTime,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      questionCount,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildActionButton(),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _buildActionButton(),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

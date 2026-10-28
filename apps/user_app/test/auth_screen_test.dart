@@ -81,7 +81,7 @@ void main() {
 
       // 11. Mode Switcher
       expect(find.text("Don't have an account? "), findsOneWidget);
-      expect(find.text('Sign Up'), findsOneWidget);
+      expect(find.text('Register'), findsOneWidget);
     });
 
     testWidgets('Tapping Sign Up switches to Create Your Account form', (WidgetTester tester) async {
@@ -92,8 +92,8 @@ void main() {
       await tester.pumpWidget(buildAuthApp(initialMode: AuthScreenMode.login));
       await tester.pumpAndSettle();
 
-      // Tap Sign Up link at the bottom
-      final signUpFinder = find.text('Sign Up');
+      // Tap Register link at the bottom
+      final signUpFinder = find.text('Register');
       await tester.ensureVisible(signUpFinder);
       await tester.tap(signUpFinder);
       await tester.pumpAndSettle();

@@ -256,28 +256,94 @@ class WeeklyLeaderboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const accentColor = Color(0xFFF59E0B);
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(accentColor.withAlpha(18), Colors.white),
+            Colors.white,
+            Colors.white,
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-        boxShadow: const [
+        border: Border.all(color: accentColor.withAlpha(45), width: 1.1),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x06000000),
+            color: accentColor.withAlpha(14),
             blurRadius: 10,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
+          ),
+          const BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
           ),
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Stack(
         children: [
-          // Header Row Inside the Card
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-            child: Row(
+          // 1. Soft Halo Glow in Top Right
+          Positioned(
+            top: -30,
+            right: -30,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: accentColor.withAlpha(18),
+              ),
+            ),
+          ),
+
+          // 2. Concentric Arc Ring
+          Positioned(
+            top: -45,
+            right: -45,
+            child: Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: accentColor.withAlpha(16),
+                  width: 1.0,
+                ),
+              ),
+            ),
+          ),
+
+          // 3. Faint Trophy Watermark Icon in lower-right
+          Positioned(
+            right: 14,
+            bottom: 12,
+            child: IgnorePointer(
+              child: Transform.rotate(
+                angle: -0.12,
+                child: Icon(
+                  Icons.military_tech_rounded,
+                  size: 92,
+                  color: accentColor.withAlpha(18),
+                ),
+              ),
+            ),
+          ),
+
+          // 4. Foreground Content
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header Row Inside the Card
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
@@ -363,6 +429,8 @@ class WeeklyLeaderboardCard extends StatelessWidget {
                 color: Color(0xFFF1F5F9),
               ),
           ],
+        ],
+      ),
         ],
       ),
     );

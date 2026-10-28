@@ -707,10 +707,11 @@ class AppHeroBanner extends StatelessWidget {
 
   /// Factory preset for the Home Dashboard Hero Banner
   factory AppHeroBanner.home({
-    String? imageAssetPath = 'assets/images/hero_mascot.jpg',
+    String? imageAssetPath,
     required VoidCallback onStartLearning,
     BorderRadius? borderRadius,
   }) {
+    final hasImage = imageAssetPath != null;
     return AppHeroBanner(
       titleWidget: RichText(
         text: const TextSpan(
@@ -747,32 +748,115 @@ class AppHeroBanner extends StatelessWidget {
         ),
       ],
       ambientGlows: [
+        // 1. Soft glowing radiant halo (top right)
         Positioned(
-          top: -40,
-          right: 40,
+          top: -50,
+          right: 10,
+          child: Container(
+            width: 240,
+            height: 240,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.16),
+                  const Color(0xFF6366F1).withValues(alpha: 0.10),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // 2. Secondary halo (bottom left)
+        Positioned(
+          bottom: -35,
+          left: 60,
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.brandPurpleLight.withValues(alpha: 0.15),
+            ),
+          ),
+        ),
+
+        // 3. Concentric Arc Ring (outer)
+        Positioned(
+          top: -60,
+          right: -30,
+          child: Container(
+            width: 250,
+            height: 250,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1.5,
+              ),
+            ),
+          ),
+        ),
+
+        // 4. Concentric Arc Ring (inner)
+        Positioned(
+          top: -25,
+          right: 5,
           child: Container(
             width: 180,
             height: 180,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withAlpha(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1.2,
+              ),
             ),
           ),
         ),
+
+        // 5. Tech Dot-Matrix Grid (top right)
         Positioned(
-          bottom: -30,
-          left: 80,
-          child: Container(
-            width: 140,
-            height: 140,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.brandPurpleLight.withAlpha(25),
+          top: 18,
+          right: 28,
+          child: SizedBox(
+            width: 100,
+            height: 60,
+            child: CustomPaint(
+              painter: _HeroDotGridPainter(),
             ),
+          ),
+        ),
+
+        // 6. Subtle Educational Watermark (right side)
+        Positioned(
+          right: 15,
+          bottom: -15,
+          child: IgnorePointer(
+            child: Transform.rotate(
+              angle: -0.10,
+              child: Icon(
+                Icons.school_rounded,
+                size: 130,
+                color: Colors.white.withValues(alpha: 0.07),
+              ),
+            ),
+          ),
+        ),
+
+        // 7. Subtle floating star sparkle
+        Positioned(
+          top: 30,
+          right: 140,
+          child: Icon(
+            Icons.auto_awesome,
+            color: const Color(0xFFFFD633).withValues(alpha: 0.35),
+            size: 20,
           ),
         ),
       ],
-      floatingMascotBadge: _buildDefaultScriptBadge(),
+      floatingMascotBadge: hasImage ? _buildDefaultScriptBadge() : null,
       features: [
         _buildHighlightTag(
           icon: Icons.bar_chart_rounded,
@@ -790,10 +874,7 @@ class AppHeroBanner extends StatelessWidget {
           label: 'Track\nProgress',
         ),
       ],
-      fallbackIllustration: _buildFallbackIconIllustration(
-        Icons.school_rounded,
-        Colors.white,
-      ),
+      fallbackIllustration: null,
     );
   }
 
@@ -803,6 +884,10 @@ class AppHeroBanner extends StatelessWidget {
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 420;
         final isVeryCompact = constraints.maxWidth < 360;
+
+        final hasMascot = imageAssetPath != null ||
+            fallbackIllustration != null ||
+            floatingMascotBadge != null;
 
         final mascotHeight = isCompact
             ? mobileMascotHeight
@@ -843,7 +928,7 @@ class AppHeroBanner extends StatelessWidget {
                     ],
                     // Left Column: Badge, Title, Subtitle, CTA, Features
                     Expanded(
-                      flex: isCompact ? 13 : 11,
+                      flex: hasMascot ? (isCompact ? 13 : 11) : 1,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -972,10 +1057,11 @@ class AppHeroBanner extends StatelessWidget {
                       ),
                     ),
 
-                    // Right Column: Mascot Illustration (Standardized height)
-                    Expanded(
-                      flex: 10,
-                      child: Stack(
+                    if (hasMascot)
+                      // Right Column: Mascot Illustration (Standardized height)
+                      Expanded(
+                        flex: 10,
+                        child: Stack(
                         alignment: Alignment.centerRight,
                         children: [
                           Container(
@@ -1136,4 +1222,31 @@ class AppHeroBanner extends StatelessWidget {
       child: Center(child: Icon(icon, color: color, size: 48)),
     );
   }
+}
+
+/// CustomPainter for rendering subtle dot matrix grid on hero banners
+class _HeroDotGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const spacing = 11.0;
+    const dotRadius = 1.2;
+    const cols = 6;
+    const rows = 4;
+    final dotPaint = Paint()
+      ..color = Colors.white.withAlpha(35)
+      ..style = PaintingStyle.fill;
+
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        canvas.drawCircle(
+          Offset(c * spacing, r * spacing),
+          dotRadius,
+          dotPaint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

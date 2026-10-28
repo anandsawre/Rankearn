@@ -11,7 +11,7 @@ class HeroPromoBanner extends StatelessWidget {
   const HeroPromoBanner({
     super.key,
     required this.onStartLearning,
-    this.imageAssetPath = 'assets/images/hero_mascot.jpg',
+    this.imageAssetPath,
     this.borderRadius,
   });
 

@@ -26,6 +26,7 @@ export 'components/cards/continue_learning_card.dart';
 export 'components/cards/today_goal_card.dart';
 export 'components/cards/daily_streak_card.dart';
 export 'components/cards/subject_card.dart';
+export 'components/cards/themed_card_background.dart';
 export 'components/cards/app_promo_card.dart';
 export 'components/cards/promo_banner_card.dart';
 export 'components/cards/live_event_card.dart';
