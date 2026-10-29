@@ -57,6 +57,8 @@ class AppDropdown<T> extends StatefulWidget {
   final double? menuMaxHeight;
   final int elevation;
   final bool enabled;
+  final Color? selectedItemColor;
+  final Color? selectedItemBackgroundColor;
 
   const AppDropdown({
     super.key,
@@ -88,6 +90,8 @@ class AppDropdown<T> extends StatefulWidget {
     this.menuMaxHeight = 240,
     this.elevation = 4,
     this.enabled = true,
+    this.selectedItemColor,
+    this.selectedItemBackgroundColor,
   });
 
   /// Convenience factory for simple lists of items with optional label mapping
@@ -393,6 +397,8 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                                   item: item,
                                   isSelected: isSelected,
                                   textStyle: effectiveTextStyle,
+                                  selectedColor: widget.selectedItemColor,
+                                  selectedBackgroundColor: widget.selectedItemBackgroundColor,
                                   onTap: () {
                                     _closeDropdown();
                                     widget.onChanged?.call(item.value);
@@ -616,12 +622,16 @@ class _AppDropdownItemWidget<T> extends StatefulWidget {
   final AppDropdownItem<T> item;
   final bool isSelected;
   final TextStyle textStyle;
+  final Color? selectedColor;
+  final Color? selectedBackgroundColor;
   final VoidCallback onTap;
 
   const _AppDropdownItemWidget({
     required this.item,
     required this.isSelected,
     required this.textStyle,
+    this.selectedColor,
+    this.selectedBackgroundColor,
     required this.onTap,
   });
 
@@ -638,14 +648,17 @@ class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
     final isSelected = widget.isSelected;
     final isEnabled = widget.item.enabled;
 
+    final primaryAccent = widget.selectedColor ?? const Color(0xFF00B96B);
+    final primaryAccentBg = widget.selectedBackgroundColor ?? const Color(0xFFECFDF5);
+
     final bgColor = isSelected
-        ? const Color(0xFFECFDF5) // Brand emerald tint
+        ? primaryAccentBg
         : _isHovered
         ? const Color(0xFFF8FAFC) // Crisp subtle hover
         : Colors.transparent;
 
     final textColor = isSelected
-        ? const Color(0xFF00B96B) // Brand green
+        ? primaryAccent
         : !isEnabled
         ? AppColors.textMuted
         : AppColors.textPrimary;
@@ -661,7 +674,7 @@ class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
       child: InkWell(
         onTap: isEnabled ? widget.onTap : null,
         hoverColor: Colors.transparent,
-        splashColor: const Color(0xFF00B96B).withValues(alpha: 0.08),
+        splashColor: primaryAccent.withValues(alpha: 0.08),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -676,7 +689,7 @@ class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
                   widget.item.icon,
                   size: 18,
                   color: isSelected
-                      ? const Color(0xFF00B96B)
+                      ? primaryAccent
                       : AppColors.textSecondary,
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -692,10 +705,10 @@ class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
                 ),
               ),
               if (isSelected)
-                const Icon(
+                Icon(
                   Icons.check_rounded,
                   size: 16,
-                  color: Color(0xFF00B96B),
+                  color: primaryAccent,
                 )
               else if (widget.item.trailing != null)
                 widget.item.trailing!,

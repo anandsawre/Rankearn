@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 
@@ -30,27 +31,42 @@ class TestResultHeader extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(64.0);
+  Size get preferredSize => const Size.fromHeight(60.0);
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 850;
 
-    return Container(
-      height: preferredSize.height,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE2ECFA), width: 1.0),
-        ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
-      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 24.0 : 16.0),
-      child: SafeArea(
-        bottom: false,
-        child: isDesktop
-            ? _buildDesktopHeader(context)
-            : _buildMobileHeader(context),
+      child: Container(
+        color: Colors.white,
+        child: SafeArea(
+          bottom: false,
+          child: Container(
+            height: 60.0,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFE2ECFA), width: 1.0),
+              ),
+            ),
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop ? 24.0 : 12.0,
+            ),
+            alignment: Alignment.center,
+            child: isDesktop
+                ? _buildDesktopHeader(context)
+                : _buildMobileHeader(context),
+          ),
+        ),
       ),
     );
   }
@@ -204,16 +220,22 @@ class TestResultHeader extends StatelessWidget implements PreferredSizeWidget {
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF10194F)),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: Color(0xFF10194F),
+            size: 24,
+          ),
           onPressed: onBack ?? () => Navigator.maybePop(context),
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           tooltip: 'Back',
         ),
         const SizedBox(width: 4),
 
-        // Logo & Tagline
-        Expanded(
+        // Logo
+        InkWell(
+          onTap: () => onNavTabSelected?.call(UserNavTab.home),
+          borderRadius: BorderRadius.circular(8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -232,58 +254,39 @@ class TestResultHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Rank',
-                              style: TextStyle(
-                                color: Color(0xFF10194F),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'earn',
-                              style: TextStyle(
-                                color: Color(0xFF00B96B),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ],
-                        ),
+              const Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Rank',
+                      style: TextStyle(
+                        color: Color(0xFF10194F),
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.3,
                       ),
-                      Text(
-                        'Learn · Practice · Earn',
-                        style: TextStyle(
-                          color: Color(0xFF586B9B),
-                          fontSize: 8,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    TextSpan(
+                      text: 'earn',
+                      style: TextStyle(
+                        color: Color(0xFF00B96B),
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.3,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(width: 6),
+        const Spacer(),
 
         // Coin Pill
-        FittedBox(fit: BoxFit.scaleDown, child: _buildCoinPill(compact: true)),
-        const SizedBox(width: 4),
+        _buildCoinPill(compact: true),
+        const SizedBox(width: 6),
 
         // Notification Bell
         _buildNotificationButton(),

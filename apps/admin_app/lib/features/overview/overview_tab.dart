@@ -351,10 +351,10 @@ class _OverviewTabState extends State<OverviewTab> {
     },
     {
       'id': 'manage_categories',
-      'label': 'Manage Categories',
-      'icon': Icons.folder_outlined,
-      'color': const Color(0xFF10B981),
-      'cardColor': const Color(0xFFD1FAE5),
+      'label': 'Target Exams',
+      'icon': Icons.explore_outlined,
+      'color': const Color(0xFF5636F5),
+      'cardColor': const Color(0xFFF5F3FF),
       'enabled': true,
     },
     {

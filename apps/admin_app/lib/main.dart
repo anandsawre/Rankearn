@@ -324,8 +324,8 @@ class _AdminAppShellState extends State<AdminAppShell> {
                     ),
                     _buildNavPill(
                       tab: AdminNavTab.patterns,
-                      label: 'Categories',
-                      icon: Icons.folder_outlined,
+                      label: 'Exams',
+                      icon: Icons.explore_outlined,
                       isActive: _activeTab == AdminNavTab.patterns,
                     ),
                     _buildNavPill(
@@ -956,7 +956,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   _buildDrawerItem(AdminNavTab.overview, 'Dashboard', Icons.dashboard_rounded),
                   _buildDrawerItem(AdminNavTab.tests, 'Test Series', Icons.menu_book_rounded),
                   _buildDrawerItem(AdminNavTab.battleQs, 'Questions Management', Icons.help_outline_rounded),
-                  _buildDrawerItem(AdminNavTab.patterns, 'Categories & Patterns', Icons.folder_outlined),
+                  _buildDrawerItem(AdminNavTab.patterns, 'Target Exams', Icons.explore_outlined),
                   _buildDrawerItem(AdminNavTab.users, 'Users & Students', Icons.people_outline_rounded),
                   _buildDrawerItem(AdminNavTab.aiCreator, 'AI Generator', Icons.auto_awesome_rounded),
 

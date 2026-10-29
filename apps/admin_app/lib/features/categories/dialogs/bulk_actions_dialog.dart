@@ -61,7 +61,7 @@ class _BulkCategoriesActionDialogState extends State<BulkCategoriesActionDialog>
                       ),
                       const SizedBox(width: 10),
                       const Text(
-                        'Bulk Actions',
+                        'Bulk Exam Actions',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
@@ -79,7 +79,7 @@ class _BulkCategoriesActionDialogState extends State<BulkCategoriesActionDialog>
               const Divider(height: 24, color: Color(0xFFE2E8F0)),
 
               Text(
-                'Apply operation to ${widget.selectedCount} selected categories:',
+                'Apply operation to ${widget.selectedCount} selected target exams:',
                 style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
               ),
               const SizedBox(height: 12),

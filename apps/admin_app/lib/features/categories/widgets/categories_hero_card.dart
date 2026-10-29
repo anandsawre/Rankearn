@@ -87,7 +87,7 @@ class CategoriesHeroCard extends StatelessWidget {
           const TextSpan(
             children: [
               TextSpan(
-                text: 'Categories ',
+                text: 'Target Exams ',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -109,7 +109,7 @@ class CategoriesHeroCard extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         const Text(
-          'Create, manage and organize categories for your platform.\nKeep your content well structured and easy to access.',
+          'Create, manage and organize target exams and curriculum for your platform.\nKeep your content well structured and easy to access.',
           style: TextStyle(
             fontSize: 12,
             color: Color(0xFF64748B),

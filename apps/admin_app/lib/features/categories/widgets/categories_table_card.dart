@@ -229,7 +229,7 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Categories List (${widget.totalCount})',
+                    'Subjects List (${widget.totalCount})',
                     style: const TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w700,
@@ -417,6 +417,73 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
     );
   }
 
+  Widget _buildExamBadge(String? examId) {
+    if (examId == null || examId.isEmpty || examId == 'general' || examId == 'all') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: const Text(
+          '🌐 All Exams',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF475569),
+          ),
+        ),
+      );
+    }
+
+    final id = examId.toLowerCase();
+    String label;
+    Color bg;
+    Color textColor;
+
+    if (id.contains('bpsc')) {
+      label = '🏛️ 70th BPSC';
+      bg = const Color(0xFFEEF2FF);
+      textColor = const Color(0xFF5636F5);
+    } else if (id.contains('ssc')) {
+      label = '📋 SSC CGL';
+      bg = const Color(0xFFEFF6FF);
+      textColor = const Color(0xFF2563EB);
+    } else if (id.contains('railway')) {
+      label = '🚆 Railway ALP';
+      bg = const Color(0xFFECFDF5);
+      textColor = const Color(0xFF059669);
+    } else if (id.contains('upsc')) {
+      label = '🇮🇳 UPSC CSE';
+      bg = const Color(0xFFFFFBEB);
+      textColor = const Color(0xFFD97706);
+    } else if (id.contains('banking')) {
+      label = '🏦 Banking';
+      bg = const Color(0xFFFFF1F2);
+      textColor = const Color(0xFFE11D48);
+    } else {
+      label = '🎯 ${examId.toUpperCase()}';
+      bg = const Color(0xFFF3E8FF);
+      textColor = const Color(0xFF7C3AED);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: textColor,
+        ),
+      ),
+    );
+  }
+
   Widget _buildTableView(bool allSelected) {
     if (widget.items.isEmpty) {
       return Container(
@@ -467,9 +534,9 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
                     ),
                   ),
                   const DataColumn(label: Text('#', style: _headerStyle)),
-                  const DataColumn(label: Text('Category Details', style: _headerStyle)),
-                  const DataColumn(label: Text('Subcategories', style: _headerStyle)),
-                  const DataColumn(label: Text('Subjects', style: _headerStyle)),
+                  const DataColumn(label: Text('Target Exam', style: _headerStyle)),
+                  const DataColumn(label: Text('Subject Details', style: _headerStyle)),
+                  const DataColumn(label: Text('Chapters', style: _headerStyle)),
                   const DataColumn(label: Text('Total Tests', style: _headerStyle)),
                   const DataColumn(label: Text('Questions', style: _headerStyle)),
                   const DataColumn(label: Text('Status', style: _headerStyle)),
@@ -513,11 +580,15 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
                       // 2. Row #
                       DataCell(
                         Text(
-                          '${item.index}',
+                          '${(widget.currentPage - 1) * widget.pageSize + idx + 1}',
                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
                         ),
                       ),
-                      // 3. Category Details (Icon + Name + Description)
+                      // 3. Target Exam Badge (Level 1)
+                      DataCell(
+                        _buildExamBadge(item.examCategoryId),
+                      ),
+                      // 4. Subject Details (Icon + Name + Description - Level 2)
                       DataCell(
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -565,7 +636,7 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
                           ],
                         ),
                       ),
-                      // 4. Subcategories Pill Badge
+                      // 5. Chapters Pill Badge
                       DataCell(
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
@@ -574,29 +645,11 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            '${item.subcategoriesCount}',
+                            '${item.subcategoriesCount} Chapters',
                             style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF0284C7),
-                            ),
-                          ),
-                        ),
-                      ),
-                      // 5. Subjects Pill Badge
-                      DataCell(
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3F0FF),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            '${item.subjectsCount}',
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF7C3AED),
                             ),
                           ),
                         ),
@@ -816,7 +869,7 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Sub: ${item.subcategoriesCount} • Subj: ${item.subjectsCount}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                        Text('${item.subcategoriesCount} Chapters', style: const TextStyle(fontSize: 11, color: Color(0xFF0284C7), fontWeight: FontWeight.w700)),
                         Text('${item.totalTests} Tests • ${_formatNumber(item.totalQuestions)} Qs', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF1E293B))),
                       ],
                     ),
@@ -840,7 +893,7 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
         final isNarrow = MediaQuery.sizeOf(context).width < 800;
 
         final infoText = Text(
-          'Showing $startIdx to $endIdx of ${widget.totalCount} categories',
+          'Showing $startIdx to $endIdx of ${widget.totalCount} subjects',
           style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
         );
 

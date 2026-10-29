@@ -207,14 +207,19 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
           onBack: _promptLeaveBattle,
         ),
         body: SafeArea(
+          top: false,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              return Center(
+              return Align(
+                alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 540),
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [

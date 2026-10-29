@@ -26,20 +26,20 @@ class CategoriesMetricsRow extends StatelessWidget {
         // Metric Card Configs
         final cards = [
           _MetricCardData(
-            icon: Icons.folder_rounded,
-            iconBg: const Color(0xFF0084FF),
-            title: 'Total Categories',
+            icon: Icons.explore_rounded,
+            iconBg: const Color(0xFF5636F5),
+            title: 'Total Exams',
             value: totalCategories.toString(),
             badgeText: '+12%',
             badgePositive: true,
             subtext: '+6 this month',
-            sparklineColor: const Color(0xFF0084FF),
+            sparklineColor: const Color(0xFF5636F5),
             sparklineData: [20, 24, 22, 28, 35, 42, 48],
           ),
           _MetricCardData(
-            icon: Icons.layers_rounded,
+            icon: Icons.check_circle_outline_rounded,
             iconBg: const Color(0xFF10B981),
-            title: 'Active Categories',
+            title: 'Published Exams',
             value: activeCategories.toString(),
             badgeText: '+10%',
             badgePositive: true,
@@ -48,9 +48,9 @@ class CategoriesMetricsRow extends StatelessWidget {
             sparklineData: [18, 22, 26, 30, 36, 40, 42],
           ),
           _MetricCardData(
-            icon: Icons.description_rounded,
+            icon: Icons.edit_note_rounded,
             iconBg: const Color(0xFFF59E0B),
-            title: 'Draft Categories',
+            title: 'Draft Exams',
             value: draftCategories.toString(),
             badgeText: '-20%',
             badgePositive: false,
@@ -61,7 +61,7 @@ class CategoriesMetricsRow extends StatelessWidget {
           _MetricCardData(
             icon: Icons.archive_rounded,
             iconBg: const Color(0xFF8B5CF6),
-            title: 'Archived Categories',
+            title: 'Archived Exams',
             value: archivedCategories.toString(),
             badgeText: '+0%',
             badgePositive: true,
@@ -70,8 +70,8 @@ class CategoriesMetricsRow extends StatelessWidget {
             sparklineData: [2, 2, 2, 3, 2, 2, 2],
           ),
           _MetricCardData(
-            icon: Icons.article_rounded,
-            iconBg: const Color(0xFFF43F5E),
+            icon: Icons.menu_book_rounded,
+            iconBg: const Color(0xFF2563EB),
             title: 'Total Subjects',
             value: totalSubjects.toString(),
             badgeText: '+18%',

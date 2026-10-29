@@ -203,10 +203,6 @@ class _TechDotMatrixPainter extends CustomPainter {
     canvas.drawCircle(Offset(w + 2, -2), w * 0.45, ringPaint);
 
     // 3. Modern Dot-Matrix Grid in Top-Right Corner (5 cols x 4 rows)
-    final dotPaint = Paint()
-      ..color = accentColor.withAlpha(40)
-      ..style = PaintingStyle.fill;
-
     const spacing = 9.0;
     const dotRadius = 1.2;
     const cols = 5;

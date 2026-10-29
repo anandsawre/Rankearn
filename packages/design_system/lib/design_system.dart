@@ -44,6 +44,7 @@ export 'components/cards/subject_selection_card.dart';
 export 'components/cards/test_category_card.dart';
 export 'components/cards/test_promo_card.dart';
 export 'components/cards/live_contest_card.dart';
+export 'components/cards/test_card_decoration_painters.dart';
 export 'components/display/live_tests_hero_banner.dart';
 export 'components/navigation/live_test_navigation.dart';
 export 'components/cards/live_test_card.dart';

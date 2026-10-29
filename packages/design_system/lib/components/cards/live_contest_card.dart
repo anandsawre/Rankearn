@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../buttons/app_button.dart';
+import 'test_card_decoration_painters.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/icons.dart';
 import '../../tokens/radii.dart';
@@ -88,15 +89,34 @@ class LiveContestCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: AppRadii.borderXl,
-        border: Border.all(color: AppColors.border, width: 1.2),
+        border: Border.all(
+          color: const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
         boxShadow: AppShadows.card,
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // 1. Top-Left Curved Diagonal Corner Accent
+          // 1. Right Vector Illustration Background (Test list waves in Red or Blue, NO Coins)
+          Positioned(
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: 220,
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: ThemedWaveCardDecorationPainter(
+                  accentColor: effectiveAccent,
+                  isMobile: true,
+                ),
+              ),
+            ),
+          ),
+
+          // 2. Top-Left Curved Diagonal Corner Accent
           Positioned(
             top: 0,
             left: 0,
@@ -568,8 +588,27 @@ class _CornerAccentPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // 1. Soft shadow / glow behind ribbon
+    final shadowPaint = Paint()
+      ..color = color.withAlpha(45)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    final shadowPath = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width + 4, 0)
+      ..quadraticBezierTo(size.width * 0.40, size.height * 0.25, 0, size.height + 4)
+      ..close();
+    canvas.drawPath(shadowPath, shadowPaint);
+
+    // 2. Main Ribbon
     final paint = Paint()
-      ..color = color
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          color,
+          color.withAlpha(220),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
 
     final path = Path()
@@ -579,6 +618,22 @@ class _CornerAccentPainter extends CustomPainter {
       ..close();
 
     canvas.drawPath(path, paint);
+
+    // 3. Delicate inner highlight arc
+    final highlightPaint = Paint()
+      ..color = Colors.white.withAlpha(55)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final highlightPath = Path()
+      ..moveTo(size.width * 0.15, 0)
+      ..quadraticBezierTo(
+        size.width * 0.35,
+        size.height * 0.16,
+        0,
+        size.height * 0.75,
+      );
+    canvas.drawPath(highlightPath, highlightPaint);
   }
 
   @override

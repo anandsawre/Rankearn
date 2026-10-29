@@ -88,6 +88,7 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
         onBack: _cancelMatchmaking,
       ),
       body: SafeArea(
+        top: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isDesktop = constraints.maxWidth >= 768;

@@ -521,94 +521,83 @@ class _QuestionsTabState extends State<QuestionsTab> {
             // ROW 3: QUESTIONS TABLE CARD + RIGHT ANALYTICS
             // ==========================================
             if (isDesktop)
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Questions List Table
-                    Expanded(
-                      child: QuestionsTableCard(
-                        items: _paginatedItems,
-                        totalCount: _hasActiveFilters ? _filteredItems.length : _totalQuestions,
-                        selectedTestSeries: _selectedTestSeries,
-                        selectedSubject: _selectedSubject,
-                        selectedType: _selectedType,
-                        selectedDifficulty: _selectedDifficulty,
-                        searchQuery: _searchQuery,
-                        currentPage: _currentPage,
-                        totalPages: _totalPages,
-                        onTestSeriesChanged: (val) {
-                          setState(() {
-                            _selectedTestSeries = val;
-                            _currentPage = 1;
-                          });
-                        },
-                        onSubjectChanged: (val) {
-                          setState(() {
-                            _selectedSubject = val;
-                            _currentPage = 1;
-                          });
-                        },
-                        onTypeChanged: (val) {
-                          setState(() {
-                            _selectedType = val;
-                            _currentPage = 1;
-                          });
-                        },
-                        onDifficultyChanged: (val) {
-                          setState(() {
-                            _selectedDifficulty = val;
-                            _currentPage = 1;
-                          });
-                        },
-                        onSearchChanged: (val) {
-                          setState(() {
-                            _searchQuery = val;
-                            _currentPage = 1;
-                          });
-                        },
-                        onPageChanged: (page) {
-                          setState(() => _currentPage = page);
-                        },
-                        onView: _openViewDialog,
-                        onEdit: (item) => _openCreateDialog(item),
-                        onDuplicate: _duplicateQuestion,
-                        onDelete: _deleteQuestion,
-                        onToggleStatus: _toggleStatus,
-                        onSelectionChanged: (ids) {
-                          setState(() {
-                            _selectedIds.clear();
-                            _selectedIds.addAll(ids);
-                          });
-                        },
-                      ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Questions List Table
+                  Expanded(
+                    child: QuestionsTableCard(
+                      items: _paginatedItems,
+                      totalCount: _hasActiveFilters ? _filteredItems.length : _totalQuestions,
+                      selectedTestSeries: _selectedTestSeries,
+                      selectedSubject: _selectedSubject,
+                      selectedType: _selectedType,
+                      selectedDifficulty: _selectedDifficulty,
+                      searchQuery: _searchQuery,
+                      currentPage: _currentPage,
+                      totalPages: _totalPages,
+                      onTestSeriesChanged: (val) {
+                        setState(() {
+                          _selectedTestSeries = val;
+                          _currentPage = 1;
+                        });
+                      },
+                      onSubjectChanged: (val) {
+                        setState(() {
+                          _selectedSubject = val;
+                          _currentPage = 1;
+                        });
+                      },
+                      onTypeChanged: (val) {
+                        setState(() {
+                          _selectedType = val;
+                          _currentPage = 1;
+                        });
+                      },
+                      onDifficultyChanged: (val) {
+                        setState(() {
+                          _selectedDifficulty = val;
+                          _currentPage = 1;
+                        });
+                      },
+                      onSearchChanged: (val) {
+                        setState(() {
+                          _searchQuery = val;
+                          _currentPage = 1;
+                        });
+                      },
+                      onPageChanged: (page) {
+                        setState(() => _currentPage = page);
+                      },
+                      onView: _openViewDialog,
+                      onEdit: (item) => _openCreateDialog(item),
+                      onDuplicate: _duplicateQuestion,
+                      onDelete: _deleteQuestion,
+                      onToggleStatus: _toggleStatus,
+                      onSelectionChanged: (ids) {
+                        setState(() {
+                          _selectedIds.clear();
+                          _selectedIds.addAll(ids);
+                        });
+                      },
                     ),
-                    const SizedBox(width: 14),
+                  ),
+                  const SizedBox(width: 14),
 
-                    // Right Analytics Column (3 Cards matching reference)
-                    SizedBox(
-                      width: 285,
-                      child: Column(
-                        children: const [
-                          Expanded(
-                            flex: 38,
-                            child: QuestionTypeDonutChartCard(fillHeight: true),
-                          ),
-                          SizedBox(height: 12),
-                          Expanded(
-                            flex: 31,
-                            child: DifficultyWiseBarChartCard(fillHeight: true),
-                          ),
-                          SizedBox(height: 12),
-                          Expanded(
-                            flex: 31,
-                            child: QuestionsRecentActivityCard(fillHeight: true),
-                          ),
-                        ],
-                      ),
+                  // Right Analytics Column (3 Cards matching reference)
+                  SizedBox(
+                    width: 285,
+                    child: Column(
+                      children: const [
+                        QuestionTypeDonutChartCard(),
+                        SizedBox(height: 12),
+                        DifficultyWiseBarChartCard(),
+                        SizedBox(height: 12),
+                        QuestionsRecentActivityCard(),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               )
             else
               Column(

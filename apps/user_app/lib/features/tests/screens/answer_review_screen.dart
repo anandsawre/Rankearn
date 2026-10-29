@@ -551,7 +551,7 @@ class _AnswerReviewScreenState extends State<AnswerReviewScreen> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.12) : const Color(0xFFF8FAFC),
+          color: isSelected ? color.withValues(alpha: 0.12) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? color : const Color(0xFFE2E8F0),

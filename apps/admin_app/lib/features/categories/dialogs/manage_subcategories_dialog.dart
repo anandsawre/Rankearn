@@ -105,7 +105,7 @@ class _ManageSubcategoriesDialogState extends State<ManageSubcategoriesDialog> {
                       ),
                       const SizedBox(width: 10),
                       const Text(
-                        'Manage Subcategories',
+                        'Manage Chapters & Units',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
@@ -122,10 +122,10 @@ class _ManageSubcategoriesDialogState extends State<ManageSubcategoriesDialog> {
               ),
               const Divider(height: 24, color: Color(0xFFE2E8F0)),
 
-              // Parent Category Selector
+              // Parent Subject Selector
               Row(
                 children: [
-                  const Text('Select Category:', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
+                  const Text('Select Subject:', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Container(

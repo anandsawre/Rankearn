@@ -15,6 +15,7 @@ import 'dialogs/send_notification_dialog.dart';
 import 'dialogs/export_users_dialog.dart';
 import 'dialogs/bulk_actions_dialog.dart';
 import 'dialogs/view_user_dialog.dart';
+import 'dialogs/adjust_coins_dialog.dart';
 
 /// Users Management Screen for Rankearn Admin Panel
 /// Pixel-accurate to reference specification image with Supabase integration.
@@ -265,7 +266,26 @@ class _UsersTabState extends State<UsersTab> {
       builder: (ctx) => ViewUserDialog(
         user: user,
         onEdit: () => _openAddUserDialog(user),
+        onManageCoins: () {
+          Navigator.of(ctx).pop();
+          _openAdjustCoinsDialog(user);
+        },
       ),
+    );
+  }
+
+  void _openAdjustCoinsDialog(UserManagementItem user) {
+    AdjustCoinsDialog.show(
+      context,
+      user: user,
+      onCoinsUpdated: (newCoins) {
+        setState(() {
+          final idx = _allUsers.indexWhere((e) => e.id == user.id);
+          if (idx >= 0) {
+            _allUsers[idx] = _allUsers[idx].copyWith(coins: newCoins);
+          }
+        });
+      },
     );
   }
 
@@ -450,6 +470,7 @@ class _UsersTabState extends State<UsersTab> {
                       }),
                       onView: _openViewDialog,
                       onEdit: _openAddUserDialog,
+                      onManageCoins: _openAdjustCoinsDialog,
                       onToggleStatus: _toggleUserStatus,
                       onDelete: _deleteUser,
                       onSendNotification: _openSendNotificationDialog,
@@ -521,6 +542,7 @@ class _UsersTabState extends State<UsersTab> {
                     }),
                     onView: _openViewDialog,
                     onEdit: _openAddUserDialog,
+                    onManageCoins: _openAdjustCoinsDialog,
                     onToggleStatus: _toggleUserStatus,
                     onDelete: _deleteUser,
                     onSendNotification: _openSendNotificationDialog,

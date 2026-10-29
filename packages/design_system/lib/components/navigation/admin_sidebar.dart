@@ -44,7 +44,7 @@ class AdminSidebar extends StatelessWidget {
       (AdminNavTab.overview, Icons.dashboard_outlined, 'Overview'),
       (AdminNavTab.tests, Icons.menu_book_outlined, 'Test Series'),
       (AdminNavTab.users, Icons.people_outline, 'Users'),
-      (AdminNavTab.patterns, Icons.layers_outlined, 'Exam Patterns'),
+      (AdminNavTab.patterns, Icons.explore_outlined, 'Target Exams'),
       (AdminNavTab.aiCreator, Icons.psychology_outlined, 'AI Test Creator'),
       (AdminNavTab.finance, Icons.currency_rupee, 'Finance'),
       (AdminNavTab.contests, Icons.emoji_events_outlined, 'Contests'),

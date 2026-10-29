@@ -22,6 +22,7 @@ class UsersTableCard extends StatefulWidget {
   final ValueChanged<int> onPageSizeChanged;
   final ValueChanged<UserManagementItem> onView;
   final ValueChanged<UserManagementItem> onEdit;
+  final ValueChanged<UserManagementItem>? onManageCoins;
   final ValueChanged<UserManagementItem> onToggleStatus;
   final ValueChanged<UserManagementItem> onDelete;
   final ValueChanged<UserManagementItem> onSendNotification;
@@ -46,6 +47,7 @@ class UsersTableCard extends StatefulWidget {
     required this.onPageSizeChanged,
     required this.onView,
     required this.onEdit,
+    this.onManageCoins,
     required this.onToggleStatus,
     required this.onDelete,
     required this.onSendNotification,
@@ -682,17 +684,37 @@ class _UsersTableCardState extends State<UsersTableCard> {
                             icon: Icons.edit_outlined,
                             onTap: () => widget.onEdit(user),
                           ),
+                          if (widget.onManageCoins != null) ...[
+                            const SizedBox(width: 4),
+                            _buildActionIconBtn(
+                              icon: Icons.monetization_on_outlined,
+                              onTap: () => widget.onManageCoins!(user),
+                              color: const Color(0xFFF59E0B),
+                            ),
+                          ],
                           const SizedBox(width: 4),
                           PopupMenuButton<String>(
                             icon: const Icon(Icons.more_vert_rounded, size: 16, color: Color(0xFF64748B)),
                             padding: EdgeInsets.zero,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             onSelected: (val) {
+                              if (val == 'coins') widget.onManageCoins?.call(user);
                               if (val == 'status') widget.onToggleStatus(user);
                               if (val == 'notify') widget.onSendNotification(user);
                               if (val == 'delete') widget.onDelete(user);
                             },
                             itemBuilder: (context) => [
+                              if (widget.onManageCoins != null)
+                                const PopupMenuItem(
+                                  value: 'coins',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.toll_rounded, size: 16, color: Color(0xFFF59E0B)),
+                                      SizedBox(width: 8),
+                                      Text('Manage Coins', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                                    ],
+                                  ),
+                                ),
                               PopupMenuItem(
                                 value: 'status',
                                 child: Text(
@@ -723,7 +745,7 @@ class _UsersTableCardState extends State<UsersTableCard> {
     );
   }
 
-  Widget _buildActionIconBtn({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildActionIconBtn({required IconData icon, required VoidCallback onTap, Color? color}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
@@ -736,7 +758,7 @@ class _UsersTableCardState extends State<UsersTableCard> {
           border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 14, color: const Color(0xFF64748B)),
+        child: Icon(icon, size: 14, color: color ?? const Color(0xFF64748B)),
       ),
     );
   }

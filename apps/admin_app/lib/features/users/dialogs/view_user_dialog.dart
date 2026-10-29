@@ -4,11 +4,13 @@ import '../models/user_management_item.dart';
 class ViewUserDialog extends StatelessWidget {
   final UserManagementItem user;
   final VoidCallback onEdit;
+  final VoidCallback? onManageCoins;
 
   const ViewUserDialog({
     super.key,
     required this.user,
     required this.onEdit,
+    this.onManageCoins,
   });
 
   @override
@@ -96,6 +98,42 @@ class ViewUserDialog extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: user.status.color,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  InkWell(
+                    onTap: onManageCoins,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10194F),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.star_rounded, color: Color(0xFFFFC928), size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${user.coins} Coins',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF00B96B),
+                            ),
+                            child: const Icon(Icons.add, size: 10, color: Colors.white),
+                          ),
+                        ],
                       ),
                     ),
                   ),

@@ -35,8 +35,16 @@ class TestSeriesItem {
   final String? examCategoryId;
   final String testMode;
   final int totalTests;
+  final int durationMinutes;
   final int totalQuestions;
-  final int priceInr;
+  final double negativeMarking;
+  final String? topic;
+  final bool isPremium;
+  final int priceInr; // unlock_price_coins
+  final bool isTournament;
+  final int entryFeeCoins;
+  final DateTime? scheduledStartTime;
+  final DateTime? scheduledEndTime;
   final int enrollments;
   final TestSeriesStatus status;
   final DateTime createdAt;
@@ -50,9 +58,17 @@ class TestSeriesItem {
     required this.subject,
     this.examCategoryId = 'bpsc',
     this.testMode = 'mock',
-    required this.totalTests,
+    this.totalTests = 1,
+    this.durationMinutes = 60,
     required this.totalQuestions,
+    this.negativeMarking = 0.25,
+    this.topic,
+    this.isPremium = false,
     required this.priceInr,
+    this.isTournament = false,
+    this.entryFeeCoins = 0,
+    this.scheduledStartTime,
+    this.scheduledEndTime,
     required this.enrollments,
     required this.status,
     required this.createdAt,
@@ -68,8 +84,16 @@ class TestSeriesItem {
     String? examCategoryId,
     String? testMode,
     int? totalTests,
+    int? durationMinutes,
     int? totalQuestions,
+    double? negativeMarking,
+    String? topic,
+    bool? isPremium,
     int? priceInr,
+    bool? isTournament,
+    int? entryFeeCoins,
+    DateTime? scheduledStartTime,
+    DateTime? scheduledEndTime,
     int? enrollments,
     TestSeriesStatus? status,
     DateTime? createdAt,
@@ -84,8 +108,16 @@ class TestSeriesItem {
       examCategoryId: examCategoryId ?? this.examCategoryId,
       testMode: testMode ?? this.testMode,
       totalTests: totalTests ?? this.totalTests,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
       totalQuestions: totalQuestions ?? this.totalQuestions,
+      negativeMarking: negativeMarking ?? this.negativeMarking,
+      topic: topic ?? this.topic,
+      isPremium: isPremium ?? this.isPremium,
       priceInr: priceInr ?? this.priceInr,
+      isTournament: isTournament ?? this.isTournament,
+      entryFeeCoins: entryFeeCoins ?? this.entryFeeCoins,
+      scheduledStartTime: scheduledStartTime ?? this.scheduledStartTime,
+      scheduledEndTime: scheduledEndTime ?? this.scheduledEndTime,
       enrollments: enrollments ?? this.enrollments,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
@@ -100,9 +132,15 @@ class TestSeriesItem {
       'title': title,
       'syllabus': description,
       'test_mode': testMode,
-      'duration_minutes': totalTests > 0 ? totalTests : 60,
+      'duration_minutes': durationMinutes > 0 ? durationMinutes : (totalTests > 0 ? totalTests : 60),
       'total_questions': totalQuestions,
+      'negative_marking': negativeMarking,
+      'is_premium': isPremium,
       'unlock_price_coins': priceInr,
+      'is_tournament': isTournament,
+      'entry_fee_coins': entryFeeCoins,
+      'scheduled_start_time': scheduledStartTime?.toIso8601String(),
+      'scheduled_end_time': scheduledEndTime?.toIso8601String(),
       'total_participants': enrollments,
       'status': status.name,
       'exam_category_id': (examCategoryId != null && examCategoryId!.isNotEmpty) ? examCategoryId : 'bpsc',
@@ -111,13 +149,12 @@ class TestSeriesItem {
     };
   }
 
-
-
   factory TestSeriesItem.fromMap(Map<String, dynamic> map, int fallbackIndex) {
     final statusStr = map['status']?.toString() ?? 'published';
     final examCat = map['exam_category_id']?.toString() ?? 'bpsc';
     final mode = map['test_mode']?.toString() ?? 'mock';
     final sub = map['category_id']?.toString() ?? 'General Science';
+    final dur = (map['duration_minutes'] as num?)?.toInt() ?? 60;
 
     final (icon, color) = _getIconAndColorForSubject(sub, fallbackIndex);
 
@@ -130,9 +167,20 @@ class TestSeriesItem {
       subject: sub,
       examCategoryId: examCat,
       testMode: mode,
-      totalTests: (map['duration_minutes'] as num?)?.toInt() ?? 1,
+      totalTests: dur,
+      durationMinutes: dur,
       totalQuestions: (map['total_questions'] as num?)?.toInt() ?? 0,
+      negativeMarking: (map['negative_marking'] as num?)?.toDouble() ?? 0.25,
+      isPremium: map['is_premium'] == true,
       priceInr: (map['unlock_price_coins'] as num?)?.toInt() ?? 0,
+      isTournament: map['is_tournament'] == true,
+      entryFeeCoins: (map['entry_fee_coins'] as num?)?.toInt() ?? 0,
+      scheduledStartTime: map['scheduled_start_time'] != null
+          ? DateTime.tryParse(map['scheduled_start_time'].toString())
+          : null,
+      scheduledEndTime: map['scheduled_end_time'] != null
+          ? DateTime.tryParse(map['scheduled_end_time'].toString())
+          : null,
       enrollments: (map['total_participants'] as num?)?.toInt() ?? 0,
       status: TestSeriesStatus.fromString(statusStr),
       createdAt: map['created_at'] != null

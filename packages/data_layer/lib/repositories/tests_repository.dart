@@ -50,6 +50,9 @@ class TestsRepository {
           .from('categories')
           .stream(primaryKey: ['id'])
           .order('display_order', ascending: true)
+          .handleError((_) {
+            // Silently swallow websocket close/reconnect errors (e.g. code 1006 on web)
+          })
           .map((rows) {
             final list = rows.map((m) => CategoryModel.fromMap(m)).toList();
             if (onlyActive) {
@@ -123,12 +126,46 @@ class TestsRepository {
       final data = await client
           .from('exam_categories')
           .select()
-          .eq('is_published', true)
           .order('display_order', ascending: true);
 
       return Success(List<Map<String, dynamic>>.from(data));
     } catch (e) {
       return Failure('Error fetching exam categories: $e', e);
+    }
+  }
+
+  /// Create or update an Exam Category (Target Exam)
+  Future<Result<ExamCategoryModel>> upsertExamCategory(ExamCategoryModel examCategory) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
+    try {
+      final map = examCategory.toMap();
+      if ((map['normalized_name'] == null || (map['normalized_name'] as String).isEmpty) &&
+          map['name'] != null) {
+        map['normalized_name'] = (map['name'] as String).toLowerCase().trim().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+      }
+      map['languages'] = map['languages'] ?? 'en,hi';
+
+      await client.from('exam_categories').upsert(map);
+      return Success(examCategory);
+    } catch (e) {
+      return Failure('Error saving exam category: $e', e);
+    }
+  }
+
+  /// Delete an Exam Category
+  Future<Result<bool>> deleteExamCategory(String id) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
+    try {
+      await client.from('exam_categories').delete().eq('id', id);
+      return const Success(true);
+    } catch (e) {
+      return Failure('Error deleting exam category: $e', e);
     }
   }
 

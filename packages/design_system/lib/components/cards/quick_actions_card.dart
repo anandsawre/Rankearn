@@ -176,25 +176,28 @@ class QuickActionsCard extends StatelessWidget {
           if (isCompact) const SizedBox(height: 6),
 
           // ── Action Tiles ──
-          Builder(
-            builder: (context) {
+          LayoutBuilder(
+            builder: (context, constraints) {
               final isSmall =
                   MediaQuery.sizeOf(context).width < smallBreakpoint;
+              final minNeededWidth = actions.length * (isCompact ? 60.0 : 76.0);
+              final shouldScroll = isSmall || constraints.maxWidth < minNeededWidth;
 
               final tiles = actions
                   .map((a) => _QuickActionTile(data: a, compact: isCompact))
                   .toList();
 
-              if (isSmall) {
+              if (shouldScroll) {
                 return SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: tiles
                         .map(
                           (t) => Padding(
-                            padding: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.only(right: 6),
                             child: SizedBox(
-                              width: isCompact ? 72 : 80,
+                              width: isCompact ? 64 : 76,
                               child: t,
                             ),
                           ),

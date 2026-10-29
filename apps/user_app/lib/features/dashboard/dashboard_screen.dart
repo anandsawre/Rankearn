@@ -65,13 +65,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     });
 
-    _categoriesSub ??= TestsRepository().streamCategories().listen((updated) {
-      if (mounted && updated.isNotEmpty) {
-        setState(() {
-          _liveCategories = updated;
-        });
-      }
-    });
+    _categoriesSub ??= TestsRepository().streamCategories().listen(
+      (updated) {
+        if (mounted && updated.isNotEmpty) {
+          setState(() {
+            _liveCategories = updated;
+          });
+        }
+      },
+      onError: (_) {
+        // Silently ignore channel close/reconnect events
+      },
+    );
   }
 
   @override

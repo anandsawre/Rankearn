@@ -146,4 +146,135 @@ class WalletRepository {
       return Failure('Error fetching config $key: $e', e);
     }
   }
+
+  /// Admin: Approve Top-up Request and atomically credit coins to user
+  Future<Result<bool>> approveTopUpRequest({
+    required String requestId,
+    required String userId,
+    required int coinsAwarded,
+    required String utr,
+    String? userName,
+  }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
+    try {
+      // 1. Fetch current profile coins
+      final userProfile = await client
+          .from('profiles')
+          .select('coins')
+          .eq('id', userId)
+          .maybeSingle();
+
+      final currentCoins = (userProfile?['coins'] as num?)?.toInt() ?? 0;
+      final newBalance = currentCoins + coinsAwarded;
+
+      // 2. Update user profile coins
+      await client
+          .from('profiles')
+          .update({'coins': newBalance})
+          .eq('id', userId);
+
+      // 3. Mark topup_request as approved
+      await client
+          .from('topup_requests')
+          .update({
+            'status': 'approved',
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', requestId);
+
+      // 4. Record wallet transaction
+      await client.from('wallet_transactions').insert({
+        'id': 'TXN_${DateTime.now().millisecondsSinceEpoch}',
+        'user_id': userId,
+        'amount': coinsAwarded,
+        'type': 'earn',
+        'category': 'topup',
+        'reference_id': utr,
+        'title': 'UPI Top-up Approved (UTR: $utr)',
+        'balance_after': newBalance,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      return const Success(true);
+    } catch (e) {
+      return Failure('Failed to approve top-up: $e', e);
+    }
+  }
+
+  /// Admin: Reject Top-up Request
+  Future<Result<bool>> rejectTopUpRequest({
+    required String requestId,
+    String? reason,
+  }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
+    try {
+      await client
+          .from('topup_requests')
+          .update({
+            'status': 'rejected',
+            'rejection_reason': reason ?? 'Payment could not be verified',
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', requestId);
+
+      return const Success(true);
+    } catch (e) {
+      return Failure('Failed to reject top-up: $e', e);
+    }
+  }
+
+  /// Admin: Directly Credit or Debit User Coins with audit trail
+  Future<Result<int>> adjustUserCoins({
+    required String userId,
+    required int coinsDelta,
+    required String reason,
+    String? adminEmail,
+  }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
+    try {
+      // 1. Fetch current profile coins
+      final userProfile = await client
+          .from('profiles')
+          .select('coins')
+          .eq('id', userId)
+          .maybeSingle();
+
+      final currentCoins = (userProfile?['coins'] as num?)?.toInt() ?? 0;
+      final newBalance = (currentCoins + coinsDelta).clamp(0, 999999999);
+
+      // 2. Update user profile coins
+      await client
+          .from('profiles')
+          .update({'coins': newBalance})
+          .eq('id', userId);
+
+      // 3. Record in wallet_transactions ledger
+      await client.from('wallet_transactions').insert({
+        'id': 'TXN_ADM_${DateTime.now().millisecondsSinceEpoch}',
+        'user_id': userId,
+        'amount': coinsDelta,
+        'type': coinsDelta >= 0 ? 'earn' : 'spend',
+        'category': coinsDelta >= 0 ? 'admin_credit' : 'admin_debit',
+        'reference_id': adminEmail ?? 'admin',
+        'title': reason.trim().isNotEmpty
+            ? reason.trim()
+            : (coinsDelta >= 0 ? 'Admin Coin Grant' : 'Admin Coin Deduction'),
+        'balance_after': newBalance,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      return Success(newBalance);
+    } catch (e) {
+      return Failure('Failed to adjust coins: $e', e);
+    }
+  }
 }
