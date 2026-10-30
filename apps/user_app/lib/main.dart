@@ -950,12 +950,19 @@ class _UserAppShellState extends State<UserAppShell> {
           ),
           UserNavTab.live => LiveTestsScreen(
             userCoins: _profile.coins,
+            userId: _profile.id,
             onStartTest: (test) => _startQuiz(test),
             onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
             onOpenLeaderboard: () =>
                 setState(() => _activeTab = UserNavTab.leaderboard),
             onExploreSeries: () =>
                 setState(() => _activeTab = UserNavTab.tests),
+            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
+            onCoinDeducted: (fee) {
+              setState(() {
+                _profile = _profile.copyWith(coins: (_profile.coins - fee).clamp(0, 999999999));
+              });
+            },
           ),
           UserNavTab.leaderboard => LeaderboardScreen(
             profile: _profile,
