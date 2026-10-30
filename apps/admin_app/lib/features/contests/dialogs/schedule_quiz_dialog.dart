@@ -17,7 +17,7 @@ class ScheduleQuizDialog extends StatefulWidget {
 }
 
 class _ScheduleQuizDialogState extends State<ScheduleQuizDialog> {
-  LiveQuizItem? _selectedQuiz;
+  String? _selectedQuizId;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _selectedTime = const TimeOfDay(hour: 19, minute: 0);
 
@@ -25,12 +25,16 @@ class _ScheduleQuizDialogState extends State<ScheduleQuizDialog> {
   void initState() {
     super.initState();
     if (widget.quizzes.isNotEmpty) {
-      _selectedQuiz = widget.quizzes.first;
+      _selectedQuizId = widget.quizzes.first.id;
     }
   }
 
   void _submit() {
-    if (_selectedQuiz == null) return;
+    if (_selectedQuizId == null) return;
+    final selectedQuiz = widget.quizzes.firstWhere(
+      (q) => q.id == _selectedQuizId,
+      orElse: () => widget.quizzes.first,
+    );
     final scheduledDateTime = DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -39,7 +43,7 @@ class _ScheduleQuizDialogState extends State<ScheduleQuizDialog> {
       _selectedTime.minute,
     );
 
-    widget.onSchedule(_selectedQuiz!, scheduledDateTime);
+    widget.onSchedule(selectedQuiz, scheduledDateTime);
     Navigator.of(context).pop();
   }
 
@@ -93,12 +97,14 @@ class _ScheduleQuizDialogState extends State<ScheduleQuizDialog> {
               // Select Quiz Dropdown
               const Text('Select Quiz', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              DropdownButtonFormField<LiveQuizItem>(
-                initialValue: _selectedQuiz,
+              DropdownButtonFormField<String>(
+                initialValue: widget.quizzes.any((q) => q.id == _selectedQuizId)
+                    ? _selectedQuizId
+                    : (widget.quizzes.isNotEmpty ? widget.quizzes.first.id : null),
                 isExpanded: true,
                 items: widget.quizzes.map((q) {
-                  return DropdownMenuItem<LiveQuizItem>(
-                    value: q,
+                  return DropdownMenuItem<String>(
+                    value: q.id,
                     child: Text(
                       '${q.title} (${q.category})',
                       style: const TextStyle(fontSize: 12),
@@ -107,7 +113,7 @@ class _ScheduleQuizDialogState extends State<ScheduleQuizDialog> {
                   );
                 }).toList(),
                 onChanged: (val) {
-                  if (val != null) setState(() => _selectedQuiz = val);
+                  if (val != null) setState(() => _selectedQuizId = val);
                 },
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),

@@ -78,6 +78,24 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
   Widget build(BuildContext context) {
     final isEdit = widget.initialItem != null;
 
+    final availableCategories = <String>{
+      'General',
+      'Railway',
+      'General Science',
+      'Mathematics',
+      'Current Affairs',
+      'Reasoning',
+      'Biology',
+      'Mixed',
+      'SSC',
+      'Banking',
+      if (_category.trim().isNotEmpty) _category.trim(),
+    }.toList();
+
+    final selectedCategory = availableCategories.contains(_category)
+        ? _category
+        : availableCategories.first;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
@@ -163,16 +181,10 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
                             const Text('Category', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                             const SizedBox(height: 6),
                             DropdownButtonFormField<String>(
-                              initialValue: _category,
-                              items: const [
-                                'Railway',
-                                'General Science',
-                                'Mathematics',
-                                'Current Affairs',
-                                'Reasoning',
-                                'Biology',
-                                'Mixed',
-                              ].map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12)))).toList(),
+                              initialValue: selectedCategory,
+                              items: availableCategories
+                                  .map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12))))
+                                  .toList(),
                               onChanged: (val) {
                                 if (val != null) setState(() => _category = val);
                               },
@@ -196,8 +208,9 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
                               items: const [
                                 DropdownMenuItem(value: LiveQuizStatus.scheduled, child: Text('Scheduled', style: TextStyle(fontSize: 12))),
                                 DropdownMenuItem(value: LiveQuizStatus.liveNow, child: Text('Live Now', style: TextStyle(fontSize: 12))),
-                                DropdownMenuItem(value: LiveQuizStatus.draft, child: Text('Draft', style: TextStyle(fontSize: 12))),
+                                DropdownMenuItem(value: LiveQuizStatus.ongoing, child: Text('Ongoing', style: TextStyle(fontSize: 12))),
                                 DropdownMenuItem(value: LiveQuizStatus.completed, child: Text('Completed', style: TextStyle(fontSize: 12))),
+                                DropdownMenuItem(value: LiveQuizStatus.draft, child: Text('Draft', style: TextStyle(fontSize: 12))),
                               ],
                               onChanged: (val) {
                                 if (val != null) setState(() => _status = val);
