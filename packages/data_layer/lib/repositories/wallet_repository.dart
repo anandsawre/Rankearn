@@ -229,6 +229,91 @@ class WalletRepository {
     }
   }
 
+  /// Admin: Process and mark coin withdrawal payout as completed
+  Future<Result<bool>> processWithdrawalPayout({
+    required String requestId,
+    required String payoutRef,
+    String? adminId,
+  }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
+    try {
+      await client
+          .from('withdrawal_requests')
+          .update({
+            'status': 'completed',
+            'rejection_reason': null,
+            'processed_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', requestId);
+
+      return const Success(true);
+    } catch (e) {
+      return Failure('Failed to process withdrawal payout: $e', e);
+    }
+  }
+
+  /// Admin: Reject withdrawal request and refund coins to candidate wallet
+  Future<Result<bool>> rejectWithdrawalRequest({
+    required String requestId,
+    required String userId,
+    required int coinsDeducted,
+    String? reason,
+  }) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
+    try {
+      // 1. Fetch current user coins
+      if (userId.isNotEmpty) {
+        final userProfile = await client
+            .from('profiles')
+            .select('coins')
+            .eq('id', userId)
+            .maybeSingle();
+
+        final currentCoins = (userProfile?['coins'] as num?)?.toInt() ?? 0;
+        final newBalance = currentCoins + coinsDeducted;
+
+        // 2. Refund coins back to profile
+        await client
+            .from('profiles')
+            .update({'coins': newBalance})
+            .eq('id', userId);
+
+        // 3. Record audit entry in wallet_transactions
+        await client.from('wallet_transactions').insert({
+          'id': 'TXN_REF_${DateTime.now().millisecondsSinceEpoch}',
+          'user_id': userId,
+          'amount': coinsDeducted,
+          'type': 'earn',
+          'category': 'refund',
+          'reference_id': requestId,
+          'title': 'Withdrawal Rejected - Coins Refunded',
+          'balance_after': newBalance,
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+        });
+      }
+
+      // 4. Mark withdrawal request as rejected in database
+      await client
+          .from('withdrawal_requests')
+          .update({
+            'status': 'rejected',
+            'rejection_reason': reason ?? 'Payout request rejected by admin',
+            'processed_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', requestId);
+
+      return const Success(true);
+    } catch (e) {
+      return Failure('Failed to reject withdrawal: $e', e);
+    }
+  }
+
   /// Admin: Directly Credit or Debit User Coins with audit trail
   Future<Result<int>> adjustUserCoins({
     required String userId,

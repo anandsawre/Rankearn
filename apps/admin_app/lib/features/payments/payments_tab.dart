@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
+import 'package:design_system/design_system.dart';
 
 import 'models/payment_item.dart';
 import 'widgets/payments_hero_card.dart';
@@ -39,94 +40,6 @@ class _PaymentsTabState extends State<PaymentsTab> {
   List<Map<String, dynamic>> _topups = [];
   List<Map<String, dynamic>> _withdrawals = [];
 
-  static final List<Map<String, dynamic>> _mockTopups = [
-    {
-      'id': 'topup-001',
-      'user_id': 'usr_1',
-      'name': 'Rahul Sharma',
-      'email': 'rahul.sharma@example.com',
-      'amount': '₹199',
-      'raw_coins': 200,
-      'coins': '200 Coins',
-      'utr': 'UPI49281749219',
-      'status': 'pending',
-      'date': 'Oct 30, 2026',
-      'method': 'UPI Manual',
-    },
-    {
-      'id': 'topup-002',
-      'user_id': 'usr_2',
-      'name': 'Priya Verma',
-      'email': 'priya.verma@example.com',
-      'amount': '₹499',
-      'raw_coins': 550,
-      'coins': '550 Coins',
-      'utr': 'HDFC8912749102',
-      'status': 'pending',
-      'date': 'Oct 29, 2026',
-      'method': 'UPI Manual',
-    },
-    {
-      'id': 'topup-003',
-      'user_id': 'usr_3',
-      'name': 'Amit Kumar',
-      'email': 'amit.kumar@example.com',
-      'amount': '₹999',
-      'raw_coins': 1200,
-      'coins': '1200 Coins',
-      'utr': 'PAYTM391829471',
-      'status': 'approved',
-      'date': 'Oct 28, 2026',
-      'method': 'UPI Manual',
-    },
-    {
-      'id': 'topup-004',
-      'user_id': 'usr_4',
-      'name': 'Neha Singh',
-      'email': 'neha.singh@example.com',
-      'amount': '₹299',
-      'raw_coins': 320,
-      'coins': '320 Coins',
-      'utr': 'ICICI991827419',
-      'status': 'pending',
-      'date': 'Oct 28, 2026',
-      'method': 'UPI Manual',
-    },
-  ];
-
-  static final List<Map<String, dynamic>> _mockWithdrawals = [
-    {
-      'id': 'with-001',
-      'name': 'Vikash Yadav',
-      'email': 'vikash.yadav@example.com',
-      'coins': '500 Coins',
-      'rupees': '₹450',
-      'upi': 'vikash@oksbi',
-      'status': 'pending',
-      'date': 'Oct 30, 2026',
-    },
-    {
-      'id': 'with-002',
-      'name': 'Anjali Patel',
-      'email': 'anjali.patel@example.com',
-      'coins': '1000 Coins',
-      'rupees': '₹920',
-      'upi': 'anjali@icici',
-      'status': 'pending',
-      'date': 'Oct 29, 2026',
-    },
-    {
-      'id': 'with-003',
-      'name': 'Saurabh Gupta',
-      'email': 'saurabh.gupta@example.com',
-      'coins': '250 Coins',
-      'rupees': '₹220',
-      'upi': 'saurabh@paytm',
-      'status': 'paid',
-      'date': 'Oct 27, 2026',
-    },
-  ];
-
   // Filter States
   String _searchQuery = '';
   String _selectedMethod = 'All Payment Methods';
@@ -140,8 +53,6 @@ class _PaymentsTabState extends State<PaymentsTab> {
   @override
   void initState() {
     super.initState();
-    _topups = List.from(_mockTopups);
-    _withdrawals = List.from(_mockWithdrawals);
     if (widget.initialPayments != null) {
       _payments = List.from(widget.initialPayments!);
       _isLoading = false;
@@ -156,15 +67,18 @@ class _PaymentsTabState extends State<PaymentsTab> {
     if (client == null) {
       if (mounted) {
         setState(() {
-          _payments = List.from(PaymentItem.referenceMockItems);
-          _topups = List.from(_mockTopups);
-          _withdrawals = List.from(_mockWithdrawals);
+          _payments = [];
+          _topups = [];
+          _withdrawals = [];
           _isLoading = false;
         });
       }
       return;
     }
 
+    final List<PaymentItem> loadedPayments = [];
+
+    // 1. Fetch real payments table
     try {
       final res = await client
           .from('payments')
@@ -172,15 +86,13 @@ class _PaymentsTabState extends State<PaymentsTab> {
           .order('created_at', ascending: false);
 
       if (res.isNotEmpty) {
-        _payments = res.map((r) => PaymentItem.fromJson(r)).toList();
-      } else {
-        _payments = List.from(PaymentItem.referenceMockItems);
+        loadedPayments.addAll((res as List).map((r) => PaymentItem.fromJson(r)));
       }
     } catch (_) {
-      _payments = List.from(PaymentItem.referenceMockItems);
+      // Table may not exist or be empty yet
     }
 
-    // Load top-ups from Supabase
+    // 2. Fetch real top-up verification requests from Supabase
     try {
       final topupData = await client
           .from('topup_requests')
@@ -192,22 +104,48 @@ class _PaymentsTabState extends State<PaymentsTab> {
           'user_id': r['user_id']?.toString() ?? '',
           'name': r['user_name']?.toString() ?? 'User',
           'email': r['user_email']?.toString() ?? 'N/A',
-          'amount': '₹${r['amount']}',
+          'amount': '₹${r['amount'] ?? 0}',
+          'raw_amount': (r['amount'] as num?)?.toDouble() ?? 0.0,
           'raw_coins': (r['coins_awarded'] as num?)?.toInt() ?? 0,
-          'coins': '${r['coins_awarded']} Coins',
+          'coins': '${r['coins_awarded'] ?? 0} Coins',
           'utr': r['utr']?.toString() ?? '',
           'status': r['status']?.toString() ?? 'pending',
-          'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
-          'method': 'UPI Manual',
+          'date': r['created_at'] != null ? _formatDate(r['created_at']) : 'N/A',
+          'created_at': r['created_at'],
+          'method': 'UPI',
         }).toList();
+
+        // Integrate candidate top-ups into master payment ledger so all manual UPI purchases appear in Payments List
+        for (final t in _topups) {
+          final id = t['id'].toString();
+          final utr = t['utr'].toString();
+          if (!loadedPayments.any((p) => p.id == id || (utr.isNotEmpty && p.transactionId == utr))) {
+            final amt = (t['raw_amount'] as double?) ?? 0.0;
+            final isApproved = t['status'] == 'approved';
+            final isRejected = t['status'] == 'rejected';
+            loadedPayments.add(PaymentItem(
+              id: id,
+              userName: t['name']?.toString() ?? 'User',
+              userEmail: t['email']?.toString() ?? 'N/A',
+              userAvatarBg: const Color(0xFF00B96B),
+              purpose: PaymentPurpose.testSeries,
+              amount: amt,
+              paymentMethod: PaymentMethodType.upi,
+              transactionId: utr.isNotEmpty ? utr : id,
+              orderId: 'ORD_${id.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '')}',
+              status: isApproved ? PaymentStatus.success : (isRejected ? PaymentStatus.failed : PaymentStatus.pending),
+              dateTime: DateTime.tryParse(t['created_at']?.toString() ?? '') ?? DateTime.now(),
+            ));
+          }
+        }
       } else {
-        _topups = List.from(_mockTopups);
+        _topups = [];
       }
     } catch (_) {
-      _topups = List.from(_mockTopups);
+      _topups = [];
     }
 
-    // Load withdrawals from Supabase
+    // 3. Fetch real withdrawal requests from Supabase
     try {
       final withdrawData = await client
           .from('withdrawal_requests')
@@ -216,25 +154,135 @@ class _PaymentsTabState extends State<PaymentsTab> {
       if (withdrawData.isNotEmpty) {
         _withdrawals = (withdrawData as List).map((r) => {
           'id': r['id']?.toString() ?? '',
+          'user_id': r['user_id']?.toString() ?? '',
           'name': r['user_name']?.toString() ?? 'User',
           'email': r['user_email']?.toString() ?? 'N/A',
-          'coins': '${r['coins_deducted']} Coins',
-          'rupees': '₹${r['payout_amount']}',
-          'upi': r['upi_id']?.toString() ?? 'Bank Transfer',
-          'status': r['status']?.toString() ?? 'pending',
-          'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
+          'raw_coins': (r['coins_deducted'] as num?)?.toInt() ?? 0,
+          'coins': '${r['coins_deducted'] ?? 0} Coins',
+          'rupees': '₹${r['payout_amount'] ?? 0}',
+          'upi': r['upi_id']?.toString() ?? (r['method'] == 'bank' ? 'Bank Transfer' : 'N/A'),
+          'status': (r['status'] == 'completed' || r['status'] == 'paid') ? 'paid' : (r['status']?.toString() ?? 'pending'),
+          'date': r['created_at'] != null ? _formatDate(r['created_at']) : 'N/A',
+          'created_at': r['created_at'],
           'utr': r['payout_ref']?.toString(),
         }).toList();
       } else {
-        _withdrawals = List.from(_mockWithdrawals);
+        _withdrawals = [];
       }
     } catch (_) {
-      _withdrawals = List.from(_mockWithdrawals);
+      _withdrawals = [];
     }
 
+    // Sort payments chronologically descending
+    loadedPayments.sort((a, b) => b.dateTime.compareTo(a.dateTime));
+
     if (mounted) {
-      setState(() => _isLoading = false);
+      setState(() {
+        _payments = loadedPayments;
+        _isLoading = false;
+      });
     }
+  }
+
+  // --- Real-Time Analytics Getters ---
+  double get _totalRevenue =>
+      _payments.where((p) => p.status == PaymentStatus.success).fold(0.0, (acc, p) => acc + p.amount);
+
+  int get _totalTransactions => _payments.length;
+
+  int get _successfulPayments =>
+      _payments.where((p) => p.status == PaymentStatus.success).length;
+
+  int get _failedPayments =>
+      _payments.where((p) => p.status == PaymentStatus.failed).length;
+
+  int get _pendingPayments =>
+      _payments.where((p) => p.status == PaymentStatus.pending).length;
+
+  List<DonutSlice> get _methodSlices {
+    if (_payments.isEmpty) {
+      return const [
+        DonutSlice(label: 'No Transactions', percentage: 100, color: Color(0xFFCBD5E1), count: 0),
+      ];
+    }
+    final total = _payments.length;
+    final Map<PaymentMethodType, int> counts = {};
+    for (final p in _payments) {
+      counts[p.paymentMethod] = (counts[p.paymentMethod] ?? 0) + 1;
+    }
+    return counts.entries.map((e) {
+      final pct = ((e.value / total) * 100).toDouble();
+      return DonutSlice(
+        label: e.key.label,
+        percentage: pct,
+        color: e.key.brandColor,
+        count: e.value,
+      );
+    }).toList();
+  }
+
+  List<DailyRevenueData> get _dailyRevenueTrend {
+    final now = DateTime.now();
+    final List<DailyRevenueData> list = [];
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    for (int i = 6; i >= 0; i--) {
+      final day = now.subtract(Duration(days: i));
+      final dateLabel = '${months[day.month - 1]} ${day.day}';
+      final dayAmount = _payments.where((p) {
+        return p.status == PaymentStatus.success &&
+            p.dateTime.year == day.year &&
+            p.dateTime.month == day.month &&
+            p.dateTime.day == day.day;
+      }).fold(0.0, (acc, p) => acc + p.amount);
+      list.add(DailyRevenueData(dateLabel: dateLabel, amount: dayAmount));
+    }
+    return list;
+  }
+
+  List<PaymentActivityItem> get _recentActivities {
+    if (_payments.isEmpty) {
+      return const [];
+    }
+    return _payments.take(5).map((p) {
+      final isRefund = p.status == PaymentStatus.refunded || p.status == PaymentStatus.partiallyRefunded;
+      final isFailed = p.status == PaymentStatus.failed;
+      final isSuccess = p.status == PaymentStatus.success;
+
+      return PaymentActivityItem(
+        title: isRefund
+            ? 'Refund: ₹${(p.refundAmount ?? p.amount).toInt()} (${p.userName})'
+            : (isFailed
+                ? 'Failed payment: ₹${p.amount.toInt()} (${p.userName})'
+                : 'Payment: ₹${p.amount.toInt()} (${p.purpose.label})'),
+        time: _formatRelativeTime(p.dateTime),
+        icon: isRefund
+            ? Icons.replay_rounded
+            : (isFailed ? Icons.error_outline_rounded : (isSuccess ? Icons.check_circle_rounded : Icons.schedule_rounded)),
+        iconColor: isRefund
+            ? const Color(0xFF2587F8)
+            : (isFailed ? const Color(0xFFEF4444) : (isSuccess ? const Color(0xFF10B981) : const Color(0xFFFF9F0A))),
+        iconBgColor: isRefund
+            ? const Color(0xFFEFF6FF)
+            : (isFailed ? const Color(0xFFFEF2F2) : (isSuccess ? const Color(0xFFECFDF5) : const Color(0xFFFFFBEB))),
+      );
+    }).toList();
+  }
+
+  static String _formatDate(dynamic dt) {
+    if (dt == null) return 'N/A';
+    final parsed = DateTime.tryParse(dt.toString());
+    if (parsed == null) return dt.toString().split('T').first;
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[parsed.month - 1]} ${parsed.day}, ${parsed.year}';
+  }
+
+  static String _formatRelativeTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${dt.day}/${dt.month}/${dt.year}';
   }
 
   // Filter Logic
@@ -366,7 +414,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Approve Top-up & Credit Coins', style: TextStyle(fontWeight: FontWeight.w800)),
         content: Text(
-          'Are you sure you want to approve UTR "$utr" and credit $coins Coins to $name?\n\nThis will update candidate balance in database and add an audit entry to the transaction ledger.',
+          'Are you sure you want to approve UTR "$utr" and credit $coins Coins to $name?\n\nThis will update candidate wallet balance in database and record an audit transaction in the ledger.',
         ),
         actions: [
           TextButton(
@@ -400,7 +448,13 @@ class _PaymentsTabState extends State<PaymentsTab> {
 
     switch (res) {
       case Success():
-        setState(() => topup['status'] = 'approved');
+        setState(() {
+          topup['status'] = 'approved';
+          final pIdx = _payments.indexWhere((p) => p.transactionId == utr || p.id == requestId);
+          if (pIdx != -1) {
+            _payments[pIdx] = _payments[pIdx].copyWith(status: PaymentStatus.success);
+          }
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: const Color(0xFF00B96B),
@@ -409,18 +463,17 @@ class _PaymentsTabState extends State<PaymentsTab> {
                 const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('Approved $utr! Successfully credited $coins Coins to $name.'),
+                  child: Text('Approved $utr! Successfully credited $coins Coins to $name in database.'),
                 ),
               ],
             ),
           ),
         );
       case Failure(message: final msg):
-        setState(() => topup['status'] = 'approved');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF00B96B),
-            content: Text('Approved $utr (Local fallback): Credited $coins Coins to $name. (Note: $msg)'),
+            backgroundColor: const Color(0xFFEF4444),
+            content: Text('Failed to approve top-up: $msg'),
           ),
         );
     }
@@ -458,16 +511,32 @@ class _PaymentsTabState extends State<PaymentsTab> {
     if (confirm != true || !mounted) return;
 
     final walletRepo = WalletRepository();
-    await walletRepo.rejectTopUpRequest(requestId: requestId);
+    final res = await walletRepo.rejectTopUpRequest(requestId: requestId);
 
     if (!mounted) return;
-    setState(() => topup['status'] = 'rejected');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFFEF4444),
-        content: Text('Rejected top-up $utr.'),
-      ),
-    );
+    switch (res) {
+      case Success():
+        setState(() {
+          topup['status'] = 'rejected';
+          final pIdx = _payments.indexWhere((p) => p.transactionId == utr || p.id == requestId);
+          if (pIdx != -1) {
+            _payments[pIdx] = _payments[pIdx].copyWith(status: PaymentStatus.failed);
+          }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFEF4444),
+            content: Text('Rejected top-up $utr.'),
+          ),
+        );
+      case Failure(message: final msg):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFEF4444),
+            content: Text('Failed to reject top-up: $msg'),
+          ),
+        );
+    }
   }
 
   void _handlePayoutWithdrawal(Map<String, dynamic> withdrawal) {
@@ -501,18 +570,40 @@ class _PaymentsTabState extends State<PaymentsTab> {
               foregroundColor: Colors.white,
             ),
             child: const Text('Complete Payout'),
-            onPressed: () {
+            onPressed: () async {
+              final ref = utrController.text.trim();
+              if (ref.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a Bank Reference or UTR Number')),
+                );
+                return;
+              }
               Navigator.pop(ctx);
-              setState(() {
-                withdrawal['status'] = 'paid';
-                withdrawal['utr'] = utrController.text;
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: const Color(0xFF00B96B),
-                  content: Text('Payout dispatched to ${withdrawal['name']}! Transaction settled.'),
-                ),
+
+              final walletRepo = WalletRepository();
+              final res = await walletRepo.processWithdrawalPayout(
+                requestId: withdrawal['id']?.toString() ?? '',
+                payoutRef: ref,
               );
+
+              if (!mounted) return;
+              switch (res) {
+                case Success():
+                  setState(() {
+                    withdrawal['status'] = 'paid';
+                    withdrawal['utr'] = ref;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: const Color(0xFF00B96B),
+                      content: Text('Payout dispatched to ${withdrawal['name']}! Database updated.'),
+                    ),
+                  );
+                case Failure(message: final msg):
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(backgroundColor: const Color(0xFFEF4444), content: Text('Error: $msg')),
+                  );
+              }
             },
           ),
         ],
@@ -521,11 +612,67 @@ class _PaymentsTabState extends State<PaymentsTab> {
   }
 
   void _handleRejectWithdrawal(Map<String, dynamic> withdrawal) {
-    setState(() => withdrawal['status'] = 'rejected');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFFEF4444),
-        content: Text('Rejected withdrawal and refunded ${withdrawal['coins']} to ${withdrawal['name']}.'),
+    final reasonController = TextEditingController(text: 'Invalid UPI / Bank details');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Reject Withdrawal & Refund Coins', style: TextStyle(fontWeight: FontWeight.w800)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Are you sure you want to reject payout of ${withdrawal['rupees']} for ${withdrawal['name']}? This will refund ${withdrawal['coins']} back to user account.'),
+            const SizedBox(height: 14),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Rejection Reason',
+                hintText: 'e.g. Invalid UPI ID or payment declined',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Confirm Reject & Refund'),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final rawCoins = (withdrawal['raw_coins'] as int?) ??
+                  int.tryParse(withdrawal['coins']?.toString().replaceAll(RegExp(r'[^0-9]'), '') ?? '') ??
+                  0;
+              final walletRepo = WalletRepository();
+              final res = await walletRepo.rejectWithdrawalRequest(
+                requestId: withdrawal['id']?.toString() ?? '',
+                userId: withdrawal['user_id']?.toString() ?? '',
+                coinsDeducted: rawCoins,
+                reason: reasonController.text.trim(),
+              );
+
+              if (!mounted) return;
+              switch (res) {
+                case Success():
+                  setState(() => withdrawal['status'] = 'rejected');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: const Color(0xFFEF4444),
+                      content: Text('Rejected withdrawal and refunded ${withdrawal['coins']} to ${withdrawal['name']}.'),
+                    ),
+                  );
+                case Failure(message: final msg):
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(backgroundColor: const Color(0xFFEF4444), content: Text('Error: $msg')),
+                  );
+              }
+            },
+          ),
+        ],
       ),
     );
   }
@@ -636,13 +783,13 @@ class _PaymentsTabState extends State<PaymentsTab> {
             ),
           const SizedBox(height: 14),
 
-          // 2. Metrics Cards Row (5 Cards)
+          // 2. Metrics Cards Row (5 Cards) - 100% Dynamic Real Data
           PaymentsMetricsRow(
-            totalRevenue: 1245780,
-            totalTransactions: 5842,
-            successfulPayments: 5621,
-            failedPayments: 221,
-            pendingPayments: 48,
+            totalRevenue: _totalRevenue,
+            totalTransactions: _totalTransactions,
+            successfulPayments: _successfulPayments,
+            failedPayments: _failedPayments,
+            pendingPayments: _pendingPayments,
           ),
           const SizedBox(height: 14),
 
@@ -711,7 +858,8 @@ class _PaymentsTabState extends State<PaymentsTab> {
                   child: Column(
                     children: [
                       PaymentsMethodDonutCard(
-                        totalCount: 5842,
+                        totalCount: _totalTransactions,
+                        slices: _methodSlices,
                         onViewAll: () {},
                       ),
                       const SizedBox(height: 14),
@@ -724,10 +872,12 @@ class _PaymentsTabState extends State<PaymentsTab> {
                       ),
                       const SizedBox(height: 14),
                       PaymentsRevenueBarChartCard(
+                        dailyData: _dailyRevenueTrend,
                         onViewAll: () {},
                       ),
                       const SizedBox(height: 14),
                       PaymentsRecentActivityCard(
+                        activities: _recentActivities,
                         onViewAll: () {},
                       ),
                     ],
@@ -783,7 +933,8 @@ class _PaymentsTabState extends State<PaymentsTab> {
             ),
             const SizedBox(height: 14),
             PaymentsMethodDonutCard(
-              totalCount: 5842,
+              totalCount: _totalTransactions,
+              slices: _methodSlices,
               onViewAll: () {},
             ),
             const SizedBox(height: 14),
@@ -795,10 +946,12 @@ class _PaymentsTabState extends State<PaymentsTab> {
             ),
             const SizedBox(height: 14),
             PaymentsRevenueBarChartCard(
+              dailyData: _dailyRevenueTrend,
               onViewAll: () {},
             ),
             const SizedBox(height: 14),
             PaymentsRecentActivityCard(
+              activities: _recentActivities,
               onViewAll: () {},
             ),
           ],
