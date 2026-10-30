@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import '../payments/payments_tab.dart';
-import '../payments/widgets/payments_method_donut_card.dart';
-import '../payments/widgets/payments_quick_actions.dart';
 
 class FinanceTab extends StatefulWidget {
   final List<Map<String, dynamic>>? initialTopups;
@@ -187,9 +185,6 @@ class _FinanceTabState extends State<FinanceTab> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1100;
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -199,76 +194,11 @@ class _FinanceTabState extends State<FinanceTab> {
           _buildMasterHeader(),
           const SizedBox(height: 20),
 
-          // Payment Method Distribution & Quick Actions Overview Row
-          if (isDesktop)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Quick Actions Card with Top-ups, Withdrawals, Settings
-                Expanded(
-                  flex: 7,
-                  child: PaymentsQuickActions(
-                    onTopups: () => setState(() => _activeSubTab = _FinanceSubTab.topups),
-                    onWithdrawals: () => setState(() => _activeSubTab = _FinanceSubTab.withdrawals),
-                    onSettings: () => setState(() => _activeSubTab = _FinanceSubTab.settings),
-                    onViewTransactions: () => setState(() => _activeSubTab = _FinanceSubTab.payments),
-                    onProcessRefund: () => setState(() => _activeSubTab = _FinanceSubTab.payments),
-                    onPayoutReports: () => setState(() => _activeSubTab = _FinanceSubTab.payments),
-                    onExportPayments: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Exporting finance reports to CSV...')),
-                      );
-                    },
-                    height: 205,
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // Payment Method Distribution Donut Card
-                SizedBox(
-                  width: 320,
-                  child: PaymentsMethodDonutCard(
-                    totalCount: 5842,
-                    height: 205,
-                    onViewAll: () => setState(() => _activeSubTab = _FinanceSubTab.payments),
-                  ),
-                ),
-              ],
-            )
-          else
-            Column(
-              children: [
-                PaymentsQuickActions(
-                  onTopups: () => setState(() => _activeSubTab = _FinanceSubTab.topups),
-                  onWithdrawals: () => setState(() => _activeSubTab = _FinanceSubTab.withdrawals),
-                  onSettings: () => setState(() => _activeSubTab = _FinanceSubTab.settings),
-                  onViewTransactions: () => setState(() => _activeSubTab = _FinanceSubTab.payments),
-                  onProcessRefund: () => setState(() => _activeSubTab = _FinanceSubTab.payments),
-                  onPayoutReports: () => setState(() => _activeSubTab = _FinanceSubTab.payments),
-                  onExportPayments: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Exporting finance reports to CSV...')),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                PaymentsMethodDonutCard(
-                  totalCount: 5842,
-                  onViewAll: () => setState(() => _activeSubTab = _FinanceSubTab.payments),
-                ),
-              ],
-            ),
-          const SizedBox(height: 20),
-
           // Subtab view switch
           switch (_activeSubTab) {
             _FinanceSubTab.topups => _buildTopupsView(),
             _FinanceSubTab.withdrawals => _buildWithdrawalsView(),
-            _FinanceSubTab.payments => PaymentsTab(
-                onGoToTopups: () => setState(() => _activeSubTab = _FinanceSubTab.topups),
-                onGoToWithdrawals: () => setState(() => _activeSubTab = _FinanceSubTab.withdrawals),
-                onGoToSettings: () => setState(() => _activeSubTab = _FinanceSubTab.settings),
-              ),
+            _FinanceSubTab.payments => const PaymentsTab(),
             _FinanceSubTab.settings => _buildSettingsView(),
           },
         ],

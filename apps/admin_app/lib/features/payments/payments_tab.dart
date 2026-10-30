@@ -22,17 +22,8 @@ import 'dialogs/payment_receipt_dialog.dart';
 /// Pixel-accurate implementation matching the Rankearn reference design.
 class PaymentsTab extends StatefulWidget {
   final List<PaymentItem>? initialPayments;
-  final VoidCallback? onGoToTopups;
-  final VoidCallback? onGoToWithdrawals;
-  final VoidCallback? onGoToSettings;
 
-  const PaymentsTab({
-    super.key,
-    this.initialPayments,
-    this.onGoToTopups,
-    this.onGoToWithdrawals,
-    this.onGoToSettings,
-  });
+  const PaymentsTab({super.key, this.initialPayments});
 
   @override
   State<PaymentsTab> createState() => _PaymentsTabState();
@@ -294,14 +285,12 @@ class _PaymentsTabState extends State<PaymentsTab> {
                 Expanded(
                   flex: 5,
                   child: PaymentsQuickActions(
-                    onTopups: widget.onGoToTopups ?? () {},
-                    onWithdrawals: widget.onGoToWithdrawals ?? () {},
-                    onSettings: widget.onGoToSettings ?? _openPaymentSettingsDialog,
                     onViewTransactions: () {},
                     onProcessRefund: () => _openProcessRefundDialog(),
                     onSubscriptionManagement: _openSubscriptionDialog,
                     onPayoutReports: _openPayoutReportsDialog,
                     onExportPayments: () => _exportPayments(),
+                    onPaymentSettings: _openPaymentSettingsDialog,
                     onCustomize: () {},
                   ),
                 ),
@@ -313,14 +302,12 @@ class _PaymentsTabState extends State<PaymentsTab> {
                 const PaymentsHeroCard(),
                 const SizedBox(height: 12),
                 PaymentsQuickActions(
-                  onTopups: widget.onGoToTopups ?? () {},
-                  onWithdrawals: widget.onGoToWithdrawals ?? () {},
-                  onSettings: widget.onGoToSettings ?? _openPaymentSettingsDialog,
                   onViewTransactions: () {},
                   onProcessRefund: () => _openProcessRefundDialog(),
                   onSubscriptionManagement: _openSubscriptionDialog,
                   onPayoutReports: _openPayoutReportsDialog,
                   onExportPayments: () => _exportPayments(),
+                  onPaymentSettings: _openPaymentSettingsDialog,
                   onCustomize: () {},
                 ),
               ],
