@@ -161,7 +161,9 @@ class _AdminAppShellState extends State<AdminAppShell> {
                       onSavedToTests: () => setState(() => _activeTab = AdminNavTab.tests),
                     ),
                   AdminNavTab.finance => const PaymentsTab(),
-                  AdminNavTab.contests => const ContestsTab(),
+                  AdminNavTab.contests => ContestsTab(
+                      onManageQuestions: () => setState(() => _activeTab = AdminNavTab.battleQs),
+                    ),
                   AdminNavTab.banners => const BannersTab(),
                   AdminNavTab.notifications => const NotificationsTab(),
                   AdminNavTab.wheel => const LuckyWheelTab(),
