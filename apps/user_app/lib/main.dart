@@ -294,6 +294,35 @@ class _UserAppShellState extends State<UserAppShell> {
           state: 'Bihar, India',
           createdAt: DateTime(2026, 10, 1),
         );
+    _syncProfileWithDatabase();
+  }
+
+  Future<void> _syncProfileWithDatabase() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+    try {
+      final currentAuthId = client.auth.currentUser?.id;
+      final targetId = (currentAuthId != null && currentAuthId.isNotEmpty)
+          ? currentAuthId
+          : _profile.id;
+
+      final data = await client
+          .from('profiles')
+          .select()
+          .eq('id', targetId)
+          .maybeSingle();
+
+      if (data != null && mounted) {
+        setState(() {
+          _profile = _profile.copyWith(
+            coins: (data['coins'] as num?)?.toInt() ?? _profile.coins,
+            totalEarned: (data['total_earned'] as num?)?.toInt() ?? _profile.totalEarned,
+            totalSpent: (data['total_spent'] as num?)?.toInt() ?? _profile.totalSpent,
+            name: data['name']?.toString() ?? _profile.name,
+          );
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -859,11 +888,18 @@ class _UserAppShellState extends State<UserAppShell> {
                 unreadNotifications: _unreadNotifications,
                 showMenuButton: !isDesktop,
                 currentTab: _activeTab,
-                onTabSelected: (tab) => setState(() => _activeTab = tab),
+                onTabSelected: (tab) {
+                  setState(() => _activeTab = tab);
+                  if (tab == UserNavTab.wallet || tab == UserNavTab.home) {
+                    _syncProfileWithDatabase();
+                  }
+                },
                 onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
                 onNotificationTap: _openNotificationsModal,
-                onCoinsTap: () =>
-                    setState(() => _activeTab = UserNavTab.wallet),
+                onCoinsTap: () {
+                  setState(() => _activeTab = UserNavTab.wallet);
+                  _syncProfileWithDatabase();
+                },
                 onAddCoinsTap: _openBuyCoinsModal,
                 onProfileTap: () =>
                     setState(() => _activeTab = UserNavTab.profile),
@@ -872,7 +908,12 @@ class _UserAppShellState extends State<UserAppShell> {
             ? null
             : AppBottomNav(
                 currentTab: _activeTab,
-                onTabSelected: (tab) => setState(() => _activeTab = tab),
+                onTabSelected: (tab) {
+                  setState(() => _activeTab = tab);
+                  if (tab == UserNavTab.wallet || tab == UserNavTab.home) {
+                    _syncProfileWithDatabase();
+                  }
+                },
               ),
         body: switch (_activeTab) {
           UserNavTab.home => DashboardScreen(

@@ -22,10 +22,13 @@ class WalletRepository {
       return const Success([]);
     }
     try {
+      final authId = client.auth.currentUser?.id;
+      final targetUserId = (authId != null && authId.isNotEmpty) ? authId : userId;
+
       final data = await client
           .from('wallet_transactions')
           .select()
-          .eq('user_id', userId)
+          .or('user_id.eq.$targetUserId,user_id.eq.$userId')
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
@@ -33,6 +36,29 @@ class WalletRepository {
       return Success(list);
     } catch (e) {
       return Failure('Error fetching transactions: $e', e);
+    }
+  }
+
+  /// Get current user coins from profiles table
+  Future<Result<int>> getProfileCoins(String userId) async {
+    final client = _client;
+    if (client == null) return const Failure('Database not connected');
+    try {
+      final authId = client.auth.currentUser?.id;
+      final targetUserId = (authId != null && authId.isNotEmpty) ? authId : userId;
+
+      final data = await client
+          .from('profiles')
+          .select('coins')
+          .eq('id', targetUserId)
+          .maybeSingle();
+
+      if (data != null && data['coins'] != null) {
+        return Success((data['coins'] as num).toInt());
+      }
+      return const Success(0);
+    } catch (e) {
+      return Failure('Error fetching coins: $e', e);
     }
   }
 
@@ -204,44 +230,59 @@ class WalletRepository {
       return const Failure('Database not connected');
     }
     try {
-      final isUuid = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(userId);
-
-      // 1. Fetch & update profile coins if valid UUID profile exists
-      if (isUuid) {
-        try {
-          final userProfile = await client
-              .from('profiles')
-              .select('coins')
-              .eq('id', userId)
-              .maybeSingle();
-
-          final currentCoins = (userProfile?['coins'] as num?)?.toInt() ?? 0;
-          final newBalance = currentCoins + coinsAwarded;
-
-          // Update user profile coins
-          await client
-              .from('profiles')
-              .update({'coins': newBalance})
-              .eq('id', userId);
-
-          // Record wallet transaction
-          await client.from('wallet_transactions').insert({
-            'id': 'TXN_${DateTime.now().millisecondsSinceEpoch}',
-            'user_id': userId,
-            'amount': coinsAwarded,
-            'type': 'earn',
-            'category': 'topup',
-            'reference_id': utr,
-            'title': 'UPI Top-up Approved (UTR: $utr)',
-            'balance_after': newBalance,
-            'created_at': DateTime.now().toUtc().toIso8601String(),
-          });
-        } catch (_) {
-          // Non-fatal if profile update fails
+      // 1. First attempt atomic RPC 'admin_approve_topup' (super-user definer bypasses RLS)
+      try {
+        final rpcRes = await client.rpc('admin_approve_topup', params: {
+          'p_request_id': requestId,
+          'p_coins': coinsAwarded,
+        });
+        if (rpcRes != null && (rpcRes['success'] == true)) {
+          return const Success(true);
         }
+      } catch (_) {
+        // Fallback to direct table operations if RPC not yet run in Supabase
       }
 
-      // 2. Mark topup_request as approved
+      // 2. Fetch current profile coins
+      int newBalance = coinsAwarded;
+      try {
+        final userProfile = await client
+            .from('profiles')
+            .select('coins, total_earned')
+            .eq('id', userId)
+            .maybeSingle();
+
+        final currentCoins = (userProfile?['coins'] as num?)?.toInt() ?? 0;
+        final currentEarned = (userProfile?['total_earned'] as num?)?.toInt() ?? 0;
+        newBalance = currentCoins + coinsAwarded;
+
+        // 3. Update user profile coins
+        await client
+            .from('profiles')
+            .update({
+              'coins': newBalance,
+              'total_earned': currentEarned + coinsAwarded,
+              'updated_at': DateTime.now().toUtc().toIso8601String(),
+            })
+            .eq('id', userId);
+      } catch (_) {}
+
+      // 4. Record wallet transaction
+      try {
+        await client.from('wallet_transactions').insert({
+          'id': 'TXN_${DateTime.now().millisecondsSinceEpoch}',
+          'user_id': userId,
+          'amount': coinsAwarded,
+          'type': 'earn',
+          'category': 'topup',
+          'reference_id': utr.isNotEmpty ? utr : requestId,
+          'title': 'UPI Top-up Approved (UTR: ${utr.isNotEmpty ? utr : "Verified"})',
+          'balance_after': newBalance,
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+        });
+      } catch (_) {}
+
+      // 5. Mark topup_request as approved
       await client
           .from('topup_requests')
           .update({

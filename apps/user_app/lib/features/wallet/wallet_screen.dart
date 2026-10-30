@@ -66,6 +66,42 @@ class _WalletScreenState extends State<WalletScreen> {
     } else {
       _loadTransactions();
     }
+    _refreshProfileCoins();
+  }
+
+  @override
+  void didUpdateWidget(covariant WalletScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.profile.coins != oldWidget.profile.coins) {
+      setState(() => _currentCoins = widget.profile.coins);
+    }
+  }
+
+  Future<void> _refreshProfileCoins() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+    try {
+      final authId = client.auth.currentUser?.id;
+      final targetId = (authId != null && authId.isNotEmpty) ? authId : widget.profile.id;
+
+      final res = await client
+          .from('profiles')
+          .select('coins, total_earned, total_spent')
+          .eq('id', targetId)
+          .maybeSingle();
+
+      if (res != null && mounted) {
+        final coins = (res['coins'] as num?)?.toInt();
+        final earned = (res['total_earned'] as num?)?.toInt();
+        final spent = (res['total_spent'] as num?)?.toInt();
+
+        setState(() {
+          if (coins != null) _currentCoins = coins;
+          if (earned != null && earned > 0) _totalEarned = earned;
+          if (spent != null && spent > 0) _totalWithdrawn = spent;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -77,8 +113,12 @@ class _WalletScreenState extends State<WalletScreen> {
   Future<void> _loadTransactions() async {
     setState(() => _isLoadingTransactions = true);
     try {
+      final client = SupabaseConfig.clientSafe;
+      final authId = client?.auth.currentUser?.id;
+      final targetId = (authId != null && authId.isNotEmpty) ? authId : widget.profile.id;
+
       final res = await WalletRepository().getTransactions(
-        userId: widget.profile.id,
+        userId: targetId,
       );
       if (!mounted) return;
 
