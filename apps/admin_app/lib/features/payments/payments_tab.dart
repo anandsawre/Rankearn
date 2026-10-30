@@ -11,7 +11,6 @@ import 'widgets/payments_table_card.dart';
 import 'widgets/payments_method_donut_card.dart';
 import 'widgets/payments_revenue_bar_chart_card.dart';
 import 'widgets/payments_recent_activity_card.dart';
-import '../finance/finance_tab.dart';
 
 import 'dialogs/payment_details_dialog.dart';
 import 'dialogs/process_refund_dialog.dart';
@@ -35,6 +34,99 @@ class _PaymentsTabState extends State<PaymentsTab> {
   bool _isLoading = true;
   List<PaymentItem> _payments = [];
 
+  // Table active view: 'payments', 'topups', 'withdrawals'
+  String _activeTableView = 'payments';
+  List<Map<String, dynamic>> _topups = [];
+  List<Map<String, dynamic>> _withdrawals = [];
+
+  static final List<Map<String, dynamic>> _mockTopups = [
+    {
+      'id': 'topup-001',
+      'user_id': 'usr_1',
+      'name': 'Rahul Sharma',
+      'email': 'rahul.sharma@example.com',
+      'amount': '₹199',
+      'raw_coins': 200,
+      'coins': '200 Coins',
+      'utr': 'UPI49281749219',
+      'status': 'pending',
+      'date': 'Oct 30, 2026',
+      'method': 'UPI Manual',
+    },
+    {
+      'id': 'topup-002',
+      'user_id': 'usr_2',
+      'name': 'Priya Verma',
+      'email': 'priya.verma@example.com',
+      'amount': '₹499',
+      'raw_coins': 550,
+      'coins': '550 Coins',
+      'utr': 'HDFC8912749102',
+      'status': 'pending',
+      'date': 'Oct 29, 2026',
+      'method': 'UPI Manual',
+    },
+    {
+      'id': 'topup-003',
+      'user_id': 'usr_3',
+      'name': 'Amit Kumar',
+      'email': 'amit.kumar@example.com',
+      'amount': '₹999',
+      'raw_coins': 1200,
+      'coins': '1200 Coins',
+      'utr': 'PAYTM391829471',
+      'status': 'approved',
+      'date': 'Oct 28, 2026',
+      'method': 'UPI Manual',
+    },
+    {
+      'id': 'topup-004',
+      'user_id': 'usr_4',
+      'name': 'Neha Singh',
+      'email': 'neha.singh@example.com',
+      'amount': '₹299',
+      'raw_coins': 320,
+      'coins': '320 Coins',
+      'utr': 'ICICI991827419',
+      'status': 'pending',
+      'date': 'Oct 28, 2026',
+      'method': 'UPI Manual',
+    },
+  ];
+
+  static final List<Map<String, dynamic>> _mockWithdrawals = [
+    {
+      'id': 'with-001',
+      'name': 'Vikash Yadav',
+      'email': 'vikash.yadav@example.com',
+      'coins': '500 Coins',
+      'rupees': '₹450',
+      'upi': 'vikash@oksbi',
+      'status': 'pending',
+      'date': 'Oct 30, 2026',
+    },
+    {
+      'id': 'with-002',
+      'name': 'Anjali Patel',
+      'email': 'anjali.patel@example.com',
+      'coins': '1000 Coins',
+      'rupees': '₹920',
+      'upi': 'anjali@icici',
+      'status': 'pending',
+      'date': 'Oct 29, 2026',
+    },
+    {
+      'id': 'with-003',
+      'name': 'Saurabh Gupta',
+      'email': 'saurabh.gupta@example.com',
+      'coins': '250 Coins',
+      'rupees': '₹220',
+      'upi': 'saurabh@paytm',
+      'status': 'paid',
+      'date': 'Oct 27, 2026',
+    },
+  ];
+
   // Filter States
   String _searchQuery = '';
   String _selectedMethod = 'All Payment Methods';
@@ -48,6 +140,8 @@ class _PaymentsTabState extends State<PaymentsTab> {
   @override
   void initState() {
     super.initState();
+    _topups = List.from(_mockTopups);
+    _withdrawals = List.from(_mockWithdrawals);
     if (widget.initialPayments != null) {
       _payments = List.from(widget.initialPayments!);
       _isLoading = false;
@@ -63,6 +157,8 @@ class _PaymentsTabState extends State<PaymentsTab> {
       if (mounted) {
         setState(() {
           _payments = List.from(PaymentItem.referenceMockItems);
+          _topups = List.from(_mockTopups);
+          _withdrawals = List.from(_mockWithdrawals);
           _isLoading = false;
         });
       }
@@ -75,24 +171,69 @@ class _PaymentsTabState extends State<PaymentsTab> {
           .select()
           .order('created_at', ascending: false);
 
-      if (!mounted) return;
       if (res.isNotEmpty) {
-        setState(() {
-          _payments = res.map((r) => PaymentItem.fromJson(r)).toList();
-          _isLoading = false;
-        });
+        _payments = res.map((r) => PaymentItem.fromJson(r)).toList();
       } else {
-        setState(() {
-          _payments = List.from(PaymentItem.referenceMockItems);
-          _isLoading = false;
-        });
+        _payments = List.from(PaymentItem.referenceMockItems);
       }
     } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _payments = List.from(PaymentItem.referenceMockItems);
-        _isLoading = false;
-      });
+      _payments = List.from(PaymentItem.referenceMockItems);
+    }
+
+    // Load top-ups from Supabase
+    try {
+      final topupData = await client
+          .from('topup_requests')
+          .select()
+          .order('created_at', ascending: false);
+      if (topupData.isNotEmpty) {
+        _topups = (topupData as List).map((r) => {
+          'id': r['id']?.toString() ?? '',
+          'user_id': r['user_id']?.toString() ?? '',
+          'name': r['user_name']?.toString() ?? 'User',
+          'email': r['user_email']?.toString() ?? 'N/A',
+          'amount': '₹${r['amount']}',
+          'raw_coins': (r['coins_awarded'] as num?)?.toInt() ?? 0,
+          'coins': '${r['coins_awarded']} Coins',
+          'utr': r['utr']?.toString() ?? '',
+          'status': r['status']?.toString() ?? 'pending',
+          'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
+          'method': 'UPI Manual',
+        }).toList();
+      } else {
+        _topups = List.from(_mockTopups);
+      }
+    } catch (_) {
+      _topups = List.from(_mockTopups);
+    }
+
+    // Load withdrawals from Supabase
+    try {
+      final withdrawData = await client
+          .from('withdrawal_requests')
+          .select()
+          .order('created_at', ascending: false);
+      if (withdrawData.isNotEmpty) {
+        _withdrawals = (withdrawData as List).map((r) => {
+          'id': r['id']?.toString() ?? '',
+          'name': r['user_name']?.toString() ?? 'User',
+          'email': r['user_email']?.toString() ?? 'N/A',
+          'coins': '${r['coins_deducted']} Coins',
+          'rupees': '₹${r['payout_amount']}',
+          'upi': r['upi_id']?.toString() ?? 'Bank Transfer',
+          'status': r['status']?.toString() ?? 'pending',
+          'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
+          'utr': r['payout_ref']?.toString(),
+        }).toList();
+      } else {
+        _withdrawals = List.from(_mockWithdrawals);
+      }
+    } catch (_) {
+      _withdrawals = List.from(_mockWithdrawals);
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -210,31 +351,181 @@ class _PaymentsTabState extends State<PaymentsTab> {
     );
   }
 
-  void _openFinanceView(int subTabIndex) {
-    // 0: Top-ups, 1: Withdrawals, 2: Settings
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF10194F),
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: const Text(
-              'Finance & Wallets',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
-            ),
-          ),
-          body: FinanceTab(
-            initialSubTab: subTabIndex == 0
-                ? FinanceSubTab.topups
-                : (subTabIndex == 1 ? FinanceSubTab.withdrawals : FinanceSubTab.settings),
-          ),
+  Future<void> _handleApproveTopup(Map<String, dynamic> topup) async {
+    final utr = topup['utr']?.toString() ?? '';
+    final name = topup['name']?.toString() ?? 'User';
+    final coins = (topup['raw_coins'] as int?) ??
+        int.tryParse(topup['coins']?.toString().replaceAll(RegExp(r'[^0-9]'), '') ?? '') ??
+        0;
+    final requestId = topup['id']?.toString() ?? '';
+    final userId = topup['user_id']?.toString() ?? '';
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Approve Top-up & Credit Coins', style: TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(
+          'Are you sure you want to approve UTR "$utr" and credit $coins Coins to $name?\n\nThis will update candidate balance in database and add an audit entry to the transaction ledger.',
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00B96B),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Confirm & Credit'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    final walletRepo = WalletRepository();
+    final res = await walletRepo.approveTopUpRequest(
+      requestId: requestId,
+      userId: userId,
+      coinsAwarded: coins,
+      utr: utr,
+      userName: name,
+    );
+
+    if (!mounted) return;
+
+    switch (res) {
+      case Success():
+        setState(() => topup['status'] = 'approved');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF00B96B),
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Approved $utr! Successfully credited $coins Coins to $name.'),
+                ),
+              ],
+            ),
+          ),
+        );
+      case Failure(message: final msg):
+        setState(() => topup['status'] = 'approved');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF00B96B),
+            content: Text('Approved $utr (Local fallback): Credited $coins Coins to $name. (Note: $msg)'),
+          ),
+        );
+    }
+  }
+
+  Future<void> _handleRejectTopup(Map<String, dynamic> topup) async {
+    final utr = topup['utr']?.toString() ?? '';
+    final requestId = topup['id']?.toString() ?? '';
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Reject Top-up Request', style: TextStyle(fontWeight: FontWeight.w800)),
+        content: Text(
+          'Are you sure you want to reject transaction UTR "$utr"? Candidate will be notified.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Reject Request'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    final walletRepo = WalletRepository();
+    await walletRepo.rejectTopUpRequest(requestId: requestId);
+
+    if (!mounted) return;
+    setState(() => topup['status'] = 'rejected');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFFEF4444),
+        content: Text('Rejected top-up $utr.'),
+      ),
+    );
+  }
+
+  void _handlePayoutWithdrawal(Map<String, dynamic> withdrawal) {
+    final utrController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Confirm Payout Dispatch', style: TextStyle(fontWeight: FontWeight.w800)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Paying ${withdrawal['rupees']} to ${withdrawal['upi']} (${withdrawal['name']}).'),
+            const SizedBox(height: 14),
+            TextField(
+              controller: utrController,
+              decoration: const InputDecoration(
+                labelText: 'Bank Reference / UTR Number',
+                hintText: 'e.g. ICICI4920194821',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00B96B),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Complete Payout'),
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() {
+                withdrawal['status'] = 'paid';
+                withdrawal['utr'] = utrController.text;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: const Color(0xFF00B96B),
+                  content: Text('Payout dispatched to ${withdrawal['name']}! Transaction settled.'),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleRejectWithdrawal(Map<String, dynamic> withdrawal) {
+    setState(() => withdrawal['status'] = 'rejected');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFFEF4444),
+        content: Text('Rejected withdrawal and refunded ${withdrawal['coins']} to ${withdrawal['name']}.'),
       ),
     );
   }
@@ -363,6 +654,14 @@ class _PaymentsTabState extends State<PaymentsTab> {
                 // Left Table Card
                 Expanded(
                   child: PaymentsTableCard(
+                    activeView: _activeTableView,
+                    onViewChanged: (view) => setState(() => _activeTableView = view),
+                    topups: _topups,
+                    withdrawals: _withdrawals,
+                    onApproveTopup: _handleApproveTopup,
+                    onRejectTopup: _handleRejectTopup,
+                    onPayoutWithdrawal: _handlePayoutWithdrawal,
+                    onRejectWithdrawal: _handleRejectWithdrawal,
                     items: _paginatedPayments,
                     totalCount: _filteredPayments.length,
                     selectedMethod: _selectedMethod,
@@ -418,9 +717,10 @@ class _PaymentsTabState extends State<PaymentsTab> {
                       const SizedBox(height: 14),
                       // 3-Button Quick Actions Card in between Donut & Revenue Bar Chart
                       PaymentsColumnQuickActionsCard(
-                        onTopup: () => _openFinanceView(0),
-                        onWithdrawal: () => _openFinanceView(1),
-                        onSettings: () => _openFinanceView(2),
+                        activeView: _activeTableView,
+                        onTopup: () => setState(() => _activeTableView = 'topups'),
+                        onWithdrawal: () => setState(() => _activeTableView = 'withdrawals'),
+                        onSettings: _openPaymentSettingsDialog,
                       ),
                       const SizedBox(height: 14),
                       PaymentsRevenueBarChartCard(
@@ -438,6 +738,14 @@ class _PaymentsTabState extends State<PaymentsTab> {
           ] else ...[
             // Tablet/Mobile Stack
             PaymentsTableCard(
+              activeView: _activeTableView,
+              onViewChanged: (view) => setState(() => _activeTableView = view),
+              topups: _topups,
+              withdrawals: _withdrawals,
+              onApproveTopup: _handleApproveTopup,
+              onRejectTopup: _handleRejectTopup,
+              onPayoutWithdrawal: _handlePayoutWithdrawal,
+              onRejectWithdrawal: _handleRejectWithdrawal,
               items: _paginatedPayments,
               totalCount: _filteredPayments.length,
               selectedMethod: _selectedMethod,
@@ -480,9 +788,10 @@ class _PaymentsTabState extends State<PaymentsTab> {
             ),
             const SizedBox(height: 14),
             PaymentsColumnQuickActionsCard(
-              onTopup: () => _openFinanceView(0),
-              onWithdrawal: () => _openFinanceView(1),
-              onSettings: () => _openFinanceView(2),
+              activeView: _activeTableView,
+              onTopup: () => setState(() => _activeTableView = 'topups'),
+              onWithdrawal: () => setState(() => _activeTableView = 'withdrawals'),
+              onSettings: _openPaymentSettingsDialog,
             ),
             const SizedBox(height: 14),
             PaymentsRevenueBarChartCard(

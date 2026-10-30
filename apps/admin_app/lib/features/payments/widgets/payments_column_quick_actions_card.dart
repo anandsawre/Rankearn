@@ -4,14 +4,15 @@ import 'package:design_system/design_system.dart';
 /// Compact 3-Button Quick Actions Card for the Payments Right-Rail Column.
 /// Positioned directly between "Payment Method Distribution" and "Revenue Trend (Last 7 Days)".
 /// Provides 1-tap quick action access to:
-/// 1. Top-up Verification
-/// 2. Process Withdrawal
+/// 1. Top-up Verification (Switches table to Top-ups)
+/// 2. Process Withdrawal (Switches table to Withdrawals)
 /// 3. Finance & Merchant Settings
 class PaymentsColumnQuickActionsCard extends StatelessWidget {
   final VoidCallback onTopup;
   final VoidCallback onWithdrawal;
   final VoidCallback onSettings;
   final VoidCallback? onCustomize;
+  final String activeView; // 'payments', 'topups', 'withdrawals'
 
   const PaymentsColumnQuickActionsCard({
     super.key,
@@ -19,6 +20,7 @@ class PaymentsColumnQuickActionsCard extends StatelessWidget {
     required this.onWithdrawal,
     required this.onSettings,
     this.onCustomize,
+    this.activeView = 'payments',
   });
 
   @override
@@ -95,8 +97,9 @@ class PaymentsColumnQuickActionsCard extends StatelessWidget {
                 child: _buildActionTile(
                   icon: Icons.add_circle_outline_rounded,
                   iconColor: const Color(0xFF00B96B),
-                  cardBg: const Color(0xFFE8FAF2),
+                  cardBg: activeView == 'topups' ? const Color(0xFFD1FAE5) : const Color(0xFFE8FAF2),
                   label: 'Top-up',
+                  isSelected: activeView == 'topups',
                   onTap: onTopup,
                 ),
               ),
@@ -105,8 +108,9 @@ class PaymentsColumnQuickActionsCard extends StatelessWidget {
                 child: _buildActionTile(
                   icon: Icons.arrow_outward_rounded,
                   iconColor: const Color(0xFFFF9F0A),
-                  cardBg: const Color(0xFFFFFBEB),
+                  cardBg: activeView == 'withdrawals' ? const Color(0xFFFEF3C7) : const Color(0xFFFFFBEB),
                   label: 'Withdrawal',
+                  isSelected: activeView == 'withdrawals',
                   onTap: onWithdrawal,
                 ),
               ),
@@ -117,6 +121,7 @@ class PaymentsColumnQuickActionsCard extends StatelessWidget {
                   iconColor: const Color(0xFF6366F1),
                   cardBg: const Color(0xFFEEF2FF),
                   label: 'Settings',
+                  isSelected: false,
                   onTap: onSettings,
                 ),
               ),
@@ -133,6 +138,7 @@ class PaymentsColumnQuickActionsCard extends StatelessWidget {
     required Color cardBg,
     required String label,
     required VoidCallback onTap,
+    bool isSelected = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -142,7 +148,10 @@ class PaymentsColumnQuickActionsCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: iconColor.withAlpha(40), width: 1),
+          border: Border.all(
+            color: isSelected ? iconColor : iconColor.withAlpha(40),
+            width: isSelected ? 2 : 1,
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -184,3 +193,4 @@ class PaymentsColumnQuickActionsCard extends StatelessWidget {
     );
   }
 }
+
