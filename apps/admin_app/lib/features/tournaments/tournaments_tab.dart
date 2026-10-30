@@ -14,6 +14,7 @@ import 'dialogs/create_tournament_dialog.dart';
 import 'dialogs/tournament_details_dialog.dart';
 import 'dialogs/tournament_registrations_dialog.dart';
 import 'dialogs/tournament_rewards_dialog.dart';
+import 'dialogs/tournament_questions_dialog.dart';
 
 /// Rankearn Admin Panel — Tournaments Management Screen
 /// Pixel-accurate implementation adhering to the centralized design system.
@@ -237,7 +238,8 @@ class _TournamentsTabState extends State<TournamentsTab> {
       barrierDismissible: false,
       builder: (ctx) => CreateTournamentDialog(
         editItem: editItem,
-        onSave: (newItem) async {
+        onSave: (newItem) {},
+        onSaveWithSource: (newItem, sourceTestId) async {
           final isEditing = editItem != null;
           final itemToSave = newItem.copyWith(
             status: newItem.computedStatus,
@@ -257,6 +259,31 @@ class _TournamentsTabState extends State<TournamentsTab> {
           if (client != null) {
             try {
               await client.from('tests').upsert(itemToSave.toSupabase());
+
+              // If admin selected an existing test to copy questions from:
+              if (sourceTestId != null && sourceTestId.isNotEmpty) {
+                final sourceQs = await client
+                    .from('questions')
+                    .select()
+                    .eq('test_id', sourceTestId)
+                    .order('question_number', ascending: true);
+
+                if (sourceQs.isNotEmpty) {
+                  final payload = <Map<String, dynamic>>[];
+                  for (int i = 0; i < sourceQs.length; i++) {
+                    final original = Map<String, dynamic>.from(sourceQs[i]);
+                    original['id'] = 'q_tour_${itemToSave.id}_${DateTime.now().millisecondsSinceEpoch}_${i + 1}';
+                    original['test_id'] = itemToSave.id;
+                    original['question_number'] = i + 1;
+                    original['created_at'] = DateTime.now().toUtc().toIso8601String();
+                    payload.add(original);
+                  }
+                  await client.from('questions').upsert(payload);
+                  await client.from('tests').update({
+                    'total_questions': payload.length,
+                  }).eq('id', itemToSave.id);
+                }
+              }
             } catch (e) {
               debugPrint('Failed to sync tournament to Supabase: $e');
             }
@@ -265,11 +292,27 @@ class _TournamentsTabState extends State<TournamentsTab> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(isEditing ? 'Tournament updated in database.' : 'Tournament created & synced with database.'),
+                content: Text(isEditing
+                    ? 'Tournament updated in database.'
+                    : (sourceTestId != null
+                        ? 'Tournament created & questions copied from existing test!'
+                        : 'Tournament created & synced with database.')),
                 backgroundColor: const Color(0xFF10B981),
               ),
             );
           }
+        },
+      ),
+    );
+  }
+
+  void _openQuestionsDialog(TournamentItem item) {
+    showDialog(
+      context: context,
+      builder: (ctx) => TournamentQuestionsDialog(
+        tournament: item,
+        onQuestionsUpdated: () {
+          _loadTournaments();
         },
       ),
     );
@@ -312,6 +355,16 @@ class _TournamentsTabState extends State<TournamentsTab> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       elevation: 6,
       items: [
+        const PopupMenuItem(
+          value: 'questions',
+          child: Row(
+            children: [
+              Icon(Icons.quiz_outlined, size: 16, color: Color(0xFF5636F5)),
+              SizedBox(width: 8),
+              Text('Manage Questions & Tests', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
         const PopupMenuItem(
           value: 'registrations',
           child: Row(
@@ -369,6 +422,9 @@ class _TournamentsTabState extends State<TournamentsTab> {
       final client = SupabaseConfig.clientSafe;
 
       switch (val) {
+        case 'questions':
+          _openQuestionsDialog(item);
+          break;
         case 'registrations':
           _openRegistrationsDialog(item);
           break;
@@ -645,6 +701,7 @@ class _TournamentsTabState extends State<TournamentsTab> {
                     onView: _openViewDialog,
                     onAnalytics: _openViewDialog,
                     onEdit: (item) => _openCreateDialog(editItem: item),
+                    onManageQuestions: _openQuestionsDialog,
                     onMore: _showMoreContextMenu,
                     onBulkArchive: (ids) async {
                       setState(() {
@@ -775,6 +832,7 @@ class _TournamentsTabState extends State<TournamentsTab> {
               onView: _openViewDialog,
               onAnalytics: _openViewDialog,
               onEdit: (item) => _openCreateDialog(editItem: item),
+              onManageQuestions: _openQuestionsDialog,
               onMore: _showMoreContextMenu,
             ),
             const SizedBox(height: 14),

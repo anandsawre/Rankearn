@@ -22,6 +22,7 @@ class TournamentsTableCard extends StatefulWidget {
   final ValueChanged<TournamentItem> onView;
   final ValueChanged<TournamentItem> onAnalytics;
   final ValueChanged<TournamentItem> onEdit;
+  final ValueChanged<TournamentItem>? onManageQuestions;
   final void Function(TournamentItem, TapDownDetails)? onMore;
   final ValueChanged<List<String>>? onBulkDelete;
   final ValueChanged<List<String>>? onBulkArchive;
@@ -46,6 +47,7 @@ class TournamentsTableCard extends StatefulWidget {
     required this.onView,
     required this.onAnalytics,
     required this.onEdit,
+    this.onManageQuestions,
     this.onMore,
     this.onBulkDelete,
     this.onBulkArchive,
@@ -716,6 +718,16 @@ class _TournamentsTableCardState extends State<TournamentsTableCard> {
                               icon: const Icon(Icons.edit_outlined, size: 15, color: AppColors.textSecondary),
                               onPressed: () => widget.onEdit(item),
                               tooltip: 'Edit Tournament',
+                              constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                              padding: EdgeInsets.zero,
+                            ),
+                            const SizedBox(width: 2),
+
+                            // Manage Questions Button
+                            IconButton(
+                              icon: const Icon(Icons.quiz_outlined, size: 15, color: Color(0xFF5636F5)),
+                              onPressed: () => widget.onManageQuestions?.call(item),
+                              tooltip: 'Manage Questions',
                               constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
                               padding: EdgeInsets.zero,
                             ),

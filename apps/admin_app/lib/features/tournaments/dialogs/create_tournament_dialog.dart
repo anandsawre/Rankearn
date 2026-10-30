@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 import '../models/tournament_item.dart';
 
 class CreateTournamentDialog extends StatefulWidget {
   final TournamentItem? editItem;
   final ValueChanged<TournamentItem> onSave;
+  final void Function(TournamentItem item, String? sourceTestId)? onSaveWithSource;
 
   const CreateTournamentDialog({
     super.key,
     this.editItem,
     required this.onSave,
+    this.onSaveWithSource,
   });
 
   @override
@@ -31,6 +34,9 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   late TimeOfDay _startTime;
   late DateTime _endDate;
   late TimeOfDay _endTime;
+
+  List<Map<String, dynamic>> _availableSourceTests = [];
+  String? _selectedSourceTestId;
 
   final List<String> _categories = [
     'Railway',
@@ -62,6 +68,25 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
 
     _endDate = item?.endDate ?? _startDate.add(const Duration(hours: 2));
     _endTime = TimeOfDay(hour: _endDate.hour, minute: _endDate.minute);
+
+    _loadAvailableSourceTests();
+  }
+
+  Future<void> _loadAvailableSourceTests() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+    try {
+      final res = await client
+          .from('tests')
+          .select('id, title, category_id, total_questions')
+          .order('created_at', ascending: false)
+          .limit(50);
+      if (mounted) {
+        setState(() {
+          _availableSourceTests = List<Map<String, dynamic>>.from(res);
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -133,7 +158,11 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
       maxParticipants: maxPart,
     );
 
-    widget.onSave(result);
+    if (widget.onSaveWithSource != null) {
+      widget.onSaveWithSource!(result, _selectedSourceTestId);
+    } else {
+      widget.onSave(result);
+    }
     Navigator.of(context).pop();
   }
 
@@ -367,6 +396,79 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
                           ),
                         ],
                       ),
+
+                      // Optional: Copy Questions From Existing Test
+                      if (!isEdit) ...[
+                        const SizedBox(height: 14),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.copy_all_rounded, size: 16, color: Color(0xFF5636F5)),
+                                  SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Copy Questions from Existing Test (Optional)',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Select an existing test or mock set to automatically populate this tournament.',
+                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                height: 40,
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String?>(
+                                    value: _selectedSourceTestId,
+                                    isExpanded: true,
+                                    hint: const Text('None (Blank tournament - add questions later)', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                                    items: [
+                                      const DropdownMenuItem<String?>(
+                                        value: null,
+                                        child: Text('None (Blank tournament - add questions later)', style: TextStyle(fontSize: 12)),
+                                      ),
+                                      ..._availableSourceTests.map((t) {
+                                        final tId = t['id']?.toString() ?? '';
+                                        final tTitle = t['title']?.toString() ?? 'Test';
+                                        final tCat = t['category_id']?.toString() ?? 'General';
+                                        final tQs = (t['total_questions'] as num?)?.toInt() ?? 0;
+                                        return DropdownMenuItem<String?>(
+                                          value: tId,
+                                          child: Text(
+                                            '$tTitle ($tCat • $tQs Questions)',
+                                            style: const TextStyle(fontSize: 12),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                    onChanged: (val) => setState(() => _selectedSourceTestId = val),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
