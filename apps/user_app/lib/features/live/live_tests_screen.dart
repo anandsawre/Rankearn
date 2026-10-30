@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
@@ -115,6 +116,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
   List<Map<String, dynamic>> _leaderboardUsers = [];
 
   final Set<String> _notifiedTestIds = <String>{};
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -123,17 +125,31 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
     _processTournaments(initial);
     _isLoading = false;
     _loadLiveScreenData();
+
+    // Auto-update live and upcoming status every 15 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted && _allTournaments.isNotEmpty) {
+        setState(() {
+          _processTournaments(_allTournaments);
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   void _processTournaments(List<TestModel> tournaments) {
     final liveNow = <TestModel>[];
     final upcoming = <TestModel>[];
-    final now = DateTime.now();
 
     for (final t in tournaments) {
-      if (t.scheduledStartTime != null && t.scheduledStartTime!.isAfter(now)) {
+      if (t.isUpcoming) {
         upcoming.add(t);
-      } else {
+      } else if (t.isLive) {
         liveNow.add(t);
       }
     }

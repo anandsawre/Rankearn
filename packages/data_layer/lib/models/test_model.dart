@@ -51,7 +51,8 @@ class TestModel {
     if (!isTournament) return true;
     final now = DateTime.now();
     if (scheduledStartTime != null && now.isBefore(scheduledStartTime!)) return false;
-    if (scheduledEndTime != null && now.isAfter(scheduledEndTime!)) return false;
+    final effectiveEndTime = scheduledEndTime ?? (scheduledStartTime?.add(Duration(minutes: durationMinutes > 0 ? durationMinutes : 60)));
+    if (effectiveEndTime != null && now.isAfter(effectiveEndTime)) return false;
     return true;
   }
 
@@ -61,8 +62,10 @@ class TestModel {
   }
 
   bool get isPast {
-    if (!isTournament || scheduledEndTime == null) return false;
-    return DateTime.now().isAfter(scheduledEndTime!);
+    if (!isTournament) return false;
+    final effectiveEndTime = scheduledEndTime ?? (scheduledStartTime?.add(Duration(minutes: durationMinutes > 0 ? durationMinutes : 60)));
+    if (effectiveEndTime == null) return false;
+    return DateTime.now().isAfter(effectiveEndTime);
   }
 
   factory TestModel.fromMap(Map<String, dynamic> map) {
@@ -84,10 +87,10 @@ class TestModel {
       prizePoolCoins: (map['prize_pool_coins'] as num?)?.toInt() ?? 0,
       totalParticipants: (map['total_participants'] as num?)?.toInt() ?? 0,
       scheduledStartTime: map['scheduled_start_time'] != null
-          ? DateTime.tryParse(map['scheduled_start_time'].toString())
+          ? DateTime.tryParse(map['scheduled_start_time'].toString())?.toLocal()
           : null,
       scheduledEndTime: map['scheduled_end_time'] != null
-          ? DateTime.tryParse(map['scheduled_end_time'].toString())
+          ? DateTime.tryParse(map['scheduled_end_time'].toString())?.toLocal()
           : null,
       isResultDeclared: map['is_result_declared'] == true,
       syllabus: map['syllabus']?.toString(),

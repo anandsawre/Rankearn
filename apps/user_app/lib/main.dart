@@ -6,13 +6,11 @@ import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'features/quiz/quiz_screen.dart';
 import 'features/spin/lucky_wheel_screen.dart';
-import 'features/battle/battle_screen.dart';
 import 'features/battle/battle_hub_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/tests/test_series_screen.dart';
 import 'features/tests/screens/test_result_screen.dart';
 import 'features/live/live_tests_screen.dart';
-import 'features/earn/earn_screen.dart';
 import 'features/wallet/wallet_screen.dart';
 import 'features/wallet/components/buy_coins_modal.dart';
 import 'features/profile/profile_screen.dart';
@@ -553,22 +551,6 @@ class _UserAppShellState extends State<UserAppShell> {
     );
   }
 
-  void _startBattle([int entryFee = 100]) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => FindingOpponentScreen(
-          userCoins: _profile.coins,
-          profile: _profile,
-          entryFee: entryFee,
-          onCoinUpdate: (coinsWon) {
-            setState(() {
-              _profile = _profile.copyWith(coins: _profile.coins + coinsWon);
-            });
-          },
-        ),
-      ),
-    );
-  }
 
   void _openNotificationsModal() {
     setState(() => _unreadNotifications = 0);
@@ -948,7 +930,7 @@ class _UserAppShellState extends State<UserAppShell> {
                 setState(() => _activeTab = UserNavTab.leaderboard),
             onViewLastResult: _openTestResult,
           ),
-          UserNavTab.live => LiveTestsScreen(
+          UserNavTab.live || UserNavTab.earn => LiveTestsScreen(
             userCoins: _profile.coins,
             userId: _profile.id,
             onStartTest: (test) => _startQuiz(test),
@@ -973,11 +955,6 @@ class _UserAppShellState extends State<UserAppShell> {
             onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
             onOpenRewards: () =>
                 setState(() => _activeTab = UserNavTab.rewards),
-          ),
-          UserNavTab.earn => EarnScreen(
-            userCoins: _profile.coins,
-            onOpenBattle: () => _startBattle(20),
-            onJoinContest: (title, fee) => _startBattle(fee),
           ),
           UserNavTab.battle => BattleHubScreen(
             userCoins: _profile.coins,

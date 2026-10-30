@@ -303,6 +303,7 @@ class _QuizScreenState extends State<QuizScreen> {
         timeTakenSeconds: safeTimeTaken,
         score: result.score,
         accuracy: result.accuracy,
+        isTournament: widget.test.isTournament,
       );
     }
 
