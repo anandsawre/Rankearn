@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import '../../wallet/components/wallet_modals.dart';
 import 'live_arena_screen.dart';
 
 /// Screen One: Finding Opponent Screen
@@ -86,6 +87,12 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
       appBar: BattleAppBar(
         coins: widget.userCoins,
         onBack: _cancelMatchmaking,
+        onAddCoins: () {
+          WalletModals.showBuyCoinsModal(
+            context,
+            profile: widget.profile,
+          );
+        },
       ),
       body: SafeArea(
         top: false,

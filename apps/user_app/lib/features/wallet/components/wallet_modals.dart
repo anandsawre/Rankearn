@@ -3,9 +3,23 @@ import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'wallet_icons.dart';
+import 'buy_coins_modal.dart';
 
 class WalletModals {
   WalletModals._();
+
+  /// "Buy Coins / Top-up" Modal Dialog / BottomSheet
+  static void showBuyCoinsModal(
+    BuildContext context, {
+    required UserProfile profile,
+    VoidCallback? onTopUpSubmitted,
+  }) {
+    BuyCoinsModal.show(
+      context,
+      profile: profile,
+      onTopUpSubmitted: onTopUpSubmitted,
+    );
+  }
 
   /// "How It Works" Explanation Dialog
   static void showHowItWorksDialog(BuildContext context) {

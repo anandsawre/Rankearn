@@ -18,6 +18,7 @@ class WalletScreen extends StatefulWidget {
   final List<WalletTransactionModel>? initialTransactions;
   final ValueChanged<UserNavTab>? onNavigateToTab;
   final ValueChanged<int>? onCoinUpdate;
+  final VoidCallback? onBuyCoins;
 
   const WalletScreen({
     super.key,
@@ -26,6 +27,7 @@ class WalletScreen extends StatefulWidget {
     this.initialTransactions,
     this.onNavigateToTab,
     this.onCoinUpdate,
+    this.onBuyCoins,
   });
 
   @override
@@ -316,6 +318,21 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
+  void _openBuyCoinsModal() {
+    if (widget.onBuyCoins != null) {
+      widget.onBuyCoins!();
+      return;
+    }
+    WalletModals.showBuyCoinsModal(
+      context,
+      profile: widget.profile,
+      onTopUpSubmitted: () {
+        widget.onCoinsUpdated();
+        _loadTransactions();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -363,7 +380,9 @@ class _WalletScreenState extends State<WalletScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // A. Hero Banner
-                    const DesktopWalletHeroBanner(),
+                    DesktopWalletHeroBanner(
+                      onBuyCoinsTap: _openBuyCoinsModal,
+                    ),
                     const SizedBox(height: 18),
 
                     // B. Summary Cards (Total Coins, Total Earned, Total Withdrawn)
@@ -371,6 +390,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       currentCoins: _currentCoins,
                       totalEarned: _totalEarned,
                       totalWithdrawn: _totalWithdrawn,
+                      onBuyCoinsTap: _openBuyCoinsModal,
                       onInfoTap: () =>
                           WalletModals.showHowItWorksDialog(context),
                     ),
@@ -418,6 +438,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     // B. Quick Actions Card
                     DesktopQuickActionsCard(
                       showWithdraw: isWithdrawalSupported,
+                      onAddCoins: _openBuyCoinsModal,
                       onWithdraw: _scrollToWithdrawal,
                       onHistory: _scrollToTransactions,
                       onEarnMore: () =>
@@ -476,13 +497,16 @@ class _WalletScreenState extends State<WalletScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const DesktopWalletHeroBanner(),
+          DesktopWalletHeroBanner(
+            onBuyCoinsTap: _openBuyCoinsModal,
+          ),
           const SizedBox(height: 16),
 
           DesktopWalletSummaryRow(
             currentCoins: _currentCoins,
             totalEarned: _totalEarned,
             totalWithdrawn: _totalWithdrawn,
+            onBuyCoinsTap: _openBuyCoinsModal,
             onInfoTap: () => WalletModals.showHowItWorksDialog(context),
           ),
           const SizedBox(height: 18),
@@ -504,6 +528,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   children: [
                     DesktopQuickActionsCard(
                       showWithdraw: isWithdrawalSupported,
+                      onAddCoins: _openBuyCoinsModal,
                       onWithdraw: _scrollToWithdrawal,
                       onHistory: _scrollToTransactions,
                       onEarnMore: () =>
@@ -569,6 +594,7 @@ class _WalletScreenState extends State<WalletScreen> {
           // 1 & 2. My Wallet Title + Total Coins Hero Card
           MobileWalletHeroSection(
             coins: _currentCoins,
+            onBuyCoinsTap: _openBuyCoinsModal,
             onHowItWorksTap: () => WalletModals.showHowItWorksDialog(context),
             onInfoTap: () => WalletModals.showHowItWorksDialog(context),
             showWithdrawalInfo: isWithdrawalSupported,
@@ -578,6 +604,7 @@ class _WalletScreenState extends State<WalletScreen> {
           // 3. 4 Quick Action Cards (Withdraw, History, Earn More, Redeem)
           MobileQuickActionsRow(
             showWithdraw: isWithdrawalSupported,
+            onAddCoins: _openBuyCoinsModal,
             onWithdraw: _openMobileWithdrawalModal,
             onHistory: _scrollToTransactions,
             onEarnMore: () => widget.onNavigateToTab?.call(UserNavTab.tests),

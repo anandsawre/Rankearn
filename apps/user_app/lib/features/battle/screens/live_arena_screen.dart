@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import '../../wallet/components/wallet_modals.dart';
 import 'battle_result_screen.dart';
 
 /// Screen Two: Live Arena / Quiz Battle Screen
@@ -205,6 +206,12 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
         appBar: BattleAppBar(
           coins: widget.userCoins,
           onBack: _promptLeaveBattle,
+          onAddCoins: () {
+            WalletModals.showBuyCoinsModal(
+              context,
+              profile: widget.userProfile,
+            );
+          },
         ),
         body: SafeArea(
           top: false,

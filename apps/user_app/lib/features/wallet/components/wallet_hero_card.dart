@@ -4,7 +4,9 @@ import 'wallet_icons.dart';
 
 /// Desktop Wallet Hero Banner
 class DesktopWalletHeroBanner extends StatelessWidget {
-  const DesktopWalletHeroBanner({super.key});
+  final VoidCallback? onBuyCoinsTap;
+
+  const DesktopWalletHeroBanner({super.key, this.onBuyCoinsTap});
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,44 @@ class DesktopWalletHeroBanner extends StatelessWidget {
                     color: AppColors.walletSecondaryText,
                   ),
                 ),
+                if (onBuyCoinsTap != null) ...[
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: onBuyCoinsTap,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF00B96B), Color(0xFF009355)],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x2800B96B),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.add_circle_rounded, color: Colors.white, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            'Buy / Top-up Coins',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -66,6 +106,7 @@ class MobileWalletHeroSection extends StatelessWidget {
   final int coins;
   final VoidCallback? onHowItWorksTap;
   final VoidCallback? onInfoTap;
+  final VoidCallback? onBuyCoinsTap;
   final bool showWithdrawalInfo;
 
   const MobileWalletHeroSection({
@@ -73,6 +114,7 @@ class MobileWalletHeroSection extends StatelessWidget {
     required this.coins,
     this.onHowItWorksTap,
     this.onInfoTap,
+    this.onBuyCoinsTap,
     this.showWithdrawalInfo = true,
   });
 
@@ -245,6 +287,44 @@ class MobileWalletHeroSection extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (onBuyCoinsTap != null) ...[
+                      const SizedBox(height: 10),
+                      InkWell(
+                        onTap: onBuyCoinsTap,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF00B96B), Color(0xFF009355)],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x2800B96B),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.add_circle_rounded, color: Colors.white, size: 14),
+                              SizedBox(width: 4),
+                              Text(
+                                'Add Coins',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import '../../wallet/components/wallet_modals.dart';
 import '../widgets/test_result_widgets.dart';
 import 'answer_review_screen.dart';
 
@@ -76,7 +77,20 @@ class _TestResultScreenState extends State<TestResultScreen> {
             unreadNotifications: 3,
             onBack: _handleBack,
             onNavTabSelected: widget.onNavTabSelected,
-            onAddCoins: () => widget.onNavTabSelected?.call(UserNavTab.wallet),
+            onAddCoins: () {
+              final profile = widget.userProfile ??
+                  UserProfile(
+                    id: 'current_user',
+                    name: widget.result.studentName,
+                    email: 'user@rankearn.com',
+                    coins: widget.userCoins,
+                    createdAt: DateTime.now(),
+                  );
+              WalletModals.showBuyCoinsModal(
+                context,
+                profile: profile,
+              );
+            },
             onProfileTap: () =>
                 widget.onNavTabSelected?.call(UserNavTab.profile),
           ),

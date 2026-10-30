@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 
 /// 1v1 Live Arena Header App Bar
 /// Features emerald gradient, crossed-swords title with accented "Live" text,
-/// and live gold coin balance pill with zero-overflow responsive layout.
+/// crisp white status bar overlay, and live gold coin balance pill with '+' add button.
 class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
   final int coins;
   final VoidCallback onBack;
   final String title;
+  final VoidCallback? onAddCoins;
 
   const BattleAppBar({
     super.key,
     required this.coins,
     required this.onBack,
     this.title = '1v1 Live Arena',
+    this.onAddCoins,
   });
 
   @override
@@ -22,31 +25,37 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(gradient: AppColors.battleHeaderGradient),
-      child: SafeArea(
-        bottom: false,
-        child: SizedBox(
-          height: 60.0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Row(
-              children: [
-                // Back Button
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white,
-                    size: 20,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Container(
+        decoration: const BoxDecoration(gradient: AppColors.battleHeaderGradient),
+        child: SafeArea(
+          bottom: false,
+          child: SizedBox(
+            height: 60.0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: Row(
+                children: [
+                  // Back Button
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    onPressed: onBack,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    tooltip: 'Back',
                   ),
-                  onPressed: onBack,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  tooltip: 'Back',
-                ),
 
                 // Center Title
                 Expanded(
@@ -113,27 +122,45 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
 
-                // Gold Coin Balance Pill
+                // Gold Coin Balance Pill with + Add Coins button
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4.5,
+                  padding: EdgeInsets.only(
+                    left: 8,
+                    top: 3.5,
+                    bottom: 3.5,
+                    right: onAddCoins != null ? 4 : 8,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(50),
+                    color: const Color(0xFF10194F).withAlpha(220),
                     borderRadius: AppRadii.borderPill,
                     border: Border.all(
-                      color: Colors.white.withAlpha(50),
+                      color: const Color(0xFFFFD54F).withAlpha(140),
                       width: 1,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('🪙', style: TextStyle(fontSize: 13)),
-                      const SizedBox(width: 4),
+                      Container(
+                        width: 18,
+                        height: 18,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFFFFC928),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.star_rounded,
+                          color: Colors.white,
+                          size: 13,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
                       Text(
-                        '$coins',
+                        coins.toString().replaceAllMapped(
+                          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                          (m) => '${m[1]},',
+                        ),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
@@ -141,6 +168,27 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
                           fontFamily: 'Inter',
                         ),
                       ),
+                      if (onAddCoins != null) ...[
+                        const SizedBox(width: 5),
+                        InkWell(
+                          onTap: onAddCoins,
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF00B96B),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.add_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -149,6 +197,7 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

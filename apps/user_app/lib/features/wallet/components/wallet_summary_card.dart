@@ -9,6 +9,7 @@ class WalletSummaryCard extends StatelessWidget {
   final Widget iconWidget;
   final bool showInfoIcon;
   final VoidCallback? onInfoTap;
+  final Widget? trailing;
 
   const WalletSummaryCard({
     super.key,
@@ -17,6 +18,7 @@ class WalletSummaryCard extends StatelessWidget {
     required this.iconWidget,
     this.showInfoIcon = false,
     this.onInfoTap,
+    this.trailing,
   });
 
   @override
@@ -104,6 +106,10 @@ class WalletSummaryCard extends StatelessWidget {
               ],
             ),
           ),
+          if (trailing != null) ...[
+            const SizedBox(width: 8),
+            trailing!,
+          ],
         ],
       ),
     );
@@ -126,6 +132,7 @@ class DesktopWalletSummaryRow extends StatelessWidget {
   final int totalEarned;
   final int totalWithdrawn;
   final VoidCallback? onInfoTap;
+  final VoidCallback? onBuyCoinsTap;
 
   const DesktopWalletSummaryRow({
     super.key,
@@ -133,6 +140,7 @@ class DesktopWalletSummaryRow extends StatelessWidget {
     required this.totalEarned,
     required this.totalWithdrawn,
     this.onInfoTap,
+    this.onBuyCoinsTap,
   });
 
   @override
@@ -172,6 +180,43 @@ class DesktopWalletSummaryRow extends StatelessWidget {
       coins: currentCoins,
       showInfoIcon: true,
       onInfoTap: onInfoTap,
+      trailing: onBuyCoinsTap != null
+          ? InkWell(
+              onTap: onBuyCoinsTap,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF00B96B), Color(0xFF009355)],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x2800B96B),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.add, size: 14, color: Colors.white),
+                    SizedBox(width: 4),
+                    Text(
+                      'Add Coins',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : null,
       iconWidget: Container(
         width: 48,
         height: 48,

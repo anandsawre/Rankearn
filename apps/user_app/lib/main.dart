@@ -14,6 +14,7 @@ import 'features/tests/screens/test_result_screen.dart';
 import 'features/live/live_tests_screen.dart';
 import 'features/earn/earn_screen.dart';
 import 'features/wallet/wallet_screen.dart';
+import 'features/wallet/components/buy_coins_modal.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/rewards/rewards_hub_screen.dart';
 import 'features/auth/user_auth_screen.dart';
@@ -809,6 +810,21 @@ class _UserAppShellState extends State<UserAppShell> {
     }
   }
 
+  void _openBuyCoinsModal() {
+    BuyCoinsModal.show(
+      context,
+      profile: _profile,
+      onTopUpSubmitted: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Color(0xFF00B96B),
+            content: Text('Top-up request submitted! Your coins will be credited within 2-5 minutes once verified by admin.'),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isPro = _profile.subscriptionStatus == 'premium';
@@ -848,6 +864,7 @@ class _UserAppShellState extends State<UserAppShell> {
                 onNotificationTap: _openNotificationsModal,
                 onCoinsTap: () =>
                     setState(() => _activeTab = UserNavTab.wallet),
+                onAddCoinsTap: _openBuyCoinsModal,
                 onProfileTap: () =>
                     setState(() => _activeTab = UserNavTab.profile),
               ),
@@ -950,6 +967,7 @@ class _UserAppShellState extends State<UserAppShell> {
           UserNavTab.wallet => WalletScreen(
             profile: _profile,
             onCoinsUpdated: () => setState(() {}),
+            onBuyCoins: _openBuyCoinsModal,
             onNavigateToTab: (tab) => setState(() => _activeTab = tab),
             onCoinUpdate: (delta) {
               setState(() {

@@ -28,6 +28,7 @@ class MobileQuickActionsRow extends StatelessWidget {
   final VoidCallback onEarnMore;
   final VoidCallback onRedeem;
   final VoidCallback? onHowItWorks;
+  final VoidCallback? onAddCoins;
   final bool showWithdraw;
 
   const MobileQuickActionsRow({
@@ -37,88 +38,72 @@ class MobileQuickActionsRow extends StatelessWidget {
     required this.onEarnMore,
     required this.onRedeem,
     this.onHowItWorks,
+    this.onAddCoins,
     this.showWithdraw = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final items = showWithdraw
-        ? [
-            QuickActionItem(
-              title: 'Withdraw',
-              subtitle: 'To UPI',
-              icon: Icons.account_balance_wallet_rounded,
-              iconColor: const Color(0xFF00B96B),
-              bgColor: const Color(0xFFE8FDF2),
-              arrowColor: const Color(0xFF00B96B),
-              onTap: onWithdraw,
-            ),
-            QuickActionItem(
-              title: 'History',
-              subtitle: 'View all',
-              icon: Icons.access_time_rounded,
-              iconColor: const Color(0xFF2587F8),
-              bgColor: const Color(0xFFEFF6FF),
-              arrowColor: const Color(0xFF2587F8),
-              onTap: onHistory,
-            ),
-            QuickActionItem(
-              title: 'Earn More',
-              subtitle: 'Play & Earn',
-              icon: Icons.card_giftcard_rounded,
-              iconColor: const Color(0xFFF59E0B),
-              bgColor: const Color(0xFFFFFBEB),
-              arrowColor: const Color(0xFFF59E0B),
-              onTap: onEarnMore,
-            ),
-            QuickActionItem(
-              title: 'Redeem',
-              subtitle: 'Offers',
-              icon: Icons.confirmation_number_rounded,
-              iconColor: const Color(0xFF8B5CF6),
-              bgColor: const Color(0xFFF5F3FF),
-              arrowColor: const Color(0xFF8B5CF6),
-              onTap: onRedeem,
-            ),
-          ]
-        : [
-            QuickActionItem(
-              title: 'Redeem',
-              subtitle: 'Use Coins',
-              icon: Icons.confirmation_number_rounded,
-              iconColor: const Color(0xFF8B5CF6),
-              bgColor: const Color(0xFFF5F3FF),
-              arrowColor: const Color(0xFF8B5CF6),
-              onTap: onRedeem,
-            ),
-            QuickActionItem(
-              title: 'History',
-              subtitle: 'Passbook',
-              icon: Icons.access_time_rounded,
-              iconColor: const Color(0xFF2587F8),
-              bgColor: const Color(0xFFEFF6FF),
-              arrowColor: const Color(0xFF2587F8),
-              onTap: onHistory,
-            ),
-            QuickActionItem(
-              title: 'Earn More',
-              subtitle: 'Play & Earn',
-              icon: Icons.card_giftcard_rounded,
-              iconColor: const Color(0xFFF59E0B),
-              bgColor: const Color(0xFFFFFBEB),
-              arrowColor: const Color(0xFFF59E0B),
-              onTap: onEarnMore,
-            ),
-            QuickActionItem(
-              title: 'Guide',
-              subtitle: 'How it works',
-              icon: Icons.school_rounded,
-              iconColor: const Color(0xFF0284C7),
-              bgColor: const Color(0xFFE0F2FE),
-              arrowColor: const Color(0xFF0284C7),
-              onTap: onHowItWorks ?? onRedeem,
-            ),
-          ];
+    final items = [
+      if (onAddCoins != null)
+        QuickActionItem(
+          title: 'Add Coins',
+          subtitle: 'Buy Packs',
+          icon: Icons.add_circle_rounded,
+          iconColor: const Color(0xFF00B96B),
+          bgColor: const Color(0xFFE8FDF2),
+          arrowColor: const Color(0xFF00B96B),
+          onTap: onAddCoins!,
+        ),
+      if (showWithdraw)
+        QuickActionItem(
+          title: 'Withdraw',
+          subtitle: 'To UPI',
+          icon: Icons.account_balance_wallet_rounded,
+          iconColor: const Color(0xFF00B96B),
+          bgColor: const Color(0xFFE8FDF2),
+          arrowColor: const Color(0xFF00B96B),
+          onTap: onWithdraw,
+        )
+      else
+        QuickActionItem(
+          title: 'Redeem',
+          subtitle: 'Use Coins',
+          icon: Icons.confirmation_number_rounded,
+          iconColor: const Color(0xFF8B5CF6),
+          bgColor: const Color(0xFFF5F3FF),
+          arrowColor: const Color(0xFF8B5CF6),
+          onTap: onRedeem,
+        ),
+      QuickActionItem(
+        title: 'History',
+        subtitle: 'View all',
+        icon: Icons.access_time_rounded,
+        iconColor: const Color(0xFF2587F8),
+        bgColor: const Color(0xFFEFF6FF),
+        arrowColor: const Color(0xFF2587F8),
+        onTap: onHistory,
+      ),
+      if (onAddCoins == null)
+        QuickActionItem(
+          title: 'Earn More',
+          subtitle: 'Play & Earn',
+          icon: Icons.card_giftcard_rounded,
+          iconColor: const Color(0xFFF59E0B),
+          bgColor: const Color(0xFFFFFBEB),
+          arrowColor: const Color(0xFFF59E0B),
+          onTap: onEarnMore,
+        ),
+      QuickActionItem(
+        title: 'Redeem',
+        subtitle: 'Offers',
+        icon: Icons.confirmation_number_rounded,
+        iconColor: const Color(0xFF8B5CF6),
+        bgColor: const Color(0xFFF5F3FF),
+        arrowColor: const Color(0xFF8B5CF6),
+        onTap: onRedeem,
+      ),
+    ];
 
     return Row(
       children: items.map((item) {
@@ -198,6 +183,7 @@ class DesktopQuickActionsCard extends StatelessWidget {
   final VoidCallback onEarnMore;
   final VoidCallback onRedeem;
   final VoidCallback? onHowItWorks;
+  final VoidCallback? onAddCoins;
   final bool showWithdraw;
 
   const DesktopQuickActionsCard({
@@ -207,88 +193,72 @@ class DesktopQuickActionsCard extends StatelessWidget {
     required this.onEarnMore,
     required this.onRedeem,
     this.onHowItWorks,
+    this.onAddCoins,
     this.showWithdraw = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final items = showWithdraw
-        ? [
-            QuickActionItem(
-              title: 'Withdraw',
-              subtitle: 'To UPI',
-              icon: Icons.account_balance_wallet_rounded,
-              iconColor: const Color(0xFF00B96B),
-              bgColor: const Color(0xFFE8FDF2),
-              arrowColor: const Color(0xFF00B96B),
-              onTap: onWithdraw,
-            ),
-            QuickActionItem(
-              title: 'History',
-              subtitle: 'View all',
-              icon: Icons.access_time_rounded,
-              iconColor: const Color(0xFF2587F8),
-              bgColor: const Color(0xFFEFF6FF),
-              arrowColor: const Color(0xFF2587F8),
-              onTap: onHistory,
-            ),
-            QuickActionItem(
-              title: 'Earn More',
-              subtitle: 'Play & Earn',
-              icon: Icons.card_giftcard_rounded,
-              iconColor: const Color(0xFFF59E0B),
-              bgColor: const Color(0xFFFFFBEB),
-              arrowColor: const Color(0xFFF59E0B),
-              onTap: onEarnMore,
-            ),
-            QuickActionItem(
-              title: 'Redeem',
-              subtitle: 'Use Coins',
-              icon: Icons.confirmation_number_rounded,
-              iconColor: const Color(0xFF8B5CF6),
-              bgColor: const Color(0xFFF5F3FF),
-              arrowColor: const Color(0xFF8B5CF6),
-              onTap: onRedeem,
-            ),
-          ]
-        : [
-            QuickActionItem(
-              title: 'Redeem',
-              subtitle: 'Use Coins',
-              icon: Icons.confirmation_number_rounded,
-              iconColor: const Color(0xFF8B5CF6),
-              bgColor: const Color(0xFFF5F3FF),
-              arrowColor: const Color(0xFF8B5CF6),
-              onTap: onRedeem,
-            ),
-            QuickActionItem(
-              title: 'History',
-              subtitle: 'Passbook',
-              icon: Icons.access_time_rounded,
-              iconColor: const Color(0xFF2587F8),
-              bgColor: const Color(0xFFEFF6FF),
-              arrowColor: const Color(0xFF2587F8),
-              onTap: onHistory,
-            ),
-            QuickActionItem(
-              title: 'Earn More',
-              subtitle: 'Play & Earn',
-              icon: Icons.card_giftcard_rounded,
-              iconColor: const Color(0xFFF59E0B),
-              bgColor: const Color(0xFFFFFBEB),
-              arrowColor: const Color(0xFFF59E0B),
-              onTap: onEarnMore,
-            ),
-            QuickActionItem(
-              title: 'Guide',
-              subtitle: 'How it works',
-              icon: Icons.school_rounded,
-              iconColor: const Color(0xFF0284C7),
-              bgColor: const Color(0xFFE0F2FE),
-              arrowColor: const Color(0xFF0284C7),
-              onTap: onHowItWorks ?? onRedeem,
-            ),
-          ];
+    final items = [
+      if (onAddCoins != null)
+        QuickActionItem(
+          title: 'Add Coins',
+          subtitle: 'Buy Packs',
+          icon: Icons.add_circle_rounded,
+          iconColor: const Color(0xFF00B96B),
+          bgColor: const Color(0xFFE8FDF2),
+          arrowColor: const Color(0xFF00B96B),
+          onTap: onAddCoins!,
+        ),
+      if (showWithdraw)
+        QuickActionItem(
+          title: 'Withdraw',
+          subtitle: 'To UPI',
+          icon: Icons.account_balance_wallet_rounded,
+          iconColor: const Color(0xFF00B96B),
+          bgColor: const Color(0xFFE8FDF2),
+          arrowColor: const Color(0xFF00B96B),
+          onTap: onWithdraw,
+        )
+      else
+        QuickActionItem(
+          title: 'Redeem',
+          subtitle: 'Use Coins',
+          icon: Icons.confirmation_number_rounded,
+          iconColor: const Color(0xFF8B5CF6),
+          bgColor: const Color(0xFFF5F3FF),
+          arrowColor: const Color(0xFF8B5CF6),
+          onTap: onRedeem,
+        ),
+      QuickActionItem(
+        title: 'History',
+        subtitle: 'View all',
+        icon: Icons.access_time_rounded,
+        iconColor: const Color(0xFF2587F8),
+        bgColor: const Color(0xFFEFF6FF),
+        arrowColor: const Color(0xFF2587F8),
+        onTap: onHistory,
+      ),
+      if (onAddCoins == null)
+        QuickActionItem(
+          title: 'Earn More',
+          subtitle: 'Play & Earn',
+          icon: Icons.card_giftcard_rounded,
+          iconColor: const Color(0xFFF59E0B),
+          bgColor: const Color(0xFFFFFBEB),
+          arrowColor: const Color(0xFFF59E0B),
+          onTap: onEarnMore,
+        ),
+      QuickActionItem(
+        title: 'Redeem',
+        subtitle: 'Use Coins',
+        icon: Icons.confirmation_number_rounded,
+        iconColor: const Color(0xFF8B5CF6),
+        bgColor: const Color(0xFFF5F3FF),
+        arrowColor: const Color(0xFF8B5CF6),
+        onTap: onRedeem,
+      ),
+    ];
 
     return Container(
       width: double.infinity,
