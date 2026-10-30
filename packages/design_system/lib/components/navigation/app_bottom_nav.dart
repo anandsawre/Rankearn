@@ -60,7 +60,6 @@ class AppBottomNav extends StatelessWidget {
 
     final leaderboardItems = [
       (UserNavTab.home, Icons.home_rounded, 'Home'),
-      (UserNavTab.categories, Icons.grid_view_rounded, 'Categories'),
       (UserNavTab.tests, Icons.feed_outlined, 'Tests'),
       (UserNavTab.live, Icons.sensors_rounded, 'Live'),
       (UserNavTab.leaderboard, Icons.emoji_events_rounded, 'Leaderboard'),
@@ -69,7 +68,6 @@ class AppBottomNav extends StatelessWidget {
 
     final walletItems = [
       (UserNavTab.home, Icons.home_rounded, 'Home'),
-      (UserNavTab.categories, Icons.grid_view_rounded, 'Categories'),
       (UserNavTab.tests, Icons.feed_outlined, 'Tests'),
       (UserNavTab.live, Icons.sensors_rounded, 'Live'),
       (UserNavTab.leaderboard, Icons.emoji_events_rounded, 'Leaderboard'),

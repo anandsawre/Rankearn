@@ -192,14 +192,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                               ),
                               const SizedBox(width: 4),
                               _buildDesktopNavItem(
-                                icon: Icons.grid_view_rounded,
-                                label: 'Categories',
-                                tab: UserNavTab.categories,
-                              ),
-                              const SizedBox(width: 4),
-                              _buildDesktopNavItem(
                                 icon: Icons.feed_outlined,
-                                label: 'Tests',
+                                label: 'Test Series',
                                 tab: UserNavTab.tests,
                               ),
                               const SizedBox(width: 4),
