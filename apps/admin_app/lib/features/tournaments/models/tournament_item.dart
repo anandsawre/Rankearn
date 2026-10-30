@@ -137,19 +137,40 @@ class TournamentItem {
     );
   }
 
+  TournamentStatus get computedStatus {
+    if (status == TournamentStatus.archived) return TournamentStatus.archived;
+    if (status == TournamentStatus.completed) return TournamentStatus.completed;
+
+    final now = DateTime.now();
+    final localStart = startDate.toLocal();
+    final localEnd = endDate.toLocal();
+
+    if (now.isBefore(localStart)) {
+      return TournamentStatus.upcoming;
+    } else if (now.isAfter(localEnd)) {
+      return TournamentStatus.completed;
+    } else {
+      return TournamentStatus.ongoing;
+    }
+  }
+
   factory TournamentItem.fromSupabase(Map<String, dynamic> map) {
     final title = map['title']?.toString() ?? 'Tournament Quiz';
-    final subtitle = map['description']?.toString() ?? 'Competitive Quiz Tournament';
-    final category = map['category']?.toString() ?? 'Railway';
+    final subtitle = (map['syllabus'] ?? map['description'])?.toString() ?? 'Competitive Quiz Tournament';
+    final category = (map['category_id'] ?? map['category'])?.toString() ?? 'General Science';
+
+    final durationMins = (map['duration_minutes'] as num?)?.toInt() ?? 60;
 
     DateTime start = DateTime.now().add(const Duration(days: 2));
     if (map['scheduled_start_time'] != null) {
-      start = DateTime.tryParse(map['scheduled_start_time'].toString()) ?? start;
+      final parsed = DateTime.tryParse(map['scheduled_start_time'].toString());
+      if (parsed != null) start = parsed.toLocal();
     }
 
-    DateTime end = start.add(const Duration(hours: 2));
+    DateTime end = start.add(Duration(minutes: durationMins));
     if (map['scheduled_end_time'] != null) {
-      end = DateTime.tryParse(map['scheduled_end_time'].toString()) ?? end;
+      final parsed = DateTime.tryParse(map['scheduled_end_time'].toString());
+      if (parsed != null) end = parsed.toLocal();
     }
 
     final entryFee = (map['entry_fee_coins'] is num)
@@ -160,15 +181,29 @@ class TournamentItem {
         ? (map['total_participants'] as num).toInt()
         : 0;
 
-    final prizePool = (map['prize_pool'] is num)
-        ? (map['prize_pool'] as num).toInt()
-        : 10000;
+    final rawPrize = (map['prize_pool_coins'] is num)
+        ? (map['prize_pool_coins'] as num).toInt()
+        : ((map['prize_pool'] is num)
+            ? (map['prize_pool'] as num).toInt()
+            : (entryFee * 10 > 0 ? entryFee * 10 : 10000));
 
-    final statusStr = map['status']?.toString() ?? 'upcoming';
-    final status = TournamentStatusExt.fromString(statusStr);
+    final statusStr = (map['status'] ?? '').toString().toLowerCase();
+    TournamentStatus status = TournamentStatus.upcoming;
+    if (statusStr == 'draft' || statusStr == 'archived') {
+      status = TournamentStatus.archived;
+    } else {
+      final now = DateTime.now();
+      if (now.isBefore(start)) {
+        status = TournamentStatus.upcoming;
+      } else if (now.isAfter(end)) {
+        status = TournamentStatus.completed;
+      } else {
+        status = TournamentStatus.ongoing;
+      }
+    }
 
     return TournamentItem(
-      id: map['id']?.toString() ?? UniqueKey().toString(),
+      id: map['id']?.toString() ?? '',
       title: title,
       subtitle: subtitle,
       category: category,
@@ -177,11 +212,11 @@ class TournamentItem {
       entryFee: entryFee,
       participants: participants,
       status: status,
-      prizePool: prizePool,
+      prizePool: rawPrize,
       thumbnailBg: _getCategoryColor(category),
       thumbnailIcon: _getCategoryIcon(category),
       maxParticipants: (map['max_participants'] is num) ? (map['max_participants'] as num).toInt() : 10000,
-      description: map['description']?.toString() ?? '',
+      description: subtitle,
     );
   }
 
@@ -189,16 +224,20 @@ class TournamentItem {
     return {
       'id': id,
       'title': title,
-      'description': subtitle,
-      'category': category,
-      'scheduled_start_time': startDate.toIso8601String(),
-      'scheduled_end_time': endDate.toIso8601String(),
+      'syllabus': subtitle.isNotEmpty ? subtitle : description,
+      'category_id': category,
+      'scheduled_start_time': startDate.toUtc().toIso8601String(),
+      'scheduled_end_time': endDate.toUtc().toIso8601String(),
       'entry_fee_coins': entryFee,
       'total_participants': participants,
-      'status': status.name,
-      'prize_pool': prizePool,
+      'status': status == TournamentStatus.archived ? 'draft' : 'published',
       'is_tournament': true,
       'test_mode': 'tournament',
+      'max_participants': maxParticipants,
+      'duration_minutes': endDate.difference(startDate).inMinutes > 0
+          ? endDate.difference(startDate).inMinutes
+          : 60,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
   }
 
@@ -251,8 +290,8 @@ class TournamentItem {
       title: 'RRB Technician Grand Quiz',
       subtitle: 'All India Live Quiz Tournament',
       category: 'Railway',
-      startDate: DateTime(2026, 10, 25, 19, 0),
-      endDate: DateTime(2026, 10, 25, 21, 0),
+      startDate: DateTime.now().add(const Duration(days: 2)),
+      endDate: DateTime.now().add(const Duration(days: 2, hours: 2)),
       entryFee: 0,
       participants: 3240,
       status: TournamentStatus.upcoming,
@@ -265,8 +304,8 @@ class TournamentItem {
       title: 'General Science Champion',
       subtitle: 'Science Special Tournament',
       category: 'General Science',
-      startDate: DateTime(2026, 10, 20, 18, 0),
-      endDate: DateTime(2026, 10, 20, 20, 0),
+      startDate: DateTime.now().subtract(const Duration(minutes: 30)),
+      endDate: DateTime.now().add(const Duration(hours: 1)),
       entryFee: 10,
       participants: 2120,
       status: TournamentStatus.ongoing,

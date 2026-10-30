@@ -176,12 +176,16 @@ class TournamentsRecentActivityCard extends StatelessWidget {
                     const SizedBox(width: 6),
 
                     // Time Ago
-                    Text(
-                      item.timeAgo,
-                      style: const TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w400,
-                        color: AppColors.textMuted,
+                    Flexible(
+                      child: Text(
+                        item.timeAgo,
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.textMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

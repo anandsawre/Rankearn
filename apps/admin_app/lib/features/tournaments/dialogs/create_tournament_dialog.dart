@@ -107,6 +107,18 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     final prizePool = int.tryParse(_prizePoolController.text) ?? 10000;
     final maxPart = int.tryParse(_maxParticipantsController.text) ?? 5000;
 
+    final now = DateTime.now();
+    TournamentStatus resolvedStatus = _status;
+    if (_status != TournamentStatus.archived) {
+      if (now.isBefore(startDateTime)) {
+        resolvedStatus = TournamentStatus.upcoming;
+      } else if (now.isAfter(endDateTime)) {
+        resolvedStatus = TournamentStatus.completed;
+      } else {
+        resolvedStatus = TournamentStatus.ongoing;
+      }
+    }
+
     final result = TournamentItem(
       id: widget.editItem?.id ?? 'tour_${DateTime.now().millisecondsSinceEpoch}',
       title: _titleController.text.trim(),
@@ -116,7 +128,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
       endDate: endDateTime,
       entryFee: entryFee,
       participants: widget.editItem?.participants ?? 0,
-      status: _status,
+      status: resolvedStatus,
       prizePool: prizePool,
       maxParticipants: maxPart,
     );
@@ -205,68 +217,86 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
                       const SizedBox(height: 12),
 
                       // Category & Status Row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Category *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                                const SizedBox(height: 6),
-                                Container(
-                                  height: 40,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF8FAFC),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _category,
-                                      isExpanded: true,
-                                      onChanged: (val) {
-                                        if (val != null) setState(() => _category = val);
-                                      },
-                                      items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12)))).toList(),
+                      Builder(
+                        builder: (context) {
+                          final availableCategories = <String>{
+                            'General',
+                            ..._categories,
+                            'SSC',
+                            'Banking',
+                            if (_category.trim().isNotEmpty) _category.trim(),
+                          }.toList();
+
+                          final selectedCategory = availableCategories.contains(_category)
+                              ? _category
+                              : availableCategories.first;
+
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Category *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      height: 40,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF8FAFC),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          value: selectedCategory,
+                                          isExpanded: true,
+                                          onChanged: (val) {
+                                            if (val != null) setState(() => _category = val);
+                                          },
+                                          items: availableCategories
+                                              .map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12))))
+                                              .toList(),
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Status *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                                const SizedBox(height: 6),
-                                Container(
-                                  height: 40,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF8FAFC),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<TournamentStatus>(
-                                      value: _status,
-                                      isExpanded: true,
-                                      onChanged: (val) {
-                                        if (val != null) setState(() => _status = val);
-                                      },
-                                      items: TournamentStatus.values
-                                          .map((s) => DropdownMenuItem(value: s, child: Text(s.label, style: const TextStyle(fontSize: 12))))
-                                          .toList(),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Status *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      height: 40,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF8FAFC),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<TournamentStatus>(
+                                          value: _status,
+                                          isExpanded: true,
+                                          onChanged: (val) {
+                                            if (val != null) setState(() => _status = val);
+                                          },
+                                          items: TournamentStatus.values
+                                              .map((s) => DropdownMenuItem(value: s, child: Text(s.label, style: const TextStyle(fontSize: 12))))
+                                              .toList(),
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
-                        ],
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 12),
 

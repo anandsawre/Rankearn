@@ -661,7 +661,7 @@ class _TournamentsTableCardState extends State<TournamentsTableCard> {
                       ),
 
                       // 9. Status
-                      DataCell(_buildStatusBadge(item.status)),
+                      DataCell(_buildStatusBadge(item.computedStatus)),
 
                       // 10. Prize Pool
                       DataCell(
@@ -997,10 +997,11 @@ class _TournamentsTableCardState extends State<TournamentsTableCard> {
   }
 
   static String _formatShortDate(DateTime dt) {
+    final local = dt.toLocal();
     final months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    return '${months[local.month - 1]} ${local.day}, ${local.year}';
   }
 }
