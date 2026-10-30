@@ -16,7 +16,7 @@ import 'features/notifications/notifications_tab.dart';
 import 'features/lucky_wheel/lucky_wheel_tab.dart';
 import 'features/lucky_wheel/widgets/lucky_wheel_icon.dart';
 import 'features/tournaments/tournaments_tab.dart';
-import 'features/payments/payments_tab.dart';
+import 'features/finance/finance_tab.dart';
 import 'features/referrals/referrals_tab.dart';
 import 'features/posts/posts_tab.dart';
 import 'features/support/support_tab.dart';
@@ -160,7 +160,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   AdminNavTab.aiCreator => AiCreatorTab(
                       onSavedToTests: () => setState(() => _activeTab = AdminNavTab.tests),
                     ),
-                  AdminNavTab.finance => const PaymentsTab(),
+                  AdminNavTab.finance => const FinanceTab(),
                   AdminNavTab.contests => const ContestsTab(),
                   AdminNavTab.banners => const BannersTab(),
                   AdminNavTab.notifications => const NotificationsTab(),
