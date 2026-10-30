@@ -150,9 +150,27 @@ class LiveQuizItem {
     }
   }
 
+  // --- Dynamic Computed Status based on Start Time & Duration ---
+  LiveQuizStatus get computedStatus {
+    if (status == LiveQuizStatus.draft) return LiveQuizStatus.draft;
+    if (status == LiveQuizStatus.completed) return LiveQuizStatus.completed;
+
+    final now = DateTime.now();
+    final localStart = startTime.toLocal();
+    final localEnd = localStart.add(Duration(minutes: durationMinutes));
+
+    if (now.isBefore(localStart)) {
+      return LiveQuizStatus.scheduled;
+    } else if (now.isAfter(localEnd)) {
+      return LiveQuizStatus.completed;
+    } else {
+      return LiveQuizStatus.liveNow;
+    }
+  }
+
   // --- Status Color & Label Helpers ---
   String get statusLabel {
-    switch (status) {
+    switch (computedStatus) {
       case LiveQuizStatus.liveNow:
         return 'Live Now';
       case LiveQuizStatus.completed:
@@ -167,7 +185,7 @@ class LiveQuizItem {
   }
 
   Color get statusBgColor {
-    switch (status) {
+    switch (computedStatus) {
       case LiveQuizStatus.liveNow:
         return const Color(0xFFEFF6FF); // Soft blue background
       case LiveQuizStatus.completed:
@@ -182,7 +200,7 @@ class LiveQuizItem {
   }
 
   Color get statusTextColor {
-    switch (status) {
+    switch (computedStatus) {
       case LiveQuizStatus.liveNow:
         return const Color(0xFF2563EB); // Blue
       case LiveQuizStatus.completed:
@@ -197,7 +215,7 @@ class LiveQuizItem {
   }
 
   Color get statusBorderColor {
-    switch (status) {
+    switch (computedStatus) {
       case LiveQuizStatus.liveNow:
         return const Color(0xFFBFDBFE);
       case LiveQuizStatus.completed:
@@ -257,7 +275,7 @@ class LiveQuizItem {
         title: 'Current Affairs Live Quiz',
         description: 'Daily current affairs',
         category: 'Current Affairs',
-        startTime: DateTime(2026, 10, 15, 20, 0),
+        startTime: DateTime.now().subtract(const Duration(minutes: 15)),
         durationMinutes: 45,
         participantsCount: 2340,
         status: LiveQuizStatus.liveNow,
@@ -271,7 +289,7 @@ class LiveQuizItem {
         title: 'Reasoning Power Quiz',
         description: 'Logic and reasoning test',
         category: 'Reasoning',
-        startTime: DateTime(2026, 10, 14, 19, 0),
+        startTime: DateTime.now().add(const Duration(days: 1)),
         durationMinutes: 60,
         participantsCount: 1120,
         status: LiveQuizStatus.scheduled,

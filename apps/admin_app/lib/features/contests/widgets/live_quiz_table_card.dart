@@ -1036,21 +1036,24 @@ class _LiveQuizTableCardState extends State<LiveQuizTableCard> {
   }
 
   static String _formatDate(DateTime dt) {
+    final local = dt.toLocal();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    return '${months[local.month - 1]} ${local.day}, ${local.year}';
   }
 
   static String _formatTime(DateTime dt) {
-    final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
-    final period = dt.hour >= 12 ? 'PM' : 'AM';
-    final minuteStr = dt.minute.toString().padLeft(2, '0');
+    final local = dt.toLocal();
+    final hour = local.hour > 12 ? local.hour - 12 : (local.hour == 0 ? 12 : local.hour);
+    final period = local.hour >= 12 ? 'PM' : 'AM';
+    final minuteStr = local.minute.toString().padLeft(2, '0');
     final hourStr = hour.toString().padLeft(2, '0');
     return '$hourStr:$minuteStr $period';
   }
 
   static String _formatMonthDay(DateTime dt) {
+    final local = dt.toLocal();
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    return '${months[local.month - 1]} ${local.day}, ${local.year}';
   }
 
   static String _formatNumber(int n) {

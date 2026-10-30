@@ -56,17 +56,32 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    final duration = int.tryParse(_durationController.text.trim()) ?? 45;
+    final now = DateTime.now();
+    final localEnd = _startTime.add(Duration(minutes: duration));
+
+    LiveQuizStatus resolvedStatus = _status;
+    if (_status != LiveQuizStatus.draft) {
+      if (now.isBefore(_startTime)) {
+        resolvedStatus = LiveQuizStatus.scheduled;
+      } else if (now.isAfter(localEnd)) {
+        resolvedStatus = LiveQuizStatus.completed;
+      } else {
+        resolvedStatus = LiveQuizStatus.liveNow;
+      }
+    }
+
     final newItem = LiveQuizItem(
       id: widget.initialItem?.id ?? 'lq-${DateTime.now().millisecondsSinceEpoch}',
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
       category: _category,
       startTime: _startTime,
-      durationMinutes: int.tryParse(_durationController.text.trim()) ?? 45,
+      durationMinutes: duration,
       questionsCount: int.tryParse(_questionsController.text.trim()) ?? 25,
       rewardCoins: int.tryParse(_rewardsController.text.trim()) ?? 1500,
       participantsCount: widget.initialItem?.participantsCount ?? 0,
-      status: _status,
+      status: resolvedStatus,
       createdByName: widget.initialItem?.createdByName ?? 'Admin',
     );
 

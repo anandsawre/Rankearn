@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
@@ -39,11 +40,22 @@ class _ContestsTabState extends State<ContestsTab> {
   DateTimeRange? _dateRange;
   int _currentPage = 1;
   int _rowsPerPage = 10;
+  Timer? _statusTimer;
 
   @override
   void initState() {
     super.initState();
     _loadQuizzes();
+    // Auto-update live quiz status dynamically as real time progresses
+    _statusTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _statusTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadQuizzes() async {
@@ -70,23 +82,21 @@ class _ContestsTabState extends State<ContestsTab> {
       if (rows.isNotEmpty) {
         final now = DateTime.now();
         final loaded = rows.map((r) {
-          final start = r['scheduled_start_time'] != null
+          final rawStart = r['scheduled_start_time'] != null
               ? DateTime.tryParse(r['scheduled_start_time'].toString())
               : null;
+          final start = rawStart?.toLocal();
           final durationMins = (r['duration_minutes'] as num?)?.toInt() ?? 45;
-          final end = r['scheduled_end_time'] != null
+          final rawEnd = r['scheduled_end_time'] != null
               ? DateTime.tryParse(r['scheduled_end_time'].toString())
-              : start?.add(Duration(minutes: durationMins));
+              : null;
+          final end = rawEnd?.toLocal() ?? start?.add(Duration(minutes: durationMins));
 
           final statusStr = (r['status'] ?? '').toString().toLowerCase();
 
           LiveQuizStatus status = LiveQuizStatus.scheduled;
           if (statusStr == 'draft') {
             status = LiveQuizStatus.draft;
-          } else if (statusStr == 'live' || statusStr == 'livenow' || statusStr == 'live now') {
-            status = LiveQuizStatus.liveNow;
-          } else if (statusStr == 'completed') {
-            status = LiveQuizStatus.completed;
           } else if (start != null && end != null) {
             if (now.isBefore(start)) {
               status = LiveQuizStatus.scheduled;
@@ -224,17 +234,17 @@ class _ContestsTabState extends State<ContestsTab> {
       Color iconBgColor;
       String action;
 
-      if (q.status == LiveQuizStatus.liveNow) {
+      if (q.computedStatus == LiveQuizStatus.liveNow) {
         icon = Icons.play_arrow_rounded;
         iconColor = const Color(0xFF10B981);
         iconBgColor = const Color(0xFFDCFCE7);
         action = 'Live now: ${q.title}';
-      } else if (q.status == LiveQuizStatus.completed) {
+      } else if (q.computedStatus == LiveQuizStatus.completed) {
         icon = Icons.emoji_events_rounded;
         iconColor = const Color(0xFFFF9F0A);
         iconBgColor = const Color(0xFFFFFBEB);
         action = 'Completed: ${q.title}';
-      } else if (q.status == LiveQuizStatus.draft) {
+      } else if (q.computedStatus == LiveQuizStatus.draft) {
         icon = Icons.edit_note_rounded;
         iconColor = const Color(0xFF6C5CE7);
         iconBgColor = const Color(0xFFF3F0FF);
@@ -264,12 +274,33 @@ class _ContestsTabState extends State<ContestsTab> {
         initialItem: editItem,
         onSave: (savedItem) async {
           final isEditing = editItem != null;
-          setState(() {
-            final idx = _allQuizzes.indexWhere((q) => q.id == savedItem.id);
-            if (idx >= 0) {
-              _allQuizzes[idx] = savedItem;
+
+          final now = DateTime.now();
+          final localStart = savedItem.startTime.toLocal();
+          final localEnd = localStart.add(Duration(minutes: savedItem.durationMinutes));
+
+          LiveQuizStatus finalStatus = savedItem.status;
+          if (finalStatus != LiveQuizStatus.draft) {
+            if (now.isBefore(localStart)) {
+              finalStatus = LiveQuizStatus.scheduled;
+            } else if (now.isAfter(localEnd)) {
+              finalStatus = LiveQuizStatus.completed;
             } else {
-              _allQuizzes.insert(0, savedItem);
+              finalStatus = LiveQuizStatus.liveNow;
+            }
+          }
+
+          final updatedItem = savedItem.copyWith(
+            startTime: localStart,
+            status: finalStatus,
+          );
+
+          setState(() {
+            final idx = _allQuizzes.indexWhere((q) => q.id == updatedItem.id);
+            if (idx >= 0) {
+              _allQuizzes[idx] = updatedItem;
+            } else {
+              _allQuizzes.insert(0, updatedItem);
             }
           });
 
@@ -278,22 +309,22 @@ class _ContestsTabState extends State<ContestsTab> {
           if (client != null) {
             try {
               final payload = {
-                'title': savedItem.title,
-                'syllabus': savedItem.description,
-                'category_id': savedItem.category,
-                'duration_minutes': savedItem.durationMinutes,
-                'total_questions': savedItem.questionsCount,
-                'entry_fee_coins': (savedItem.rewardCoins / 10).round().clamp(0, 5000),
-                'status': savedItem.status == LiveQuizStatus.draft ? 'draft' : 'published',
-                'scheduled_start_time': savedItem.startTime.toUtc().toIso8601String(),
-                'scheduled_end_time': savedItem.startTime.add(Duration(minutes: savedItem.durationMinutes)).toUtc().toIso8601String(),
+                'title': updatedItem.title,
+                'syllabus': updatedItem.description,
+                'category_id': updatedItem.category,
+                'duration_minutes': updatedItem.durationMinutes,
+                'total_questions': updatedItem.questionsCount,
+                'entry_fee_coins': (updatedItem.rewardCoins / 10).round().clamp(0, 5000),
+                'status': updatedItem.status == LiveQuizStatus.draft ? 'draft' : 'published',
+                'scheduled_start_time': updatedItem.startTime.toUtc().toIso8601String(),
+                'scheduled_end_time': updatedItem.startTime.add(Duration(minutes: updatedItem.durationMinutes)).toUtc().toIso8601String(),
                 'updated_at': DateTime.now().toUtc().toIso8601String(),
               };
 
               if (isEditing) {
-                await client.from('tests').update(payload).eq('id', savedItem.id);
+                await client.from('tests').update(payload).eq('id', updatedItem.id);
               } else {
-                payload['id'] = savedItem.id;
+                payload['id'] = updatedItem.id;
                 payload['is_tournament'] = true;
                 payload['test_mode'] = 'tournament';
                 payload['total_participants'] = 0;
@@ -324,9 +355,20 @@ class _ContestsTabState extends State<ContestsTab> {
       builder: (ctx) => ScheduleQuizDialog(
         quizzes: _allQuizzes,
         onSchedule: (quiz, dateTime) async {
+          final localStart = dateTime.toLocal();
+          final localEnd = localStart.add(Duration(minutes: quiz.durationMinutes));
+          final now = DateTime.now();
+
+          LiveQuizStatus schedStatus = LiveQuizStatus.scheduled;
+          if (now.isAfter(localStart) && now.isBefore(localEnd)) {
+            schedStatus = LiveQuizStatus.liveNow;
+          } else if (now.isAfter(localEnd)) {
+            schedStatus = LiveQuizStatus.completed;
+          }
+
           final updatedQuiz = quiz.copyWith(
-            startTime: dateTime,
-            status: LiveQuizStatus.scheduled,
+            startTime: localStart,
+            status: schedStatus,
           );
 
           setState(() {
@@ -340,8 +382,8 @@ class _ContestsTabState extends State<ContestsTab> {
           if (client != null) {
             try {
               await client.from('tests').update({
-                'scheduled_start_time': dateTime.toUtc().toIso8601String(),
-                'scheduled_end_time': dateTime.add(Duration(minutes: quiz.durationMinutes)).toUtc().toIso8601String(),
+                'scheduled_start_time': localStart.toUtc().toIso8601String(),
+                'scheduled_end_time': localEnd.toUtc().toIso8601String(),
                 'status': 'published',
                 'updated_at': DateTime.now().toUtc().toIso8601String(),
               }).eq('id', quiz.id);
@@ -353,7 +395,7 @@ class _ContestsTabState extends State<ContestsTab> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Quiz "${quiz.title}" scheduled for ${dateTime.toLocal()}'),
+                content: Text('Quiz "${quiz.title}" scheduled for ${localStart.toLocal()}'),
                 backgroundColor: const Color(0xFF0084FF),
               ),
             );
@@ -603,10 +645,10 @@ class _ContestsTabState extends State<ContestsTab> {
         ? _allQuizzes.fold<int>(0, (acc, q) => acc + q.participantsCount)
         : 24892;
     final completedQuiz = _allQuizzes.length > 20
-        ? _allQuizzes.where((q) => q.status == LiveQuizStatus.completed).length
+        ? _allQuizzes.where((q) => q.computedStatus == LiveQuizStatus.completed).length
         : 106;
     final ongoingQuiz = _allQuizzes.length > 20
-        ? _allQuizzes.where((q) => q.status == LiveQuizStatus.liveNow || q.status == LiveQuizStatus.ongoing).length
+        ? _allQuizzes.where((q) => q.computedStatus == LiveQuizStatus.liveNow || q.computedStatus == LiveQuizStatus.ongoing).length
         : 3;
     final totalRewards = _allQuizzes.length > 20
         ? _allQuizzes.fold<int>(0, (acc, q) => acc + q.rewardCoins)
