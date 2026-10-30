@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
-import '../payments/payments_tab.dart';
 
 class FinanceTab extends StatefulWidget {
   final List<Map<String, dynamic>>? initialTopups;
@@ -17,7 +16,7 @@ class FinanceTab extends StatefulWidget {
   State<FinanceTab> createState() => _FinanceTabState();
 }
 
-enum _FinanceSubTab { topups, withdrawals, payments, settings }
+enum _FinanceSubTab { topups, withdrawals, settings }
 
 class _FinanceTabState extends State<FinanceTab> {
   _FinanceSubTab _activeSubTab = _FinanceSubTab.topups;
@@ -26,73 +25,11 @@ class _FinanceTabState extends State<FinanceTab> {
   List<Map<String, dynamic>> _topups = [];
   List<Map<String, dynamic>> _withdrawals = [];
 
-  static final List<Map<String, dynamic>> _defaultMockTopups = [
-    {
-      'id': 'topup_demo_1',
-      'user_id': 'user_current',
-      'name': 'Vikram Singh',
-      'email': 'vikram.singh@rankearn.com',
-      'amount': '₹49',
-      'raw_coins': 700,
-      'coins': '700 Coins',
-      'utr': '429184719204',
-      'status': 'pending',
-      'date': '2026-10-30',
-      'method': 'UPI Manual',
-    },
-    {
-      'id': 'topup_demo_2',
-      'user_id': 'usr_2',
-      'name': 'Priya Sharma',
-      'email': 'priya.s@gmail.com',
-      'amount': '₹99',
-      'raw_coins': 1600,
-      'coins': '1,600 Coins',
-      'utr': '938210481928',
-      'status': 'pending',
-      'date': '2026-10-30',
-      'method': 'UPI Manual',
-    },
-    {
-      'id': 'topup_demo_3',
-      'user_id': 'usr_3',
-      'name': 'Rahul Verma',
-      'email': 'rahul.v@gmail.com',
-      'amount': '₹199',
-      'raw_coins': 3800,
-      'coins': '3,800 Coins',
-      'utr': '551928471029',
-      'status': 'approved',
-      'date': '2026-10-29',
-      'method': 'UPI Manual',
-    },
-  ];
-
-  static final List<Map<String, dynamic>> _defaultMockWithdrawals = [
-    {
-      'id': 'w_demo_1',
-      'name': 'Amit Patel',
-      'email': 'amit.p@gmail.com',
-      'coins': '10,000 Coins',
-      'rupees': '₹100',
-      'upi': 'amit.patel@okhdfcbank',
-      'status': 'pending',
-      'date': '2026-10-30',
-      'utr': null,
-    },
-  ];
-
   Future<void> _loadFinanceData() async {
     setState(() => _isLoading = true);
     final client = SupabaseConfig.clientSafe;
     if (client == null) {
-      if (mounted) {
-        setState(() {
-          _topups = List.from(_defaultMockTopups);
-          _withdrawals = List.from(_defaultMockWithdrawals);
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
       return;
     }
     try {
@@ -106,45 +43,36 @@ class _FinanceTabState extends State<FinanceTab> {
           .order('created_at', ascending: false);
 
       if (!mounted) return;
-      final loadedTopups = (topupData as List).map((r) => {
-        'id': r['id']?.toString() ?? '',
-        'user_id': r['user_id']?.toString() ?? '',
-        'name': r['user_name']?.toString() ?? 'User',
-        'email': r['user_email']?.toString() ?? 'N/A',
-        'amount': '₹${r['amount']}',
-        'raw_coins': (r['coins_awarded'] as num?)?.toInt() ?? 0,
-        'coins': '${r['coins_awarded']} Coins',
-        'utr': r['utr']?.toString() ?? '',
-        'status': r['status']?.toString() ?? 'pending',
-        'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
-        'method': 'UPI Manual',
-      }).toList();
-
-      final loadedWithdrawals = (withdrawData as List).map((r) => {
-        'id': r['id']?.toString() ?? '',
-        'name': r['user_name']?.toString() ?? 'User',
-        'email': r['user_email']?.toString() ?? 'N/A',
-        'coins': '${r['coins_deducted']} Coins',
-        'rupees': '₹${r['payout_amount']}',
-        'upi': r['upi_id']?.toString() ?? 'Bank Transfer',
-        'status': r['status']?.toString() ?? 'pending',
-        'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
-        'utr': r['payout_ref']?.toString(),
-      }).toList();
-
       setState(() {
         _isLoading = false;
-        _topups = loadedTopups.isNotEmpty ? loadedTopups : List.from(_defaultMockTopups);
-        _withdrawals = loadedWithdrawals.isNotEmpty ? loadedWithdrawals : List.from(_defaultMockWithdrawals);
+        _topups = (topupData as List).map((r) => {
+          'id': r['id']?.toString() ?? '',
+          'user_id': r['user_id']?.toString() ?? '',
+          'name': r['user_name']?.toString() ?? 'User',
+          'email': r['user_email']?.toString() ?? 'N/A',
+          'amount': '₹${r['amount']}',
+          'raw_coins': (r['coins_awarded'] as num?)?.toInt() ?? 0,
+          'coins': '${r['coins_awarded']} Coins',
+          'utr': r['utr']?.toString() ?? '',
+          'status': r['status']?.toString() ?? 'pending',
+          'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
+          'method': 'UPI Manual',
+        }).toList();
+
+        _withdrawals = (withdrawData as List).map((r) => {
+          'id': r['id']?.toString() ?? '',
+          'name': r['user_name']?.toString() ?? 'User',
+          'email': r['user_email']?.toString() ?? 'N/A',
+          'coins': '${r['coins_deducted']} Coins',
+          'rupees': '₹${r['payout_amount']}',
+          'upi': r['upi_id']?.toString() ?? 'Bank Transfer',
+          'status': r['status']?.toString() ?? 'pending',
+          'date': r['created_at'] != null ? r['created_at'].toString().split('T').first : 'N/A',
+          'utr': r['payout_ref']?.toString(),
+        }).toList();
       });
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          _topups = List.from(_defaultMockTopups);
-          _withdrawals = List.from(_defaultMockWithdrawals);
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -198,7 +126,6 @@ class _FinanceTabState extends State<FinanceTab> {
           switch (_activeSubTab) {
             _FinanceSubTab.topups => _buildTopupsView(),
             _FinanceSubTab.withdrawals => _buildWithdrawalsView(),
-            _FinanceSubTab.payments => const PaymentsTab(),
             _FinanceSubTab.settings => _buildSettingsView(),
           },
         ],
@@ -253,11 +180,9 @@ class _FinanceTabState extends State<FinanceTab> {
                       Text(
                         _activeSubTab == _FinanceSubTab.settings
                             ? 'Configure Payment Rules & Gateways'
-                            : (_activeSubTab == _FinanceSubTab.payments
-                                ? 'Gateway Transactions & Revenue Analytics'
-                                : (_activeSubTab == _FinanceSubTab.topups
-                                    ? 'Verify Manual UPI Candidate Top-ups'
-                                    : 'Process Coin Payout Redemptions')),
+                            : (_activeSubTab == _FinanceSubTab.topups
+                                ? 'Verify Manual UPI Candidate Top-ups'
+                                : 'Process Coin Payout Redemptions'),
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8)),
                       ),
                     ],
@@ -275,21 +200,8 @@ class _FinanceTabState extends State<FinanceTab> {
                 ),
                 child: Row(
                   children: [
-                    _buildSubTabButton(
-                      'Top-ups (${_topups.where((t) => t['status'] == 'pending').length})',
-                      Icons.add_circle_outline,
-                      _FinanceSubTab.topups,
-                    ),
-                    _buildSubTabButton(
-                      'Withdrawals (${_withdrawals.where((w) => w['status'] == 'pending').length})',
-                      Icons.arrow_outward,
-                      _FinanceSubTab.withdrawals,
-                    ),
-                    _buildSubTabButton(
-                      'Payments & Revenue',
-                      Icons.analytics_outlined,
-                      _FinanceSubTab.payments,
-                    ),
+                    _buildSubTabButton('Top-ups', Icons.add_circle_outline, _FinanceSubTab.topups),
+                    _buildSubTabButton('Withdrawals', Icons.arrow_outward, _FinanceSubTab.withdrawals),
                     _buildSubTabButton('Settings', Icons.tune, _FinanceSubTab.settings),
                   ],
                 ),
@@ -299,7 +211,7 @@ class _FinanceTabState extends State<FinanceTab> {
         ),
 
           // Secondary Filter Bar for Top-ups & Withdrawals
-          if (_activeSubTab == _FinanceSubTab.topups || _activeSubTab == _FinanceSubTab.withdrawals) ...[
+          if (_activeSubTab != _FinanceSubTab.settings) ...[
             const SizedBox(height: 16),
             const Divider(color: Color(0xFFF1F5F9), height: 1),
             const SizedBox(height: 16),
