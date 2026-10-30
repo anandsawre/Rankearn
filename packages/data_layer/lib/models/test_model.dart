@@ -48,23 +48,33 @@ class TestModel {
   int get registeredParticipants => totalParticipants;
 
   bool get isLive {
-    if (!isTournament) return true;
     final now = DateTime.now();
-    if (scheduledStartTime != null && now.isBefore(scheduledStartTime!)) return false;
-    final effectiveEndTime = scheduledEndTime ?? (scheduledStartTime?.add(Duration(minutes: durationMinutes > 0 ? durationMinutes : 60)));
-    if (effectiveEndTime != null && now.isAfter(effectiveEndTime)) return false;
+    // If it has a scheduled start time in the future, it is not live yet
+    if (scheduledStartTime != null && now.isBefore(scheduledStartTime!)) {
+      return false;
+    }
+    final effectiveEndTime = scheduledEndTime ??
+        (scheduledStartTime?.add(
+          Duration(minutes: durationMinutes > 0 ? durationMinutes : 60),
+        ));
+    // If it has passed its end time, it is finished (past)
+    if (effectiveEndTime != null && now.isAfter(effectiveEndTime)) {
+      return false;
+    }
     return true;
   }
 
   bool get isUpcoming {
-    if (!isTournament || scheduledStartTime == null) return false;
+    if (scheduledStartTime == null) return false;
     return DateTime.now().isBefore(scheduledStartTime!);
   }
 
   bool get isPast {
-    if (!isTournament) return false;
-    final effectiveEndTime = scheduledEndTime ?? (scheduledStartTime?.add(Duration(minutes: durationMinutes > 0 ? durationMinutes : 60)));
-    if (effectiveEndTime == null) return false;
+    if (scheduledStartTime == null) return false;
+    final effectiveEndTime = scheduledEndTime ??
+        scheduledStartTime!.add(
+          Duration(minutes: durationMinutes > 0 ? durationMinutes : 60),
+        );
     return DateTime.now().isAfter(effectiveEndTime);
   }
 

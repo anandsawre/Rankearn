@@ -122,6 +122,21 @@ class ContestsRepository {
             'created_at': DateTime.now().toUtc().toIso8601String(),
           });
         } catch (_) {}
+      } else {
+        // Free registration entry tracking
+        try {
+          await client.from('wallet_transactions').insert({
+            'id': 'TXN_REG_${DateTime.now().millisecondsSinceEpoch}',
+            'user_id': targetUserId,
+            'amount': 0,
+            'type': 'spend',
+            'category': 'contest_entry',
+            'reference_id': testId,
+            'title': 'Registered for Live Contest',
+            'balance_after': 0,
+            'created_at': DateTime.now().toUtc().toIso8601String(),
+          });
+        } catch (_) {}
       }
 
       // 3. Increment test total_participants count
@@ -141,6 +156,48 @@ class ContestsRepository {
       return const Success(true);
     } catch (e) {
       return Failure('Failed to join contest: $e', e);
+    }
+  }
+
+  /// Check registered tournament IDs for a user
+  Future<Set<String>> getUserRegisteredTournamentIds(String userId) async {
+    final client = _client;
+    if (client == null) return {};
+    try {
+      final authId = client.auth.currentUser?.id;
+      final targetId = (authId != null && authId.isNotEmpty) ? authId : userId;
+      if (targetId.isEmpty) return {};
+
+      final Set<String> registered = {};
+
+      // 1. Check wallet_transactions
+      final txns = await client
+          .from('wallet_transactions')
+          .select('reference_id')
+          .eq('user_id', targetId)
+          .eq('category', 'contest_entry');
+      for (final t in (txns as List)) {
+        final ref = t['reference_id']?.toString();
+        if (ref != null && ref.isNotEmpty) {
+          registered.add(ref);
+        }
+      }
+
+      // 2. Check attempts
+      final attempts = await client
+          .from('attempts')
+          .select('test_id')
+          .eq('user_id', targetId);
+      for (final a in (attempts as List)) {
+        final tid = a['test_id']?.toString();
+        if (tid != null && tid.isNotEmpty) {
+          registered.add(tid);
+        }
+      }
+
+      return registered;
+    } catch (_) {
+      return {};
     }
   }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import 'dialogs/contest_entry_dialog.dart';
 
 /// LiveTestsScreen - Production-Quality Live Tests & Tournaments Tab
 /// Fully wired with Supabase Contests, Realtime Leaderboard, and Dynamic Live/Upcoming state.
@@ -192,92 +193,12 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
     final entryFee = test.entryFeeCoins;
 
     if (entryFee > 0) {
-      final confirm = await showDialog<bool>(
+      final confirm = await showContestEntryDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          title: Row(
-            children: const [
-              Icon(Icons.sports_esports_rounded, color: Color(0xFF6366F1), size: 24),
-              SizedBox(width: 8),
-              Text('Confirm Contest Entry', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                test.title,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFF0F172A)),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Entry Fee:', style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
-                        Text('$entryFee Coins', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFFF59E0B))),
-                      ],
-                    ),
-                    const Divider(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Your Wallet:', style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
-                        Text('${widget.userCoins} Coins', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF10B981))),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (widget.userCoins < entryFee) ...[
-                const SizedBox(height: 12),
-                const Text(
-                  'You don\'t have enough coins in your wallet to join this contest.',
-                  style: TextStyle(color: Color(0xFFDC2626), fontSize: 12, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel'),
-            ),
-            if (widget.userCoins < entryFee)
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00B96B),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () {
-                  Navigator.of(ctx).pop(false);
-                  widget.onOpenWallet?.call();
-                },
-                child: const Text('Top-up Coins'),
-              )
-            else
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Pay & Join Test'),
-              ),
-          ],
-        ),
+        test: test,
+        userCoins: widget.userCoins,
+        isPreRegister: test.isUpcoming,
+        onOpenWallet: widget.onOpenWallet,
       );
 
       if (confirm != true || !mounted) return;
@@ -507,9 +428,10 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
             if (_selectedTab == LiveTestFilterTab.myParticipations)
               _buildMyParticipationsView()
             else ...[
-              // Section 1: Live Now Carousel
-              if (_selectedTab == LiveTestFilterTab.allLiveTests ||
-                  _selectedTab == LiveTestFilterTab.liveNow) ...[
+              // Section 1: Live Now Carousel (Hidden when no live tests are active on All tab)
+              if (_liveNowTournaments.isNotEmpty &&
+                  (_selectedTab == LiveTestFilterTab.allLiveTests ||
+                      _selectedTab == LiveTestFilterTab.liveNow)) ...[
                 _buildSectionHeader(
                   title: 'Live Now',
                   icon: Icons.sensors_rounded,
@@ -517,6 +439,9 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
                   onViewAll: () => setState(() => _selectedTab = LiveTestFilterTab.liveNow),
                 ),
                 const SizedBox(height: 12),
+                _buildLiveNowCarousel(isDesktop),
+                const SizedBox(height: 24),
+              ] else if (_selectedTab == LiveTestFilterTab.liveNow && _liveNowTournaments.isEmpty) ...[
                 _buildLiveNowCarousel(isDesktop),
                 const SizedBox(height: 24),
               ],

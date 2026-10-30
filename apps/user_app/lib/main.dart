@@ -910,22 +910,40 @@ class _UserAppShellState extends State<UserAppShell> {
           ),
           UserNavTab.categories => TestSeriesScreen(
             userCoins: _profile.coins,
+            userId: _profile.id,
             onStartTest: (test) => _startQuiz(test),
             initialTests: widget.initialTests,
             onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
             onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
             onOpenLive: () => setState(() => _activeTab = UserNavTab.live),
+            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
+            onCoinDeducted: (fee) {
+              setState(() {
+                _profile = _profile.copyWith(
+                  coins: (_profile.coins - fee).clamp(0, 999999999),
+                );
+              });
+            },
             onOpenLeaderboard: () =>
                 setState(() => _activeTab = UserNavTab.leaderboard),
             onViewLastResult: _openTestResult,
           ),
           UserNavTab.tests => TestSeriesScreen(
             userCoins: _profile.coins,
+            userId: _profile.id,
             onStartTest: (test) => _startQuiz(test),
             initialTests: widget.initialTests,
             onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
             onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
             onOpenLive: () => setState(() => _activeTab = UserNavTab.live),
+            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
+            onCoinDeducted: (fee) {
+              setState(() {
+                _profile = _profile.copyWith(
+                  coins: (_profile.coins - fee).clamp(0, 999999999),
+                );
+              });
+            },
             onOpenLeaderboard: () =>
                 setState(() => _activeTab = UserNavTab.leaderboard),
             onViewLastResult: _openTestResult,

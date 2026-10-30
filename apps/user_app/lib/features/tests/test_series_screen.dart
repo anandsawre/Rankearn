@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'screens/exam_tests_screen.dart';
+import '../live/dialogs/contest_entry_dialog.dart';
 
 class TestSeriesScreen extends StatefulWidget {
   final int userCoins;
+  final String? userId;
   final void Function(TestModel test) onStartTest;
   final List<TestModel>? initialTests;
   final VoidCallback? onOpenBattle;
@@ -13,10 +15,13 @@ class TestSeriesScreen extends StatefulWidget {
   final VoidCallback? onOpenLive;
   final VoidCallback? onOpenLeaderboard;
   final VoidCallback? onViewLastResult;
+  final VoidCallback? onOpenWallet;
+  final void Function(int coins)? onCoinDeducted;
 
   const TestSeriesScreen({
     super.key,
     required this.userCoins,
+    this.userId,
     required this.onStartTest,
     this.initialTests,
     this.onOpenBattle,
@@ -24,6 +29,8 @@ class TestSeriesScreen extends StatefulWidget {
     this.onOpenLive,
     this.onOpenLeaderboard,
     this.onViewLastResult,
+    this.onOpenWallet,
+    this.onCoinDeducted,
   });
 
   @override
@@ -38,11 +45,14 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   CategoryModel? _selectedCategory;
   String? _selectedTopic;
   final String _searchQuery = '';
-  bool _isLoading = true;
+  bool _isLoading = false;
   List<TestModel> _tests = [];
+  List<TestModel> _upcomingAndLiveTests = [];
+  Set<String> _registeredContestIds = {};
   List<ExamCategoryModel> _examCategories = [];
   List<CategoryModel> _allCategories = [];
   StreamSubscription<List<CategoryModel>>? _categoriesSub;
+  Timer? _ticker;
 
   List<
     ({String title, String questionCount, IconData icon, Color color, Color bg})
@@ -55,11 +65,64 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   void initState() {
     super.initState();
     if (widget.initialTests != null && widget.initialTests!.isNotEmpty) {
-      _tests = widget.initialTests!;
+      _tests = List.from(widget.initialTests!);
       _isLoading = false;
     } else {
-      _loadTests();
+      _tests = _getFallbackTests();
+      _isLoading = false;
     }
+    _extractUpcomingTests();
+    _loadTests();
+    _startCountdownTicker();
+  }
+
+  void _startCountdownTicker() {
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    if (isTest) return;
+
+    _ticker?.cancel();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  void _extractUpcomingTests([List<TestModel>? additional]) {
+    final List<TestModel> candidates = [];
+    if (additional != null) {
+      candidates.addAll(additional);
+    }
+    candidates.addAll(
+      _tests.where(
+        (t) =>
+            t.isTournament ||
+            t.testMode == 'live' ||
+            t.scheduledStartTime != null,
+      ),
+    );
+
+    final seenIds = <String>{};
+    final unique = <TestModel>[];
+    for (final t in candidates) {
+      if (seenIds.add(t.id)) {
+        unique.add(t);
+      }
+    }
+
+    // Filter out past / ended tests
+    final active = unique.where((t) => (t.isLive || t.isUpcoming) && !t.isPast).toList();
+
+    // Sort: Live tests first, then upcoming by start time
+    active.sort((a, b) {
+      if (a.isLive && !b.isLive) return -1;
+      if (!a.isLive && b.isLive) return 1;
+      final aTime = a.scheduledStartTime ?? DateTime.now();
+      final bTime = b.scheduledStartTime ?? DateTime.now();
+      return aTime.compareTo(bTime);
+    });
+
+    _upcomingAndLiveTests = active;
   }
 
   IconData _resolveCategoryIcon(String iconName) {
@@ -203,23 +266,32 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   }
 
   Future<void> _loadTests() async {
-    setState(() => _isLoading = true);
     final testsRepo = TestsRepository();
     final res = await testsRepo.getTests();
     final catRes = await testsRepo.getCategories();
     final examRes = await testsRepo.getExamCategoryList();
+    final tourRes = await ContestsRepository().getTournaments();
+    final registered = await ContestsRepository()
+        .getUserRegisteredTournamentIds(widget.userId ?? '');
 
     if (!mounted) return;
     setState(() {
       _isLoading = false;
+      _registeredContestIds = registered;
       if (res is Success<List<TestModel>> && res.data.isNotEmpty) {
         _tests = res.data;
-      } else {
+      } else if (_tests.isEmpty) {
         _tests = _getFallbackTests();
       }
       if (examRes is Success<List<ExamCategoryModel>>) {
         _examCategories = examRes.data;
       }
+
+      final List<TestModel> extra = [];
+      if (tourRes is Success<List<TestModel>>) {
+        extra.addAll(tourRes.data);
+      }
+      _extractUpcomingTests(extra);
     });
 
     if (catRes is Success<List<CategoryModel>>) {
@@ -242,8 +314,151 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
   @override
   void dispose() {
+    _ticker?.cancel();
     _categoriesSub?.cancel();
     super.dispose();
+  }
+
+  Future<void> _handleJoinTest(TestModel test) async {
+    // If user already pre-registered for this test, enter directly!
+    if (_registeredContestIds.contains(test.id)) {
+      widget.onStartTest(test);
+      return;
+    }
+
+    final entryFee = test.entryFeeCoins;
+
+    if (entryFee > 0) {
+      final confirm = await showContestEntryDialog(
+        context: context,
+        test: test,
+        userCoins: widget.userCoins,
+        isPreRegister: false,
+        onOpenWallet: widget.onOpenWallet,
+      );
+
+      if (confirm != true || !mounted) return;
+
+      final repo = ContestsRepository();
+      final res = await repo.joinTournamentSafe(
+        testId: test.id,
+        userId: widget.userId ?? '',
+        entryFee: entryFee,
+      );
+
+      if (res is Failure) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFDC2626),
+            content: Text((res as Failure).message),
+          ),
+        );
+        return;
+      }
+
+      widget.onCoinDeducted?.call(entryFee);
+    }
+
+    if (mounted) {
+      setState(() {
+        _registeredContestIds.add(test.id);
+      });
+    }
+
+    widget.onStartTest(test);
+  }
+
+  Future<void> _handlePreRegister(TestModel test) async {
+    final entryFee = test.entryFeeCoins;
+
+    if (entryFee > 0) {
+      final confirm = await showContestEntryDialog(
+        context: context,
+        test: test,
+        userCoins: widget.userCoins,
+        isPreRegister: true,
+        onOpenWallet: widget.onOpenWallet,
+      );
+
+      if (confirm != true || !mounted) return;
+
+      final repo = ContestsRepository();
+      final res = await repo.joinTournamentSafe(
+        testId: test.id,
+        userId: widget.userId ?? '',
+        entryFee: entryFee,
+      );
+
+      if (res is Failure) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFDC2626),
+            content: Text((res as Failure).message),
+          ),
+        );
+        return;
+      }
+
+      widget.onCoinDeducted?.call(entryFee);
+    } else {
+      // Free pre-registration
+      final repo = ContestsRepository();
+      await repo.joinTournamentSafe(
+        testId: test.id,
+        userId: widget.userId ?? '',
+        entryFee: 0,
+      );
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _registeredContestIds.add(test.id);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '✓ Successfully pre-registered for ${test.title}! You can enter directly when it goes live.',
+        ),
+        backgroundColor: const Color(0xFF10B981),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  String _formatShortDate(DateTime? dt) {
+    if (dt == null) return 'Live Now';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final m = (dt.month >= 1 && dt.month <= 12) ? months[dt.month - 1] : '';
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final period = dt.hour >= 12 ? 'pm' : 'am';
+    return '${dt.day} $m, ${hour.toString().padLeft(2, '0')}:$minute $period';
+  }
+
+  String _formatRemainingTime(DateTime? targetTime) {
+    if (targetTime == null) return '00:00:00';
+    final diff = targetTime.difference(DateTime.now());
+    if (diff.isNegative) return '00:00:00';
+    final hours = diff.inHours.toString().padLeft(2, '0');
+    final minutes = (diff.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (diff.inSeconds % 60).toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
   }
 
   List<TestModel> _getFallbackTests() {
@@ -2201,77 +2416,160 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Card 1: Live Contest Card matching user reference design
-        LiveContestCard(
-          title: 'Physics Live Test',
-          tagline: 'Test & Win Rewards!',
-          questions: '10 Qs',
-          duration: '10 Mins',
-          joined: '0 Joined',
-          prizePool: '0',
-          entryFee: '10',
-          endsIn: '210:06:33',
-          startsAt: '21 Oct, 05:38 am',
-          isLive: true,
-          onJoin: () {
-            final liveTest = _tests.firstWhere(
-              (t) => t.testMode == 'live',
-              orElse: () => _tests.first,
-            );
-            widget.onStartTest(liveTest);
-          },
-          onShare: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Live Test link copied! Share with friends.'),
-                backgroundColor: Color(0xFFE5252A),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 10),
+        if (_upcomingAndLiveTests.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.event_available_rounded,
+                  size: 36,
+                  color: Colors.blue.shade300,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'No Live or Upcoming Tests Right Now',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Scheduled tournaments and live contests will appear here.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          )
+        else
+          for (final t in _upcomingAndLiveTests.take(2)) ...[
+            Builder(
+              builder: (context) {
+                final isRegistered = _registeredContestIds.contains(t.id);
+                final isLive = t.isLive;
 
-        // Card 2: General Science Mega Test (matching LiveContestCard design system)
-        LiveContestCard(
-          title: 'General Science Mega Test',
-          tagline: 'All India Scholarship Challenge!',
-          icon: Icons.emoji_events_rounded,
-          questions: '120 Qs',
-          duration: '90 Mins',
-          joined: '1.2k Joined',
-          prizePool: '25,000',
-          entryFee: 'FREE',
-          countdownTime: '05:22:10',
-          countdownLabel: 'STARTS IN',
-          startsAt: '21 Oct, 06:00 pm',
-          isLive: false,
-          statusLabel: 'UPCOMING',
-          accentColor: AppColors.brandBlue,
-          accentLightColor: AppColors.infoBlueLight,
-          accentBorderColor: AppColors.infoBlueBorder,
-          primaryButtonLabel: 'NOTIFY ME',
-          primaryButtonLeadingIcon: const Icon(
-            Icons.notifications_none_rounded,
-            size: 15,
-            color: Colors.white,
-          ),
-          onJoin: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Reminder set for General Science Mega Test!'),
-                backgroundColor: Color(0xFF2587F8),
-              ),
-            );
-          },
-          onShare: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Mega Test link copied! Share with friends.'),
-                backgroundColor: Color(0xFF2587F8),
-              ),
-            );
-          },
-        ),
+                final String effectiveStatusLabel = isLive
+                    ? 'LIVE NOW'
+                    : (isRegistered ? 'REGISTERED' : 'UPCOMING');
+
+                final String buttonLabel = isLive
+                    ? (isRegistered ? 'START TEST NOW' : 'JOIN & WIN COINS')
+                    : (isRegistered
+                        ? '✓ REGISTERED'
+                        : (t.entryFeeCoins > 0
+                            ? 'PRE-REGISTER (${t.entryFeeCoins} COINS)'
+                            : 'REGISTER FREE'));
+
+                final Widget? buttonLeadingIcon = isLive
+                    ? (isRegistered
+                        ? const Icon(
+                            Icons.play_arrow_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          )
+                        : null)
+                    : (isRegistered
+                        ? const Icon(
+                            Icons.check_circle_rounded,
+                            size: 15,
+                            color: Colors.white,
+                          )
+                        : const Icon(
+                            Icons.how_to_reg_rounded,
+                            size: 15,
+                            color: Colors.white,
+                          ));
+
+                return Column(
+                  children: [
+                    LiveContestCard(
+                      title: t.title,
+                      tagline: t.isTournament
+                          ? 'Prize Tournament Challenge!'
+                          : (t.categoryId != null && t.categoryId!.isNotEmpty
+                              ? t.categoryId!
+                              : 'Test & Win Rewards!'),
+                      icon: t.isTournament
+                          ? Icons.emoji_events_rounded
+                          : Icons.sensors_rounded,
+                      questions: '${t.totalQuestions > 0 ? t.totalQuestions : 10} Qs',
+                      duration:
+                          '${t.durationMinutes > 0 ? t.durationMinutes : 10} Mins',
+                      joined: '${t.totalParticipants} Joined',
+                      prizePool: t.prizePoolCoins > 0 ? '${t.prizePoolCoins}' : '0',
+                      entryFee: t.entryFeeCoins > 0 ? '${t.entryFeeCoins}' : 'FREE',
+                      endsIn: isLive
+                          ? _formatRemainingTime(
+                              t.scheduledEndTime ??
+                                  t.scheduledStartTime?.add(
+                                    Duration(
+                                      minutes: t.durationMinutes > 0
+                                          ? t.durationMinutes
+                                          : 60,
+                                    ),
+                                  ),
+                            )
+                          : null,
+                      countdownTime: !isLive
+                          ? _formatRemainingTime(t.scheduledStartTime)
+                          : null,
+                      countdownLabel: !isLive ? 'STARTS IN' : 'ENDS IN',
+                      startsAt: _formatShortDate(t.scheduledStartTime),
+                      isLive: isLive,
+                      statusLabel: effectiveStatusLabel,
+                      // Orange theme for upcoming tests, Red theme for live tests
+                      accentColor: isLive ? null : const Color(0xFFEA580C),
+                      accentLightColor: isLive ? null : const Color(0xFFFFF7ED),
+                      accentBorderColor: isLive ? null : const Color(0xFFFFEDD5),
+                      primaryButtonLabel: buttonLabel,
+                      primaryButtonLeadingIcon: buttonLeadingIcon,
+                      onJoin: () {
+                        if (isLive) {
+                          _handleJoinTest(t);
+                        } else {
+                          if (isRegistered) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'You are already registered for ${t.title}! Starts at ${_formatShortDate(t.scheduledStartTime)}.',
+                                ),
+                                backgroundColor: const Color(0xFFEA580C),
+                              ),
+                            );
+                          } else {
+                            _handlePreRegister(t);
+                          }
+                        }
+                      },
+                      onShare: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${t.title} link copied! Share with friends.'),
+                            backgroundColor: isLive
+                                ? const Color(0xFFE5252A)
+                                : const Color(0xFFEA580C),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                );
+              },
+            ),
+          ],
       ],
     );
   }
