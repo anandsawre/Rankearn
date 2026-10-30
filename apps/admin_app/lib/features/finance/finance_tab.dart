@@ -5,21 +5,23 @@ import 'package:data_layer/data_layer.dart';
 class FinanceTab extends StatefulWidget {
   final List<Map<String, dynamic>>? initialTopups;
   final List<Map<String, dynamic>>? initialWithdrawals;
+  final FinanceSubTab initialSubTab;
 
   const FinanceTab({
     super.key,
     this.initialTopups,
     this.initialWithdrawals,
+    this.initialSubTab = FinanceSubTab.topups,
   });
 
   @override
   State<FinanceTab> createState() => _FinanceTabState();
 }
 
-enum _FinanceSubTab { topups, withdrawals, settings }
+enum FinanceSubTab { topups, withdrawals, settings }
 
 class _FinanceTabState extends State<FinanceTab> {
-  _FinanceSubTab _activeSubTab = _FinanceSubTab.topups;
+  late FinanceSubTab _activeSubTab;
   String _filterType = 'pending'; // 'pending' or 'history'
   bool _isLoading = true;
   List<Map<String, dynamic>> _topups = [];
@@ -86,6 +88,7 @@ class _FinanceTabState extends State<FinanceTab> {
   @override
   void initState() {
     super.initState();
+    _activeSubTab = widget.initialSubTab;
     _upiIdController = TextEditingController(text: 'rankearn.pay@icici');
     _merchantNameController = TextEditingController(text: 'Rankearn Technologies');
     _minDepositController = TextEditingController(text: '50');
@@ -124,9 +127,9 @@ class _FinanceTabState extends State<FinanceTab> {
 
           // Subtab view switch
           switch (_activeSubTab) {
-            _FinanceSubTab.topups => _buildTopupsView(),
-            _FinanceSubTab.withdrawals => _buildWithdrawalsView(),
-            _FinanceSubTab.settings => _buildSettingsView(),
+            FinanceSubTab.topups => _buildTopupsView(),
+            FinanceSubTab.withdrawals => _buildWithdrawalsView(),
+            FinanceSubTab.settings => _buildSettingsView(),
           },
         ],
       ),
@@ -178,9 +181,9 @@ class _FinanceTabState extends State<FinanceTab> {
                       const Text('Finance Management', style: AppTypography.displayMedium),
                       const SizedBox(height: 2),
                       Text(
-                        _activeSubTab == _FinanceSubTab.settings
+                        _activeSubTab == FinanceSubTab.settings
                             ? 'Configure Payment Rules & Gateways'
-                            : (_activeSubTab == _FinanceSubTab.topups
+                            : (_activeSubTab == FinanceSubTab.topups
                                 ? 'Verify Manual UPI Candidate Top-ups'
                                 : 'Process Coin Payout Redemptions'),
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8)),
@@ -200,9 +203,9 @@ class _FinanceTabState extends State<FinanceTab> {
                 ),
                 child: Row(
                   children: [
-                    _buildSubTabButton('Top-ups', Icons.add_circle_outline, _FinanceSubTab.topups),
-                    _buildSubTabButton('Withdrawals', Icons.arrow_outward, _FinanceSubTab.withdrawals),
-                    _buildSubTabButton('Settings', Icons.tune, _FinanceSubTab.settings),
+                    _buildSubTabButton('Top-ups', Icons.add_circle_outline, FinanceSubTab.topups),
+                    _buildSubTabButton('Withdrawals', Icons.arrow_outward, FinanceSubTab.withdrawals),
+                    _buildSubTabButton('Settings', Icons.tune, FinanceSubTab.settings),
                   ],
                 ),
               ),
@@ -211,7 +214,7 @@ class _FinanceTabState extends State<FinanceTab> {
         ),
 
           // Secondary Filter Bar for Top-ups & Withdrawals
-          if (_activeSubTab != _FinanceSubTab.settings) ...[
+          if (_activeSubTab != FinanceSubTab.settings) ...[
             const SizedBox(height: 16),
             const Divider(color: Color(0xFFF1F5F9), height: 1),
             const SizedBox(height: 16),
@@ -248,7 +251,7 @@ class _FinanceTabState extends State<FinanceTab> {
     );
   }
 
-  Widget _buildSubTabButton(String label, IconData icon, _FinanceSubTab tab) {
+  Widget _buildSubTabButton(String label, IconData icon, FinanceSubTab tab) {
     final isSelected = _activeSubTab == tab;
     return InkWell(
       onTap: () => setState(() => _activeSubTab = tab),

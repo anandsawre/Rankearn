@@ -5,11 +5,13 @@ import 'package:data_layer/data_layer.dart';
 import 'models/payment_item.dart';
 import 'widgets/payments_hero_card.dart';
 import 'widgets/payments_quick_actions.dart';
+import 'widgets/payments_column_quick_actions_card.dart';
 import 'widgets/payments_metrics_row.dart';
 import 'widgets/payments_table_card.dart';
 import 'widgets/payments_method_donut_card.dart';
 import 'widgets/payments_revenue_bar_chart_card.dart';
 import 'widgets/payments_recent_activity_card.dart';
+import '../finance/finance_tab.dart';
 
 import 'dialogs/payment_details_dialog.dart';
 import 'dialogs/process_refund_dialog.dart';
@@ -208,6 +210,35 @@ class _PaymentsTabState extends State<PaymentsTab> {
     );
   }
 
+  void _openFinanceView(int subTabIndex) {
+    // 0: Top-ups, 1: Withdrawals, 2: Settings
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF10194F),
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: const Text(
+              'Finance & Wallets',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+            ),
+          ),
+          body: FinanceTab(
+            initialSubTab: subTabIndex == 0
+                ? FinanceSubTab.topups
+                : (subTabIndex == 1 ? FinanceSubTab.withdrawals : FinanceSubTab.settings),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _openPaymentSettingsDialog() {
     showDialog(
       context: context,
@@ -375,7 +406,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
                 ),
                 const SizedBox(width: 14),
 
-                // Right Analytics Column (3 Cards: Donut, Bar Chart, Recent Activity)
+                // Right Analytics Column (Donut, Quick Actions [Topup, Withdrawal, Settings], Bar Chart, Recent Activity)
                 SizedBox(
                   width: 295,
                   child: Column(
@@ -383,6 +414,13 @@ class _PaymentsTabState extends State<PaymentsTab> {
                       PaymentsMethodDonutCard(
                         totalCount: 5842,
                         onViewAll: () {},
+                      ),
+                      const SizedBox(height: 14),
+                      // 3-Button Quick Actions Card in between Donut & Revenue Bar Chart
+                      PaymentsColumnQuickActionsCard(
+                        onTopup: () => _openFinanceView(0),
+                        onWithdrawal: () => _openFinanceView(1),
+                        onSettings: () => _openFinanceView(2),
                       ),
                       const SizedBox(height: 14),
                       PaymentsRevenueBarChartCard(
@@ -439,6 +477,12 @@ class _PaymentsTabState extends State<PaymentsTab> {
             PaymentsMethodDonutCard(
               totalCount: 5842,
               onViewAll: () {},
+            ),
+            const SizedBox(height: 14),
+            PaymentsColumnQuickActionsCard(
+              onTopup: () => _openFinanceView(0),
+              onWithdrawal: () => _openFinanceView(1),
+              onSettings: () => _openFinanceView(2),
             ),
             const SizedBox(height: 14),
             PaymentsRevenueBarChartCard(
