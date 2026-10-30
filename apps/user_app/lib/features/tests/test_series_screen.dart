@@ -2497,13 +2497,13 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                     LiveContestCard(
                       title: t.title,
                       tagline: t.isTournament
-                          ? 'Prize Tournament Challenge!'
+                          ? '🏆 Prize Tournament Challenge!'
                           : (t.categoryId != null && t.categoryId!.isNotEmpty
-                              ? t.categoryId!
-                              : 'Test & Win Rewards!'),
+                              ? '🎙️ Live Quiz • ${t.categoryId}'
+                              : '🎙️ Live Quiz Show'),
                       icon: t.isTournament
                           ? Icons.emoji_events_rounded
-                          : Icons.sensors_rounded,
+                          : Icons.podcasts_rounded,
                       questions: '${t.totalQuestions > 0 ? t.totalQuestions : 10} Qs',
                       duration:
                           '${t.durationMinutes > 0 ? t.durationMinutes : 10} Mins',

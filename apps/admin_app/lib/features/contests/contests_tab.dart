@@ -76,9 +76,19 @@ class _ContestsTabState extends State<ContestsTab> {
       final res = await client
           .from('tests')
           .select()
+          .eq('is_tournament', false)
           .order('created_at', ascending: false);
 
-      final List<dynamic> rows = res as List<dynamic>;
+      final List<dynamic> allRows = res as List<dynamic>;
+      // Filter out pure static mock tests that don't belong to Live Quiz
+      final rows = allRows.where((r) {
+        if (r['is_tournament'] == true) return false;
+        final hasSchedule = r['scheduled_start_time'] != null;
+        final isLq = (r['id']?.toString().startsWith('lq-') ?? false);
+        final mode = (r['test_mode'] ?? '').toString().toLowerCase();
+        return hasSchedule || isLq || mode == 'live_quiz' || mode == 'live';
+      }).toList();
+
       if (rows.isNotEmpty) {
         final now = DateTime.now();
         final loaded = rows.map((r) {
@@ -123,6 +133,7 @@ class _ContestsTabState extends State<ContestsTab> {
             status: status,
             createdByName: 'Admin',
             rewardCoins: rawPrize,
+            entryFeeCoins: rawFee,
             questionsCount: (r['total_questions'] as num?)?.toInt() ?? 25,
           );
         }).toList();
@@ -314,7 +325,10 @@ class _ContestsTabState extends State<ContestsTab> {
                 'category_id': updatedItem.category,
                 'duration_minutes': updatedItem.durationMinutes,
                 'total_questions': updatedItem.questionsCount,
-                'entry_fee_coins': (updatedItem.rewardCoins / 10).round().clamp(0, 5000),
+                'entry_fee_coins': updatedItem.entryFeeCoins,
+                'prize_pool_coins': updatedItem.rewardCoins,
+                'is_tournament': false, // Strictly false for Live Quiz!
+                'test_mode': 'mock',
                 'status': updatedItem.status == LiveQuizStatus.draft ? 'draft' : 'published',
                 'scheduled_start_time': updatedItem.startTime.toUtc().toIso8601String(),
                 'scheduled_end_time': updatedItem.startTime.add(Duration(minutes: updatedItem.durationMinutes)).toUtc().toIso8601String(),
@@ -325,8 +339,6 @@ class _ContestsTabState extends State<ContestsTab> {
                 await client.from('tests').update(payload).eq('id', updatedItem.id);
               } else {
                 payload['id'] = updatedItem.id;
-                payload['is_tournament'] = true;
-                payload['test_mode'] = 'tournament';
                 payload['total_participants'] = 0;
                 payload['created_at'] = DateTime.now().toUtc().toIso8601String();
                 await client.from('tests').insert(payload);
@@ -568,9 +580,10 @@ class _ContestsTabState extends State<ContestsTab> {
                       'category_id': dup.category,
                       'duration_minutes': dup.durationMinutes,
                       'total_questions': dup.questionsCount,
-                      'is_tournament': true,
-                      'test_mode': 'tournament',
-                      'entry_fee_coins': (dup.rewardCoins / 10).round().clamp(0, 5000),
+                      'is_tournament': false, // Strictly false!
+                      'test_mode': 'mock',
+                      'entry_fee_coins': dup.entryFeeCoins,
+                      'prize_pool_coins': dup.rewardCoins,
                       'status': 'draft',
                       'total_participants': 0,
                       'created_at': DateTime.now().toUtc().toIso8601String(),

@@ -24,6 +24,7 @@ class LiveQuizItem {
   final int rewardCoins;
   final int currentQuestionIndex;
   final int totalQuestions;
+  final int entryFeeCoins;
   final bool isArchived;
 
   const LiveQuizItem({
@@ -40,6 +41,7 @@ class LiveQuizItem {
     this.thumbnailUrl,
     this.questionsCount = 20,
     this.rewardCoins = 500,
+    this.entryFeeCoins = 0,
     this.currentQuestionIndex = 1,
     this.totalQuestions = 20,
     this.isArchived = false,
@@ -59,6 +61,7 @@ class LiveQuizItem {
     String? thumbnailUrl,
     int? questionsCount,
     int? rewardCoins,
+    int? entryFeeCoins,
     int? currentQuestionIndex,
     int? totalQuestions,
     bool? isArchived,
@@ -77,6 +80,7 @@ class LiveQuizItem {
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       questionsCount: questionsCount ?? this.questionsCount,
       rewardCoins: rewardCoins ?? this.rewardCoins,
+      entryFeeCoins: entryFeeCoins ?? this.entryFeeCoins,
       currentQuestionIndex: currentQuestionIndex ?? this.currentQuestionIndex,
       totalQuestions: totalQuestions ?? this.totalQuestions,
       isArchived: isArchived ?? this.isArchived,

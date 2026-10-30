@@ -169,7 +169,7 @@ Future<bool?> showContestEntryDialog({
                           child: Icon(
                             isPreRegister
                                 ? Icons.how_to_reg_rounded
-                                : Icons.emoji_events_rounded,
+                                : (test.isTournament ? Icons.emoji_events_rounded : Icons.podcasts_rounded),
                             color: Colors.white, // CRISP WHITE ICON
                             size: 28,
                           ),
@@ -181,8 +181,8 @@ Future<bool?> showContestEntryDialog({
                     // 2. Title & Status Badge
                     Text(
                       isPreRegister
-                          ? 'Pre-Register Contest'
-                          : 'Confirm Contest Entry',
+                          ? (test.isTournament ? 'Pre-Register Tournament' : 'Pre-Register Live Quiz')
+                          : (test.isTournament ? 'Confirm Tournament Entry' : 'Confirm Live Quiz Entry'),
                       style: const TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w900,
@@ -215,7 +215,7 @@ Future<bool?> showContestEntryDialog({
                           Icon(
                             isPreRegister
                                 ? Icons.calendar_today_rounded
-                                : Icons.sensors_rounded,
+                                : (test.isTournament ? Icons.emoji_events_outlined : Icons.sensors_rounded),
                             size: 11,
                             color: isPreRegister
                                 ? const Color(0xFFEA580C)
@@ -224,8 +224,8 @@ Future<bool?> showContestEntryDialog({
                           const SizedBox(width: 5),
                           Text(
                             isPreRegister
-                                ? 'UPCOMING CONTEST'
-                                : 'LIVE TOURNAMENT',
+                                ? (test.isTournament ? 'UPCOMING TOURNAMENT' : 'UPCOMING LIVE QUIZ')
+                                : (test.isTournament ? 'LIVE TOURNAMENT' : 'LIVE QUIZ NOW'),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,

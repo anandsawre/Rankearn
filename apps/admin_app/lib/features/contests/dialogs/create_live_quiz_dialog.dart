@@ -23,6 +23,7 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
   late TextEditingController _durationController;
   late TextEditingController _questionsController;
   late TextEditingController _rewardsController;
+  late TextEditingController _entryFeeController;
   String _category = 'Railway';
   DateTime _startTime = DateTime.now().add(const Duration(hours: 2));
   LiveQuizStatus _status = LiveQuizStatus.scheduled;
@@ -36,6 +37,7 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
     _durationController = TextEditingController(text: (item?.durationMinutes ?? 45).toString());
     _questionsController = TextEditingController(text: (item?.questionsCount ?? 25).toString());
     _rewardsController = TextEditingController(text: (item?.rewardCoins ?? 1500).toString());
+    _entryFeeController = TextEditingController(text: (item?.entryFeeCoins ?? 0).toString());
     if (item != null) {
       _category = item.category;
       _startTime = item.startTime;
@@ -50,6 +52,7 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
     _durationController.dispose();
     _questionsController.dispose();
     _rewardsController.dispose();
+    _entryFeeController.dispose();
     super.dispose();
   }
 
@@ -57,6 +60,7 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     final duration = int.tryParse(_durationController.text.trim()) ?? 45;
+    final entryFee = int.tryParse(_entryFeeController.text.trim()) ?? 0;
     final now = DateTime.now();
     final localEnd = _startTime.add(Duration(minutes: duration));
 
@@ -80,6 +84,7 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
       durationMinutes: duration,
       questionsCount: int.tryParse(_questionsController.text.trim()) ?? 25,
       rewardCoins: int.tryParse(_rewardsController.text.trim()) ?? 1500,
+      entryFeeCoins: entryFee,
       participantsCount: widget.initialItem?.participantsCount ?? 0,
       status: resolvedStatus,
       createdByName: widget.initialItem?.createdByName ?? 'Admin',
@@ -141,13 +146,27 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
                             child: const Icon(Icons.podcasts_rounded, color: Colors.white, size: 18),
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            isEdit ? 'Edit Live Quiz' : 'Create Live Quiz',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEdit ? 'Edit Live Quiz' : 'Create Live Quiz',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                'Scheduled Fast Live Quiz • Instant Coin Rewards',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -377,6 +396,25 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
                               decoration: const InputDecoration(
                                 border: OutlineInputBorder(),
                                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Entry (0=Free)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 6),
+                            TextFormField(
+                              controller: _entryFeeController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                hintText: '0',
                               ),
                             ),
                           ],
