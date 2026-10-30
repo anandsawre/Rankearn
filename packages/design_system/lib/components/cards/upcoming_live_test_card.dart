@@ -257,24 +257,26 @@ class UpcomingLiveTestCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // LIVE status badge
+          // UPCOMING status badge (Orange)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF1F4),
+              color: const Color(0xFFFFF7ED),
               borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFFFEDD5), width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: const [
-                Icon(Icons.circle, color: Color(0xFFF43F5E), size: 6),
+                Icon(Icons.circle, color: Color(0xFFEA580C), size: 6),
                 SizedBox(width: 4),
                 Text(
-                  'LIVE',
+                  'UPCOMING',
                   style: TextStyle(
-                    color: Color(0xFFF43F5E),
+                    color: Color(0xFFEA580C),
                     fontSize: 9.5,
                     fontWeight: FontWeight.w900,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ],
