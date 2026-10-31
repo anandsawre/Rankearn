@@ -1,10 +1,15 @@
+import 'dart:convert';
 import 'package:shared_core/shared_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 import '../models/user_profile.dart';
 import '../supabase/supabase_config.dart';
 
 /// Authentication & User Profile Repository
 class AuthRepository {
+  static const String _localProfileKey = 'rankearn_user_profile_cache';
+  static const String _rememberMeKey = 'rankearn_user_remember_me';
+
   final supa.SupabaseClient? _explicitClient;
 
   AuthRepository({supa.SupabaseClient? client}) : _explicitClient = client;
@@ -16,6 +21,87 @@ class AuthRepository {
 
   Stream<supa.AuthState> get authStateChanges =>
       _client?.auth.onAuthStateChange ?? const Stream.empty();
+
+  /// Persist authenticated user profile in local storage for instant offline / APK reopen
+  Future<void> saveLocalProfile(UserProfile profile) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_localProfileKey, jsonEncode(profile.toMap()));
+      await prefs.setBool(_rememberMeKey, true);
+    } catch (_) {}
+  }
+
+  /// Retrieve locally persisted user profile
+  Future<UserProfile?> getLocalProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rememberMe = prefs.getBool(_rememberMeKey) ?? true;
+      if (!rememberMe) return null;
+      final raw = prefs.getString(_localProfileKey);
+      if (raw != null && raw.isNotEmpty) {
+        final map = jsonDecode(raw) as Map<String, dynamic>;
+        return UserProfile.fromMap(map);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Clear locally persisted user profile on explicit logout
+  Future<void> clearLocalProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_localProfileKey);
+      await prefs.remove(_rememberMeKey);
+    } catch (_) {}
+  }
+
+  /// Restore user session seamlessly on app launch (guarantees session persistence across APK restarts)
+  Future<Result<UserProfile>> restoreSession() async {
+    final client = _client;
+    final cachedProfile = await getLocalProfile();
+
+    if (client == null) {
+      if (cachedProfile != null) {
+        return Success(cachedProfile);
+      }
+      return const Failure('Database not connected');
+    }
+
+    try {
+      // 1. Check if Supabase has a valid or refreshable session
+      final currentSession = client.auth.currentSession;
+      if (currentSession != null) {
+        if (currentSession.isExpired) {
+          try {
+            await client.auth.refreshSession();
+          } catch (_) {}
+        }
+
+        final currentUserId = client.auth.currentUser?.id ?? currentSession.user.id;
+        final profileRes = await getProfile(currentUserId);
+        if (profileRes is Success<UserProfile>) {
+          await saveLocalProfile(profileRes.data);
+          return profileRes;
+        }
+      }
+
+      final currentUser = client.auth.currentUser;
+      if (currentUser != null) {
+        final profileRes = await getProfile(currentUser.id);
+        if (profileRes is Success<UserProfile>) {
+          await saveLocalProfile(profileRes.data);
+          return profileRes;
+        }
+      }
+    } catch (_) {}
+
+    // Fallback to locally cached profile so user is NEVER logged out due to network latency on app launch
+    if (cachedProfile != null) {
+      return Success(cachedProfile);
+    }
+
+    return const Failure('No authenticated session found');
+  }
 
   /// Register new user with Email, Phone, Password, Name, and optional Referral Code
   Future<Result<UserProfile>> signUp({
@@ -160,7 +246,11 @@ class AuthRepository {
         return const Failure('Login failed: Invalid credentials');
       }
 
-      return await getProfile(user.id);
+      final profileRes = await getProfile(user.id);
+      if (profileRes is Success<UserProfile>) {
+        await saveLocalProfile(profileRes.data);
+      }
+      return profileRes;
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {
@@ -254,7 +344,11 @@ class AuthRepository {
       if (user == null) {
         return const Failure('Verification failed: invalid OTP code');
       }
-      return await getProfile(user.id);
+      final profileRes = await getProfile(user.id);
+      if (profileRes is Success<UserProfile>) {
+        await saveLocalProfile(profileRes.data);
+      }
+      return profileRes;
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {
@@ -283,6 +377,7 @@ class AuthRepository {
 
   /// Sign Out
   Future<Result<bool>> signOut() async {
+    await clearLocalProfile();
     final client = _client;
     if (client == null) {
       return const Success(true);
@@ -299,6 +394,10 @@ class AuthRepository {
   Future<Result<UserProfile>> getProfile(String userId) async {
     final client = _client;
     if (client == null) {
+      final cached = await getLocalProfile();
+      if (cached != null && cached.id == userId) {
+        return Success(cached);
+      }
       return const Failure('Database not connected');
     }
     try {
@@ -335,13 +434,25 @@ class AuthRepository {
           try {
             await client.from('profiles').upsert(provisionedProfile.toMap());
           } catch (_) {}
+          await saveLocalProfile(provisionedProfile);
           return Success(provisionedProfile);
+        }
+
+        final cached = await getLocalProfile();
+        if (cached != null && cached.id == userId) {
+          return Success(cached);
         }
         return const Failure('Profile not found');
       }
 
-      return Success(UserProfile.fromMap(data));
+      final profile = UserProfile.fromMap(data);
+      await saveLocalProfile(profile);
+      return Success(profile);
     } catch (e) {
+      final cached = await getLocalProfile();
+      if (cached != null && cached.id == userId) {
+        return Success(cached);
+      }
       return Failure('Error fetching profile: $e', e);
     }
   }

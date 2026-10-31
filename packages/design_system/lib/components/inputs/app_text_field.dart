@@ -36,6 +36,7 @@ class AppTextField extends StatefulWidget {
   final TextStyle? floatingLabelStyle;
   final TextStyle? hintStyle;
   final int? maxLength;
+  final Iterable<String>? autofillHints;
 
   const AppTextField({
     super.key,
@@ -67,6 +68,7 @@ class AppTextField extends StatefulWidget {
     this.floatingLabelStyle,
     this.hintStyle,
     this.maxLength,
+    this.autofillHints,
   });
 
   /// Factory constructor for modern floating-label form inputs (e.g. Auth Screen).
@@ -99,6 +101,7 @@ class AppTextField extends StatefulWidget {
     this.floatingLabelStyle,
     this.hintStyle,
     this.maxLength,
+    this.autofillHints,
   })  : isFloatingLabel = true,
         floatingLabelBehavior = FloatingLabelBehavior.auto;
 
@@ -141,6 +144,7 @@ class _AppTextFieldState extends State<AppTextField> {
       enabled: widget.enabled,
       maxLength: widget.maxLength,
       maxLines: widget.isPassword ? 1 : widget.maxLines,
+      autofillHints: widget.autofillHints,
       onChanged: widget.onChanged,
       onFieldSubmitted: widget.onSubmitted,
       validator: widget.validator,
@@ -234,6 +238,7 @@ class _AppTextFieldState extends State<AppTextField> {
           enabled: widget.enabled,
           maxLength: widget.maxLength,
           maxLines: widget.isPassword ? 1 : widget.maxLines,
+          autofillHints: widget.autofillHints,
           onChanged: widget.onChanged,
           onFieldSubmitted: widget.onSubmitted,
           validator: widget.validator,

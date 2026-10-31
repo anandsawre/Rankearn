@@ -81,20 +81,15 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
 
   Future<void> _checkSession() async {
     try {
-      if (_authRepository.isAuthenticated) {
-        final user = _authRepository.currentUser;
-        if (user != null) {
-          final res = await _authRepository.getProfile(user.id);
-          if (mounted) {
-            if (res case Success(:final data)) {
-              setState(() {
-                _currentUser = data;
-                _showAuth = false;
-                _isCheckingSession = false;
-              });
-              return;
-            }
-          }
+      final res = await _authRepository.restoreSession();
+      if (mounted) {
+        if (res case Success(:final data)) {
+          setState(() {
+            _currentUser = data;
+            _showAuth = false;
+            _isCheckingSession = false;
+          });
+          return;
         }
       }
     } catch (e) {
@@ -114,6 +109,20 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
       authState,
     ) async {
       final session = authState.session;
+      final event = authState.event;
+
+      // Only force show auth screen if explicitly signed out
+      if (event.name == 'signedOut') {
+        await _authRepository.clearLocalProfile();
+        if (mounted) {
+          setState(() {
+            _currentUser = null;
+            _showAuth = true;
+          });
+        }
+        return;
+      }
+
       if (session != null) {
         final res = await _authRepository.getProfile(session.user.id);
         if (mounted) {
@@ -123,13 +132,6 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
               _showAuth = false;
             });
           }
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _currentUser = null;
-            _showAuth = true;
-          });
         }
       }
     });
@@ -227,11 +229,14 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
       home: _showAuth
           ? UserAuthScreen(
               initialMode: AuthScreenMode.login,
-              onAuthSuccess: (profile) {
-                setState(() {
-                  _currentUser = profile;
-                  _showAuth = false;
-                });
+              onAuthSuccess: (profile) async {
+                await _authRepository.saveLocalProfile(profile);
+                if (mounted) {
+                  setState(() {
+                    _currentUser = profile;
+                    _showAuth = false;
+                  });
+                }
               },
             )
           : UserAppShell(

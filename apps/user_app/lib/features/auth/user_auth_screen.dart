@@ -231,6 +231,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 
   void _handleSuccess(UserProfile profile) {
+    _authRepository.saveLocalProfile(profile);
     if (widget.onAuthSuccess != null) {
       widget.onAuthSuccess!(profile);
     } else {
@@ -286,6 +287,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return AlertDialog(
+            scrollable: true,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
               children: [
@@ -1150,8 +1152,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       padding: isDesktop
           ? const EdgeInsets.symmetric(horizontal: 24, vertical: 18)
           : EdgeInsets.zero,
-      child: Form(
-        key: _formKey,
+      child: AutofillGroup(
+        child: Form(
+          key: _formKey,
         child: SingleChildScrollView(
           physics: isDesktop ? const ClampingScrollPhysics() : const NeverScrollableScrollPhysics(),
           child: Column(
@@ -1535,12 +1538,14 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               children: [
                 Expanded(
                   child: SocialAuthButton.google(
+                    label: isMobile ? 'Google' : 'Continue with Google',
                     onPressed: _handleGoogleLogin,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: SocialAuthButton.phone(
+                    label: isMobile ? 'Phone' : 'Continue with Phone',
                     onPressed: _handlePhoneLogin,
                   ),
                 ),
@@ -1561,7 +1566,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         ),
       ),
     ),
-  );
+  ),
+);
 }
 
   Widget _buildUnifiedLoginField() {
@@ -1572,6 +1578,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       controller: _emailController,
       label: 'Email Address or Mobile Number',
       keyboardType: TextInputType.emailAddress,
+      autofillHints: const [AutofillHints.username, AutofillHints.email, AutofillHints.telephoneNumber],
       onChanged: (_) => setState(() {}),
       prefixIcon: Icon(
         isPhoneInput ? Icons.phone_android_rounded : Icons.mail_outline_rounded,
@@ -1604,6 +1611,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       controller: _emailController,
       label: 'Email Address',
       keyboardType: TextInputType.emailAddress,
+      autofillHints: const [AutofillHints.email],
       prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your email address';
@@ -1618,6 +1626,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       controller: _passwordController,
       label: 'Password',
       isPassword: true,
+      autofillHints: [isLogin ? AutofillHints.password : AutofillHints.newPassword],
       fillColor: Colors.white,
       prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
@@ -1632,6 +1641,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     return AppTextField.floating(
       controller: _nameController,
       label: 'Full Name',
+      autofillHints: const [AutofillHints.name],
       prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your full name';
@@ -1647,6 +1657,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       focusNode: _phoneFocusNode,
       label: 'Mobile Number',
       keyboardType: TextInputType.phone,
+      autofillHints: const [AutofillHints.telephoneNumber],
       prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF00B96B)),
       prefixText: showPrefix ? '+91 ' : null,
       validator: (val) {
