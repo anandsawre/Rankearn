@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
+import 'package:design_system/design_system.dart';
 
 /// Pure Vector CustomPainter for Contest Entry Dialog background decoration
 /// (Ambient watermark rings on top-left + flowing waves on top-right + floating particle accents)
@@ -138,40 +139,44 @@ Future<bool?> showContestEntryDialog({
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // 1. Solid distinct circular badge with WHITE icon
-                    Container(
-                      padding: const EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: primaryColor.withValues(alpha: 0.12),
-                      ),
+                    // 1. Solid distinct circular badge with WHITE icon & LivePulseMotion
+                    LivePulseMotion(
+                      pulseColor: primaryColor,
+                      maxRadius: isPreRegister ? 0.0 : 12.0,
                       child: Container(
-                        width: 58,
-                        height: 58,
+                        padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: isPreRegister
-                                ? const [Color(0xFFEA580C), Color(0xFFF97316)]
-                                : const [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: primaryColor.withValues(alpha: 0.38),
-                              blurRadius: 14,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
+                          color: primaryColor.withValues(alpha: 0.12),
                         ),
-                        child: Center(
-                          child: Icon(
-                            isPreRegister
-                                ? Icons.how_to_reg_rounded
-                                : (test.isTournament ? Icons.emoji_events_rounded : Icons.podcasts_rounded),
-                            color: Colors.white, // CRISP WHITE ICON
-                            size: 28,
+                        child: Container(
+                          width: 58,
+                          height: 58,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: isPreRegister
+                                  ? const [Color(0xFFEA580C), Color(0xFFF97316)]
+                                  : const [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: primaryColor.withValues(alpha: 0.38),
+                                blurRadius: 14,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Icon(
+                              isPreRegister
+                                  ? Icons.how_to_reg_rounded
+                                  : (test.isTournament ? Icons.emoji_events_rounded : Icons.podcasts_rounded),
+                              color: Colors.white, // CRISP WHITE ICON
+                              size: 28,
+                            ),
                           ),
                         ),
                       ),

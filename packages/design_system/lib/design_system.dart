@@ -98,3 +98,9 @@ export 'components/battle/battle_leave_dialog.dart';
 
 // Showcase
 export 'showcase/design_system_showcase.dart';
+
+// Motion Graphics Suite (GPU-Accelerated 60-120fps)
+export 'components/motion/celebration_confetti_motion.dart';
+export 'components/motion/trophy_bounce_motion.dart';
+export 'components/motion/animated_coin_counter.dart';
+export 'components/motion/live_pulse_motion.dart';

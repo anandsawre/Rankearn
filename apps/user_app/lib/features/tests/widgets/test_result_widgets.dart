@@ -597,26 +597,29 @@ class ResultHeroBanner extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1000;
 
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE6FAF1), Color(0xFFD6F5E9), Color(0xFFE2F8F0)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFB9F0DA), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF00B96B).withValues(alpha: 0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+    return CelebrationConfettiMotion(
+      particleCount: 45,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE6FAF1), Color(0xFFD6F5E9), Color(0xFFE2F8F0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFB9F0DA), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF00B96B).withValues(alpha: 0.06),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        padding: EdgeInsets.all(isDesktop ? 24 : 16),
+        child: isDesktop ? _buildDesktopHero(context) : _buildMobileHero(context),
       ),
-      padding: EdgeInsets.all(isDesktop ? 24 : 16),
-      child: isDesktop ? _buildDesktopHero(context) : _buildMobileHero(context),
     );
   }
 
@@ -929,27 +932,12 @@ class ResultHeroBanner extends StatelessWidget {
   }
 
   Widget _buildMascotImage({required double size}) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Image.asset(
-          'assets/images/test_result_hero_mascot.jpg',
-          fit: BoxFit.contain,
-          errorBuilder: (ctx, err, stack) => Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF9E6),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.emoji_events_rounded,
-              color: Color(0xFFFFC928),
-              size: 50,
-            ),
-          ),
-        ),
-      ),
+    return TrophyBounceMotion(
+      size: size * 0.72,
+      icon: Icons.emoji_events_rounded,
+      primaryColor: const Color(0xFFFFB800),
+      secondaryColor: const Color(0xFFEA580C),
+      badgeText: result.isNewBestScore ? 'TOP 5% 🏆' : 'COMPLETED ✓',
     );
   }
 
