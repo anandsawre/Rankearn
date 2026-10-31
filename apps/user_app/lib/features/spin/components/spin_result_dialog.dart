@@ -309,57 +309,62 @@ class SpinResultDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 22),
 
-                    // 3D Elevated Golden Claim & Continue Button (Matching Large Coin)
+                    // 3D Elevated Golden Pill Button (Matching Large 3D Coin exactly as in Image 2)
                     Container(
                       width: double.infinity,
-                      height: 52,
+                      height: 54,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(26),
+                        borderRadius: BorderRadius.circular(28),
                         gradient: const LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Color(0xFFFFF6A1), // Shimmering top rim highlight
-                            Color(0xFFFFDF00), // Vibrant golden face
-                            Color(0xFFF59E0B), // Rich amber mid-tone
-                            Color(0xFFD97706), // Deep metallic gold
+                            Color(0xFFFFF59D), // Shimmering bright golden highlight
+                            Color(0xFFFFD600), // Vibrant gold face
+                            Color(0xFFFFB300), // Warm amber mid-tone
+                            Color(0xFFFF8F00), // Rich metallic gold
+                            Color(0xFFE65100), // Deep warm coin rim
                           ],
-                          stops: [0.0, 0.22, 0.68, 1.0],
+                          stops: [0.0, 0.20, 0.52, 0.82, 1.0],
                         ),
                         border: Border.all(
-                          color: const Color(0xFFFFFBEB),
-                          width: 1.5,
+                          color: Colors.white,
+                          width: 2.0,
                         ),
-                      ),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(26),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          onClaim();
-                        },
-                        child: const Text(
-                          'Claim & Continue',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            fontFamily: 'Inter',
-                            letterSpacing: 0.3,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                color: Color(0xFF78350F),
-                                offset: Offset(0, 1.8),
-                                blurRadius: 3,
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(28),
+                          onTap: () {
+                            Navigator.pop(context);
+                            onClaim();
+                          },
+                          child: const Center(
+                            child: Text(
+                              'Claim & Continue',
+                              style: TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w900,
+                                fontFamily: 'Inter',
+                                letterSpacing: 0.3,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: Color(0xFF9A3412),
+                                    offset: Offset(0, 1.8),
+                                    blurRadius: 2.5,
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ),

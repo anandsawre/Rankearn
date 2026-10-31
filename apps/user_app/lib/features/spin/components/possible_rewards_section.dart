@@ -17,12 +17,15 @@ class PossibleRewardsSection extends StatelessWidget {
 
   const PossibleRewardsSection({
     super.key,
-    this.rewards = SpinRewardItem.showcaseList,
+    this.rewards = const [],
     this.onRewardTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (rewards.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),

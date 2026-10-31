@@ -48,59 +48,56 @@ class SpinHeader extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 1. Back Navigation Button
-              InkWell(
-                onTap: onBack,
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
-
-              // 2. Center: 🎁 Gift Icon + "Spin & Win" Title
+              // Left side: Back Button + 🎁 + "Spin & Win" (clustered left)
               Expanded(
-                child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Text('🎁', style: TextStyle(fontSize: 20)),
-                        SizedBox(width: 6),
-                        Text.rich(
-                          TextSpan(
-                            style: TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w900,
-                              fontFamily: 'Inter',
-                              letterSpacing: -0.3,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: 'Spin & ',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              TextSpan(
-                                text: 'Win',
-                                style: TextStyle(color: Color(0xFFFFD32A)),
-                              ),
-                            ],
-                          ),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: onBack,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 20,
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 6),
+                    const Text('🎁', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 6),
+                    const Flexible(
+                      child: Text.rich(
+                        TextSpan(
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            fontFamily: 'Inter',
+                            letterSpacing: -0.3,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: 'Spin & ',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            TextSpan(
+                              text: 'Win',
+                              style: TextStyle(color: Color(0xFFFFD32A)),
+                            ),
+                          ],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(width: 8),
 
-              // 3. Right: Coin Balance Chip + Add (+) Button
+              // Right side: Coin Balance Chip + Add (+) Button
               InkWell(
                 onTap: onOpenWallet,
                 borderRadius: BorderRadius.circular(20),

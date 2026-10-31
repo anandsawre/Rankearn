@@ -999,6 +999,7 @@ class _UserAppShellState extends State<UserAppShell> {
           ),
           UserNavTab.spin => LuckyWheelScreen(
             currentCoins: _profile.coins,
+            userId: _profile.id,
             onBack: () => setState(() => _activeTab = UserNavTab.rewards),
             onRewardClaimed: (coinsWon) {
               setState(() {

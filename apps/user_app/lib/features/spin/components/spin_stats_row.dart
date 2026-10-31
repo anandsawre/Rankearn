@@ -11,7 +11,7 @@ class SpinStatsRow extends StatelessWidget {
   const SpinStatsRow({
     super.key,
     required this.spinsUsedToday,
-    this.maxSpinsPerDay = 3,
+    this.maxSpinsPerDay = 5,
     required this.formattedCooldown,
   });
 

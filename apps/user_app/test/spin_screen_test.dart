@@ -7,6 +7,22 @@ import 'package:user_app/features/spin/components/spin_stats_row.dart';
 import 'package:user_app/features/spin/components/spin_wheel.dart';
 import 'package:user_app/features/spin/components/spin_action_button.dart';
 import 'package:user_app/features/spin/services/spin_service.dart';
+import 'package:user_app/features/spin/models/spin_reward_model.dart';
+
+final List<SpinRewardItem> _testRewards = List.generate(
+  8,
+  (i) => SpinRewardItem(
+    id: 'test_reward_$i',
+    title: '${(i + 1) * 10}',
+    subtitle: 'Coins',
+    coins: (i + 1) * 10,
+    type: SpinRewardType.coins,
+    badgeText: '+${(i + 1) * 10}',
+    description: 'Test coins reward',
+    cardTint: const Color(0xFFFEF3C7),
+    accentColor: const Color(0xFFF59E0B),
+  ),
+);
 
 Widget _buildTestApp({
   required double width,
@@ -30,6 +46,7 @@ Widget _buildTestApp({
           onBack: onBack ?? () {},
           onOpenWallet: onOpenWallet,
           onRewardClaimed: onRewardClaimed,
+          initialRewards: _testRewards,
         ),
       ),
     ),
@@ -39,6 +56,7 @@ Widget _buildTestApp({
 void main() {
   setUp(() {
     SpinService.resetForTesting();
+    SpinService.setMockRewardsForTesting(_testRewards);
   });
 
   group('Rankearn Spin & Win — Responsive Viewport Tests', () {
@@ -159,8 +177,8 @@ void main() {
       expect(find.text('Good Luck!'), findsOneWidget);
 
       // Advance animation through rotations (4200ms)
-      await tester.pump(const Duration(seconds: 5));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 4400));
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Congratulations dialog appears
       expect(find.text('Congratulations! 🎉'), findsOneWidget);
@@ -168,7 +186,8 @@ void main() {
 
       // Tap Claim & Continue
       await tester.tap(find.text('Claim & Continue'));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Dialog dismisses
       expect(find.text('Congratulations! 🎉'), findsNothing);

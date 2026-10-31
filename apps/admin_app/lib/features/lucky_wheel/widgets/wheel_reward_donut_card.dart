@@ -17,7 +17,7 @@ class WheelRewardDonutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = items.isNotEmpty ? items : kDefaultRewardDistribution;
+    final list = items;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -82,42 +82,58 @@ class WheelRewardDonutCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
 
-          // Donut + Legend Row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Donut Chart with center text
-              SizedBox(
-                width: 96,
-                height: 96,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CustomPaint(
-                      size: const Size(96, 96),
-                      painter: _DonutChartPainter(items: list),
-                    ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$totalCount',
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF101A3A),
-                            height: 1.1,
+          // Donut or Empty State
+          if (list.isEmpty)
+            const SizedBox(
+              height: 96,
+              child: Center(
+                child: Text(
+                  'No reward distribution data available.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF94A3B8),
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ),
+            )
+          else
+            // Donut + Legend Row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Donut Chart with center text
+                SizedBox(
+                  width: 96,
+                  height: 96,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CustomPaint(
+                        size: const Size(96, 96),
+                        painter: _DonutChartPainter(items: list),
+                      ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$totalCount',
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF101A3A),
+                              height: 1.1,
+                            ),
                           ),
-                        ),
-                        const Text(
-                          'Total',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
-                            height: 1.1,
+                          const Text(
+                            'Total',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                              height: 1.1,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ],

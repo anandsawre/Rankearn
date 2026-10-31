@@ -37,7 +37,7 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
     _titleController = TextEditingController(text: item?.title ?? '');
     _subtitleController = TextEditingController(text: item?.subtitle ?? '');
     _spinCostController = TextEditingController(text: (item?.spinCost ?? 10).toString());
-    _dailyLimitController = TextEditingController(text: (item?.dailyLimit ?? 3).toString());
+    _dailyLimitController = TextEditingController(text: (item?.dailyLimit ?? 5).toString());
     _campaignLimitController = TextEditingController(text: (item?.campaignLimit ?? 10).toString());
 
     _rewardType = item?.rewardType ?? WheelRewardType.coins;
@@ -73,11 +73,12 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
       status: _status,
       createdBy: widget.editItem?.createdBy ?? 'Admin',
       spinCost: int.tryParse(_spinCostController.text) ?? 10,
-      dailyLimit: int.tryParse(_dailyLimitController.text) ?? 3,
+      dailyLimit: int.tryParse(_dailyLimitController.text) ?? 5,
       campaignLimit: int.tryParse(_campaignLimitController.text) ?? 10,
       iconData: _rewardType.icon,
       iconColor: _rewardType.color,
       iconBgColor: _rewardType.backgroundColor,
+      slices: widget.editItem?.slices ?? [],
     );
 
     widget.onCampaignCreated(created);
@@ -291,7 +292,7 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
                                     controller: _dailyLimitController,
                                     keyboardType: TextInputType.number,
                                     decoration: InputDecoration(
-                                      hintText: '3',
+                                      hintText: '5',
                                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                                     ),

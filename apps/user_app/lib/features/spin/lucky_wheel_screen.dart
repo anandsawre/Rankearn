@@ -24,16 +24,20 @@ typedef SpinAndWinScreen = LuckyWheelScreen;
 /// - Celebratory claim result dialog
 class LuckyWheelScreen extends StatefulWidget {
   final int currentCoins;
+  final String? userId;
   final VoidCallback onBack;
   final void Function(int coinsWon)? onRewardClaimed;
   final VoidCallback? onOpenWallet;
+  final List<SpinRewardItem>? initialRewards;
 
   const LuckyWheelScreen({
     super.key,
     required this.currentCoins,
+    this.userId,
     required this.onBack,
     this.onRewardClaimed,
     this.onOpenWallet,
+    this.initialRewards,
   });
 
   @override
@@ -43,10 +47,10 @@ class LuckyWheelScreen extends StatefulWidget {
 class _LuckyWheelScreenState extends State<LuckyWheelScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _spinController;
-  late Animation<double> _spinAnimation;
+  Animation<double>? _spinAnimation;
 
-  final List<SpinRewardItem> _rewards = SpinRewardItem.defaultRewards;
-
+  List<SpinRewardItem> _rewards = [];
+  bool _isLoading = true;
   bool _isSpinning = false;
   double _currentAngle = 0.0;
   late SpinStateModel _spinState;
@@ -56,10 +60,16 @@ class _LuckyWheelScreenState extends State<LuckyWheelScreen>
   void initState() {
     super.initState();
     _spinState = SpinService.getSpinState();
+    if (widget.initialRewards != null && widget.initialRewards!.isNotEmpty) {
+      _rewards = widget.initialRewards!;
+      _isLoading = false;
+    } else {
+      _initDynamicWheel();
+    }
 
     _spinController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 4200),
+      duration: const Duration(milliseconds: 3600),
     );
 
     // Refresh cooldown countdown every minute
@@ -72,6 +82,20 @@ class _LuckyWheelScreenState extends State<LuckyWheelScreen>
     });
   }
 
+  Future<void> _initDynamicWheel() async {
+    setState(() => _isLoading = true);
+    final active = await SpinService.loadActiveRewards();
+    final authUserId = widget.userId ?? 'current_user';
+    final state = await SpinService.fetchSpinState(userId: authUserId);
+    if (mounted) {
+      setState(() {
+        _rewards = active;
+        _spinState = state;
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _cooldownTimer?.cancel();
@@ -80,26 +104,35 @@ class _LuckyWheelScreenState extends State<LuckyWheelScreen>
   }
 
   // ---------------------------------------------------------------------------
-  // AUTHORITATIVE SPIN CONTROLLER
+  // AUTHORITATIVE SINGLE-STAGE BUTTER-SMOOTH SPIN CONTROLLER
   // ---------------------------------------------------------------------------
   Future<void> _handleSpin() async {
     if (_isSpinning || !_spinState.hasSpinsLeft) return;
 
     setState(() {
       _isSpinning = true;
+      _spinAnimation = null;
     });
 
-    // 1. Authoritative request from trusted service
+    // 1. Instant smooth continuous rotation on button tap (zero latency, zero freeze)
+    _spinController.duration = const Duration(milliseconds: 550);
+    _spinController.repeat();
+
+    // 2. Authoritative request (RPC execution)
     final requestId = 'SPIN_${DateTime.now().millisecondsSinceEpoch}';
     final res = await SpinService.requestSpin(
-      userId: 'user_current',
+      userId: widget.userId ?? 'user_current',
       transactionRequestId: requestId,
     );
 
     if (!mounted) return;
 
     if (res.isFailure) {
-      setState(() => _isSpinning = false);
+      _spinController.stop();
+      setState(() {
+        _isSpinning = false;
+        _spinAnimation = null;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(res.errorOrNull ?? 'Could not complete spin request.'),
@@ -113,34 +146,57 @@ class _LuckyWheelScreenState extends State<LuckyWheelScreen>
     final targetIndex = outcome.targetIndex;
     final reward = outcome.reward;
 
-    // 2. Compute exact rotation physics so pointer lands in targetIndex center
-    // Sector 0 is centered at 12 o'clock (-pi/2).
-    // Clockwise rotation brings Sector k to 12 o'clock when rotated by (2*pi - k * sectorAngle).
-    const sectorAngle = (2 * math.pi) / 8;
-    const fullRotations = 6 * 2 * math.pi; // 6 full dramatic spins
-    final targetSectorOffset = (2 * math.pi) - (targetIndex * sectorAngle);
+    // 3. Capture current visual angle without snapping
+    final currentVisualAngle =
+        _currentAngle + (_spinController.value * 2 * math.pi);
+    _spinController.stop();
 
-    final normalizedCurrent = _currentAngle % (2 * math.pi);
-    final targetAngle =
-        _currentAngle + fullRotations + targetSectorOffset - normalizedCurrent;
+    // 4. Compute target angle
+    final totalSectors = _rewards.isNotEmpty ? _rewards.length : 8;
+    final sectorAngle = (2 * math.pi) / totalSectors;
+    final currentNorm = currentVisualAngle % (2 * math.pi);
+    final targetNorm =
+        (2 * math.pi - (targetIndex * sectorAngle) % (2 * math.pi)) %
+            (2 * math.pi);
 
-    _spinAnimation = Tween<double>(begin: _currentAngle, end: targetAngle)
-        .animate(
-          CurvedAnimation(parent: _spinController, curve: Curves.easeOutCubic),
-        );
+    double delta = targetNorm - currentNorm;
+    if (delta < 0) {
+      delta += 2 * math.pi;
+    }
+
+    // 5 full dramatic turns + precise target alignment
+    final targetAngle = currentVisualAngle + (5 * 2 * math.pi) + delta;
+
+    // 5. Silky smooth physical ease-out deceleration curve
+    _spinController.duration = const Duration(milliseconds: 3600);
+    _spinAnimation = Tween<double>(
+      begin: currentVisualAngle,
+      end: targetAngle,
+    ).animate(
+      CurvedAnimation(
+        parent: _spinController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
     _spinController.reset();
     await _spinController.forward();
 
     if (!mounted) return;
 
+    final authUserId = widget.userId ?? 'current_user';
+    final refreshedState = await SpinService.fetchSpinState(userId: authUserId);
+
+    if (!mounted) return;
+
     setState(() {
       _currentAngle = targetAngle % (2 * math.pi);
+      _spinAnimation = null;
       _isSpinning = false;
-      _spinState = SpinService.getSpinState();
+      _spinState = refreshedState;
     });
 
-    // 3. Show Celebration Result Dialog
+    // 6. Show Celebration Result Dialog
     await SpinResultDialog.show(
       context: context,
       reward: reward,
@@ -177,6 +233,79 @@ class _LuckyWheelScreenState extends State<LuckyWheelScreen>
               intensity: 0.85,
               child: LayoutBuilder(
                 builder: (context, constraints) {
+                  if (_isLoading) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: CircularProgressIndicator(color: Color(0xFF00B96B)),
+                      ),
+                    );
+                  }
+
+                  if (_rewards.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(22),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE8F5E9),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.casino_outlined,
+                                size: 48,
+                                color: Color(0xFF00B96B),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            const Text(
+                              'No Active Lucky Wheel Campaign',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Inter',
+                                color: Color(0xFF1E293B),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'The Lucky Wheel is currently resting or being configured. Please check back soon!',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF64748B),
+                                height: 1.45,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 22),
+                            ElevatedButton.icon(
+                              onPressed: _initDynamicWheel,
+                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              label: const Text('Refresh Wheel'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF00B96B),
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
                   final isDesktop = constraints.maxWidth >= 900;
                   final maxContentWidth = isDesktop ? 680.0 : double.infinity;
                   final hPadding = isDesktop ? 24.0 : 16.0;
@@ -215,9 +344,7 @@ class _LuckyWheelScreenState extends State<LuckyWheelScreen>
                             SpinWheel(
                               rewards: _rewards,
                               controller: _spinController,
-                              animation: _isSpinning
-                                  ? _spinAnimation
-                                  : const AlwaysStoppedAnimation(0),
+                              animation: _isSpinning ? _spinAnimation : null,
                               currentAngle: _currentAngle,
                               isSpinning: _isSpinning,
                               spinsRemaining: _spinState.spinsRemaining,

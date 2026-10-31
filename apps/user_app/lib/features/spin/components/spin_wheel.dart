@@ -9,7 +9,7 @@ import 'wheel_painter.dart';
 class SpinWheel extends StatelessWidget {
   final List<SpinRewardItem> rewards;
   final AnimationController controller;
-  final Animation<double> animation;
+  final Animation<double>? animation;
   final double currentAngle;
   final bool isSpinning;
   final int spinsRemaining;
@@ -20,7 +20,7 @@ class SpinWheel extends StatelessWidget {
     super.key,
     required this.rewards,
     required this.controller,
-    required this.animation,
+    this.animation,
     required this.currentAngle,
     required this.isSpinning,
     required this.spinsRemaining,
@@ -41,16 +41,39 @@ class SpinWheel extends StatelessWidget {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            // 1. Animated Rotational Wheel
+            // 1. Static Outer Rim Frame (Cached once via RepaintBoundary)
+            RepaintBoundary(
+              child: CustomPaint(
+                size: Size(wheelSize, wheelSize),
+                painter: const WheelRimPainter(),
+              ),
+            ),
+
+            // 2. GPU Hardware-Accelerated Rotational Slices (Rotated directly by GPU matrix)
             AnimatedBuilder(
               animation: controller,
               builder: (context, child) {
-                final angle = isSpinning ? animation.value : currentAngle;
-                return CustomPaint(
-                  size: Size(wheelSize, wheelSize),
-                  painter: WheelPainter(rewards: rewards, currentAngle: angle),
+                final double angle;
+                if (controller.isAnimating) {
+                  if (animation != null) {
+                    angle = animation!.value;
+                  } else {
+                    angle = currentAngle + (controller.value * 2 * 3.141592653589793);
+                  }
+                } else {
+                  angle = currentAngle;
+                }
+                return Transform.rotate(
+                  angle: angle,
+                  child: child,
                 );
               },
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  size: Size(wheelSize, wheelSize),
+                  painter: WheelSlicesPainter(rewards: rewards),
+                ),
+              ),
             ),
 
             // 2. Center Gold Interactive Hub ("SPIN / 1 Free Spin")

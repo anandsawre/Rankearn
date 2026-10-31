@@ -14,7 +14,7 @@ class SpinsTrendBarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = data.isNotEmpty ? data : kDefaultSpinsTrend;
+    final list = data;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -79,32 +79,47 @@ class SpinsTrendBarCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
 
-          // Chart Body: Y-Axis + 7 Bars
-          SizedBox(
-            height: 90,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Y-Axis labels
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: const [
-                    Text('20K', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
-                    Text('15K', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
-                    Text('10K', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
-                    Text('5K', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
-                    Text('0', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
-                  ],
+          // Chart Body: Y-Axis + Bars or Empty State
+          if (list.isEmpty)
+            const SizedBox(
+              height: 90,
+              child: Center(
+                child: Text(
+                  'No spin trend data available.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF94A3B8),
+                    fontFamily: 'Inter',
+                  ),
                 ),
-                const SizedBox(width: 8),
-
-                // Bars
-                Expanded(
-                  child: Row(
+              ),
+            )
+          else
+            SizedBox(
+              height: 90,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Y-Axis labels
+                  Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: list.map((day) {
+                    children: const [
+                      Text('20K', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
+                      Text('15K', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
+                      Text('10K', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
+                      Text('5K', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
+                      Text('0', style: TextStyle(fontSize: 8.5, color: AppColors.textMuted, height: 1)),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Bars
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: list.map((day) {
                       return Expanded(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 3),

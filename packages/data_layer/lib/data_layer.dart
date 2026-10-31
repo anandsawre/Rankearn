@@ -16,6 +16,7 @@ export 'models/subcategory_model.dart';
 export 'models/topic_model.dart';
 export 'models/exam_category_model.dart';
 export 'models/test_result_model.dart';
+export 'models/lucky_wheel_models.dart';
 
 // Repositories
 export 'repositories/auth_repository.dart';
@@ -25,3 +26,4 @@ export 'repositories/wallet_repository.dart';
 export 'repositories/contests_repository.dart';
 export 'repositories/battle_repository.dart';
 export 'repositories/reward_repository.dart';
+export 'repositories/lucky_wheel_repository.dart';

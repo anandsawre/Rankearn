@@ -14,8 +14,6 @@ class LuckyWheelRecentActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = activities.isNotEmpty ? activities : kDefaultWheelActivities;
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -80,8 +78,23 @@ class LuckyWheelRecentActivityCard extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Items list
-          Column(
-            children: list.map((item) {
+          if (activities.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'No recent spin activity recorded.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF94A3B8),
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ),
+            )
+          else
+            Column(
+              children: activities.map((item) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.5),
                 child: Row(

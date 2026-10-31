@@ -200,3 +200,196 @@ class WheelPainter extends CustomPainter {
       oldDelegate.currentAngle != currentAngle ||
       oldDelegate.rewards != rewards;
 }
+
+/// Static Outer Rim (Shadow, Emerald Gradient, Gold Trim, 12 glowing lights)
+/// Rendered ONCE via RepaintBoundary for maximum 60-120fps performance.
+class WheelRimPainter extends CustomPainter {
+  const WheelRimPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final outerRadius = size.width / 2;
+    const rimWidth = 24.0;
+    final wheelRadius = outerRadius - rimWidth;
+
+    // 1. Outer Wheel Shadow
+    final shadowPaint = Paint()
+      ..color = const Color(0x35000000)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawCircle(
+      center + const Offset(0, 6),
+      outerRadius - 2,
+      shadowPaint,
+    );
+
+    // 2. Thick Emerald Outer Rim
+    final rimRect = Rect.fromCircle(center: center, radius: outerRadius);
+    final rimPaint = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFF00C26F), Color(0xFF009655), Color(0xFF007542)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(rimRect);
+    canvas.drawCircle(center, outerRadius - 2, rimPaint);
+
+    // Outer and Inner Gold Trim Lines on Rim
+    final goldTrim = Paint()
+      ..color = const Color(0xFFFDE68A)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(center, outerRadius - 3, goldTrim);
+    canvas.drawCircle(center, wheelRadius, goldTrim);
+
+    // 3. 12 Glowing Circular White Lights around Rim
+    const lightCount = 12;
+    const lightStep = (2 * math.pi) / lightCount;
+    final lightRadius = outerRadius - (rimWidth / 2);
+
+    for (int i = 0; i < lightCount; i++) {
+      final angle = i * lightStep - (math.pi / 2);
+      final x = center.dx + lightRadius * math.cos(angle);
+      final y = center.dy + lightRadius * math.sin(angle);
+      final lightOffset = Offset(x, y);
+
+      final glowPaint = Paint()
+        ..color = Colors.white.withAlpha(90)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5);
+      canvas.drawCircle(lightOffset, 4.5, glowPaint);
+
+      final bulbPaint = Paint()..color = Colors.white;
+      canvas.drawCircle(lightOffset, 3.2, bulbPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Pure Rotating Slices Layer (Wedges, Dividers, Icons, and Text)
+/// Rendered ONCE via RepaintBoundary and rotated directly by the GPU.
+class WheelSlicesPainter extends CustomPainter {
+  final List<SpinRewardItem> rewards;
+
+  const WheelSlicesPainter({required this.rewards});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final outerRadius = size.width / 2;
+    const rimWidth = 24.0;
+    final wheelRadius = outerRadius - rimWidth;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+
+    final totalSectors = rewards.length;
+    if (totalSectors == 0) {
+      canvas.restore();
+      return;
+    }
+    final sectorAngle = (2 * math.pi) / totalSectors;
+    final arcRect = Rect.fromCircle(center: Offset.zero, radius: wheelRadius);
+
+    // 1. Alternating Sector Wedges
+    for (int i = 0; i < totalSectors; i++) {
+      final startAngle = (i * sectorAngle) - (math.pi / 2) - (sectorAngle / 2);
+      final isEven = (i % 2 == 0);
+
+      final segmentPaint = Paint()
+        ..style = PaintingStyle.fill
+        ..color = isEven ? const Color(0xFFFFFDEB) : const Color(0xFF00B96B);
+
+      canvas.drawArc(arcRect, startAngle, sectorAngle, true, segmentPaint);
+    }
+
+    // 2. Crisp White Sector Dividers
+    final dividerPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 1.8;
+    for (int i = 0; i < totalSectors; i++) {
+      final startAngle = (i * sectorAngle) - (math.pi / 2) - (sectorAngle / 2);
+      final edgeX = wheelRadius * math.cos(startAngle);
+      final edgeY = wheelRadius * math.sin(startAngle);
+      canvas.drawLine(Offset.zero, Offset(edgeX, edgeY), dividerPaint);
+    }
+
+    // 3. Upright Content (Icon + Title + Subtitle)
+    final contentRadius = wheelRadius * 0.58;
+    final iconSize = wheelRadius * 0.20;
+
+    for (int i = 0; i < totalSectors; i++) {
+      final reward = rewards[i];
+      final isEven = (i % 2 == 0);
+      final bisectorAngle = (i * sectorAngle) - (math.pi / 2);
+
+      final cx = contentRadius * math.cos(bisectorAngle);
+      final cy = contentRadius * math.sin(bisectorAngle);
+
+      final iconCenter = Offset(cx, cy - (wheelRadius * 0.10));
+      final titleCenter = Offset(cx, cy + (wheelRadius * 0.045));
+      final subCenter = Offset(cx, cy + (wheelRadius * 0.13));
+
+      RewardArtCanvas.draw(
+        canvas: canvas,
+        center: iconCenter,
+        size: iconSize,
+        rewardId: reward.id,
+      );
+
+      final textColor = isEven ? const Color(0xFF10194F) : Colors.white;
+
+      final titlePainter = TextPainter(
+        text: TextSpan(
+          text: reward.title,
+          style: TextStyle(
+            color: textColor,
+            fontSize: wheelRadius * 0.088,
+            fontWeight: FontWeight.w900,
+            fontFamily: 'Inter',
+            letterSpacing: -0.2,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      titlePainter.paint(
+        canvas,
+        Offset(
+          titleCenter.dx - (titlePainter.width / 2),
+          titleCenter.dy - (titlePainter.height / 2),
+        ),
+      );
+
+      final subPainter = TextPainter(
+        text: TextSpan(
+          text: reward.subtitle,
+          style: TextStyle(
+            color: textColor.withAlpha(isEven ? 230 : 255),
+            fontSize: wheelRadius * 0.068,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Inter',
+            letterSpacing: -0.1,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      subPainter.paint(
+        canvas,
+        Offset(
+          subCenter.dx - (subPainter.width / 2),
+          subCenter.dy - (subPainter.height / 2),
+        ),
+      );
+    }
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant WheelSlicesPainter oldDelegate) =>
+      oldDelegate.rewards != rewards;
+}

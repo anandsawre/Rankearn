@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.lucky_wheel_campaigns (
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'scheduled', 'completed', 'paused', 'draft')),
     created_by TEXT NOT NULL DEFAULT 'Admin',
     spin_cost INTEGER NOT NULL DEFAULT 10,
-    daily_limit INTEGER NOT NULL DEFAULT 3,
+    daily_limit INTEGER NOT NULL DEFAULT 5,
     campaign_limit INTEGER NOT NULL DEFAULT 10,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -250,26 +250,29 @@ END;
 $$;
 
 -- 7. SEED DATA (7 Primary Reference Campaigns)
-INSERT INTO public.lucky_wheel_campaigns (id, title, subtitle, reward_type, start_date, end_date, total_spins, participants, status, created_by, spin_cost)
+INSERT INTO public.lucky_wheel_campaigns (id, title, subtitle, reward_type, start_date, end_date, total_spins, participants, status, created_by, spin_cost, daily_limit)
 VALUES
-('wheel-camp-001', 'Daily Spin Rewards', 'Win coins, cashback and more', 'coins', '2026-10-18 10:00:00+00', '2026-10-31 23:59:00+00', 12450, 5240, 'active', 'Admin', 10),
-('wheel-camp-002', 'Festive Mega Spin', 'Special rewards for festival', 'cashback', '2026-10-15 09:00:00+00', '2026-10-30 23:59:00+00', 18230, 6820, 'active', 'Admin', 15),
-('wheel-camp-003', 'New User Bonus Spin', 'Exclusive for new users', 'gift', '2026-10-10 00:00:00+00', '2026-12-31 23:59:00+00', 8450, 4120, 'scheduled', 'Admin', 0),
-('wheel-camp-004', 'Weekend Lucky Draw', 'Spin and win big rewards', 'discount', '2026-10-08 10:00:00+00', '2026-10-12 23:59:00+00', 6780, 2940, 'completed', 'Admin', 20),
-('wheel-camp-005', 'Exam Prep Spin', 'Special rewards for students', 'coins', '2026-10-05 10:00:00+00', '2026-10-25 23:59:00+00', 14320, 5680, 'completed', 'Admin', 10),
-('wheel-camp-006', 'Mega Reward Spin', 'High value rewards campaign', 'product', '2026-10-01 10:00:00+00', '2026-10-20 23:59:00+00', 9450, 3860, 'active', 'Admin', 25),
-('wheel-camp-007', 'Referral Spin', 'Spin for referring friends', 'cashback', '2026-09-28 10:00:00+00', '2026-10-15 23:59:00+00', 8640, 3120, 'paused', 'Admin', 10)
-ON CONFLICT (id) DO NOTHING;
+('wheel-camp-001', 'Daily Spin Rewards', 'Win coins, cashback and more', 'coins', '2026-10-18 10:00:00+00', '2026-10-31 23:59:00+00', 12450, 5240, 'active', 'Admin', 10, 5),
+('wheel-camp-002', 'Festive Mega Spin', 'Special rewards for festival', 'cashback', '2026-10-15 09:00:00+00', '2026-10-30 23:59:00+00', 18230, 6820, 'active', 'Admin', 15, 5),
+('wheel-camp-003', 'New User Bonus Spin', 'Exclusive for new users', 'gift', '2026-10-10 00:00:00+00', '2026-12-31 23:59:00+00', 8450, 4120, 'scheduled', 'Admin', 0, 5),
+('wheel-camp-004', 'Weekend Lucky Draw', 'Spin and win big rewards', 'discount', '2026-10-08 10:00:00+00', '2026-10-12 23:59:00+00', 6780, 2940, 'completed', 'Admin', 20, 5),
+('wheel-camp-005', 'Exam Prep Spin', 'Special rewards for students', 'coins', '2026-10-05 10:00:00+00', '2026-10-25 23:59:00+00', 14320, 5680, 'completed', 'Admin', 10, 5),
+('wheel-camp-006', 'Mega Reward Spin', 'High value rewards campaign', 'product', '2026-10-01 10:00:00+00', '2026-10-20 23:59:00+00', 9450, 3860, 'active', 'Admin', 25, 5),
+('wheel-camp-007', 'Referral Spin', 'Spin for referring friends', 'cashback', '2026-09-28 10:00:00+00', '2026-10-15 23:59:00+00', 8640, 3120, 'paused', 'Admin', 10, 5)
+ON CONFLICT (id) DO UPDATE SET daily_limit = EXCLUDED.daily_limit;
 
--- Seed Slices for Daily Spin Rewards (sum to 100%)
+-- Ensure all existing active campaigns adhere to daily limit = 5
+UPDATE public.lucky_wheel_campaigns SET daily_limit = 5 WHERE daily_limit = 3;
+
+-- Seed Slices for Daily Spin Rewards (Canonical 8 Slices summing to 100%)
 INSERT INTO public.lucky_wheel_reward_slices (campaign_id, label, reward_type, reward_value, probability, slice_color, is_active)
 VALUES
+('wheel-camp-001', '100 Coins', 'coins', 100, 17, 4294319627, true),
 ('wheel-camp-001', '50 Coins', 'coins', 50, 25, 4279318913, true),
-('wheel-camp-001', 'Better Luck Next Time', 'noPrize', 0, 30, 4284834955, true),
-('wheel-camp-001', '100 Coins', 'coins', 100, 15, 4280653816, true),
-('wheel-camp-001', '20 Coins', 'coins', 20, 15, 4294942474, true),
-('wheel-camp-001', '250 Coins (Jackpot)', 'coins', 250, 5, 4285222655, true),
-('wheel-camp-001', '₹50 Cashback', 'cashback', 50, 5, 4278240396, true),
-('wheel-camp-001', '500 Coins (Super Mega)', 'coins', 500, 2, 4293936259, true),
-('wheel-camp-001', 'Free Re-Spin', 'gift', 10, 3, 4278630100, true)
+('wheel-camp-001', 'Rank Booster', 'gift', 0, 5, 4292507398, true),
+('wheel-camp-001', 'Surprise Gift', 'gift', 150, 3, 4294197086, true),
+('wheel-camp-001', '10 Coins', 'coins', 10, 30, 4294319627, true),
+('wheel-camp-001', '500 Coins', 'coins', 500, 2, 4293862468, true),
+('wheel-camp-001', '200 Coins', 'coins', 200, 10, 4287324150, true),
+('wheel-camp-001', 'Extra Attempt', 'gift', 0, 8, 4278416583, true)
 ON CONFLICT DO NOTHING;

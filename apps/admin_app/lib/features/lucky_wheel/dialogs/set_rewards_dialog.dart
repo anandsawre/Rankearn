@@ -4,10 +4,14 @@ import 'package:design_system/design_system.dart';
 import '../models/lucky_wheel_item.dart';
 
 class SetRewardsDialog extends StatefulWidget {
-  final ValueChanged<List<WheelRewardSegment>>? onSave;
+  final List<WheelRewardSegment>? initialSlices;
+  final int initialDailyLimit;
+  final void Function(List<WheelRewardSegment> slices, int dailyLimit)? onSave;
 
   const SetRewardsDialog({
     super.key,
+    this.initialSlices,
+    this.initialDailyLimit = 5,
     this.onSave,
   });
 
@@ -16,16 +20,44 @@ class SetRewardsDialog extends StatefulWidget {
 }
 
 class _SetRewardsDialogState extends State<SetRewardsDialog> {
+  late final TextEditingController _dailyLimitController;
   final List<Map<String, dynamic>> _slices = [
+    {'label': '100 Coins', 'type': WheelRewardType.coins, 'value': 100, 'probability': 17, 'color': const Color(0xFFF59E0B), 'isActive': true},
     {'label': '50 Coins', 'type': WheelRewardType.coins, 'value': 50, 'probability': 25, 'color': const Color(0xFF10B981), 'isActive': true},
-    {'label': 'Better Luck Next Time', 'type': WheelRewardType.noPrize, 'value': 0, 'probability': 30, 'color': const Color(0xFF64748B), 'isActive': true},
-    {'label': '100 Coins', 'type': WheelRewardType.coins, 'value': 100, 'probability': 15, 'color': const Color(0xFF2587F8), 'isActive': true},
-    {'label': '20 Coins', 'type': WheelRewardType.coins, 'value': 20, 'probability': 15, 'color': const Color(0xFFFF9F0A), 'isActive': true},
-    {'label': '250 Coins (Jackpot)', 'type': WheelRewardType.coins, 'value': 250, 'probability': 5, 'color': const Color(0xFF6B4EFF), 'isActive': true},
-    {'label': '₹50 Cashback', 'type': WheelRewardType.cashback, 'value': 50, 'probability': 5, 'color': const Color(0xFF00C48C), 'isActive': true},
-    {'label': '500 Coins (Super Mega)', 'type': WheelRewardType.coins, 'value': 500, 'probability': 2, 'color': const Color(0xFFF04483), 'isActive': true},
-    {'label': 'Free Re-Spin', 'type': WheelRewardType.gift, 'value': 10, 'probability': 3, 'color': const Color(0xFF06B6D4), 'isActive': true},
+    {'label': 'Rank Booster', 'type': WheelRewardType.gift, 'value': 0, 'probability': 5, 'color': const Color(0xFFD97706), 'isActive': true},
+    {'label': 'Surprise Gift', 'type': WheelRewardType.gift, 'value': 150, 'probability': 3, 'color': const Color(0xFFF43F5E), 'isActive': true},
+    {'label': '10 Coins', 'type': WheelRewardType.coins, 'value': 10, 'probability': 30, 'color': const Color(0xFFF59E0B), 'isActive': true},
+    {'label': '500 Coins (Jackpot)', 'type': WheelRewardType.coins, 'value': 500, 'probability': 2, 'color': const Color(0xFFEF4444), 'isActive': true},
+    {'label': '200 Coins', 'type': WheelRewardType.coins, 'value': 200, 'probability': 10, 'color': const Color(0xFF8B5CF6), 'isActive': true},
+    {'label': 'Extra Attempt', 'type': WheelRewardType.gift, 'value': 0, 'probability': 8, 'color': const Color(0xFF0284C7), 'isActive': true},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _dailyLimitController = TextEditingController(
+      text: widget.initialDailyLimit.toString(),
+    );
+    if (widget.initialSlices != null && widget.initialSlices!.isNotEmpty) {
+      _slices.clear();
+      for (final s in widget.initialSlices!) {
+        _slices.add({
+          'label': s.label,
+          'type': s.rewardType,
+          'value': s.rewardValue,
+          'probability': s.probability,
+          'color': s.color,
+          'isActive': s.isActive,
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _dailyLimitController.dispose();
+    super.dispose();
+  }
 
   int get _totalProbability => _slices.fold(0, (sum, s) => sum + (s['probability'] as int));
 
@@ -51,10 +83,11 @@ class _SetRewardsDialogState extends State<SetRewardsDialog> {
       );
     }).toList();
 
-    if (widget.onSave != null) widget.onSave!(segments);
+    final limit = int.tryParse(_dailyLimitController.text.trim()) ?? widget.initialDailyLimit;
+    if (widget.onSave != null) widget.onSave!(segments, limit);
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Wheel reward segments and probabilities saved successfully!')),
+      const SnackBar(content: Text('Wheel rewards and Daily Spin limit saved successfully!')),
     );
   }
 
@@ -121,6 +154,60 @@ class _SetRewardsDialogState extends State<SetRewardsDialog> {
               const SizedBox(height: 14),
               const Divider(height: 1, color: Color(0xFFE2E8F0)),
               const SizedBox(height: 14),
+
+              // Daily Spin Limit Configuration Bar
+              Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00B96B).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.refresh_rounded, color: Color(0xFF00B96B), size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Daily Spin Limit (Per User)',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                          ),
+                          Text(
+                            'Users will be able to spin exactly this many times per day',
+                            style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width: 120,
+                      child: TextFormField(
+                        controller: _dailyLimitController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF00B96B)),
+                        decoration: InputDecoration(
+                          suffixText: 'Spins',
+                          suffixStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
               // Content: Wheel Preview (Left) + Slices List (Right)
               Expanded(

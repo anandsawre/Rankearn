@@ -36,7 +36,8 @@ class _TrophyBounceMotionState extends State<TrophyBounceMotion>
   late Animation<double> _scaleAnimation;
 
   late AnimationController _auraController;
-  late AnimationController _hoverController;
+  late AnimationController _tossController;
+  late Animation<double> _tossAnimation;
   late AnimationController _sheenController;
   late AnimationController _sparkleController;
 
@@ -55,17 +56,46 @@ class _TrophyBounceMotionState extends State<TrophyBounceMotion>
     );
     _springController.forward();
 
-    // 2. Rotating Aura
+    // 2. Realistic Coin Toss & Gravitational Fall Landing
+    _tossController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _tossAnimation = TweenSequence<double>([
+      // Rapid upward celebratory toss into the air
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: -40.0)
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 38,
+      ),
+      // Gravitational acceleration falling back down
+      TweenSequenceItem(
+        tween: Tween<double>(begin: -40.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeInQuad)),
+        weight: 34,
+      ),
+      // Crisp landing rebound bounce
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: -9.0)
+            .chain(CurveTween(curve: Curves.easeOutQuad)),
+        weight: 14,
+      ),
+      // Settles permanently onto resting surface
+      TweenSequenceItem(
+        tween: Tween<double>(begin: -9.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeInQuad)),
+        weight: 14,
+      ),
+    ]).animate(_tossController);
+
+    _tossController.forward();
+
+    // 3. Rotating Aura
     _auraController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 14),
     )..repeat();
-
-    // 3. Gentle Hover
-    _hoverController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
 
     // 4. Glossy Light Sweep Sheen
     _sheenController = AnimationController(
@@ -84,7 +114,7 @@ class _TrophyBounceMotionState extends State<TrophyBounceMotion>
   void dispose() {
     _springController.dispose();
     _auraController.dispose();
-    _hoverController.dispose();
+    _tossController.dispose();
     _sheenController.dispose();
     _sparkleController.dispose();
     super.dispose();
@@ -97,19 +127,19 @@ class _TrophyBounceMotionState extends State<TrophyBounceMotion>
     return AnimatedBuilder(
       animation: Listenable.merge([
         _scaleAnimation,
+        _tossAnimation,
         _auraController,
-        _hoverController,
         _sheenController,
         _sparkleController,
       ]),
       builder: (context, child) {
-        final hoverOffset = math.sin(_hoverController.value * math.pi * 2) * 3.5;
+        final tossOffset = _tossAnimation.value;
         final sheenProgress = _sheenController.value;
 
         return Transform.scale(
           scale: _scaleAnimation.value,
           child: Transform.translate(
-            offset: Offset(0, hoverOffset),
+            offset: Offset(0, tossOffset),
             child: SizedBox(
               width: auraSize,
               height: auraSize,

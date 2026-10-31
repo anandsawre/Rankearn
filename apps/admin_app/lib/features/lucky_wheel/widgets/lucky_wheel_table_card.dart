@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../models/lucky_wheel_item.dart';
@@ -930,8 +931,57 @@ class _LuckyWheelTableCardState extends State<LuckyWheelTableCard> {
   }
 
   Widget _buildFooter() {
-    final startItem = (widget.currentPage - 1) * widget.rowsPerPage + 1;
-    final endItem = (widget.currentPage * widget.rowsPerPage).clamp(1, widget.totalCount);
+    if (widget.totalCount <= 0) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Showing 0 campaigns',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF64748B),
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Show', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
+              const SizedBox(width: 6),
+              Container(
+                height: 28,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: widget.rowsPerPage,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textSecondary),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                    onChanged: (val) {
+                      if (val != null) widget.onRowsPerPageChanged(val);
+                    },
+                    items: const [
+                      DropdownMenuItem(value: 5, child: Text('5')),
+                      DropdownMenuItem(value: 10, child: Text('10')),
+                      DropdownMenuItem(value: 20, child: Text('20')),
+                      DropdownMenuItem(value: 50, child: Text('50')),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    final totalPages = (widget.totalCount / widget.rowsPerPage).ceil();
+    final startItem = math.min((widget.currentPage - 1) * widget.rowsPerPage + 1, widget.totalCount);
+    final endItem = math.min(widget.currentPage * widget.rowsPerPage, widget.totalCount);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -946,7 +996,7 @@ class _LuckyWheelTableCardState extends State<LuckyWheelTableCard> {
           ),
         ),
 
-        // Center: Pagination Buttons < 1 2 3 4 5 ... 18 >
+        // Center: Dynamic Pagination Buttons
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -956,23 +1006,19 @@ class _LuckyWheelTableCardState extends State<LuckyWheelTableCard> {
               onTap: () => widget.onPageChanged(widget.currentPage - 1),
             ),
             const SizedBox(width: 4),
-            _buildPagePill(1, isActive: widget.currentPage == 1),
-            const SizedBox(width: 4),
-            _buildPagePill(2, isActive: widget.currentPage == 2),
-            const SizedBox(width: 4),
-            _buildPagePill(3, isActive: widget.currentPage == 3),
-            const SizedBox(width: 4),
-            _buildPagePill(4, isActive: widget.currentPage == 4),
-            const SizedBox(width: 4),
-            _buildPagePill(5, isActive: widget.currentPage == 5),
-            const SizedBox(width: 4),
-            const Text('...', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-            const SizedBox(width: 4),
-            _buildPagePill(18, isActive: widget.currentPage == 18),
-            const SizedBox(width: 4),
+            for (int p = 1; p <= math.min(totalPages, 5); p++) ...[
+              _buildPagePill(p, isActive: widget.currentPage == p),
+              const SizedBox(width: 4),
+            ],
+            if (totalPages > 5) ...[
+              const Text('...', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+              const SizedBox(width: 4),
+              _buildPagePill(totalPages, isActive: widget.currentPage == totalPages),
+              const SizedBox(width: 4),
+            ],
             _buildPaginationArrow(
               icon: Icons.chevron_right_rounded,
-              isEnabled: widget.currentPage < 18,
+              isEnabled: widget.currentPage < totalPages,
               onTap: () => widget.onPageChanged(widget.currentPage + 1),
             ),
           ],

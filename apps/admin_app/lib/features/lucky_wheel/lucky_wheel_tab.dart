@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:data_layer/data_layer.dart';
+import 'package:data_layer/data_layer.dart'
+    hide WheelRewardType, WheelCampaignStatus, WheelRewardSegment;
 import 'models/lucky_wheel_item.dart';
 import 'widgets/lucky_wheel_hero_card.dart';
 import 'widgets/lucky_wheel_quick_actions.dart';
@@ -30,7 +31,8 @@ class LuckyWheelTab extends StatefulWidget {
 }
 
 class _LuckyWheelTabState extends State<LuckyWheelTab> {
-  List<LuckyWheelCampaignItem> _allCampaigns = List.from(kDefaultLuckyWheelCampaigns);
+  List<LuckyWheelCampaignItem> _allCampaigns = [];
+  bool _isLoading = true;
   String _searchQuery = '';
   String _selectedStatus = 'All Status';
   String _selectedRewardType = 'All Reward Types';
@@ -45,26 +47,39 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
   }
 
   Future<void> _fetchSupabaseCampaigns() async {
+    setState(() => _isLoading = true);
     try {
-      final client = SupabaseConfig.clientSafe;
-      if (client == null) return;
-      final response = await client
-          .from('lucky_wheel_campaigns')
-          .select()
-          .order('created_at', ascending: false)
-          .limit(50);
-
-      if (response.isNotEmpty && mounted) {
-        final List<LuckyWheelCampaignItem> loaded = [];
-        for (int i = 0; i < response.length; i++) {
-          loaded.add(LuckyWheelCampaignItem.fromJson(response[i], i));
-        }
+      final res = await LuckyWheelRepository().getAllCampaigns();
+      if (res.isSuccess && res.dataOrNull != null && mounted) {
+        final list = res.dataOrNull!;
         setState(() {
-          _allCampaigns = loaded;
+          _allCampaigns = list
+              .map((m) => LuckyWheelCampaignItem(
+                    id: m.id,
+                    rowNumber: m.rowNumber,
+                    title: m.title,
+                    subtitle: m.subtitle,
+                    rewardType: m.rewardType,
+                    startDate: m.startDate,
+                    endDate: m.endDate,
+                    totalSpins: m.totalSpins,
+                    participants: m.participants,
+                    status: m.status,
+                    createdBy: m.createdBy,
+                    spinCost: m.spinCost,
+                    dailyLimit: m.dailyLimit,
+                    campaignLimit: m.campaignLimit,
+                    slices: m.slices,
+                  ))
+              .toList();
         });
       }
     } catch (e) {
-      debugPrint('Supabase fetch notice (using robust local dataset): $e');
+      debugPrint('Supabase fetch error: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -100,7 +115,7 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
       context: context,
       builder: (ctx) => CreateLuckyWheelDialog(
         editItem: editItem,
-        onCampaignCreated: (newCamp) {
+        onCampaignCreated: (newCamp) async {
           setState(() {
             if (editItem != null) {
               final idx = _allCampaigns.indexWhere((c) => c.id == editItem.id);
@@ -109,15 +124,70 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
               _allCampaigns.insert(0, newCamp);
             }
           });
+
+          // Sync to database
+          await LuckyWheelRepository().upsertCampaign(
+            LuckyWheelCampaignModel(
+              id: newCamp.id,
+              title: newCamp.title,
+              subtitle: newCamp.subtitle,
+              rewardType: newCamp.rewardType,
+              startDate: newCamp.startDate,
+              endDate: newCamp.endDate,
+              totalSpins: newCamp.totalSpins,
+              participants: newCamp.participants,
+              status: newCamp.status,
+              createdBy: newCamp.createdBy,
+              spinCost: newCamp.spinCost,
+              dailyLimit: newCamp.dailyLimit,
+              campaignLimit: newCamp.campaignLimit,
+              slices: newCamp.slices,
+            ),
+          );
         },
       ),
     );
   }
 
   void _openSetRewardsDialog() {
+    if (_allCampaigns.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No campaigns found. Please create a campaign first.')),
+      );
+      return;
+    }
+    final active = _allCampaigns.firstWhere(
+      (c) => c.status == WheelCampaignStatus.active,
+      orElse: () => _allCampaigns.first,
+    );
+
     showDialog(
       context: context,
-      builder: (ctx) => const SetRewardsDialog(),
+      builder: (ctx) => SetRewardsDialog(
+        initialSlices: active.slices.isNotEmpty ? active.slices : null,
+        initialDailyLimit: active.dailyLimit,
+        onSave: (newSlices, newDailyLimit) async {
+          await LuckyWheelRepository().saveCampaignSlices(
+            campaignId: active.id,
+            slices: newSlices,
+          );
+          await LuckyWheelRepository().updateCampaignDailyLimit(
+            campaignId: active.id,
+            dailyLimit: newDailyLimit,
+          );
+          if (mounted) {
+            setState(() {
+              final idx = _allCampaigns.indexWhere((c) => c.id == active.id);
+              if (idx != -1) {
+                _allCampaigns[idx] = _allCampaigns[idx].copyWith(
+                  slices: newSlices,
+                  dailyLimit: newDailyLimit,
+                );
+              }
+            });
+          }
+        },
+      ),
     );
   }
 
@@ -171,6 +241,16 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: LinearProgressIndicator(
+                    minHeight: 3,
+                    backgroundColor: Color(0xFFF1F5F9),
+                    color: Color(0xFF10B981),
+                  ),
+                ),
+
               // 1. Top Section: Hero Banner + Quick Actions
               if (isDesktop) ...[
                 Row(
@@ -210,13 +290,11 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
 
               // 2. Statistics Cards Row (5 Cards)
               LuckyWheelMetricsRow(
-                totalCampaigns: _allCampaigns.length < 18 ? 18 : _allCampaigns.length,
-                totalParticipants: 24560,
-                totalRewardsGiven: 12450,
-                activeCampaigns: _allCampaigns.where((c) => c.status == WheelCampaignStatus.active).length < 5
-                    ? 5
-                    : _allCampaigns.where((c) => c.status == WheelCampaignStatus.active).length,
-                totalSpins: 78320,
+                totalCampaigns: _allCampaigns.length,
+                totalParticipants: _allCampaigns.fold<int>(0, (sum, c) => sum + c.participants),
+                totalRewardsGiven: _allCampaigns.fold<int>(0, (sum, c) => sum + (c.totalSpins > 0 ? c.totalSpins * 10 : 0)),
+                activeCampaigns: _allCampaigns.where((c) => c.status == WheelCampaignStatus.active).length,
+                totalSpins: _allCampaigns.fold<int>(0, (sum, c) => sum + c.totalSpins),
               ),
               const SizedBox(height: 14),
 
@@ -229,7 +307,7 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
                     Expanded(
                       child: LuckyWheelTableCard(
                         items: filtered,
-                        totalCount: 18,
+                        totalCount: filtered.length,
                         currentPage: _currentPage,
                         rowsPerPage: _rowsPerPage,
                         searchQuery: _searchQuery,
@@ -311,7 +389,7 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           WheelRewardDonutCard(
-                            totalCount: 18,
+                            totalCount: _allCampaigns.length,
                             onViewAll: _openManageCampaignsDialog,
                           ),
                           const SizedBox(height: 12),
@@ -331,7 +409,7 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
                 // Tablet/Mobile: Stacked layout
                 LuckyWheelTableCard(
                   items: filtered,
-                  totalCount: 18,
+                  totalCount: filtered.length,
                   currentPage: _currentPage,
                   rowsPerPage: _rowsPerPage,
                   searchQuery: _searchQuery,
@@ -351,7 +429,7 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
                 ),
                 const SizedBox(height: 14),
                 WheelRewardDonutCard(
-                  totalCount: 18,
+                  totalCount: _allCampaigns.length,
                   onViewAll: _openManageCampaignsDialog,
                 ),
                 const SizedBox(height: 12),
