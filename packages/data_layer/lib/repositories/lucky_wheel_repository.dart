@@ -156,12 +156,29 @@ class LuckyWheelRepository {
           .delete()
           .eq('campaign_id', campaignId);
 
-      // Insert new slices
-      final insertData = slices.map((s) => s.toJson(forCampaignId: campaignId)).toList();
+      // Insert new slices with sequential order IDs so slices preserve the exact admin ordering
+      final insertData = <Map<String, dynamic>>[];
+      for (int i = 0; i < slices.length; i++) {
+        final map = slices[i].toJson(forCampaignId: campaignId);
+        map['id'] = '${campaignId}_slice_$i';
+        insertData.add(map);
+      }
       final res = await client
           .from('lucky_wheel_reward_slices')
           .insert(insertData)
           .select();
+
+      // Also sync slices to app_configs for universal compatibility across web/mobile
+      try {
+        await client.from('app_configs').upsert({
+          'key': 'lucky_wheel',
+          'value': {
+            'is_active': true,
+            'slices': slices.map((s) => s.toJson()).toList(),
+          },
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
 
       final saved = (res as List)
           .map((item) => WheelRewardSegment.fromJson(item as Map<String, dynamic>))
@@ -284,7 +301,7 @@ class LuckyWheelRepository {
     try {
       dynamic rpcRes;
       try {
-        // Authoritative campaign engine respecting dynamic daily_limit
+        // Authoritative campaign engine respecting dynamic daily_limit & configured slices
         rpcRes = await client.rpc(
           'fn_spin_lucky_wheel',
           params: {
@@ -293,19 +310,10 @@ class LuckyWheelRepository {
           },
         );
       } catch (err) {
-        try {
-          // Fallback to spin_lucky_wheel
-          final authUserId = client.auth.currentUser?.id ?? userId;
-          rpcRes = await client.rpc(
-            'spin_lucky_wheel',
-            params: {
-              'p_user_id': authUserId,
-            },
-          );
-        } catch (_) {
-          // If RPC is 404 or not deployed, proceed to direct database ledger fallback
-          rpcRes = null;
-        }
+        // When fn_spin_lucky_wheel is not yet deployed on Supabase (e.g. 404),
+        // we DO NOT call legacy spin_lucky_wheel because it has hardcoded
+        // coin amounts (5, 10, 25) and fixed static probabilities in SQL that ignore admin settings.
+        rpcRes = null;
       }
 
       if (rpcRes != null && rpcRes is Map<String, dynamic>) {
@@ -370,32 +378,39 @@ class LuckyWheelRepository {
       final now = DateTime.now();
       final startOfDay = DateTime(now.year, now.month, now.day).toIso8601String();
       try {
-        final existingSpinsRes = await client
+        var query = client
             .from('lucky_wheel_spins')
             .select('id')
             .eq('user_id', authUserId)
             .gte('created_at', startOfDay);
 
+        if (campaignId.isNotEmpty) {
+          query = query.eq('campaign_id', campaignId);
+        }
+
+        final existingSpinsRes = await query;
         final todaySpinsCount = (existingSpinsRes as List).length;
         if (todaySpinsCount >= dynamicLimit) {
           return Failure('Daily spin limit of $dynamicLimit reached for this campaign.');
         }
       } catch (_) {}
 
-      // 3. Deterministic RNG slice selection based on configured probability weights
+      // 3. Deterministic RNG slice selection strictly based on admin's configured probability weights
       final slicesToUse = currentSlices.isNotEmpty ? currentSlices : [
-        const WheelRewardSegment(label: '100 Coins', rewardType: WheelRewardType.coins, rewardValue: 100, probability: 17, color: Color(0xFFF59E0B)),
-        const WheelRewardSegment(label: '50 Coins', rewardType: WheelRewardType.coins, rewardValue: 50, probability: 25, color: Color(0xFF10B981)),
-        const WheelRewardSegment(label: 'Rank Booster', rewardType: WheelRewardType.gift, rewardValue: 0, probability: 5, color: Color(0xFFD97706)),
-        const WheelRewardSegment(label: 'Surprise Gift', rewardType: WheelRewardType.gift, rewardValue: 150, probability: 3, color: Color(0xFFF43F5E)),
-        const WheelRewardSegment(label: '10 Coins', rewardType: WheelRewardType.coins, rewardValue: 10, probability: 30, color: Color(0xFFF59E0B)),
-        const WheelRewardSegment(label: '500 Coins', rewardType: WheelRewardType.coins, rewardValue: 500, probability: 2, color: Color(0xFFEF4444)),
-        const WheelRewardSegment(label: '200 Coins', rewardType: WheelRewardType.coins, rewardValue: 200, probability: 10, color: Color(0xFF8B5CF6)),
-        const WheelRewardSegment(label: 'Extra Attempt', rewardType: WheelRewardType.gift, rewardValue: 0, probability: 8, color: Color(0xFF0284C7)),
+        WheelRewardSegment(label: '100 Coins', rewardType: WheelRewardType.coins, rewardValue: 100, probability: 17, color: Color(0xFFF59E0B)),
+        WheelRewardSegment(label: '50 Coins', rewardType: WheelRewardType.coins, rewardValue: 50, probability: 25, color: Color(0xFF10B981)),
+        WheelRewardSegment(label: 'Rank Booster', rewardType: WheelRewardType.gift, rewardValue: 0, probability: 5, color: Color(0xFFD97706)),
+        WheelRewardSegment(label: 'Surprise Gift', rewardType: WheelRewardType.gift, rewardValue: 150, probability: 3, color: Color(0xFFF43F5E)),
+        WheelRewardSegment(label: '10 Coins', rewardType: WheelRewardType.coins, rewardValue: 10, probability: 30, color: Color(0xFFF59E0B)),
+        WheelRewardSegment(label: '500 Coins', rewardType: WheelRewardType.coins, rewardValue: 500, probability: 2, color: Color(0xFFEF4444)),
+        WheelRewardSegment(label: '200 Coins', rewardType: WheelRewardType.coins, rewardValue: 200, probability: 10, color: Color(0xFF8B5CF6)),
+        WheelRewardSegment(label: 'Extra Attempt', rewardType: WheelRewardType.gift, rewardValue: 0, probability: 8, color: Color(0xFF0284C7)),
       ];
 
-      final randVal = math.Random().nextInt(100);
-      int cumulative = 0;
+      final totalWeight = slicesToUse.fold<int>(0, (sum, s) => sum + s.probability);
+      final weightBase = totalWeight > 0 ? totalWeight : 100;
+      final randVal = math.Random().nextDouble() * weightBase;
+      double cumulative = 0.0;
       int selectedIdx = 0;
       for (int i = 0; i < slicesToUse.length; i++) {
         cumulative += slicesToUse[i].probability;
@@ -407,7 +422,9 @@ class LuckyWheelRepository {
       final selectedSlice = slicesToUse[selectedIdx];
       final coinsWon = selectedSlice.rewardType == WheelRewardType.coins
           ? selectedSlice.rewardValue
-          : 0;
+          : (selectedSlice.rewardType == WheelRewardType.gift || selectedSlice.rewardType == WheelRewardType.cashback
+              ? selectedSlice.rewardValue
+              : 0);
 
       final spinId = 'spin_${DateTime.now().millisecondsSinceEpoch}';
       final txnId = 'TXN_WHEEL_${DateTime.now().millisecondsSinceEpoch}';
@@ -426,24 +443,65 @@ class LuckyWheelRepository {
           'spin_cost_paid': 0,
           'status': 'credited',
           'transaction_id': txnId,
-          if (idempotencyKey != null) 'idempotency_key': idempotencyKey,
+          'idempotency_key': ?idempotencyKey,
         });
       } catch (_) {}
 
-      // 5. Credit coins to user profile
+      // 5. Credit coins to user profile & record wallet transaction
       if (coinsWon > 0) {
         try {
           final prof = await client
               .from('profiles')
-              .select('coins')
+              .select('coins, total_earned')
               .eq('id', authUserId)
               .maybeSingle();
           if (prof != null) {
             final curr = (prof['coins'] as num?)?.toInt() ?? 0;
+            final earned = (prof['total_earned'] as num?)?.toInt() ?? 0;
+            final newBalance = curr + coinsWon;
             await client
                 .from('profiles')
-                .update({'coins': curr + coinsWon})
+                .update({
+                  'coins': newBalance,
+                  'total_earned': earned + coinsWon,
+                  'last_spin_date': DateTime.now().toIso8601String(),
+                  'updated_at': DateTime.now().toIso8601String(),
+                })
                 .eq('id', authUserId);
+
+            try {
+              await client.from('wallet_transactions').insert({
+                'id': txnId,
+                'user_id': authUserId,
+                'amount': coinsWon,
+                'type': 'earn',
+                'category': 'spin_wheel',
+                'title': 'Daily Wheel Spin: Won $coinsWon Coins',
+                'balance_after': newBalance,
+                'created_at': DateTime.now().toIso8601String(),
+              });
+            } catch (_) {}
+          }
+        } catch (_) {}
+      }
+
+      // 6. Atomically update campaign spin counter
+      if (campaignId.isNotEmpty) {
+        try {
+          final camp = await client
+              .from('lucky_wheel_campaigns')
+              .select('total_spins')
+              .eq('id', campaignId)
+              .maybeSingle();
+          if (camp != null) {
+            final totalSpins = (camp['total_spins'] as num?)?.toInt() ?? 0;
+            await client
+                .from('lucky_wheel_campaigns')
+                .update({
+                  'total_spins': totalSpins + 1,
+                  'updated_at': DateTime.now().toIso8601String(),
+                })
+                .eq('id', campaignId);
           }
         } catch (_) {}
       }
