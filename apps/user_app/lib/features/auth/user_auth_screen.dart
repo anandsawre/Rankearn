@@ -293,7 +293,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               children: [
                 const Icon(Icons.phone_iphone_rounded, color: Color(0xFF00B96B)),
                 const SizedBox(width: 8),
-                Text('Continue with Phone', style: AppTypography.titleMedium.copyWith(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                Text('Continue with Phone', style: AppTypography.authModalTitle),
               ],
             ),
             content: SizedBox(
@@ -306,7 +306,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     otpSent
                         ? 'Enter the 6-digit OTP sent to ${phoneController.text}'
                         : 'Enter your mobile number to receive a secure login OTP.',
-                    style: AppTypography.bodySmall.copyWith(fontSize: 12.5),
+                    style: AppTypography.authModalBody,
                   ),
                   const SizedBox(height: 16),
                   if (modalError != null) ...[
@@ -321,7 +321,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       ),
                       child: Text(
                         modalError!,
-                        style: const TextStyle(fontSize: 11.5, color: Color(0xFFDC2626)),
+                        style: AppTypography.authModalError,
                       ),
                     ),
                   ],
@@ -543,11 +543,11 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(title, style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        title: Text(title, style: AppTypography.authModalTitle),
         content: SizedBox(
           width: 360,
           child: SingleChildScrollView(
-            child: Text(content, style: AppTypography.bodyMedium.copyWith(color: const Color(0xFF475569))),
+            child: Text(content, style: AppTypography.authModalBody),
           ),
         ),
         actions: [
@@ -833,26 +833,26 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           // Header Text above form
           RichText(
             text: TextSpan(
-              style: AppTypography.displayMedium.copyWith(
-                fontSize: isVeryNarrow ? 21 : 25,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF0F172A),
-                height: 1.15,
-                letterSpacing: -0.5,
-              ),
+              style: isVeryNarrow
+                  ? AppTypography.authMobileHeroHeadingNarrow
+                  : AppTypography.authMobileHeroHeading,
               children: isLogin
-                  ? const [
-                      TextSpan(text: 'Welcome '),
+                  ? [
+                      const TextSpan(text: 'Welcome '),
                       TextSpan(
                         text: 'Back!',
-                        style: TextStyle(color: Color(0xFF00B96B)),
+                        style: isVeryNarrow
+                            ? AppTypography.authMobileHeroAccentNarrow
+                            : AppTypography.authMobileHeroAccent,
                       ),
                     ]
-                  : const [
-                      TextSpan(text: 'Create Your Account '),
+                  : [
+                      const TextSpan(text: 'Create Your Account '),
                       TextSpan(
                         text: 'Today!',
-                        style: TextStyle(color: Color(0xFF00B96B)),
+                        style: isVeryNarrow
+                            ? AppTypography.authMobileHeroAccentNarrow
+                            : AppTypography.authMobileHeroAccent,
                       ),
                     ],
             ),
@@ -891,23 +891,20 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         // 2. Main Large Heading
         RichText(
           text: TextSpan(
-            style: AppTypography.authHeroHeading.copyWith(
-              fontSize: isDesktop ? 28 : 24,
-              height: 1.14,
-            ),
+            style: AppTypography.authHeroHeading,
             children: isLogin
                 ? const [
                     TextSpan(text: 'Login to\nContinue Your\n'),
                     TextSpan(
                       text: 'Learning Journey',
-                      style: TextStyle(color: Color(0xFF00B96B)),
+                      style: AppTypography.authHeroAccent,
                     ),
                   ]
               : const [
                   TextSpan(text: 'Learn\nPractice\n'),
                   TextSpan(
                     text: 'Earn Rewards',
-                    style: TextStyle(color: Color(0xFF00B96B)),
+                    style: AppTypography.authHeroAccent,
                   ),
                 ],
           ),
@@ -1298,8 +1295,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 isDense: true,
                 borderRadius: BorderRadius.circular(10),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+                style: AppTypography.authDropdownValue,
+                hintStyle: AppTypography.authDropdownHint,
                 fillColor: Colors.white,
                 borderColor: const Color(0xFFE2E8F0),
                 focusedBorderColor: const Color(0xFF00B96B),
@@ -1332,24 +1329,24 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       children: [
                         Text(
                           'I agree to the ',
-                          style: AppTypography.bodySmall.copyWith(fontSize: 11.5, color: const Color(0xFF475569), fontWeight: FontWeight.w500),
+                          style: AppTypography.authTermsText,
                         ),
                         InkWell(
                           onTap: () => _openLegalModal('Terms of Service', 'Welcome to Rankearn. By accessing our mock tests, quiz battles, and reward system, you agree to our standard terms of use, fair play policies, and academic integrity guidelines.'),
                           child: Text(
                             'Terms of Service',
-                            style: AppTypography.bodySmall.copyWith(fontSize: 11.5, color: const Color(0xFF00B96B), fontWeight: FontWeight.w700),
+                            style: AppTypography.authTermsLink,
                           ),
                         ),
                         Text(
                           ' and ',
-                          style: AppTypography.bodySmall.copyWith(fontSize: 11.5, color: const Color(0xFF475569), fontWeight: FontWeight.w500),
+                          style: AppTypography.authTermsText,
                         ),
                         InkWell(
                           onTap: () => _openLegalModal('Privacy Policy', 'At Rankearn, your personal data and test analytics are encrypted and securely safeguarded. We never sell your personal information.'),
                           child: Text(
                             'Privacy Policy',
-                            style: AppTypography.bodySmall.copyWith(fontSize: 11.5, color: const Color(0xFF00B96B), fontWeight: FontWeight.w700),
+                            style: AppTypography.authTermsLink,
                           ),
                         ),
                       ],
@@ -1393,7 +1390,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                         const SizedBox(width: 6),
                         Text(
                           'Keep me logged in',
-                          style: AppTypography.supporting.copyWith(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+                          style: AppTypography.authRememberMe,
                         ),
                       ],
                     ),
@@ -1404,11 +1401,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
                         child: Text(
                           'Forgot Password?',
-                          style: AppTypography.supporting.copyWith(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF00B96B),
-                          ),
+                          style: AppTypography.authForgotPassword,
                         ),
                       ),
                     ),
@@ -1455,12 +1448,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                             const SizedBox(width: 8),
                             Text(
                               isLogin ? 'Login' : 'Register',
-                              style: AppTypography.buttonText.copyWith(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.2,
-                                height: 1.2,
-                              ),
+                              style: AppTypography.authButton,
                             ),
                           ],
                         ),
@@ -1477,9 +1465,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 children: [
                   Text(
                     isLogin ? "Don't have an account? " : "Already have an account? ",
-                    style: AppTypography.formHint.copyWith(
-                      color: const Color(0xFF64748B),
-                    ),
+                    style: AppTypography.authModeSwitchPrompt,
                   ),
                   InkWell(
                     onTap: () => _switchMode(isLogin ? AuthScreenMode.signUp : AuthScreenMode.login),
@@ -1491,10 +1477,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                         children: [
                           Text(
                             isLogin ? 'Register' : 'Login',
-                            style: AppTypography.formHint.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF00B96B),
-                            ),
+                            style: AppTypography.authModeSwitchAction,
                           ),
                           if (isMobile) ...[
                             const SizedBox(width: 2),
@@ -1519,13 +1502,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 const Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
+                  child: const Text(
                     'OR',
-                    style: AppTypography.captionBold.copyWith(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF94A3B8),
-                    ),
+                    style: AppTypography.authDividerText,
                   ),
                 ),
                 const Expanded(child: Divider(color: Color(0xFFE2E8F0), thickness: 1)),
