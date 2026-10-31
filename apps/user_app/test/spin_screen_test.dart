@@ -93,7 +93,7 @@ void main() {
 
           // 3. Verify Spin Stats Row
           expect(find.byType(SpinStatsRow), findsOneWidget);
-          expect(find.text("Today's\nSpins"), findsOneWidget);
+          expect(find.text("Today's Spins"), findsOneWidget);
           expect(find.text('Next Spin In'), findsOneWidget);
 
           // 4. Verify Interactive Spin Wheel

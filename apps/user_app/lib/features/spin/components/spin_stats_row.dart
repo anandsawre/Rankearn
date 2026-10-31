@@ -25,7 +25,7 @@ class SpinStatsRow extends StatelessWidget {
             icon: Icons.donut_large_rounded,
             iconColor: const Color(0xFFC026D3), // Vibrant magenta/purple
             iconBg: const Color(0xFFFDF4FF),
-            label: "Today's\nSpins",
+            label: "Today's Spins",
             value: '$spinsUsedToday / $maxSpinsPerDay',
           ),
         ),
@@ -53,7 +53,7 @@ class SpinStatsRow extends StatelessWidget {
     required String value,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -93,7 +93,7 @@ class SpinStatsRow extends StatelessWidget {
                     height: 1.15,
                     fontFamily: 'Inter',
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
