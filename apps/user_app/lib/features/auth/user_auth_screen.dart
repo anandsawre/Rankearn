@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 
@@ -571,7 +572,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 990;
         final isTablet = constraints.maxWidth >= 640 && constraints.maxWidth < 990;
-        final statusBarBgColor = isDesktop ? const Color(0xFFF4F8FF) : const Color(0xFFE8FBF2);
+        final statusBarBgColor = isDesktop ? const Color(0xFFF4F8FF) : Colors.white;
 
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
@@ -593,34 +594,55 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       child: WaveBackground(),
                     ),
                   )
-                else ...[
-                  const Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFFE8FBF2),
-                              Color(0xFFF1FCF6),
-                              Color(0xFFF9FCFA),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                else
                   const Positioned.fill(
                     child: IgnorePointer(
                       child: RepaintBoundary(
                         child: CustomPaint(
-                          painter: _MobileProfessionalBlendedPainter(),
+                          painter: _MobileCornerBlendedWavesPainter(),
                         ),
                       ),
                     ),
                   ),
-                ],
+
+                // Top-Right Corner SVG Artwork (Brand Liquid Accent)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: IgnorePointer(
+                    child: SvgPicture.string(
+                      _cornerSvgData,
+                      width: isDesktop
+                          ? 460.0
+                          : (isTablet
+                              ? 360.0
+                              : (constraints.maxWidth * 0.70).clamp(220.0, 290.0)),
+                      alignment: Alignment.topRight,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+
+                // Bottom-Left Corner SVG Artwork (Rotated 180° for Perfect Corner Fit)
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  child: IgnorePointer(
+                    child: RotatedBox(
+                      quarterTurns: 2,
+                      child: SvgPicture.string(
+                        _cornerSvgData,
+                        width: isDesktop
+                            ? 460.0
+                            : (isTablet
+                                ? 360.0
+                                : (constraints.maxWidth * 0.70).clamp(220.0, 290.0)),
+                        alignment: Alignment.topRight,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
 
                 // Main Content Viewport
                 ScrollConfiguration(
@@ -1663,113 +1685,261 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 }
 
-/// Modern stylish fluid wave background painter for mobile & tablet auth screens.
-/// Modern executive blended ambient background painter for mobile auth screen.
-/// Features diffused luminous mint auras, smooth ambient horizon glows,
-/// and delicate geometric blended curves that melt seamlessly into the canvas.
-class _MobileProfessionalBlendedPainter extends CustomPainter {
-  const _MobileProfessionalBlendedPainter();
+/// Inlined brand liquid corner vector artwork (100% immune to asset manifest bundling delays on Web).
+const String _cornerSvgData = r'''<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1024" viewBox="0 0 1536 1024">
+  <defs>
+    <linearGradient id="lime" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D7FF35"/>
+      <stop offset=".38" stop-color="#7BE900"/>
+      <stop offset=".75" stop-color="#16C83C"/>
+      <stop offset="1" stop-color="#009B54"/>
+    </linearGradient>
+    <linearGradient id="emerald" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00D77A"/>
+      <stop offset=".5" stop-color="#00A95E"/>
+      <stop offset="1" stop-color="#006B45"/>
+    </linearGradient>
+    <linearGradient id="mint" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D8FFE7" stop-opacity=".78"/>
+      <stop offset=".55" stop-color="#8EF5BE" stop-opacity=".58"/>
+      <stop offset="1" stop-color="#B5FFD0" stop-opacity=".18"/>
+    </linearGradient>
+    <linearGradient id="highlight" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#D8FF45"/>
+      <stop offset=".55" stop-color="#A8FF39"/>
+      <stop offset="1" stop-color="#56E95B"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".78" cy=".3" r=".75">
+      <stop offset="0" stop-color="#52F500" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#00A85B" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="dot" cx=".3" cy=".25" r=".8">
+      <stop offset="0" stop-color="#A8FF36"/>
+      <stop offset="1" stop-color="#00A94F"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Soft ambient green glow, kept transparent outside the artwork -->
+  <path d="M760 0H1536V540C1440 510 1385 463 1320 398C1245 323 1185 282 1090 275C975 267 900 305 820 275C740 245 700 172 760 0Z"
+        fill="url(#glow)"/>
+
+  <!-- Back lime ribbon -->
+  <path d="M770 0H1536V250C1480 206 1435 190 1385 205C1320 224 1275 275 1190 286C1095 299 1018 255 960 198C900 139 845 65 770 0Z"
+        fill="url(#lime)"/>
+
+  <!-- Main upper flowing layer -->
+  <path d="M855 0H1536V180C1490 137 1450 125 1402 137C1338 154 1295 202 1220 211C1130 222 1065 185 1008 130C952 76 915 25 855 0Z"
+        fill="url(#emerald)" opacity=".95"/>
+
+  <!-- Deep emerald wave flowing down the right edge -->
+  <path d="M1060 0H1536V470C1490 438 1458 398 1435 350C1400 278 1370 225 1300 205C1225 184 1160 220 1090 250C1010 284 935 300 865 267C800 236 775 180 735 125C700 76 660 40 610 0Z"
+        fill="url(#emerald)"/>
+
+  <!-- Soft mint translucent layer under the main ribbon -->
+  <path d="M760 0C850 42 900 108 965 167C1030 226 1090 256 1175 248C1265 239 1330 192 1390 235C1450 278 1445 358 1480 405C1498 430 1518 445 1536 455V0Z"
+        fill="url(#mint)"/>
+
+  <!-- Foreground lime/emerald liquid sweep -->
+  <path d="M620 0H1536V350C1485 330 1445 300 1405 263C1350 211 1300 178 1235 188C1160 200 1100 255 1020 278C935 302 865 283 805 235C735 179 700 90 620 0Z"
+        fill="url(#lime)" opacity=".96"/>
+
+  <!-- Dark green lower ribbon -->
+  <path d="M1010 0H1536V470C1490 440 1455 395 1430 345C1390 265 1350 218 1280 210C1205 202 1145 245 1070 275C990 307 910 320 840 285C785 258 750 205 710 150C675 102 640 55 590 0Z"
+        fill="url(#emerald)" opacity=".92"/>
+
+  <!-- Fine luminous contour -->
+  <path d="M770 0C850 38 905 105 970 165C1035 225 1095 260 1180 250C1260 241 1325 195 1385 235"
+        fill="none" stroke="url(#highlight)" stroke-width="4" stroke-linecap="round" opacity=".95"/>
+
+  <!-- Soft translucent lower edge -->
+  <path d="M735 0C820 60 860 130 920 190C990 260 1060 282 1145 270C1235 258 1300 225 1365 270C1430 315 1420 390 1475 450C1495 472 1515 485 1536 495"
+        fill="none" stroke="#B9FFD0" stroke-width="34" stroke-linecap="round" opacity=".24"/>
+
+  <!-- Decorative droplets -->
+  <circle cx="940" cy="132" r="13" fill="url(#dot)" opacity=".9"/>
+  <circle cx="970" cy="170" r="7" fill="url(#dot)" opacity=".85"/>
+  <circle cx="1345" cy="335" r="16" fill="url(#dot)" opacity=".82"/>
+  <circle cx="1385" cy="370" r="8" fill="url(#dot)" opacity=".78"/>
+</svg>''';
+
+/// Modern blended harmonic wave background painter for mobile auth screen.
+/// Uses the exact brand lime, emerald, and mint color palette from corner.svg
+/// to create softly diffused waves and glowing crests that connect the corners seamlessly.
+class _MobileCornerBlendedWavesPainter extends CustomPainter {
+  const _MobileCornerBlendedWavesPainter();
+
+  // Color tokens extracted identically from corner.svg
+  static const Color _lime = Color(0xFFD7FF35);
+  static const Color _limeBright = Color(0xFF7BE900);
+  static const Color _emerald = Color(0xFF16C83C);
+  static const Color _mintBright = Color(0xFF00D77A);
+  static const Color _mintSoft = Color(0xFFD8FFE7);
+  static const Color _mintPastel = Color(0xFF8EF5BE);
+  static const Color _highlight = Color(0xFFD8FF45);
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
 
-    // 1. Top-Right Soft Ambient Mint Glow (Diffused Aura)
-    final topAuraRect = Rect.fromCircle(
-      center: Offset(w * 0.85, 40),
-      radius: (w * 0.60).clamp(160.0, 280.0),
+    // 1. Pure White Clean Base Canvas
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, w, h),
+      Paint()..color = Colors.white,
     );
-    final topAuraPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF00B96B).withValues(alpha: 0.14),
-          const Color(0xFF10B981).withValues(alpha: 0.05),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.55, 1.0],
-      ).createShader(topAuraRect);
-    canvas.drawCircle(topAuraRect.center, topAuraRect.width / 2, topAuraPaint);
 
-    // 2. Center-Left Ambient Pulse Aura
-    final midAuraRect = Rect.fromCircle(
-      center: Offset(w * 0.05, h * 0.45),
-      radius: (w * 0.50).clamp(140.0, 220.0),
+    // 2. Top-Right Soft Ambient Mint Glow (Blends seamlessly with top corner SVG)
+    final topGlowRect = Rect.fromCircle(
+      center: Offset(w * 0.85, h * 0.12),
+      radius: (w * 0.65).clamp(180.0, 320.0),
     );
-    final midAuraPaint = Paint()
+    final topGlowPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF34D399).withValues(alpha: 0.09),
-          const Color(0xFF00B96B).withValues(alpha: 0.03),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.60, 1.0],
-      ).createShader(midAuraRect);
-    canvas.drawCircle(midAuraRect.center, midAuraRect.width / 2, midAuraPaint);
-
-    // 3. Bottom Broad Luminous Ambient Glow (Smooth Diffusion, Zero Harsh Edges)
-    final bottomAuraRect = Rect.fromCenter(
-      center: Offset(w * 0.5, h),
-      width: w * 1.4,
-      height: (h * 0.40).clamp(200.0, 360.0),
-    );
-    final bottomAuraPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF00B96B).withValues(alpha: 0.12),
-          const Color(0xFF10B981).withValues(alpha: 0.05),
+          _mintSoft.withValues(alpha: 0.32),
+          _mintBright.withValues(alpha: 0.08),
           Colors.transparent,
         ],
         stops: const [0.0, 0.50, 1.0],
-      ).createShader(bottomAuraRect);
-    canvas.drawOval(bottomAuraRect, bottomAuraPaint);
+      ).createShader(topGlowRect);
+    canvas.drawCircle(topGlowRect.center, topGlowRect.width / 2, topGlowPaint);
 
-    // 4. Elegant Blended Geometric Arcs (Subtle modern fintech/ed-tech aesthetic)
-    final arcPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+    // 3. Bottom-Left Soft Ambient Lime Glow (Blends seamlessly with bottom corner SVG)
+    final bottomGlowRect = Rect.fromCircle(
+      center: Offset(w * 0.15, h * 0.88),
+      radius: (w * 0.65).clamp(180.0, 320.0),
+    );
+    final bottomGlowPaint = Paint()
+      ..shader = RadialGradient(
         colors: [
-          const Color(0xFF00B96B).withValues(alpha: 0.20),
-          const Color(0xFF10B981).withValues(alpha: 0.08),
+          _lime.withValues(alpha: 0.22),
+          _emerald.withValues(alpha: 0.06),
           Colors.transparent,
         ],
-      ).createShader(Rect.fromLTWH(0, 0, w, h));
+        stops: const [0.0, 0.50, 1.0],
+      ).createShader(bottomGlowRect);
+    canvas.drawCircle(bottomGlowRect.center, bottomGlowRect.width / 2, bottomGlowPaint);
 
-    // Gentle top accent concentric arc
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(w * 0.9, 0), radius: w * 0.45),
-      0,
-      math.pi,
-      false,
-      arcPaint,
+    // 4. Upper Organic Blended Wave (Soft mint wash flowing diagonally from top-right)
+    final upperWave = Path();
+    upperWave.moveTo(0, h * 0.38);
+    upperWave.cubicTo(w * 0.35, h * 0.28, w * 0.65, h * 0.44, w, h * 0.20);
+    upperWave.lineTo(w, 0);
+    upperWave.lineTo(0, 0);
+    upperWave.close();
+
+    final upperShader = LinearGradient(
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+      colors: [
+        _mintSoft.withValues(alpha: 0.28),
+        _mintPastel.withValues(alpha: 0.12),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.60, 1.0],
+    ).createShader(Rect.fromLTWH(0, 0, w, h * 0.45));
+
+    canvas.drawPath(
+      upperWave,
+      Paint()
+        ..shader = upperShader
+        ..style = PaintingStyle.fill
+        ..isAntiAlias = true,
     );
 
-    // Smooth blended bottom arc
-    final bottomArcPaint = Paint()
+    // 5. Mid-Diagonal Harmonic Liquid Wave (Translucent lime-emerald ribbon)
+    final midWave = Path();
+    midWave.moveTo(0, h * 0.68);
+    midWave.cubicTo(w * 0.30, h * 0.58, w * 0.60, h * 0.76, w, h * 0.52);
+    midWave.lineTo(w, h * 0.38);
+    midWave.cubicTo(w * 0.65, h * 0.58, w * 0.30, h * 0.44, 0, h * 0.54);
+    midWave.close();
+
+    final midShader = LinearGradient(
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+      colors: [
+        _lime.withValues(alpha: 0.12),
+        _emerald.withValues(alpha: 0.08),
+        _mintBright.withValues(alpha: 0.04),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.40, 0.70, 1.0],
+    ).createShader(Rect.fromLTWH(0, h * 0.35, w, h * 0.45));
+
+    canvas.drawPath(
+      midWave,
+      Paint()
+        ..shader = midShader
+        ..style = PaintingStyle.fill
+        ..isAntiAlias = true,
+    );
+
+    // 6. Lower Organic Blended Wave (Soft mint/lime wash rising from bottom-left)
+    final lowerWave = Path();
+    lowerWave.moveTo(0, h * 0.72);
+    lowerWave.cubicTo(w * 0.32, h * 0.84, w * 0.68, h * 0.68, w, h * 0.86);
+    lowerWave.lineTo(w, h);
+    lowerWave.lineTo(0, h);
+    lowerWave.close();
+
+    final lowerShader = LinearGradient(
+      begin: Alignment.bottomLeft,
+      end: Alignment.topRight,
+      colors: [
+        _mintBright.withValues(alpha: 0.10),
+        _limeBright.withValues(alpha: 0.06),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.55, 1.0],
+    ).createShader(Rect.fromLTWH(0, h * 0.65, w, h * 0.35));
+
+    canvas.drawPath(
+      lowerWave,
+      Paint()
+        ..shader = lowerShader
+        ..style = PaintingStyle.fill
+        ..isAntiAlias = true,
+    );
+
+    // 7. Fine Luminous Crest Contour Ribbons (Subtle glowing highlight contours)
+    final crestPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0
-      ..shader = LinearGradient(
-        begin: Alignment.bottomLeft,
-        end: Alignment.topRight,
-        colors: [
-          Colors.transparent,
-          const Color(0xFF00B96B).withValues(alpha: 0.15),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromLTWH(0, h - 160, w, 160));
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..isAntiAlias = true;
 
-    final bottomCurve = Path();
-    bottomCurve.moveTo(0, h - 40);
-    bottomCurve.quadraticBezierTo(w * 0.5, h - 110, w, h - 50);
-    canvas.drawPath(bottomCurve, bottomArcPaint);
+    // Upper crest line
+    final crest1 = Path();
+    crest1.moveTo(0, h * 0.38);
+    crest1.cubicTo(w * 0.35, h * 0.28, w * 0.65, h * 0.44, w, h * 0.20);
+    crestPaint.shader = LinearGradient(
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+      colors: [
+        _highlight.withValues(alpha: 0.28),
+        _mintBright.withValues(alpha: 0.12),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.60, 1.0],
+    ).createShader(Rect.fromLTWH(0, h * 0.18, w, h * 0.28));
+    canvas.drawPath(crest1, crestPaint);
 
-    final bottomCurve2 = Path();
-    bottomCurve2.moveTo(0, h - 15);
-    bottomCurve2.quadraticBezierTo(w * 0.45, h - 75, w, h - 25);
-    canvas.drawPath(bottomCurve2, bottomArcPaint);
+    // Lower crest line
+    final crest2 = Path();
+    crest2.moveTo(0, h * 0.72);
+    crest2.cubicTo(w * 0.32, h * 0.84, w * 0.68, h * 0.68, w, h * 0.86);
+    crestPaint.shader = LinearGradient(
+      begin: Alignment.bottomLeft,
+      end: Alignment.topRight,
+      colors: [
+        _highlight.withValues(alpha: 0.26),
+        _emerald.withValues(alpha: 0.10),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.60, 1.0],
+    ).createShader(Rect.fromLTWH(0, h * 0.65, w, h * 0.25));
+    canvas.drawPath(crest2, crestPaint);
   }
 
   @override
