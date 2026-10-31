@@ -22,7 +22,7 @@ class SpinStatsRow extends StatelessWidget {
         // 1. Today's Spins
         Expanded(
           child: _buildStatCard(
-            icon: Icons.donut_large_rounded,
+            icon: Icons.cyclone_rounded,
             iconColor: const Color(0xFFC026D3), // Vibrant magenta/purple
             iconBg: const Color(0xFFFDF4FF),
             label: "Today's Spins",
