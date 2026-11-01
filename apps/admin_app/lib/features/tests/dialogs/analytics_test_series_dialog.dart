@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import '../models/test_series_item.dart';
 
 class AnalyticsTestSeriesDialog extends StatelessWidget {
@@ -10,117 +11,70 @@ class AnalyticsTestSeriesDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final estimatedRevenue = item.enrollments * item.priceInr;
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.insights_rounded, color: Colors.white, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${item.title} — Analytics',
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF101A3A)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Text(
-                        'Live student performance and enrollment metrics',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close_rounded, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 520,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Divider(height: 1, color: Color(0xFFF1F5F9)),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _buildMetricBlock('Total Enrollments', '${item.enrollments}', '+18% vs last month', const Color(0xFF10B981)),
-                _buildMetricBlock('Estimated Revenue', '₹${_formatNumber(estimatedRevenue)}', 'Platform GMV', const Color(0xFF2563EB)),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                _buildMetricBlock('Completion Rate', '78.4%', 'High student retention', const Color(0xFF7C3AED)),
-                _buildMetricBlock('Avg. Score', '64.2 / 100', 'Standard benchmark', const Color(0xFFD97706)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Weekly Attempt Velocity',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              height: 96,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Row(
-                children: const [
-                  Expanded(child: _Bar(day: 'Mon', fraction: 0.45)),
-                  Expanded(child: _Bar(day: 'Tue', fraction: 0.60)),
-                  Expanded(child: _Bar(day: 'Wed', fraction: 0.72)),
-                  Expanded(child: _Bar(day: 'Thu', fraction: 0.55)),
-                  Expanded(child: _Bar(day: 'Fri', fraction: 0.82)),
-                  Expanded(child: _Bar(day: 'Sat', fraction: 0.95)),
-                  Expanded(child: _Bar(day: 'Sun', fraction: 0.75)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    return AppModalDialog(
+      title: '${item.title} — Analytics',
+      subtitle: 'Live student performance and enrollment metrics',
+      iconData: Icons.insights_rounded,
+      gradientColors: const [Color(0xFF1D4ED8), Color(0xFF3B82F6)],
+      maxWidth: 560,
       actions: [
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFF1D4ED8),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            elevation: 0,
           ),
           onPressed: () => Navigator.pop(context),
-          child: const Text('Done'),
+          child: const Text('Done', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
         ),
       ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              _buildMetricBlock('Total Enrollments', '${item.enrollments}', '+18% vs last month', const Color(0xFF10B981)),
+              _buildMetricBlock('Estimated Revenue', '₹${_formatNumber(estimatedRevenue)}', 'Platform GMV', const Color(0xFF2563EB)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _buildMetricBlock('Completion Rate', '78.4%', 'High student retention', const Color(0xFF7C3AED)),
+              _buildMetricBlock('Avg. Score', '64.2 / 100', 'Standard benchmark', const Color(0xFFD97706)),
+            ],
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'Weekly Attempt Velocity',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 100,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: const [
+                Expanded(child: _Bar(day: 'Mon', fraction: 0.45)),
+                Expanded(child: _Bar(day: 'Tue', fraction: 0.60)),
+                Expanded(child: _Bar(day: 'Wed', fraction: 0.72)),
+                Expanded(child: _Bar(day: 'Thu', fraction: 0.55)),
+                Expanded(child: _Bar(day: 'Fri', fraction: 0.82)),
+                Expanded(child: _Bar(day: 'Sat', fraction: 0.95)),
+                Expanded(child: _Bar(day: 'Sun', fraction: 0.75)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -128,7 +82,7 @@ class AnalyticsTestSeriesDialog extends StatelessWidget {
     return Expanded(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(10),
@@ -138,7 +92,7 @@ class AnalyticsTestSeriesDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8))),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF101A3A))),
             const SizedBox(height: 2),
             Text(sub, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: color)),
@@ -179,7 +133,7 @@ class _Bar extends StatelessWidget {
               child: Container(
                 width: 16,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5636F5),
+                  color: const Color(0xFF1D4ED8),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),

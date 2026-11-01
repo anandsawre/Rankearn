@@ -181,7 +181,7 @@ class _TestsTabState extends State<TestsTab> {
 
   // Actions
   void _openCreateDialog([TestSeriesItem? itemToEdit]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => CreateTestSeriesDialog(
         initialItem: itemToEdit,
@@ -221,7 +221,7 @@ class _TestsTabState extends State<TestsTab> {
   }
 
   void _openViewDialog(TestSeriesItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ViewTestSeriesDialog(
         item: item,
@@ -232,7 +232,7 @@ class _TestsTabState extends State<TestsTab> {
   }
 
   void _openViewQuestionsDialog(TestSeriesItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ViewTestQuestionsDialog(
         item: item,
@@ -440,26 +440,34 @@ class _TestsTabState extends State<TestsTab> {
   }
 
   void _openAnalyticsDialog(TestSeriesItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => AnalyticsTestSeriesDialog(item: item),
     );
   }
 
   void _deleteItem(TestSeriesItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Test Series', style: TextStyle(fontWeight: FontWeight.w700)),
-        content: Text('Are you sure you want to delete "${item.title}"? This action cannot be undone.'),
+      builder: (ctx) => AppModalDialog(
+        title: 'Delete Test Series',
+        subtitle: 'Permanent deletion warning',
+        iconData: Icons.delete_outline_rounded,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 440,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
             onPressed: () async {
               Navigator.pop(ctx);
               setState(() {
@@ -479,9 +487,13 @@ class _TestsTabState extends State<TestsTab> {
                 );
               }
             },
-            child: const Text('Delete'),
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
+        child: Text(
+          'Are you sure you want to delete "${item.title}"? This action cannot be undone and will remove all associated test records.',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF334155), height: 1.45),
+        ),
       ),
     );
   }

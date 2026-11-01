@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
+import 'package:design_system/design_system.dart';
 import '../models/test_series_item.dart';
 import '../../questions/models/question_item.dart';
 import '../../questions/dialogs/create_question_dialog.dart';
@@ -305,424 +306,145 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 700;
-
-    if (isMobile) {
-      return Dialog.fullscreen(
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            backgroundColor: Colors.white,
+    return AppModalDialog(
+      title: widget.item.title,
+      subtitle: '${widget.item.subject} • ${_questions.length} Questions',
+      iconData: widget.item.icon,
+      gradientColors: const [Color(0xFF1E1B4B), Color(0xFF4338CA)],
+      maxWidth: 820,
+      maxHeight: 740,
+      actions: [
+        Text(
+          'Showing ${_filteredQuestions.length} of ${_questions.length} questions',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
+        ),
+        const Spacer(),
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onPressed: () => Navigator.pop(context),
+          child: const Text(
+            'Close',
+            style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12),
+          ),
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            side: const BorderSide(color: Color(0xFF10B981)),
+            foregroundColor: const Color(0xFF059669),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          icon: const Icon(Icons.cloud_upload_rounded, size: 16),
+          label: const Text(
+            'Import Questions',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+          ),
+          onPressed: () => _openImportQuestionsDialog(),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5636F5),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
-              onPressed: () => Navigator.pop(context),
-            ),
-            titleSpacing: 0,
-            title: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: widget.item.iconColor,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(widget.item.icon, color: Colors.white, size: 16),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.item.title,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF101A3A)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${widget.item.subject} • ${_questions.length} Questions',
-                        style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: IconButton.filled(
-                  style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(34, 34),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  icon: const Icon(Icons.cloud_upload_rounded, size: 16),
-                  tooltip: 'Import Questions',
-                  onPressed: () => _openImportQuestionsDialog(),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: IconButton.filled(
-                  style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xFF5636F5),
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(34, 34),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  tooltip: 'Add Question',
-                  onPressed: () => _openAddQuestionDialog(),
-                ),
-              ),
-            ],
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1, color: Color(0xFFF1F5F9)),
-            ),
           ),
-          body: Column(
+          icon: const Icon(Icons.post_add_rounded, size: 16),
+          label: const Text(
+            'Add Question',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+          ),
+          onPressed: () => _openAddQuestionDialog(),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Search & Filter Toolbar
+          Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 36,
-                        child: TextField(
-                          controller: _searchController,
-                          style: const TextStyle(fontSize: 12),
-                          onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                          decoration: InputDecoration(
-                            hintText: 'Search questions...',
-                            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                            prefixIcon: const Icon(Icons.search_rounded, size: 16, color: Color(0xFF94A3B8)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            isDense: true,
-                            filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF5636F5))),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+              Expanded(
+                child: SizedBox(
+                  height: 38,
+                  child: TextField(
+                    controller: _searchController,
+                    style: const TextStyle(fontSize: 12),
+                    onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                    decoration: InputDecoration(
+                      hintText: 'Search questions, options, or explanations...',
+                      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                      prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear_rounded, size: 16, color: Color(0xFF94A3B8)),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      isDense: true,
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
                       ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedDifficulty,
-                          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF64748B)),
-                          style: const TextStyle(fontSize: 11.5, color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
-                          items: ['All', 'Easy', 'Medium', 'Hard', 'Expert']
-                              .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                              .toList(),
-                          onChanged: (val) {
-                            if (val != null) setState(() => _selectedDifficulty = val);
-                          },
-                        ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF5636F5)))
-                    : _filteredQuestions.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-                            itemCount: _filteredQuestions.length,
-                            separatorBuilder: (ctx, i) => const SizedBox(height: 10),
-                            itemBuilder: (ctx, i) => _buildQuestionCard(_filteredQuestions[i], i + 1),
-                          ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      clipBehavior: Clip.antiAlias,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 720,
-          maxHeight: (MediaQuery.of(context).size.height * 0.90).clamp(450.0, 720.0),
-        ),
-        child: Container(
-          width: 720,
-          color: Colors.white,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: widget.item.iconColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            alignment: Alignment.center,
-                            child: Icon(widget.item.icon, color: Colors.white, size: 20),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        widget.item.title,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFF101A3A),
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFEEF2FF),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        '${_questions.length} Questions',
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF5636F5),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${widget.item.subject} • Question Bank Review',
-                                  style: const TextStyle(
-                                    fontSize: 11.5,
-                                    color: Color(0xFF64748B),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-
-              // Search & Filter Toolbar + Questions List
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 14, 24, 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Search & Filter Toolbar
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 36,
-                              child: TextField(
-                                controller: _searchController,
-                                style: const TextStyle(fontSize: 12),
-                                onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                                decoration: InputDecoration(
-                                  hintText: 'Search questions, options, or explanations...',
-                                  hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                                  prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
-                                  suffixIcon: _searchQuery.isNotEmpty
-                                      ? IconButton(
-                                          icon: const Icon(Icons.clear_rounded, size: 16, color: Color(0xFF94A3B8)),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            setState(() => _searchQuery = '');
-                                          },
-                                        )
-                                      : null,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  isDense: true,
-                                  filled: true,
-                                  fillColor: const Color(0xFFF8FAFC),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xFF5636F5)),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          // Difficulty Dropdown
-                          Container(
-                            height: 36,
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedDifficulty,
-                                icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF64748B)),
-                                style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
-                                items: ['All', 'Easy', 'Medium', 'Hard', 'Expert']
-                                    .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                                    .toList(),
-                                onChanged: (val) {
-                                  if (val != null) setState(() => _selectedDifficulty = val);
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Questions List Body
-                      Expanded(
-                        child: _isLoading
-                            ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF5636F5)))
-                            : _filteredQuestions.isEmpty
-                                ? _buildEmptyState()
-                                : ListView.separated(
-                                    padding: const EdgeInsets.symmetric(vertical: 4),
-                                    itemCount: _filteredQuestions.length,
-                                    separatorBuilder: (ctx, i) => const SizedBox(height: 12),
-                                    itemBuilder: (ctx, i) => _buildQuestionCard(_filteredQuestions[i], i + 1),
-                                  ),
-                      ),
-                    ],
                   ),
                 ),
               ),
-
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-
-              // Footer Actions
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 18),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Showing ${_filteredQuestions.length} of ${_questions.length} questions',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
-                    ),
-                    Row(
-                      children: [
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                            side: const BorderSide(color: Color(0xFFCBD5E1)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            'Close',
-                            style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12),
-                          ),
-                        ),
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            side: const BorderSide(color: Color(0xFF10B981)),
-                            foregroundColor: const Color(0xFF059669),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          icon: const Icon(Icons.cloud_upload_rounded, size: 16),
-                          label: const Text(
-                            'Import Questions',
-                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-                          ),
-                          onPressed: () => _openImportQuestionsDialog(),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5636F5),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          icon: const Icon(Icons.post_add_rounded, size: 16),
-                          label: const Text(
-                            'Add Question',
-                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-                          ),
-                          onPressed: () => _openAddQuestionDialog(),
-                        ),
-                      ],
-                    ),
+              const SizedBox(width: 10),
+              // Difficulty Dropdown
+              SizedBox(
+                width: 170,
+                child: AppDropdown<String>(
+                  value: _selectedDifficulty,
+                  items: const [
+                    AppDropdownItem(value: 'All', label: 'All Difficulties'),
+                    AppDropdownItem(value: 'Easy', label: 'Easy'),
+                    AppDropdownItem(value: 'Medium', label: 'Medium'),
+                    AppDropdownItem(value: 'Hard', label: 'Hard'),
+                    AppDropdownItem(value: 'Expert', label: 'Expert'),
                   ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedDifficulty = val);
+                  },
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 14),
+
+          // Questions List Body
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF5636F5)))
+                : _filteredQuestions.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        itemCount: _filteredQuestions.length,
+                        separatorBuilder: (ctx, i) => const SizedBox(height: 12),
+                        itemBuilder: (ctx, i) => _buildQuestionCard(_filteredQuestions[i], i + 1),
+                      ),
+          ),
+        ],
       ),
     );
   }

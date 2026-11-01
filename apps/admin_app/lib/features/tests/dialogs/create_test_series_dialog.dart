@@ -229,13 +229,43 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initialItem != null;
-    final isMobile = MediaQuery.sizeOf(context).width < 640;
     final subjects = _filteredSubjects;
 
-    final content = Form(
-      key: _formKey,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    return AppModalDialog(
+      title: isEditing ? 'Edit Test Series' : 'Create New Test Series',
+      subtitle: 'Configure exam parameters, syllabus and access rules',
+      iconData: isEditing ? Icons.edit_note_rounded : Icons.library_books_rounded,
+      gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+      maxWidth: 640,
+      scrollable: true,
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+          ),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+        ),
+        const SizedBox(width: 10),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5636F5),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+            elevation: 0,
+          ),
+          onPressed: _submit,
+          child: Text(
+            isEditing ? 'Save Changes' : 'Create Test Series',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+          ),
+        ),
+      ],
+      child: Form(
+        key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -310,7 +340,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: const Color(0xFFCBD5E1)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -419,7 +449,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
             const SizedBox(height: 14),
 
             // ==========================================
-            // SECTION 3: EXAM ENGINE PARAMETERS (Duration, Total Q, Negative Marking)
+            // SECTION 3: EXAM ENGINE PARAMETERS
             // ==========================================
             Row(
               children: [
@@ -498,7 +528,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
               decoration: BoxDecoration(
                 color: const Color(0xFFF5F3FF),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE9D5FF)),
+                border: Border.all(color: const Color(0xFFDDD6FE)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -530,7 +560,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                       ],
                     ),
                   ],
-                  const Divider(height: 18, color: Color(0xFFE9D5FF)),
+                  const Divider(height: 18, color: Color(0xFFDDD6FE)),
                   CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
                     dense: true,
@@ -565,119 +595,6 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
         ),
       ),
     );
-
-    // Modal Header
-    final header = Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF5636F5),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  isEditing ? Icons.edit_note_rounded : Icons.add_circle_outline_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isEditing ? 'Edit Test Series' : 'Create New Test',
-                    style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800, color: Color(0xFF101A3A)),
-                  ),
-                  const Text(
-                    'Configure exam parameters, syllabus and access rules',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
-
-    // Modal Actions
-    final actions = Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            ),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5636F5),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              elevation: 0,
-            ),
-            onPressed: _submit,
-            child: Text(
-              isEditing ? 'Save Changes' : 'Create Test Series',
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (isMobile) {
-      return Dialog(
-        insetPadding: EdgeInsets.zero,
-        backgroundColor: Colors.white,
-        child: Column(
-          children: [
-            header,
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            Expanded(child: content),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            actions,
-          ],
-        ),
-      );
-    }
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620, maxHeight: 720),
-        child: Column(
-          children: [
-            header,
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            Expanded(child: content),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            actions,
-          ],
-        ),
-      ),
-    );
   }
 
   static const _labelStyle = TextStyle(
@@ -695,11 +612,11 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
