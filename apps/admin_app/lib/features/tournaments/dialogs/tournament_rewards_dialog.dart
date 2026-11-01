@@ -9,128 +9,85 @@ class TournamentRewardsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pool = tournament?.prizePool ?? 50000;
-
-    final distributions = [
+    final pool = tournament?.prizePool ?? 10000;
+    final tiers = [
       {'rank': 'Rank 1', 'percentage': '50%', 'amount': '₹${(pool * 0.50).toInt()}', 'color': const Color(0xFFF59E0B)},
       {'rank': 'Rank 2', 'percentage': '25%', 'amount': '₹${(pool * 0.25).toInt()}', 'color': const Color(0xFF94A3B8)},
       {'rank': 'Rank 3', 'percentage': '15%', 'amount': '₹${(pool * 0.15).toInt()}', 'color': const Color(0xFFB45309)},
       {'rank': 'Rank 4 - 10', 'percentage': '10%', 'amount': '₹${(pool * 0.10).toInt()}', 'color': const Color(0xFF5636F5)},
     ];
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 12,
-      backgroundColor: Colors.white,
-      child: Container(
-        width: 520,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+    return AppModalDialog(
+      title: 'Prize Pool & Rewards',
+      subtitle: 'Total Reward Pool: ₹$pool • Leaderboard payouts',
+      iconData: Icons.card_giftcard_rounded,
+      gradientColors: const [Color(0xFF00B368), Color(0xFF10B981)],
+      maxWidth: 520,
+      scrollable: true,
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00B368),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+            elevation: 0,
+          ),
+          child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: tiers.length,
+              separatorBuilder: (_, index) => const Divider(height: 18, color: Color(0xFFE2E8F0)),
+              itemBuilder: (context, i) {
+                final tier = tiers[i];
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF00C48C),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.card_giftcard_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        const Text(
-                          'Prize Pool & Rewards',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: tier['color'] as Color,
+                            shape: BoxShape.circle,
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
-                          'Total Pool: ₹$pool',
-                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                          tier['rank'] as String,
+                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
                         ),
                       ],
                     ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const Divider(height: 24, color: Color(0xFFE2E8F0)),
-
-            ...distributions.map((d) {
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: (d['color'] as Color).withAlpha(30),
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(Icons.emoji_events_rounded, color: d['color'] as Color, size: 16),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        d['rank'].toString(),
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                      ),
+                    Text(
+                      tier['percentage'] as String,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                     ),
                     Text(
-                      d['percentage'].toString(),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
-                    ),
-                    const SizedBox(width: 16),
-                    Text(
-                      d['amount'].toString(),
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF101A3A)),
+                      tier['amount'] as String,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF10B981)),
                     ),
                   ],
-                ),
-              );
-            }),
-
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
-                    side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('Close'),
-                ),
-              ],
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

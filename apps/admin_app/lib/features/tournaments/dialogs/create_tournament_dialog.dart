@@ -86,7 +86,9 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
           _availableSourceTests = List<Map<String, dynamic>>.from(res);
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Error loading source tests for tournament: $e');
+    }
   }
 
   @override
@@ -100,7 +102,11 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   }
 
   void _submit() {
-    if (!_formKey.currentState!.validate()) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final entryFee = int.tryParse(_entryFeeController.text.trim()) ?? 0;
+    final prizePool = int.tryParse(_prizePoolController.text.trim()) ?? 10000;
+    final maxPart = int.tryParse(_maxParticipantsController.text.trim()) ?? 5000;
 
     final startDateTime = DateTime(
       _startDate.year,
@@ -118,20 +124,6 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
       _endTime.minute,
     );
 
-    if (endDateTime.isBefore(startDateTime)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('End date/time must be after start date/time.'),
-          backgroundColor: Color(0xFFDC2626),
-        ),
-      );
-      return;
-    }
-
-    final entryFee = int.tryParse(_entryFeeController.text) ?? 0;
-    final prizePool = int.tryParse(_prizePoolController.text) ?? 10000;
-    final maxPart = int.tryParse(_maxParticipantsController.text) ?? 5000;
-
     final now = DateTime.now();
     TournamentStatus resolvedStatus = _status;
     if (_status != TournamentStatus.archived) {
@@ -145,9 +137,11 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     }
 
     final result = TournamentItem(
-      id: widget.editItem?.id ?? 'tour_${DateTime.now().millisecondsSinceEpoch}',
+      id: widget.editItem?.id ?? 'tourney-${DateTime.now().millisecondsSinceEpoch}',
       title: _titleController.text.trim(),
-      subtitle: _subtitleController.text.trim(),
+      subtitle: _subtitleController.text.trim().isNotEmpty
+          ? _subtitleController.text.trim()
+          : 'All India Mega Tournament with Leaderboard & Rewards',
       category: _category,
       startDate: startDateTime,
       endDate: endDateTime,
@@ -170,475 +164,412 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   Widget build(BuildContext context) {
     final isEdit = widget.editItem != null;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 12,
-      backgroundColor: Colors.white,
-      child: Container(
-        width: 580,
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF5636F5),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.emoji_events_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        isEdit ? 'Edit Tournament' : 'Create Tournament',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const Divider(height: 24, color: Color(0xFFE2E8F0)),
+    final availableCategories = <String>[
+      'General',
+      ..._categories,
+      'SSC',
+      'Banking',
+    ];
+    if (_category.trim().isNotEmpty && !availableCategories.contains(_category.trim())) {
+      availableCategories.add(_category.trim());
+    }
 
-              // Scrollable Form Fields
-              Flexible(
-                child: SingleChildScrollView(
+    final selectedCategory = availableCategories.contains(_category)
+        ? _category
+        : availableCategories.first;
+
+    return AppModalDialog(
+      title: isEdit ? 'Edit Tournament' : 'Create Tournament',
+      subtitle: 'Configure tournament parameters, prize pool & schedule',
+      iconData: Icons.emoji_events_rounded,
+      gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+      maxWidth: 620,
+      scrollable: true,
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          ),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5636F5),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+          ),
+          child: Text(
+            isEdit ? 'Save Changes' : 'Create Tournament',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+          ),
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Title
+            const Text('Tournament Title *', style: _labelStyle),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _titleController,
+              decoration: _inputDecoration('e.g. RRB Technician Grand Championship'),
+              validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a title' : null,
+            ),
+            const SizedBox(height: 14),
+
+            // Subtitle
+            const Text('Subtitle / Description', style: _labelStyle),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _subtitleController,
+              decoration: _inputDecoration('e.g. All India Live Quiz Tournament & Leaderboard'),
+            ),
+            const SizedBox(height: 14),
+
+            // Category & Status Row
+            Row(
+              children: [
+                Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
-                      _buildTextField(
-                        controller: _titleController,
-                        label: 'Tournament Title *',
-                        hint: 'e.g. RRB Technician Grand Quiz',
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a title' : null,
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Subtitle / Tagline
-                      _buildTextField(
-                        controller: _subtitleController,
-                        label: 'Subtitle / Description',
-                        hint: 'e.g. All India Live Quiz Tournament',
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Category & Status Row
-                      Builder(
-                        builder: (context) {
-                          final availableCategories = <String>{
-                            'General',
-                            ..._categories,
-                            'SSC',
-                            'Banking',
-                            if (_category.trim().isNotEmpty) _category.trim(),
-                          }.toList();
-
-                          final selectedCategory = availableCategories.contains(_category)
-                              ? _category
-                              : availableCategories.first;
-
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('Category *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      height: 40,
-                                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF8FAFC),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                                      ),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<String>(
-                                          value: selectedCategory,
-                                          isExpanded: true,
-                                          onChanged: (val) {
-                                            if (val != null) setState(() => _category = val);
-                                          },
-                                          items: availableCategories
-                                              .map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12))))
-                                              .toList(),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('Status *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      height: 40,
-                                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF8FAFC),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                                      ),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<TournamentStatus>(
-                                          value: _status,
-                                          isExpanded: true,
-                                          onChanged: (val) {
-                                            if (val != null) setState(() => _status = val);
-                                          },
-                                          items: TournamentStatus.values
-                                              .map((s) => DropdownMenuItem(value: s, child: Text(s.label, style: const TextStyle(fontSize: 12))))
-                                              .toList(),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
+                      const Text('Category *', style: _labelStyle),
+                      const SizedBox(height: 6),
+                      AppDropdown<String>(
+                        value: selectedCategory,
+                        items: availableCategories
+                            .map((c) => AppDropdownItem(value: c, label: c))
+                            .toList(),
+                        onChanged: (val) {
+                          if (val != null) setState(() => _category = val);
                         },
                       ),
-                      const SizedBox(height: 12),
-
-                      // Entry Fee & Prize Pool Row
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _entryFeeController,
-                              label: 'Entry Fee (₹ / Coins)',
-                              hint: '0 for free',
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _prizePoolController,
-                              label: 'Prize Pool (₹) *',
-                              hint: '50000',
-                              keyboardType: TextInputType.number,
-                              validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter prize pool' : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Start Date & Time
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDatePicker(
-                              label: 'Start Date',
-                              currentDate: _startDate,
-                              onPicked: (d) => setState(() => _startDate = d),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _buildTimePicker(
-                              label: 'Start Time',
-                              currentTime: _startTime,
-                              onPicked: (t) => setState(() => _startTime = t),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // End Date & Time
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDatePicker(
-                              label: 'End Date',
-                              currentDate: _endDate,
-                              onPicked: (d) => setState(() => _endDate = d),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _buildTimePicker(
-                              label: 'End Time',
-                              currentTime: _endTime,
-                              onPicked: (t) => setState(() => _endTime = t),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Optional: Copy Questions From Existing Test
-                      if (!isEdit) ...[
-                        const SizedBox(height: 14),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Row(
-                                children: [
-                                  Icon(Icons.copy_all_rounded, size: 16, color: Color(0xFF5636F5)),
-                                  SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      'Copy Questions from Existing Test (Optional)',
-                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'Select an existing test or mock set to automatically populate this tournament.',
-                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                height: 40,
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: const Color(0xFFCBD5E1)),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String?>(
-                                    value: _selectedSourceTestId,
-                                    isExpanded: true,
-                                    hint: const Text('None (Blank tournament - add questions later)', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
-                                    items: [
-                                      const DropdownMenuItem<String?>(
-                                        value: null,
-                                        child: Text('None (Blank tournament - add questions later)', style: TextStyle(fontSize: 12)),
-                                      ),
-                                      ..._availableSourceTests.map((t) {
-                                        final tId = t['id']?.toString() ?? '';
-                                        final tTitle = t['title']?.toString() ?? 'Test';
-                                        final tCat = t['category_id']?.toString() ?? 'General';
-                                        final tQs = (t['total_questions'] as num?)?.toInt() ?? 0;
-                                        return DropdownMenuItem<String?>(
-                                          value: tId,
-                                          child: Text(
-                                            '$tTitle ($tCat • $tQs Questions)',
-                                            style: const TextStyle(fontSize: 12),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        );
-                                      }),
-                                    ],
-                                    onChanged: (val) => setState(() => _selectedSourceTestId = val),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
-              ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Status *', style: _labelStyle),
+                      const SizedBox(height: 6),
+                      AppDropdown<TournamentStatus>(
+                        value: _status,
+                        items: TournamentStatus.values
+                            .map((s) => AppDropdownItem(value: s, label: s.label))
+                            .toList(),
+                        onChanged: (val) {
+                          if (val != null) setState(() => _status = val);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
 
-              const SizedBox(height: 20),
-              // Action Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    child: const Text('Cancel', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            // Entry Fee & Prize Pool Row
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Entry Fee (Coins / ₹)', style: _labelStyle),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: _entryFeeController,
+                        keyboardType: TextInputType.number,
+                        decoration: _inputDecoration('0 for free'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5636F5),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    ),
-                    child: Text(
-                      isEdit ? 'Save Changes' : 'Create Tournament',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                    ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Prize Pool (Coins / ₹) *', style: _labelStyle),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: _prizePoolController,
+                        keyboardType: TextInputType.number,
+                        decoration: _inputDecoration('50000'),
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter prize pool' : null,
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // Start Date & Time
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Start Date *', style: _labelStyle),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: () async {
+                          final d = await showDatePicker(
+                            context: context,
+                            initialDate: _startDate,
+                            firstDate: DateTime(2025),
+                            lastDate: DateTime(2030),
+                          );
+                          if (d != null) setState(() => _startDate = d);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF5636F5)),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}-${_startDate.day.toString().padLeft(2, '0')}',
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Start Time *', style: _labelStyle),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: () async {
+                          final t = await showTimePicker(
+                            context: context,
+                            initialTime: _startTime,
+                          );
+                          if (t != null) setState(() => _startTime = t);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF5636F5)),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}',
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // End Date & Time
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('End Date *', style: _labelStyle),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: () async {
+                          final d = await showDatePicker(
+                            context: context,
+                            initialDate: _endDate,
+                            firstDate: DateTime(2025),
+                            lastDate: DateTime(2030),
+                          );
+                          if (d != null) setState(() => _endDate = d);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF5636F5)),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${_endDate.year}-${_endDate.month.toString().padLeft(2, '0')}-${_endDate.day.toString().padLeft(2, '0')}',
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('End Time *', style: _labelStyle),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: () async {
+                          final t = await showTimePicker(
+                            context: context,
+                            initialTime: _endTime,
+                          );
+                          if (t != null) setState(() => _endTime = t);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF5636F5)),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${_endTime.hour.toString().padLeft(2, '0')}:${_endTime.minute.toString().padLeft(2, '0')}',
+                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // Optional: Copy Questions From Existing Test
+            if (!isEdit) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.copy_all_rounded, size: 16, color: Color(0xFF5636F5)),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Copy Questions from Existing Test (Optional)',
+                            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Select an existing test or mock set to automatically populate questions for this tournament.',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                    ),
+                    const SizedBox(height: 10),
+                    AppDropdown<String?>(
+                      value: _selectedSourceTestId,
+                      items: [
+                        const AppDropdownItem(
+                          value: null,
+                          label: 'None (Blank tournament - add questions later)',
+                        ),
+                        ..._availableSourceTests.map((t) {
+                          final tId = t['id']?.toString() ?? '';
+                          final tTitle = t['title']?.toString() ?? 'Test';
+                          final tCat = t['category_id']?.toString() ?? 'General';
+                          final tQs = (t['total_questions'] as num?)?.toInt() ?? 0;
+                          return AppDropdownItem<String?>(
+                            value: tId,
+                            label: '$tTitle ($tCat • $tQs Questions)',
+                          );
+                        }),
+                      ],
+                      onChanged: (val) => setState(() => _selectedSourceTestId = val),
+                    ),
+                  ],
+                ),
               ),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-        const SizedBox(height: 6),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          validator: validator,
-          style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(fontSize: 11.5, color: AppColors.textMuted),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            filled: true,
-            fillColor: const Color(0xFFF8FAFC),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.2),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  static const TextStyle _labelStyle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: Color(0xFF334155),
+  );
 
-  Widget _buildDatePicker({
-    required String label,
-    required DateTime currentDate,
-    required ValueChanged<DateTime> onPicked,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-        const SizedBox(height: 6),
-        InkWell(
-          onTap: () async {
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: currentDate,
-              firstDate: DateTime(2025),
-              lastDate: DateTime(2030),
-            );
-            if (picked != null) onPicked(picked);
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_month_rounded, size: 15, color: AppColors.textSecondary),
-                const SizedBox(width: 6),
-                Text(
-                  '${currentDate.day}/${currentDate.month}/${currentDate.year}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimePicker({
-    required String label,
-    required TimeOfDay currentTime,
-    required ValueChanged<TimeOfDay> onPicked,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-        const SizedBox(height: 6),
-        InkWell(
-          onTap: () async {
-            final picked = await showTimePicker(
-              context: context,
-              initialTime: currentTime,
-            );
-            if (picked != null) onPicked(picked);
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            height: 40,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.schedule_rounded, size: 15, color: AppColors.textSecondary),
-                const SizedBox(width: 6),
-                Text(
-                  currentTime.format(context),
-                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+  static InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      isDense: true,
+      filled: true,
+      fillColor: const Color(0xFFF8FAFC),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
+      ),
     );
   }
 }

@@ -233,7 +233,7 @@ class _TournamentsTabState extends State<TournamentsTab> {
 
   // Quick Action & Dialog handlers
   void _openCreateDialog({TournamentItem? editItem}) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => CreateTournamentDialog(
@@ -307,7 +307,7 @@ class _TournamentsTabState extends State<TournamentsTab> {
   }
 
   void _openQuestionsDialog(TournamentItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => TournamentQuestionsDialog(
         tournament: item,
@@ -319,7 +319,7 @@ class _TournamentsTabState extends State<TournamentsTab> {
   }
 
   void _openViewDialog(TournamentItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => TournamentDetailsDialog(
         item: item,
@@ -329,14 +329,14 @@ class _TournamentsTabState extends State<TournamentsTab> {
   }
 
   void _openRegistrationsDialog([TournamentItem? item]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => TournamentRegistrationsDialog(tournament: item),
     );
   }
 
   void _openRewardsDialog([TournamentItem? item]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => TournamentRewardsDialog(tournament: item),
     );
@@ -505,34 +505,25 @@ class _TournamentsTabState extends State<TournamentsTab> {
   void _sendNotification() {
     final textController = TextEditingController();
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.campaign_outlined, color: Color(0xFF5636F5)),
-            SizedBox(width: 8),
-            Text('Send Tournament Notification'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Broadcast instant notification to all registered candidates or general users.'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: textController,
-              decoration: const InputDecoration(
-                hintText: 'e.g. Mega Tournament starts in 30 minutes! Join now to win rewards.',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
+      builder: (ctx) => AppModalDialog(
+        title: 'Send Tournament Notification',
+        iconData: Icons.campaign_rounded,
+        gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+        maxWidth: 500,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+              ),
+            ),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
           ElevatedButton(
             onPressed: () async {
               final text = textController.text.trim();
@@ -562,10 +553,47 @@ class _TournamentsTabState extends State<TournamentsTab> {
                 );
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5636F5), foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5636F5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             child: const Text('Send Now'),
           ),
         ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Broadcast instant notification to all registered candidates or general users.',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: textController,
+              decoration: InputDecoration(
+                hintText: 'e.g. Mega Tournament starts in 30 minutes! Join now to win rewards.',
+                hintStyle: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                ),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
       ),
     );
   }

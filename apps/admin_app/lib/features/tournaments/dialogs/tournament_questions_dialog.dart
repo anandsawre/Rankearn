@@ -102,7 +102,7 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
 
   // --- 1. Manual Add / Edit Question Dialog ---
   void _openAddQuestionDialog([QuestionItem? itemToEdit]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => CreateQuestionDialog(
         initialItem: itemToEdit,
@@ -171,7 +171,7 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
 
   // --- 2. Bulk Upload Questions (CSV / Excel) ---
   void _openImportQuestionsDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ImportQuestionsDialog(
         onImport: (importedQuestions) async {
@@ -262,7 +262,7 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
     bool replaceExisting = false;
     int previewQuestionCount = (availableTests.first['total_questions'] as num?)?.toInt() ?? 0;
 
-    await showDialog(
+    await AppModalDialog.show(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) {
@@ -271,117 +271,30 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
             orElse: () => availableTests.first,
           );
 
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Row(
-              children: [
-                Icon(Icons.copy_all_rounded, color: Color(0xFF5636F5)),
-                SizedBox(width: 10),
-                Text('Add from Existing Test', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-              ],
-            ),
-            content: SizedBox(
-              width: 520,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Select any existing test or mock set. All its questions will be automatically copied into this tournament.',
-                    style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Test Selection Dropdown
-                  const Text('Select Test to Copy From *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                  const SizedBox(height: 6),
-                  Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFCBD5E1)),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedTestId,
-                        isExpanded: true,
-                        items: availableTests.map((t) {
-                          final tId = t['id']?.toString() ?? '';
-                          final tTitle = t['title']?.toString() ?? 'Untitled Test';
-                          final tCat = t['category_id']?.toString() ?? 'General';
-                          final tQs = (t['total_questions'] as num?)?.toInt() ?? 0;
-                          return DropdownMenuItem<String>(
-                            value: tId,
-                            child: Text(
-                              '$tTitle ($tCat • $tQs Questions)',
-                              style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setDialogState(() {
-                              selectedTestId = val;
-                              final match = availableTests.firstWhere((t) => t['id']?.toString() == val);
-                              previewQuestionCount = (match['total_questions'] as num?)?.toInt() ?? 0;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Info Box
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F0FF),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFDDD6FE)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline_rounded, color: Color(0xFF6B4EFF), size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Selected test: "${selectedTest['title']}"\nQuestions to copy: $previewQuestionCount questions',
-                            style: const TextStyle(fontSize: 11.5, color: Color(0xFF5636F5), fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Replace vs Append Checkbox
-                  CheckboxListTile(
-                    value: replaceExisting,
-                    onChanged: (val) => setDialogState(() => replaceExisting = val ?? false),
-                    title: const Text('Replace existing questions in this tournament', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    subtitle: const Text('If checked, current questions of this tournament will be removed before importing.', style: TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    activeColor: const Color(0xFF5636F5),
-                  ),
-                ],
-              ),
-            ),
+          return AppModalDialog(
+            title: 'Add from Existing Test',
+            subtitle: 'Bulk clone questions from another mock test or category',
+            iconData: Icons.copy_all_rounded,
+            gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+            maxWidth: 520,
             actions: [
-              TextButton(
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFCBD5E1)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+                child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
               ),
+              const SizedBox(width: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF5636F5),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
                 ),
                 onPressed: () async {
                   Navigator.pop(ctx);
@@ -391,9 +304,81 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
                     replaceExisting: replaceExisting,
                   );
                 },
-                child: const Text('Copy Questions Now'),
+                child: const Text('Copy Questions Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
               ),
             ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select any existing test or mock set. All its questions will be automatically copied into this tournament.',
+                  style: TextStyle(fontSize: 12.5, color: Color(0xFF475569)),
+                ),
+                const SizedBox(height: 16),
+
+                // Test Selection Dropdown
+                const Text('Select Test to Copy From *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
+                const SizedBox(height: 6),
+                AppDropdown<String>(
+                  value: selectedTestId,
+                  items: availableTests.map((t) {
+                    final tId = t['id']?.toString() ?? '';
+                    final tTitle = t['title']?.toString() ?? 'Untitled Test';
+                    final tCat = t['category_id']?.toString() ?? 'General';
+                    final tQs = (t['total_questions'] as num?)?.toInt() ?? 0;
+                    return AppDropdownItem<String>(
+                      value: tId,
+                      label: '$tTitle ($tCat • $tQs Questions)',
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setDialogState(() {
+                        selectedTestId = val;
+                        final match = availableTests.firstWhere((t) => t['id']?.toString() == val);
+                        previewQuestionCount = (match['total_questions'] as num?)?.toInt() ?? 0;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 14),
+
+                // Info Box
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded, color: Color(0xFF5636F5), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Selected test: "${selectedTest['title']}"\nQuestions to copy: $previewQuestionCount questions',
+                          style: const TextStyle(fontSize: 11.5, color: Color(0xFF1E293B), fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Replace vs Append Checkbox
+                CheckboxListTile(
+                  value: replaceExisting,
+                  onChanged: (val) => setDialogState(() => replaceExisting = val ?? false),
+                  title: const Text('Replace existing questions in this tournament', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  subtitle: const Text('If checked, current questions of this tournament will be removed before importing.', style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B))),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: const Color(0xFF5636F5),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -485,19 +470,33 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
   }
 
   void _deleteQuestion(QuestionItem question) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Question', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-        content: Text('Are you sure you want to delete Question #${question.questionNumber}?'),
+      builder: (ctx) => AppModalDialog(
+        title: 'Delete Question',
+        subtitle: 'Question #${question.questionNumber}',
+        iconData: Icons.delete_outline_rounded,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 420,
         actions: [
-          TextButton(
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
+            ),
             onPressed: () async {
               Navigator.pop(ctx);
               setState(() {
@@ -527,9 +526,13 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
                 );
               }
             },
-            child: const Text('Delete'),
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
+        child: Text(
+          'Are you sure you want to delete Question #${question.questionNumber}? This action cannot be undone.',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF334155), height: 1.45),
+        ),
       ),
     );
   }
@@ -538,208 +541,142 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
   Widget build(BuildContext context) {
     final filtered = _filteredQuestions;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          maxWidth: 1040,
-          maxHeight: 750,
-          minWidth: 700,
+    return AppModalDialog(
+      title: widget.tournament.title,
+      subtitle: '${_questions.length} Questions Attached • Entry Fee: ${widget.tournament.entryFee} Coins • Prize: ₹${widget.tournament.prizePool}',
+      iconData: Icons.quiz_outlined,
+      gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+      maxWidth: 960,
+      scrollable: false,
+      actions: [
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5636F5),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+          ),
+          icon: const Icon(Icons.copy_all_rounded, size: 16),
+          label: const Text('Add Existing Test', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          onPressed: _openImportFromExistingTestDialog,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF5636F5),
+            side: const BorderSide(color: Color(0xFF5636F5)),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          icon: const Icon(Icons.add_rounded, size: 16),
+          label: const Text('New Question', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          onPressed: () => _openAddQuestionDialog(),
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF475569),
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          icon: const Icon(Icons.upload_file_rounded, size: 16),
+          label: const Text('Import CSV', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          onPressed: _openImportQuestionsDialog,
+        ),
+        const SizedBox(width: 8),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 2. Search & Filter Bar
+          Row(
             children: [
-              // 1. Header Row
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: widget.tournament.thumbnailBg,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(widget.tournament.thumbnailIcon, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                widget.tournament.title,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                widget.tournament.category,
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${_questions.length} Questions Attached • Entry Fee: ${widget.tournament.entryFee} Coins • Prize: ₹${widget.tournament.prizePool}',
-                          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Action Buttons in Header
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      // IMPORT FROM EXISTING TEST BUTTON (STAR FEATURE)
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5636F5),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          elevation: 0,
-                        ),
-                        icon: const Icon(Icons.copy_all_rounded, size: 16),
-                        label: const Text('Add Existing Test', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                        onPressed: _openImportFromExistingTestDialog,
-                      ),
-
-                      // Manual Add Question Button
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF5636F5),
-                          side: const BorderSide(color: Color(0xFF5636F5)),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        icon: const Icon(Icons.add_rounded, size: 16),
-                        label: const Text('New Question', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                        onPressed: () => _openAddQuestionDialog(),
-                      ),
-
-                      // Import CSV / Excel Button
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.textPrimary,
-                          side: const BorderSide(color: Color(0xFFCBD5E1)),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        icon: const Icon(Icons.upload_file_rounded, size: 16),
-                        label: const Text('Import CSV', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                        onPressed: _openImportQuestionsDialog,
-                      ),
-
-                      // Close Dialog
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: () => Navigator.of(context).pop(),
-                        splashRadius: 18,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const Divider(height: 24, color: Color(0xFFE2E8F0)),
-
-              // 2. Search & Filter Bar
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                        style: const TextStyle(fontSize: 12),
-                        decoration: InputDecoration(
-                          hintText: 'Search questions by text, explanation, or options...',
-                          hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                          prefixIcon: const Icon(Icons.search_rounded, size: 17, color: AppColors.textSecondary),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear_rounded, size: 16),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() => _searchQuery = '');
-                                  },
-                                )
-                              : null,
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 9),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Difficulty Filter
-                  Container(
-                    height: 38,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedDifficulty,
-                        style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                        items: const ['All', 'Easy', 'Medium', 'Hard', 'Expert']
-                            .map((d) => DropdownMenuItem(value: d, child: Text('$d Difficulty')))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedDifficulty = val);
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-
-              // 3. Questions List / Empty State / Loader
               Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF5636F5)))
-                    : filtered.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.separated(
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, _) => const SizedBox(height: 10),
-                            itemBuilder: (context, index) {
-                              final q = filtered[index];
-                              return _buildQuestionCard(q);
-                            },
-                          ),
+                child: SizedBox(
+                  height: 38,
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) => setState(() => _searchQuery = val),
+                    style: const TextStyle(fontSize: 12),
+                    decoration: InputDecoration(
+                      hintText: 'Search questions by text, explanation, or options...',
+                      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                      prefixIcon: const Icon(Icons.search_rounded, size: 17, color: Color(0xFF94A3B8)),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear_rounded, size: 16),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      isDense: true,
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Difficulty Filter
+              SizedBox(
+                width: 160,
+                child: AppDropdown<String>(
+                  value: _selectedDifficulty,
+                  items: const [
+                    AppDropdownItem(value: 'All', label: 'All Difficulties'),
+                    AppDropdownItem(value: 'Easy', label: 'Easy Level'),
+                    AppDropdownItem(value: 'Medium', label: 'Medium Level'),
+                    AppDropdownItem(value: 'Hard', label: 'Hard Level'),
+                    AppDropdownItem(value: 'Expert', label: 'Expert Level'),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedDifficulty = val);
+                  },
+                ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 14),
+
+          // 3. Questions List / Empty State / Loader
+          SizedBox(
+            height: 460,
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF5636F5)))
+                : filtered.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, index) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final q = filtered[index];
+                          return _buildQuestionCard(q);
+                        },
+                      ),
+          ),
+        ],
       ),
     );
   }
