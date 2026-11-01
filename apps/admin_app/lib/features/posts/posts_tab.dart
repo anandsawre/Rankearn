@@ -286,24 +286,34 @@ class _PostsTabState extends State<PostsTab> {
     final catController = TextEditingController(text: 'Current Affairs');
     final excerptController = TextEditingController();
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Publish New Article'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppTextField(label: 'Article Title', controller: titleController, hintText: 'e.g. 70th BPSC Prelims Strategy'),
-            const SizedBox(height: 12),
-            AppTextField(label: 'Category', controller: catController, hintText: 'Current Affairs'),
-            const SizedBox(height: 12),
-            AppTextField(label: 'Excerpt Summary', controller: excerptController, hintText: 'Short synopsis of the update...', maxLines: 2),
-          ],
-        ),
+      builder: (ctx) => AppModalDialog(
+        title: 'Publish New Article',
+        subtitle: 'Broadcast educational articles, updates & exam strategies',
+        iconData: Icons.article_rounded,
+        gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+        maxWidth: 520,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          AppButton(
-            label: 'Publish Live',
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+              ),
+            ),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5636F5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () async {
               if (titleController.text.isNotEmpty) {
                 final newId = 'post-${DateTime.now().millisecondsSinceEpoch}';
@@ -347,8 +357,35 @@ class _PostsTabState extends State<PostsTab> {
                 }
               }
             },
+            child: const Text('Publish Live'),
           ),
         ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppTextField(
+              label: 'Article Title',
+              controller: titleController,
+              hintText: 'e.g. 70th BPSC Prelims Strategy',
+              borderRadius: BorderRadius.circular(8),
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              label: 'Category',
+              controller: catController,
+              hintText: 'Current Affairs',
+              borderRadius: BorderRadius.circular(8),
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              label: 'Excerpt Summary',
+              controller: excerptController,
+              hintText: 'Short synopsis of the update...',
+              maxLines: 2,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ],
+        ),
       ),
     );
   }
