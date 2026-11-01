@@ -169,7 +169,7 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () {
-                  showDialog(context: context, builder: (_) => const CreateBattleDialog());
+                  AppModalDialog.show(context: context, builder: (_) => const CreateBattleDialog());
                 },
                 icon: const Icon(Icons.add_rounded, size: 16),
                 label: Text(
@@ -551,7 +551,7 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
             children: [
               OutlinedButton.icon(
                 onPressed: () {
-                  showDialog(context: context, builder: (_) => BattleDetailDialog(battle: b));
+                  AppModalDialog.show(context: context, builder: (_) => BattleDetailDialog(battle: b));
                 },
                 icon: const Icon(Icons.leaderboard_rounded, size: 16, color: AppColors.battleAdminPurple),
                 label: Text(
@@ -635,7 +635,7 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
               ],
               ElevatedButton.icon(
                 onPressed: () {
-                  showDialog(
+                  AppModalDialog.show(
                     context: context,
                     builder: (_) => ConfirmActionDialog(
                       title: 'End Competition ${b.id}?',

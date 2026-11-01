@@ -40,96 +40,73 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderLg),
-      backgroundColor: AppColors.surface,
-      child: Container(
-        width: 480,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandGreenLight,
-                    borderRadius: AppRadii.borderMd,
-                  ),
-                  child: const Icon(Icons.campaign_rounded, color: AppColors.brandGreenDark, size: 24),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Broadcast Battle Alert',
-                        style: AppTypography.headingSmall.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w800),
-                      ),
-                      Text(
-                        'In-game notification transmission',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-
-            Text('Alert Header', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _titleController,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-              decoration: _inputDecoration('Title'),
-            ),
-            const SizedBox(height: 14),
-
-            Text('Target Audience', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-            const SizedBox(height: 6),
-            DropdownButtonFormField<String>(
-              initialValue: _target,
-              decoration: _inputDecoration(''),
-              items: [
-                DropdownMenuItem(value: 'All Players', child: Text('All Online Players', style: AppTypography.bodyMedium)),
-                DropdownMenuItem(value: 'In Battles Only', child: Text('In Live Battles Only', style: AppTypography.bodyMedium)),
-                DropdownMenuItem(value: 'In Rooms Only', child: Text('In Custom Rooms Only', style: AppTypography.bodyMedium)),
-              ],
-              onChanged: (v) => setState(() => _target = v!),
-            ),
-            const SizedBox(height: 14),
-
-            Text('Message Body', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _messageController,
-              maxLines: 3,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-              decoration: _inputDecoration('Notification message content...'),
-            ),
-            const SizedBox(height: 20),
-
-            ElevatedButton(
-              onPressed: _handleTransmit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brandGreenDark,
-                foregroundColor: AppColors.textOnPrimary,
-                minimumSize: const Size(double.infinity, 42),
-                shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderSm),
-                elevation: 0,
-              ),
-              child: Text('Transmit Broadcast', style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textOnPrimary)),
-            ),
-          ],
+    return AppModalDialog(
+      title: 'Broadcast Battle Alert',
+      subtitle: 'In-game real-time notification transmission',
+      iconData: Icons.campaign_rounded,
+      gradientColors: const [Color(0xFF0D9488), Color(0xFF14B8A6)],
+      maxWidth: 500,
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: _handleTransmit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0D9488),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            elevation: 0,
+          ),
+          icon: const Icon(Icons.send_rounded, size: 16),
+          label: const Text('Transmit Alert', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Alert Header', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _titleController,
+            style: const TextStyle(fontSize: 12.5),
+            decoration: _inputDecoration('Title'),
+          ),
+          const SizedBox(height: 14),
+
+          const Text('Target Audience', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+          const SizedBox(height: 6),
+          AppDropdown<String>(
+            value: _target,
+            items: const [
+              AppDropdownItem(value: 'All Players', label: 'All Online Players'),
+              AppDropdownItem(value: '1 vs 1 Players Only', label: '1 vs 1 Players Only'),
+              AppDropdownItem(value: 'Tournament Players Only', label: 'Tournament Players Only'),
+              AppDropdownItem(value: 'VIP & High-Tier Rankers', label: 'VIP & High-Tier Rankers'),
+            ],
+            onChanged: (v) {
+              if (v != null) setState(() => _target = v);
+            },
+          ),
+          const SizedBox(height: 14),
+
+          const Text('Message Body', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _messageController,
+            maxLines: 3,
+            style: const TextStyle(fontSize: 12.5),
+            decoration: _inputDecoration('Enter alert notification text...'),
+          ),
+        ],
       ),
     );
   }
@@ -137,17 +114,21 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+      hintStyle: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
       filled: true,
-      fillColor: AppColors.surfaceSubtle,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      fillColor: const Color(0xFFF8FAFC),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       border: OutlineInputBorder(
-        borderRadius: AppRadii.borderMd,
-        borderSide: const BorderSide(color: AppColors.borderSubtle),
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: AppRadii.borderMd,
-        borderSide: const BorderSide(color: AppColors.brandGreenDark, width: 1.5),
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFF0D9488), width: 1.5),
       ),
     );
   }

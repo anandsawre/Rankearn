@@ -170,7 +170,7 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () {
-                  showDialog(context: context, builder: (_) => const CreateBattleDialog());
+                  AppModalDialog.show(context: context, builder: (_) => const CreateBattleDialog());
                 },
                 icon: const Icon(Icons.add_rounded, size: 16),
                 label: Text(
@@ -545,7 +545,7 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
                 icon: const Icon(Icons.visibility_outlined, size: 18, color: AppColors.battleAdminPurple),
                 tooltip: 'View Match Details',
                 onPressed: () {
-                  showDialog(context: context, builder: (_) => BattleDetailDialog(battle: b));
+                  AppModalDialog.show(context: context, builder: (_) => BattleDetailDialog(battle: b));
                 },
               ),
               IconButton(
@@ -566,7 +566,7 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
                 icon: const Icon(Icons.cancel_outlined, size: 18, color: AppColors.liveRed),
                 tooltip: 'Cancel Match & Refund',
                 onPressed: () {
-                  showDialog(
+                  AppModalDialog.show(
                     context: context,
                     builder: (_) => ConfirmActionDialog(
                       title: 'Cancel Match ${b.id}?',

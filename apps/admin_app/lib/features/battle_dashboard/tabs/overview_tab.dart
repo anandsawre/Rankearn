@@ -316,28 +316,28 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
         icon: Icons.add_circle_outline_rounded,
         iconColor: const Color(0xFF7C3AED),
         cardColor: const Color(0xFFF3E8FF),
-        onTap: () => showDialog(context: context, builder: (_) => const CreateBattleDialog()),
+        onTap: () => AppModalDialog.show(context: context, builder: (_) => const CreateBattleDialog()),
       ),
       QuickActionItemData(
         label: 'Create\nRoom',
         icon: Icons.meeting_room_outlined,
         iconColor: const Color(0xFF0EA5E9),
         cardColor: const Color(0xFFE0F2FE),
-        onTap: () => showDialog(context: context, builder: (_) => const CreateRoomDialog()),
+        onTap: () => AppModalDialog.show(context: context, builder: (_) => const CreateRoomDialog()),
       ),
       QuickActionItemData(
         label: 'Manage\nGames',
         icon: Icons.tune_rounded,
         iconColor: const Color(0xFFF59E0B),
         cardColor: const Color(0xFFFEF3C7),
-        onTap: () => showDialog(context: context, builder: (_) => const ManageGamesDialog()),
+        onTap: () => AppModalDialog.show(context: context, builder: (_) => const ManageGamesDialog()),
       ),
       QuickActionItemData(
         label: 'Broadcast\nNotice',
         icon: Icons.campaign_outlined,
         iconColor: const Color(0xFF10B981),
         cardColor: const Color(0xFFD1FAE5),
-        onTap: () => showDialog(context: context, builder: (_) => const BroadcastDialog()),
+        onTap: () => AppModalDialog.show(context: context, builder: (_) => const BroadcastDialog()),
       ),
       QuickActionItemData(
         label: '1 vs 1\nBattles',
@@ -855,7 +855,7 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
             child: Center(
               child: InkWell(
                 onTap: () {
-                  showDialog(
+                  AppModalDialog.show(
                     context: context,
                     builder: (_) => BattleDetailDialog(battle: b),
                   );
@@ -1052,7 +1052,7 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
                   icon: Icons.power_settings_new_rounded,
                   color: AppColors.liveRed,
                   onTap: () {
-                    showDialog(
+                    AppModalDialog.show(
                       context: context,
                       builder: (_) => ConfirmActionDialog(
                         title: 'Force End All Active Battles?',
@@ -1083,7 +1083,7 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
                   icon: Icons.delete_outline_rounded,
                   color: AppColors.liveRed,
                   onTap: () {
-                    showDialog(
+                    AppModalDialog.show(
                       context: context,
                       builder: (_) => ConfirmActionDialog(
                         title: 'Clear All Active Rooms?',

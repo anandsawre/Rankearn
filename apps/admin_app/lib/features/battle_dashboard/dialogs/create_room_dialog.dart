@@ -55,312 +55,244 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderLg),
-      backgroundColor: AppColors.surface,
-      child: Container(
-        width: 560,
-        constraints: const BoxConstraints(maxHeight: 700),
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.battleAdminPurpleSecondary, AppColors.battleAdminPurple],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: AppRadii.borderTopLg,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface.withValues(alpha: 0.2),
-                      borderRadius: AppRadii.borderMd,
-                    ),
-                    child: const Icon(Icons.meeting_room_rounded, color: AppColors.textOnPrimary, size: 22),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Create Custom Battle Room',
-                          style: AppTypography.headingSmall.copyWith(color: AppColors.textOnPrimary, fontWeight: FontWeight.w800),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Configure custom room rules, code & access permissions',
-                          style: AppTypography.captionBold.copyWith(color: AppColors.battleAdminPurpleLight),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, color: AppColors.battleAdminPurpleLight),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-
-            // Body
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+    return AppModalDialog(
+      title: 'Create Custom Battle Room',
+      subtitle: 'Configure custom room rules, code & access permissions',
+      iconData: Icons.meeting_room_rounded,
+      gradientColors: const [AppColors.battleAdminPurpleSecondary, AppColors.battleAdminPurple],
+      maxWidth: 620,
+      scrollable: true,
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+          ),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+        ),
+        const SizedBox(width: 10),
+        ElevatedButton(
+          onPressed: _handleDeploy,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.battleAdminPurple,
+            foregroundColor: AppColors.textOnPrimary,
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+          ),
+          child: const Text('Deploy Arena Room', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Room Name & Code
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Room Name & Code
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Room Name', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                              const SizedBox(height: 6),
-                              TextField(
-                                controller: _nameController,
-                                style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-                                decoration: _inputDecoration('e.g., RRB-Tech Practice'),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text('Code', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                                  const Spacer(),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                                    decoration: BoxDecoration(color: AppColors.brandPurpleLight, borderRadius: AppRadii.borderSm),
-                                    child: Text('Auto', style: AppTypography.captionBold.copyWith(color: AppColors.battleAdminPurple, fontSize: 11)),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              TextFormField(
-                                initialValue: _roomCode,
-                                readOnly: true,
-                                style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w800, color: AppColors.battleAdminPurple),
-                                decoration: _inputDecoration('').copyWith(
-                                  fillColor: AppColors.brandPurpleLight,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Description
-                    Text('Room Description', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                    const Text('Room Name', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: _descController,
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-                      decoration: _inputDecoration('Describe tournament guidelines or audience...'),
+                      controller: _nameController,
+                      style: const TextStyle(fontSize: 12.5),
+                      decoration: _inputDecoration('e.g., RRB-Tech Practice'),
                     ),
-                    const SizedBox(height: 16),
-
-                    // Subject & Capacity
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Subject', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                              const SizedBox(height: 6),
-                              DropdownButtonFormField<String>(
-                                initialValue: _subject,
-                                decoration: _inputDecoration(''),
-                                items: [
-                                  DropdownMenuItem(value: 'Mathematics', child: Text('Mathematics', style: AppTypography.bodyMedium)),
-                                  DropdownMenuItem(value: 'General Science', child: Text('General Science', style: AppTypography.bodyMedium)),
-                                  DropdownMenuItem(value: 'Reasoning', child: Text('Reasoning', style: AppTypography.bodyMedium)),
-                                  DropdownMenuItem(value: 'General Awareness', child: Text('General Awareness', style: AppTypography.bodyMedium)),
-                                  DropdownMenuItem(value: 'Mixed (All)', child: Text('Mixed (All)', style: AppTypography.bodyMedium)),
-                                ],
-                                onChanged: (v) => setState(() => _subject = v!),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Max Participants', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                              const SizedBox(height: 6),
-                              TextFormField(
-                                initialValue: _maxPlayers.toString(),
-                                keyboardType: TextInputType.number,
-                                style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-                                decoration: _inputDecoration(''),
-                                onChanged: (v) {
-                                  final num = int.tryParse(v) ?? 20;
-                                  setState(() {
-                                    _maxPlayers = num;
-                                    _reward = (_entryFee * num * 0.85).toInt();
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Entry fee & reward
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceSubtle,
-                        borderRadius: AppRadii.borderLg,
-                        border: Border.all(color: AppColors.borderSubtle),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Entry Fee (Coins)', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                                const SizedBox(height: 6),
-                                TextFormField(
-                                  initialValue: _entryFee.toString(),
-                                  keyboardType: TextInputType.number,
-                                  style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w700),
-                                  decoration: _inputDecoration('').copyWith(
-                                    prefixIcon: const Icon(Icons.monetization_on_rounded, color: AppColors.warning, size: 18),
-                                  ),
-                                  onChanged: (v) {
-                                    final f = int.tryParse(v) ?? 10;
-                                    setState(() {
-                                      _entryFee = f;
-                                      _reward = (f * _maxPlayers * 0.85).toInt();
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Prize Pool (Coins)', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                                const SizedBox(height: 6),
-                                TextFormField(
-                                  key: ValueKey(_reward),
-                                  initialValue: _reward.toString(),
-                                  keyboardType: TextInputType.number,
-                                  style: AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.brandGreen),
-                                  decoration: _inputDecoration('').copyWith(
-                                    prefixIcon: const Icon(Icons.emoji_events_rounded, color: AppColors.brandGreen, size: 18),
-                                  ),
-                                  onChanged: (v) => setState(() => _reward = int.tryParse(v) ?? 200),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Privacy Switch
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: AppRadii.borderMd,
-                        border: Border.all(color: AppColors.borderSubtle),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _isPrivate ? Icons.lock_rounded : Icons.public_rounded,
-                            color: _isPrivate ? AppColors.warning : AppColors.textMuted,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _isPrivate ? 'Private Room (Password Protected)' : 'Public Room (Open for all)',
-                                  style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                                ),
-                                Text(
-                                  _isPrivate ? 'Only players with password or direct link can join' : 'Visible on public rooms list',
-                                  style: AppTypography.captionBold.copyWith(color: AppColors.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: _isPrivate,
-                            activeThumbColor: AppColors.battleAdminPurple,
-                            onChanged: (v) => setState(() => _isPrivate = v),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    if (_isPrivate) ...[
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
-                        decoration: _inputDecoration('Enter Room Password').copyWith(
-                          prefixIcon: const Icon(Icons.key_rounded, size: 18, color: AppColors.battleAdminPurple),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
-            ),
-
-            // Footer Button
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: ElevatedButton(
-                onPressed: _handleDeploy,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.battleAdminPurple,
-                  foregroundColor: AppColors.textOnPrimary,
-                  minimumSize: const Size(double.infinity, 44),
-                  shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderSm),
-                  elevation: 0,
+              const SizedBox(width: 14),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text('Code', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                          decoration: BoxDecoration(color: AppColors.brandPurpleLight, borderRadius: BorderRadius.circular(4)),
+                          child: const Text('Auto', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.battleAdminPurple)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    TextFormField(
+                      initialValue: _roomCode,
+                      readOnly: true,
+                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.battleAdminPurple),
+                      decoration: _inputDecoration('').copyWith(
+                        fillColor: AppColors.brandPurpleLight,
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text('Deploy Room', style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w800, color: AppColors.textOnPrimary)),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Description
+          const Text('Room Description', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _descController,
+            style: const TextStyle(fontSize: 12.5),
+            decoration: _inputDecoration('Describe tournament guidelines or audience...'),
+          ),
+          const SizedBox(height: 16),
+
+          // Subject & Capacity
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Subject', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+                    const SizedBox(height: 6),
+                    AppDropdown<String>(
+                      value: _subject,
+                      items: const [
+                        AppDropdownItem(value: 'Mathematics', label: 'Mathematics'),
+                        AppDropdownItem(value: 'General Science', label: 'General Science'),
+                        AppDropdownItem(value: 'Reasoning', label: 'Reasoning'),
+                        AppDropdownItem(value: 'General Awareness', label: 'General Awareness'),
+                        AppDropdownItem(value: 'Mixed (All)', label: 'Mixed (All)'),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setState(() => _subject = v);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Max Participants', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+                    const SizedBox(height: 6),
+                    TextFormField(
+                      initialValue: _maxPlayers.toString(),
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontSize: 12.5),
+                      decoration: _inputDecoration(''),
+                      onChanged: (v) {
+                        final num = int.tryParse(v) ?? 20;
+                        setState(() {
+                          _maxPlayers = num;
+                          _reward = (_entryFee * num * 0.85).toInt();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Entry fee & reward
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
             ),
-          ],
-        ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Entry Fee (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        initialValue: _entryFee.toString(),
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                        decoration: _inputDecoration('').copyWith(
+                          prefixIcon: const Icon(Icons.monetization_on_rounded, color: AppColors.warning, size: 18),
+                        ),
+                        onChanged: (v) {
+                          final f = int.tryParse(v) ?? 10;
+                          setState(() {
+                            _entryFee = f;
+                            _reward = (f * _maxPlayers * 0.85).toInt();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Prize Pool (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        key: ValueKey(_reward),
+                        initialValue: _reward.toString(),
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.brandGreen),
+                        decoration: _inputDecoration('').copyWith(
+                          prefixIcon: const Icon(Icons.emoji_events_rounded, color: AppColors.brandGreen, size: 18),
+                        ),
+                        onChanged: (v) => setState(() => _reward = int.tryParse(v) ?? 50),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Access Type (Public vs Private)
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
+            ),
+            child: Column(
+              children: [
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  value: _isPrivate,
+                  activeColor: AppColors.battleAdminPurple,
+                  onChanged: (val) => setState(() => _isPrivate = val ?? false),
+                  title: const Text('Require Password / PIN to Join', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
+                  subtitle: const Text('Only users with passcode can enter this arena', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                ),
+                if (_isPrivate) ...[
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    style: const TextStyle(fontSize: 12.5),
+                    decoration: _inputDecoration('Enter 4-6 digit passcode'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -368,20 +300,20 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+      hintStyle: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
       filled: true,
-      fillColor: AppColors.surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      fillColor: const Color(0xFFF8FAFC),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       border: OutlineInputBorder(
-        borderRadius: AppRadii.borderMd,
-        borderSide: const BorderSide(color: AppColors.borderSubtle),
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: AppRadii.borderMd,
-        borderSide: const BorderSide(color: AppColors.borderSubtle),
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: AppRadii.borderMd,
+        borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: AppColors.battleAdminPurple, width: 1.5),
       ),
     );

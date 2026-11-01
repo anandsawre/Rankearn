@@ -168,7 +168,7 @@ class _BattleRoomsTabState extends State<BattleRoomsTab> {
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: () {
-                  showDialog(context: context, builder: (_) => const CreateRoomDialog());
+                  AppModalDialog.show(context: context, builder: (_) => const CreateRoomDialog());
                 },
                 icon: const Icon(Icons.add_rounded, size: 16),
                 label: Text(
@@ -516,7 +516,7 @@ class _BattleRoomsTabState extends State<BattleRoomsTab> {
             icon: const Icon(Icons.delete_outline_rounded, color: AppColors.liveRed, size: 20),
             tooltip: 'Clear & Close Room',
             onPressed: () {
-              showDialog(
+              AppModalDialog.show(
                 context: context,
                 builder: (_) => ConfirmActionDialog(
                   title: 'Clear Room "${r.name}" (${r.code})?',

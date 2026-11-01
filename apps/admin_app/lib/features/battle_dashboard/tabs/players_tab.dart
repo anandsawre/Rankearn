@@ -437,7 +437,7 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
             shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
             onSelected: (val) {
               if (val == 'restrict') {
-                showDialog(
+                AppModalDialog.show(
                   context: context,
                   builder: (_) => ConfirmActionDialog(
                     title: 'Restrict Battle Access: ${p.username}?',
@@ -453,7 +453,7 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
                   ),
                 );
               } else if (val == 'suspend') {
-                showDialog(
+                AppModalDialog.show(
                   context: context,
                   builder: (_) => ConfirmActionDialog(
                     title: 'Suspend Account: ${p.username}?',
