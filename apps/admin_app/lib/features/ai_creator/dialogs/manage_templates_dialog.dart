@@ -13,8 +13,8 @@ class ManageTemplatesDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppModalDialog(
-      iconData: Icons.folder_outlined,
-      iconColor: const Color(0xFF10B981),
+      iconData: Icons.folder_special_rounded,
+      gradientColors: const [Color(0xFF047857), Color(0xFF10B981)],
       title: 'Manage Test Templates',
       subtitle: 'Rapid 1-click test generation blueprints for competitive exams',
       maxWidth: 620,

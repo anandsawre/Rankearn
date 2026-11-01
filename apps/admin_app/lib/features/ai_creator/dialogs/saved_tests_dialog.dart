@@ -17,8 +17,8 @@ class SavedTestsDialog extends StatelessWidget {
     final savedTests = tests.where((t) => t.status != AiTestStatus.processing).toList();
 
     return AppModalDialog(
-      iconData: Icons.bookmark_outline_rounded,
-      iconColor: const Color(0xFFFF9F0A),
+      iconData: Icons.bookmark_rounded,
+      gradientColors: const [Color(0xFFD97706), Color(0xFFF59E0B)],
       title: 'Saved AI Tests (${savedTests.length})',
       subtitle: 'Inspect, review or resume publishing drafted tests',
       maxWidth: 620,

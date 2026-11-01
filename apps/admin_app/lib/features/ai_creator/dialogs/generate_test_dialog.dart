@@ -133,7 +133,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
   Widget build(BuildContext context) {
     return AppModalDialog(
       iconData: Icons.auto_awesome_rounded,
-      iconColor: const Color(0xFF5636F5),
+      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
       title: _isGenerating ? 'Synthesizing Test' : 'Generate Test with AI',
       subtitle: _isGenerating
           ? 'Generating verified bilingual questions via AI pipeline'

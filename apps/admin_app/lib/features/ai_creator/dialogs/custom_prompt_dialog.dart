@@ -52,8 +52,8 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
   @override
   Widget build(BuildContext context) {
     return AppModalDialog(
-      iconData: Icons.edit_note_rounded,
-      iconColor: const Color(0xFF2587F8),
+      iconData: Icons.tune_rounded,
+      gradientColors: const [Color(0xFF2587F8), Color(0xFF0D9488)],
       title: 'Custom Prompt & Model Config',
       subtitle: 'Configure Gemini system prompt, temperature & cognitive depth',
       maxWidth: 640,

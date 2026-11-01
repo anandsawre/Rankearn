@@ -42,7 +42,7 @@ class _ExportTestDialogState extends State<ExportTestDialog> {
   Widget build(BuildContext context) {
     return AppModalDialog(
       iconData: Icons.ios_share_rounded,
-      iconColor: const Color(0xFFF43F5E),
+      gradientColors: const [Color(0xFFE11D48), Color(0xFFF43F5E)],
       title: 'Export AI Test',
       subtitle: 'Download question paper, answer key & solutions',
       maxWidth: 540,

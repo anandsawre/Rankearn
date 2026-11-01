@@ -101,16 +101,8 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
   @override
   Widget build(BuildContext context) {
     return AppModalDialog(
-      icon: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: widget.test.iconBgColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        alignment: Alignment.center,
-        child: Icon(widget.test.icon, color: widget.test.iconColor, size: 20),
-      ),
+      iconData: widget.test.icon,
+      gradientColors: const [Color(0xFF1E1B4B), Color(0xFF4338CA)],
       title: widget.test.title,
       subtitle:
           '${widget.test.subject.label} • ${widget.test.difficulty.label} • ${widget.test.questionCount} Questions • ${widget.test.durationMinutes} min',

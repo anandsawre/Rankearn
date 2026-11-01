@@ -1,26 +1,27 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
+import '../../tokens/radii.dart';
 
-/// A professional, responsive, and attractive modal dialog component.
+/// A rich, responsive, and visually stunning modal dialog component.
 ///
-/// Provides a consistent UI across admin and user dashboards:
-/// - Responsive screen-adaptive constraints (mobile, tablet, desktop).
-/// - Premium header with gradient accent bar, icon badge, title, subtitle, and close button.
-/// - Scroll-safe flexible body with optional single-child scroll view.
-/// - Integrated footer with left-side metadata / status and right-side responsive action buttons.
-/// - Smooth scale-fade entrance transition helper (`AppModalDialog.show`).
+/// Features:
+/// - Full-width vibrant gradient hero header banner with glassmorphic icon pod.
+/// - Crisp white typography with soft translucent subtitles.
+/// - Responsive adaptive layout for mobile (<640px), tablet, and desktop.
+/// - Soft shadow, rounded corners, and clean separation between header, content, and footer.
+/// - Integrated standard input decoration helper for forms.
+/// - Smooth scale-fade cubic transition animation (`AppModalDialog.show`).
 class AppModalDialog extends StatelessWidget {
   final Widget? icon;
   final IconData? iconData;
-  final Color? iconColor;
-  final Color? iconBgColor;
   final String title;
   final String? subtitle;
   final Widget? headerTrailing;
   final bool showCloseButton;
   final VoidCallback? onClose;
-  final Color? accentColor;
+  final Gradient? headerGradient;
+  final List<Color>? gradientColors;
   final double maxWidth;
   final double? maxHeight;
   final EdgeInsetsGeometry? contentPadding;
@@ -33,15 +34,14 @@ class AppModalDialog extends StatelessWidget {
     super.key,
     this.icon,
     this.iconData,
-    this.iconColor,
-    this.iconBgColor,
     required this.title,
     this.subtitle,
     this.headerTrailing,
     this.showCloseButton = true,
     this.onClose,
-    this.accentColor,
-    this.maxWidth = 620,
+    this.headerGradient,
+    this.gradientColors,
+    this.maxWidth = 640,
     this.maxHeight,
     this.contentPadding,
     this.scrollable = false,
@@ -50,7 +50,7 @@ class AppModalDialog extends StatelessWidget {
     this.actions,
   });
 
-  /// Opens the dialog with an attractive scale-fade motion and backdrop tint.
+  /// Opens the dialog with an attractive scale-fade motion and backdrop blur.
   static Future<T?> show<T>({
     required BuildContext context,
     required WidgetBuilder builder,
@@ -60,7 +60,7 @@ class AppModalDialog extends StatelessWidget {
       context: context,
       barrierDismissible: barrierDismissible,
       barrierLabel: 'Modal',
-      barrierColor: const Color(0x660F172A),
+      barrierColor: const Color(0x730F172A),
       transitionDuration: const Duration(milliseconds: 220),
       pageBuilder: (ctx, anim1, anim2) => builder(ctx),
       transitionBuilder: (ctx, anim, secondaryAnim, child) {
@@ -76,6 +76,37 @@ class AppModalDialog extends StatelessWidget {
     );
   }
 
+  /// Standard input decoration matching Rankearn design system
+  static InputDecoration inputDecoration(
+    String hint, {
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    Color? focusColor,
+  }) {
+    final activeFocus = focusColor ?? AppColors.brandPurple;
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+      filled: true,
+      fillColor: const Color(0xFFF8FAFC),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      border: OutlineInputBorder(
+        borderRadius: AppRadii.borderMd,
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: AppRadii.borderMd,
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: AppRadii.borderMd,
+        borderSide: BorderSide(color: activeFocus, width: 1.6),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -84,11 +115,19 @@ class AppModalDialog extends StatelessWidget {
     final effectiveMaxWidth = isMobile ? math.max(300.0, media.size.width - 24) : maxWidth;
     final effectiveMaxHeight = maxHeight ?? (media.size.height * 0.88);
 
-    final resolvedColor = iconColor ?? const Color(0xFF5636F5);
-    final resolvedBgColor = iconBgColor ?? resolvedColor.withAlpha(22);
+    final resolvedGradient = headerGradient ??
+        LinearGradient(
+          colors: gradientColors ??
+              const [
+                Color(0xFF5636F5),
+                Color(0xFF2587F8),
+              ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderLg),
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 24,
@@ -103,9 +142,9 @@ class AppModalDialog extends StatelessWidget {
           border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0F172A).withAlpha(24),
-              blurRadius: 32,
-              offset: const Offset(0, 16),
+              color: const Color(0xFF0F172A).withAlpha(35),
+              blurRadius: 36,
+              offset: const Offset(0, 18),
             ),
           ],
         ),
@@ -117,48 +156,38 @@ class AppModalDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Accent Bar (Gradient Highlight)
+            // Rich Gradient Hero Header
             Container(
-              height: 3.5,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    accentColor ?? resolvedColor,
-                    (accentColor ?? resolvedColor).withAlpha(90),
-                    const Color(0xFF2587F8),
-                  ],
-                ),
-              ),
-            ),
-
-            // Header Section
-            Padding(
               padding: EdgeInsets.fromLTRB(
                 isMobile ? 16 : 22,
-                isMobile ? 14 : 18,
+                isMobile ? 16 : 18,
                 isMobile ? 12 : 16,
-                isMobile ? 12 : 14,
+                isMobile ? 16 : 18,
+              ),
+              decoration: BoxDecoration(
+                gradient: resolvedGradient,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
               ),
               child: Row(
                 children: [
-                  // Icon box
+                  // Glassmorphic Icon Pod
                   if (icon != null)
                     icon!
                   else if (iconData != null)
                     Container(
-                      width: 38,
-                      height: 38,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        color: resolvedBgColor,
+                        color: Colors.white.withAlpha(45),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: resolvedColor.withAlpha(35), width: 1),
+                        border: Border.all(color: Colors.white.withAlpha(60), width: 1.2),
                       ),
                       alignment: Alignment.center,
-                      child: Icon(iconData, color: resolvedColor, size: 20),
+                      child: Icon(iconData, color: Colors.white, size: 22),
                     ),
-                  if (icon != null || iconData != null) const SizedBox(width: 12),
+                  if (icon != null || iconData != null) const SizedBox(width: 14),
 
-                  // Title & Subtitle
+                  // Title & Subtitle in crisp white
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,9 +195,9 @@ class AppModalDialog extends StatelessWidget {
                         Text(
                           title,
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF101A3A),
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
                             letterSpacing: -0.2,
                           ),
                           maxLines: 1,
@@ -178,9 +207,9 @@ class AppModalDialog extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             subtitle!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
-                              color: AppColors.textMuted,
+                              color: Colors.white.withAlpha(210),
                               height: 1.25,
                             ),
                             maxLines: 2,
@@ -191,25 +220,25 @@ class AppModalDialog extends StatelessWidget {
                     ),
                   ),
 
-                  // Trailing widget or status badge
+                  // Trailing widget or badge
                   if (headerTrailing != null) ...[
                     const SizedBox(width: 8),
                     headerTrailing!,
                   ],
 
-                  // Close Button
+                  // Glass Close Button
                   if (showCloseButton) ...[
                     const SizedBox(width: 6),
                     Material(
-                      color: Colors.transparent,
+                      color: Colors.white.withAlpha(30),
                       borderRadius: BorderRadius.circular(8),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(8),
-                        hoverColor: const Color(0xFFF1F5F9),
+                        hoverColor: Colors.white.withAlpha(60),
                         onTap: onClose ?? () => Navigator.of(context).pop(),
                         child: const Padding(
                           padding: EdgeInsets.all(6),
-                          child: Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
+                          child: Icon(Icons.close_rounded, size: 18, color: Colors.white),
                         ),
                       ),
                     ),
@@ -217,8 +246,6 @@ class AppModalDialog extends StatelessWidget {
                 ],
               ),
             ),
-
-            const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
 
             // Body Content
             if (scrollable)
