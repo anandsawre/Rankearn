@@ -338,7 +338,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
 
   // Dialog Handlers
   void _openDetailsDialog(PaymentItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => PaymentDetailsDialog(
         payment: item,
@@ -355,7 +355,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
   }
 
   void _openProcessRefundDialog({PaymentItem? initialPayment}) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ProcessRefundDialog(
         initialPayment: initialPayment,
@@ -379,21 +379,21 @@ class _PaymentsTabState extends State<PaymentsTab> {
   }
 
   void _openReceiptDialog(PaymentItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => PaymentReceiptDialog(payment: item),
     );
   }
 
   void _openSubscriptionDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => const SubscriptionManagementDialog(),
     );
   }
 
   void _openPayoutReportsDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => const PayoutReportsDialog(),
     );
@@ -408,28 +408,41 @@ class _PaymentsTabState extends State<PaymentsTab> {
     final requestId = topup['id']?.toString() ?? '';
     final userId = topup['user_id']?.toString() ?? '';
 
-    final confirm = await showDialog<bool>(
+    final confirm = await AppModalDialog.show<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Approve Top-up & Credit Coins', style: TextStyle(fontWeight: FontWeight.w800)),
-        content: Text(
-          'Are you sure you want to approve UTR "$utr" and credit $coins Coins to $name?\n\nThis will update candidate wallet balance in database and record an audit transaction in the ledger.',
-        ),
+      builder: (ctx) => AppModalDialog(
+        title: 'Approve Top-up & Credit Coins',
+        iconData: Icons.check_circle_outline_rounded,
+        gradientColors: const [Color(0xFF00B96B), Color(0xFF10B981)],
+        maxWidth: 480,
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+              ),
+            ),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF00B96B),
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Confirm & Credit'),
           ),
         ],
+        child: Text(
+          'Are you sure you want to approve UTR "$utr" and credit $coins Coins to $name?\n\nThis will update candidate wallet balance in database and record an audit transaction in the ledger.',
+          style: const TextStyle(fontSize: 13, height: 1.5, color: AppColors.textSecondary),
+        ),
       ),
     );
 
@@ -483,28 +496,41 @@ class _PaymentsTabState extends State<PaymentsTab> {
     final utr = topup['utr']?.toString() ?? '';
     final requestId = topup['id']?.toString() ?? '';
 
-    final confirm = await showDialog<bool>(
+    final confirm = await AppModalDialog.show<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Reject Top-up Request', style: TextStyle(fontWeight: FontWeight.w800)),
-        content: Text(
-          'Are you sure you want to reject transaction UTR "$utr"? Candidate will be notified.',
-        ),
+      builder: (ctx) => AppModalDialog(
+        title: 'Reject Top-up Request',
+        iconData: Icons.cancel_outlined,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 480,
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+              ),
+            ),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Reject Request'),
           ),
         ],
+        child: Text(
+          'Are you sure you want to reject transaction UTR "$utr"? Candidate will be notified.',
+          style: const TextStyle(fontSize: 13, height: 1.5, color: AppColors.textSecondary),
+        ),
       ),
     );
 
@@ -541,35 +567,33 @@ class _PaymentsTabState extends State<PaymentsTab> {
 
   void _handlePayoutWithdrawal(Map<String, dynamic> withdrawal) {
     final utrController = TextEditingController();
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Confirm Payout Dispatch', style: TextStyle(fontWeight: FontWeight.w800)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Paying ${withdrawal['rupees']} to ${withdrawal['upi']} (${withdrawal['name']}).'),
-            const SizedBox(height: 14),
-            TextField(
-              controller: utrController,
-              decoration: const InputDecoration(
-                labelText: 'Bank Reference / UTR Number',
-                hintText: 'e.g. ICICI4920194821',
-                border: OutlineInputBorder(),
+      builder: (ctx) => AppModalDialog(
+        title: 'Confirm Payout Dispatch',
+        iconData: Icons.send_rounded,
+        gradientColors: const [Color(0xFF00B96B), Color(0xFF10B981)],
+        maxWidth: 480,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          const SizedBox(width: 8),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF00B96B),
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Complete Payout'),
             onPressed: () async {
               final ref = utrController.text.trim();
               if (ref.isEmpty) {
@@ -605,43 +629,74 @@ class _PaymentsTabState extends State<PaymentsTab> {
                   );
               }
             },
+            child: const Text('Complete Payout'),
           ),
         ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Paying ${withdrawal['rupees']} to ${withdrawal['upi']} (${withdrawal['name']}).',
+              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: utrController,
+              decoration: InputDecoration(
+                labelText: 'Bank Reference / UTR Number',
+                hintText: 'e.g. ICICI4920194821',
+                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _handleRejectWithdrawal(Map<String, dynamic> withdrawal) {
     final reasonController = TextEditingController(text: 'Invalid UPI / Bank details');
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Reject Withdrawal & Refund Coins', style: TextStyle(fontWeight: FontWeight.w800)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Are you sure you want to reject payout of ${withdrawal['rupees']} for ${withdrawal['name']}? This will refund ${withdrawal['coins']} back to user account.'),
-            const SizedBox(height: 14),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Rejection Reason',
-                hintText: 'e.g. Invalid UPI ID or payment declined',
-                border: OutlineInputBorder(),
+      builder: (ctx) => AppModalDialog(
+        title: 'Reject Withdrawal & Refund Coins',
+        iconData: Icons.cancel_outlined,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 480,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          const SizedBox(width: 8),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Confirm Reject & Refund'),
             onPressed: () async {
               Navigator.pop(ctx);
               final rawCoins = (withdrawal['raw_coins'] as int?) ??
@@ -671,14 +726,47 @@ class _PaymentsTabState extends State<PaymentsTab> {
                   );
               }
             },
+            child: const Text('Confirm Reject & Refund'),
           ),
         ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to reject payout of ${withdrawal['rupees']} for ${withdrawal['name']}? This will refund ${withdrawal['coins']} back to user account.',
+              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                labelText: 'Rejection Reason',
+                hintText: 'e.g. Invalid UPI ID or payment declined',
+                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _openPaymentSettingsDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => const PaymentSettingsDialog(),
     );

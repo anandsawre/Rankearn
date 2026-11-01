@@ -46,91 +46,46 @@ class SubscriptionManagementDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return AppModalDialog(
+      title: 'Subscription Management',
+      subtitle: 'Overview of active subscription tiers and recurring billing',
+      iconData: Icons.card_giftcard_rounded,
+      gradientColors: const [Color(0xFF10B981), Color(0xFF059669)],
+      maxWidth: 620,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+          ),
+          child: const Text('Close', style: TextStyle(color: AppColors.textSecondary)),
+        ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // KPI Row
+          Row(
             children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withAlpha(25),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.card_giftcard_rounded, color: Color(0xFF10B981), size: 20),
-                        ),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Subscription Management',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-                              ),
-                              Text(
-                                'Overview of active subscription tiers and recurring billing',
-                                style: TextStyle(fontSize: 11, color: AppColors.textMuted),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const Divider(height: 24, color: AppColors.borderSubtle),
-
-              // KPI Row
-              Row(
-                children: [
-                  _buildKpiCard('Total Active', '4,930', const Color(0xFF10B981)),
-                  const SizedBox(width: 10),
-                  _buildKpiCard('Monthly MRR', '₹ 14,85,200', const Color(0xFF5636F5)),
-                  const SizedBox(width: 10),
-                  _buildKpiCard('Renewal Rate', '94.2%', const Color(0xFF2587F8)),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // Plans List
-              const Text('Active Plans', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF101A3A))),
-              const SizedBox(height: 8),
-              ..._plans.map((p) => _buildPlanTile(p)),
-
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ],
-              ),
+              _buildKpiCard('Total Active', '4,930', const Color(0xFF10B981)),
+              const SizedBox(width: 10),
+              _buildKpiCard('Monthly MRR', '₹ 14,85,200', const Color(0xFF5636F5)),
+              const SizedBox(width: 10),
+              _buildKpiCard('Renewal Rate', '94.2%', const Color(0xFF2587F8)),
             ],
           ),
-        ),
+          const SizedBox(height: 18),
+
+          // Plans List
+          const Text('Active Plans', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF101A3A))),
+          const SizedBox(height: 8),
+          ..._plans.map((p) => _buildPlanTile(p)),
+        ],
       ),
     );
   }
@@ -163,7 +118,7 @@ class SubscriptionManagementDialog extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFCBD5E1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

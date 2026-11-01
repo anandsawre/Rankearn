@@ -95,242 +95,195 @@ class _ProcessRefundDialogState extends State<ProcessRefundDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    return AppModalDialog(
+      title: 'Process Refund',
+      subtitle: 'Issue a secure full or partial refund to user',
+      iconData: Icons.replay_rounded,
+      gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+      maxWidth: 540,
+      actions: [
+        TextButton(
+          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+          ),
+          child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: _isSubmitting ? null : _submit,
+          icon: _isSubmitting
+              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.check_rounded, size: 16),
+          label: Text(_isSubmitting ? 'Processing...' : 'Confirm Refund'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFDC2626),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Select Transaction custom AppDropdown
+            AppDropdown<PaymentItem>(
+              label: 'Select Transaction',
+              value: _selectedPayment,
+              items: widget.availablePayments.map((p) {
+                return AppDropdownItem(
+                  value: p,
+                  label: '${p.userName} — ₹${p.amount.toInt()} (${p.transactionId}) [${p.status.label}]',
+                );
+              }).toList(),
+              onChanged: _onPaymentChanged,
+            ),
+            const SizedBox(height: 16),
+
+            // Full vs Partial Radio
+            Row(
               children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0084FF).withAlpha(25),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.replay_rounded, color: Color(0xFF0084FF), size: 20),
-                          ),
-                          const SizedBox(width: 10),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Process Refund',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-                                ),
-                                Text(
-                                  'Issue a secure full or partial refund to user',
-                                  style: TextStyle(fontSize: 11, color: AppColors.textMuted),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                const Divider(height: 24, color: AppColors.borderSubtle),
-
-                // Select Transaction dropdown if multiple
-                const Text('Select Transaction', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                Expanded(
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<PaymentItem>(
-                      value: _selectedPayment,
-                      isExpanded: true,
-                      onChanged: _onPaymentChanged,
-                      items: widget.availablePayments.map((p) {
-                        return DropdownMenuItem(
-                          value: p,
-                          child: Text(
-                            '${p.userName} — ₹${p.amount.toInt()} (${p.transactionId}) [${p.status.label}]',
-                            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Full vs Partial Radio
-                Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _isFullRefund = true;
-                            if (_selectedPayment != null) {
-                              _amountController.text = _selectedPayment!.amount.toInt().toString();
-                            }
-                          });
-                        },
-                        child: Row(
-                          children: [
-                            // ignore: deprecated_member_use
-                            Radio<bool>(
-                              value: true,
-                              // ignore: deprecated_member_use
-                              groupValue: _isFullRefund,
-                              // ignore: deprecated_member_use
-                              onChanged: (val) {
-                                setState(() {
-                                  _isFullRefund = true;
-                                  if (_selectedPayment != null) {
-                                    _amountController.text = _selectedPayment!.amount.toInt().toString();
-                                  }
-                                });
-                              },
-                              // ignore: deprecated_member_use
-                              activeColor: const Color(0xFF5636F5),
-                            ),
-                            const Text('Full Refund', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                          ],
+                    onTap: () {
+                      setState(() {
+                        _isFullRefund = true;
+                        if (_selectedPayment != null) {
+                          _amountController.text = _selectedPayment!.amount.toInt().toString();
+                        }
+                      });
+                    },
+                    child: Row(
+                      children: [
+                        // ignore: deprecated_member_use
+                        Radio<bool>(
+                          value: true,
+                          // ignore: deprecated_member_use
+                          groupValue: _isFullRefund,
+                          // ignore: deprecated_member_use
+                          onChanged: (val) {
+                            setState(() {
+                              _isFullRefund = true;
+                              if (_selectedPayment != null) {
+                                _amountController.text = _selectedPayment!.amount.toInt().toString();
+                              }
+                            });
+                          },
+                          activeColor: const Color(0xFF5636F5),
                         ),
-                      ),
+                        const Text('Full Refund', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      ],
                     ),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => setState(() => _isFullRefund = false),
-                        child: Row(
-                          children: [
-                            // ignore: deprecated_member_use
-                            Radio<bool>(
-                              value: false,
-                              // ignore: deprecated_member_use
-                              groupValue: _isFullRefund,
-                              // ignore: deprecated_member_use
-                              onChanged: (val) => setState(() => _isFullRefund = false),
-                              // ignore: deprecated_member_use
-                              activeColor: const Color(0xFF5636F5),
-                            ),
-                            const Text('Partial Refund', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-
-                // Refund Amount Field
-                TextFormField(
-                  controller: _amountController,
-                  enabled: !_isFullRefund,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: 'Refund Amount (₹)',
-                    prefixText: '₹ ',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    filled: true,
-                    fillColor: _isFullRefund ? const Color(0xFFF1F5F9) : Colors.white,
                   ),
-                  validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Enter refund amount';
-                    final numVal = double.tryParse(val);
-                    if (numVal == null || numVal <= 0) return 'Enter a valid amount';
-                    if (_selectedPayment != null && numVal > _selectedPayment!.amount) {
-                      return 'Cannot exceed original amount (₹${_selectedPayment!.amount.toInt()})';
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 14),
-
-                // Reason dropdown
-                const Text('Refund Reason', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                Expanded(
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedReason,
-                      isExpanded: true,
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedReason = val);
-                      },
-                      items: _refundReasons.map((r) {
-                        return DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 12)));
-                      }).toList(),
+                    onTap: () => setState(() => _isFullRefund = false),
+                    child: Row(
+                      children: [
+                        // ignore: deprecated_member_use
+                        Radio<bool>(
+                          value: false,
+                          // ignore: deprecated_member_use
+                          groupValue: _isFullRefund,
+                          // ignore: deprecated_member_use
+                          onChanged: (val) => setState(() => _isFullRefund = false),
+                          activeColor: const Color(0xFF5636F5),
+                        ),
+                        const Text('Partial Refund', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      ],
                     ),
                   ),
-                ),
-
-                if (_selectedReason == 'Other') ...[
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: _reasonController,
-                    decoration: InputDecoration(
-                      labelText: 'Specify Reason',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    validator: (val) => val == null || val.trim().isEmpty ? 'Please specify reason' : null,
-                  ),
-                ],
-                const SizedBox(height: 24),
-
-                // Actions
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    const SizedBox(width: 10),
-                    ElevatedButton.icon(
-                      onPressed: _isSubmitting ? null : _submit,
-                      icon: _isSubmitting
-                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.check_rounded, size: 16),
-                      label: Text(_isSubmitting ? 'Processing...' : 'Confirm Refund'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDC2626),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 12),
+
+            // Refund Amount Field
+            const Text(
+              'Refund Amount (₹)',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _amountController,
+              enabled: !_isFullRefund,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                prefixText: '₹ ',
+                filled: true,
+                fillColor: _isFullRefund ? const Color(0xFFF1F5F9) : Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                ),
+              ),
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) return 'Enter refund amount';
+                final numVal = double.tryParse(val);
+                if (numVal == null || numVal <= 0) return 'Enter a valid amount';
+                if (_selectedPayment != null && numVal > _selectedPayment!.amount) {
+                  return 'Cannot exceed original amount (₹${_selectedPayment!.amount.toInt()})';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 14),
+
+            // Reason dropdown
+            AppDropdown<String>(
+              label: 'Refund Reason',
+              value: _selectedReason,
+              items: _refundReasons.map((r) => AppDropdownItem(value: r, label: r)).toList(),
+              onChanged: (val) {
+                if (val != null) setState(() => _selectedReason = val);
+              },
+            ),
+
+            if (_selectedReason == 'Other') ...[
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _reasonController,
+                decoration: InputDecoration(
+                  labelText: 'Specify Reason',
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                  ),
+                ),
+                validator: (val) => val == null || val.trim().isEmpty ? 'Please specify reason' : null,
+              ),
+            ],
+          ],
         ),
       ),
     );

@@ -602,61 +602,25 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
         ),
 
         // Method Filter Dropdown
-        Container(
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _methodFilterOptions.contains(widget.selectedMethod)
-                  ? widget.selectedMethod
-                  : _methodFilterOptions.first,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 15, color: AppColors.textSecondary),
-              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-              onChanged: (val) {
-                if (val != null) widget.onMethodChanged(val);
-              },
-              items: _methodFilterOptions.map((opt) {
-                return DropdownMenuItem<String>(
-                  value: opt,
-                  child: Text(opt),
-                );
-              }).toList(),
-            ),
-          ),
+        AppDropdownFilter<String>(
+          value: _methodFilterOptions.contains(widget.selectedMethod)
+              ? widget.selectedMethod
+              : _methodFilterOptions.first,
+          items: _methodFilterOptions,
+          onChanged: (val) {
+            if (val != null) widget.onMethodChanged(val);
+          },
         ),
 
         // Status Filter Dropdown
-        Container(
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _statusFilterOptions.contains(widget.selectedStatus)
-                  ? widget.selectedStatus
-                  : _statusFilterOptions.first,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 15, color: AppColors.textSecondary),
-              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-              onChanged: (val) {
-                if (val != null) widget.onStatusChanged(val);
-              },
-              items: _statusFilterOptions.map((opt) {
-                return DropdownMenuItem<String>(
-                  value: opt,
-                  child: Text(opt),
-                );
-              }).toList(),
-            ),
-          ),
+        AppDropdownFilter<String>(
+          value: _statusFilterOptions.contains(widget.selectedStatus)
+              ? widget.selectedStatus
+              : _statusFilterOptions.first,
+          items: _statusFilterOptions,
+          onChanged: (val) {
+            if (val != null) widget.onStatusChanged(val);
+          },
         ),
 
         // Date Range Picker
@@ -1287,27 +1251,15 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Show ', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-            Container(
+            AppDropdownFilter<int>(
+              value: widget.rowsPerPage,
+              items: const [5, 10, 20, 50],
               height: 28,
               padding: const EdgeInsets.symmetric(horizontal: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: widget.rowsPerPage,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textSecondary),
-                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                  onChanged: (val) {
-                    if (val != null) widget.onRowsPerPageChanged(val);
-                  },
-                  items: [5, 10, 20, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text(n.toString())))
-                      .toList(),
-                ),
-              ),
+              borderRadius: BorderRadius.circular(6),
+              onChanged: (val) {
+                if (val != null) widget.onRowsPerPageChanged(val);
+              },
             ),
             const Text(' per page', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
           ],
