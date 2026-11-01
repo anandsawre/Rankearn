@@ -218,7 +218,7 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
   }
 
   void _openImportDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ImportQuestionsDialog(
         onImport: (importedList) async {
