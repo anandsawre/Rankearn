@@ -291,30 +291,45 @@ class _PatternsTabState extends State<PatternsTab> {
   void _showSubjectsModal() {
     final subjects = ['History of India & Bihar', 'General Science & Technology', 'Indian Polity & Governance', 'Quantitative Aptitude', 'Reasoning & Mental Ability', 'Current Affairs & GK'];
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Manage Standard Syllabus Subjects'),
-        content: SizedBox(
-          width: 400,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: subjects.map((s) {
-              return ListTile(
+      builder: (ctx) => AppModalDialog(
+        title: 'Manage Standard Syllabus Subjects',
+        subtitle: 'Overview of accredited syllabus subjects for exam patterns',
+        iconData: Icons.menu_book_rounded,
+        gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+        maxWidth: 480,
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5636F5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: subjects.map((s) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFCBD5E1)),
+              ),
+              child: ListTile(
                 dense: true,
                 leading: const Icon(Icons.bookmark_outline, size: 18, color: AppColors.brandPrimary),
                 title: Text(s, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                 trailing: const Icon(Icons.check, size: 16, color: AppColors.brandPrimary),
-              );
-            }).toList(),
-          ),
+              ),
+            );
+          }).toList(),
         ),
-        actions: [
-          AppButton(
-            label: 'Close',
-            onPressed: () => Navigator.pop(ctx),
-          ),
-        ],
       ),
     );
   }
@@ -325,30 +340,34 @@ class _PatternsTabState extends State<PatternsTab> {
     final qCountController = TextEditingController(text: '100');
     final durController = TextEditingController(text: '90');
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Create New Exam Pattern'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppTextField(label: 'Exam Name', controller: nameController, hintText: 'e.g. Haryana HSSC CET 2026'),
-            const SizedBox(height: 12),
-            AppTextField(label: 'Category', controller: catController, hintText: 'State PSC'),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: AppTextField(label: 'Questions', controller: qCountController, hintText: '100')),
-                const SizedBox(width: 12),
-                Expanded(child: AppTextField(label: 'Duration (mins)', controller: durController, hintText: '90')),
-              ],
-            ),
-          ],
-        ),
+      builder: (ctx) => AppModalDialog(
+        title: 'Create New Exam Pattern',
+        subtitle: 'Define blueprint schema, subject distribution & duration',
+        iconData: Icons.architecture_rounded,
+        gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+        maxWidth: 520,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          AppButton(
-            label: 'Save Pattern',
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+              ),
+            ),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5636F5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () {
               if (nameController.text.isNotEmpty) {
                 setState(() {
@@ -372,8 +391,49 @@ class _PatternsTabState extends State<PatternsTab> {
                 );
               }
             },
+            child: const Text('Save Pattern'),
           ),
         ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppTextField(
+              label: 'Exam Name',
+              controller: nameController,
+              hintText: 'e.g. Haryana HSSC CET 2026',
+              borderRadius: BorderRadius.circular(8),
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              label: 'Category',
+              controller: catController,
+              hintText: 'State PSC',
+              borderRadius: BorderRadius.circular(8),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: 'Questions',
+                    controller: qCountController,
+                    hintText: '100',
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppTextField(
+                    label: 'Duration (mins)',
+                    controller: durController,
+                    hintText: '90',
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
