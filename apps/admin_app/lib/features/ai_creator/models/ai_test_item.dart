@@ -275,6 +275,42 @@ class AiGeneratedTestItem {
           [],
     );
   }
+
+  AiGeneratedTestItem copyWith({
+    String? id,
+    int? rowNumber,
+    String? title,
+    String? subtitle,
+    AiTestSubject? subject,
+    AiTestDifficulty? difficulty,
+    int? questionCount,
+    int? durationMinutes,
+    AiTestStatus? status,
+    DateTime? createdOn,
+    String? createdBy,
+    IconData? icon,
+    Color? iconBgColor,
+    Color? iconColor,
+    List<AiTestQuestion>? questions,
+  }) {
+    return AiGeneratedTestItem(
+      id: id ?? this.id,
+      rowNumber: rowNumber ?? this.rowNumber,
+      title: title ?? this.title,
+      subtitle: subtitle ?? this.subtitle,
+      subject: subject ?? this.subject,
+      difficulty: difficulty ?? this.difficulty,
+      questionCount: questionCount ?? this.questionCount,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      status: status ?? this.status,
+      createdOn: createdOn ?? this.createdOn,
+      createdBy: createdBy ?? this.createdBy,
+      icon: icon ?? this.icon,
+      iconBgColor: iconBgColor ?? this.iconBgColor,
+      iconColor: iconColor ?? this.iconColor,
+      questions: questions ?? this.questions,
+    );
+  }
 }
 
 class AiTestTemplate {

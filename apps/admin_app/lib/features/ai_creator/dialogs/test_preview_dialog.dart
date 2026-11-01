@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../models/ai_test_item.dart';
+import '../services/ai_creator_service.dart';
 
 class TestPreviewDialog extends StatefulWidget {
   final AiGeneratedTestItem test;
@@ -20,6 +21,40 @@ class TestPreviewDialog extends StatefulWidget {
 
 class _TestPreviewDialogState extends State<TestPreviewDialog> {
   late List<AiTestQuestion> _questions;
+  bool _isPushingToBattle = false;
+  bool _isPublishing = false;
+
+  Future<void> _pushToBattlePool() async {
+    setState(() => _isPushingToBattle = true);
+    final count = await AiCreatorService().pushToBattlePool(
+      questions: _questions,
+      subjectName: widget.test.subject.label,
+    );
+    if (!mounted) return;
+    setState(() => _isPushingToBattle = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('⚡ Successfully pushed $count questions to the Live Battle Pool!'),
+        backgroundColor: const Color(0xFF10B981),
+      ),
+    );
+  }
+
+  Future<void> _publishTest() async {
+    setState(() => _isPublishing = true);
+    final updatedTest = widget.test.copyWith(questions: _questions);
+    await AiCreatorService().publishTestToApp(testItem: updatedTest);
+    if (!mounted) return;
+    setState(() => _isPublishing = false);
+    Navigator.of(context).pop();
+    widget.onPublish(updatedTest);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Test "${widget.test.title}" published successfully to student mobile app!'),
+        backgroundColor: const Color(0xFF10B981),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -140,33 +175,50 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
                     '${_questions.length} questions ready for publishing',
                     style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
                   ),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       OutlinedButton.icon(
                         onPressed: widget.onExport,
                         icon: const Icon(Icons.ios_share_rounded, size: 15),
-                        label: const Text('Export Test'),
+                        label: const Text('Export'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF5636F5),
                           side: const BorderSide(color: Color(0xFFC7D2FE)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _isPushingToBattle ? null : _pushToBattlePool,
+                        icon: _isPushingToBattle
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.bolt_rounded, size: 16),
+                        label: Text(_isPushingToBattle ? 'Pushing...' : 'Push to Battle Pool'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF59E0B),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         ),
                       ),
-                      const SizedBox(width: 10),
                       ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          widget.onPublish(widget.test);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Test "${widget.test.title}" published successfully to student mobile app!'),
-                              backgroundColor: const Color(0xFF10B981),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.publish_rounded, size: 16),
-                        label: const Text('Publish Test'),
+                        onPressed: _isPublishing ? null : _publishTest,
+                        icon: _isPublishing
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.publish_rounded, size: 16),
+                        label: Text(_isPublishing ? 'Publishing...' : 'Publish Test'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF10B981),
                           foregroundColor: Colors.white,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import '../services/ai_creator_service.dart';
 
 class CustomPromptDialog extends StatefulWidget {
   final VoidCallback onOpenGenerate;
@@ -16,6 +17,7 @@ class CustomPromptDialog extends StatefulWidget {
 class _CustomPromptDialogState extends State<CustomPromptDialog> {
   late final TextEditingController _systemPromptController;
   late final TextEditingController _antiHallucinationController;
+  late final TextEditingController _apiKeyController;
   double _temperature = 0.4;
   String _bloomsLevel = 'Application & Analytical (Standard)';
 
@@ -29,8 +31,10 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
   @override
   void initState() {
     super.initState();
+    _temperature = AiCreatorService().temperature;
+    _apiKeyController = TextEditingController(text: AiCreatorService().apiKey);
     _systemPromptController = TextEditingController(
-      text: 'You are an expert Indian Competitive Examination paper setter specializing in Railway RRB, SSC, and State PSC test series. Synthesize high-quality multiple choice questions strictly based on the prescribed syllabus with 4 distinct plausible options and detailed bilingual solutions.',
+      text: AiCreatorService().systemPrompt,
     );
     _antiHallucinationController = TextEditingController(
       text: 'Rule 1: Always verify numerical facts against NCERT textbooks.\nRule 2: Never produce ambiguous or disputed questions.\nRule 3: Ensure 3 plausible distractor options per question.',
@@ -39,6 +43,7 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
 
   @override
   void dispose() {
+    _apiKeyController.dispose();
     _systemPromptController.dispose();
     _antiHallucinationController.dispose();
     super.dispose();
@@ -101,6 +106,37 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
                   ],
                 ),
                 const Divider(height: 24, color: AppColors.borderSubtle),
+
+                // Google Gemini API Key
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Google Gemini API Key (Direct Cloud AI)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    Text(
+                      _apiKeyController.text.isNotEmpty ? '● Key Active' : 'Optional (Fallback Gateway)',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: _apiKeyController.text.isNotEmpty ? const Color(0xFF10B981) : AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: _apiKeyController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    hintText: 'AIzaSy... (Paste Google AI Studio Key for direct 0-delay generation)',
+                    hintStyle: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                    prefixIcon: const Icon(Icons.key_rounded, size: 16, color: Color(0xFF5636F5)),
+                  ),
+                  style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: 14),
 
                 // System Instruction Prompt
                 const Text('AI System Prompt (Role Definition)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
@@ -184,10 +220,13 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () {
+                        AiCreatorService().setApiKey(_apiKeyController.text.trim());
+                        AiCreatorService().setSystemPrompt(_systemPromptController.text.trim());
+                        AiCreatorService().setTemperature(_temperature);
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Custom AI prompt configuration saved successfully'),
+                            content: Text('AI configuration & API Key saved successfully to AI Engine'),
                             backgroundColor: Color(0xFF10B981),
                           ),
                         );

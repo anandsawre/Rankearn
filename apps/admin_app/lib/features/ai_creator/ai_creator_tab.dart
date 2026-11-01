@@ -162,23 +162,7 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
           setState(() {
             final idx = _allTests.indexWhere((t) => t.id == publishedTest.id);
             if (idx != -1) {
-              _allTests[idx] = AiGeneratedTestItem(
-                id: publishedTest.id,
-                rowNumber: publishedTest.rowNumber,
-                title: publishedTest.title,
-                subtitle: publishedTest.subtitle,
-                subject: publishedTest.subject,
-                difficulty: publishedTest.difficulty,
-                questionCount: publishedTest.questionCount,
-                durationMinutes: publishedTest.durationMinutes,
-                status: AiTestStatus.published,
-                createdOn: publishedTest.createdOn,
-                createdBy: publishedTest.createdBy,
-                icon: publishedTest.icon,
-                iconBgColor: publishedTest.iconBgColor,
-                iconColor: publishedTest.iconColor,
-                questions: publishedTest.questions,
-              );
+              _allTests[idx] = publishedTest.copyWith(status: AiTestStatus.published);
             }
           });
         },

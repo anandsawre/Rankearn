@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../models/ai_test_item.dart';
+import '../services/ai_creator_service.dart';
 
 class GenerateTestDialog extends StatefulWidget {
   final ValueChanged<AiGeneratedTestItem> onTestGenerated;
@@ -69,74 +70,53 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
 
     setState(() {
       _isGenerating = true;
-      _generationProgress = 0.1;
-      _progressStatus = 'Connecting to Gemini AI Engine...';
+      _generationProgress = 0.05;
+      _progressStatus = 'Initializing Gemini AI Creator pipeline...';
     });
 
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    setState(() {
-      _generationProgress = 0.35;
-      _progressStatus = 'Analyzing syllabus & generating $_questionCount verified questions...';
-    });
+    final questions = await AiCreatorService().generateQuestions(
+      title: _titleController.text.trim(),
+      topic: _topicController.text.trim(),
+      subject: _selectedSubject,
+      difficulty: _selectedDifficulty,
+      count: _questionCount,
+      exam: _selectedExam,
+      language: _selectedLanguage,
+      customInstructions: _customPromptController.text.trim(),
+      onProgress: (progress, status) {
+        if (mounted) {
+          setState(() {
+            _generationProgress = progress;
+            _progressStatus = status;
+          });
+        }
+      },
+    );
 
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-    setState(() {
-      _generationProgress = 0.70;
-      _progressStatus = 'Validating correct options & formatting bilingual explanations...';
-    });
-
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    setState(() {
-      _generationProgress = 1.0;
-      _progressStatus = 'Complete! Synthesizing mock test...';
-    });
-
-    await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
 
     final newTest = AiGeneratedTestItem(
       id: 'ait_${DateTime.now().millisecondsSinceEpoch}',
       rowNumber: 1,
       title: _titleController.text.trim(),
-      subtitle: 'Topic wise AI generated test',
+      subtitle: '$_selectedExam • ${_selectedSubject.label}',
       subject: _selectedSubject,
       difficulty: _selectedDifficulty,
-      questionCount: _questionCount,
+      questionCount: questions.length,
       durationMinutes: _durationMinutes,
       status: AiTestStatus.published,
       createdOn: DateTime.now(),
-      createdBy: 'Admin',
+      createdBy: 'AI Creator',
       icon: _selectedSubject.icon,
       iconBgColor: _selectedSubject.color,
       iconColor: Colors.white,
-      questions: [
-        AiTestQuestion(
-          id: 'q_gen_1',
-          questionNumber: 1,
-          questionText: 'Which electromagnetic radiation has the highest frequency in the electromagnetic spectrum?',
-          questionTextHi: 'विद्युतचुंबकीय स्पेक्ट्रम में किस विद्युतचुंबकीय विकिरण की आवृत्ति सबसे अधिक होती है?',
-          options: ['Gamma Rays (गामा किरणें)', 'X-Rays (एक्स-किरणें)', 'Ultraviolet Rays', 'Microwaves'],
-          correctOptionIndex: 0,
-          explanation: 'Gamma rays have the shortest wavelength and the highest frequency (and highest photon energy) in the electromagnetic spectrum.',
-          subject: _selectedSubject.label,
-          difficulty: _selectedDifficulty.label,
-        ),
-        AiTestQuestion(
-          id: 'q_gen_2',
-          questionNumber: 2,
-          questionText: 'What is the pH value of pure water at standard temperature (25°C)?',
-          questionTextHi: 'मानक तापमान (25°C) पर शुद्ध जल का pH मान क्या होता है?',
-          options: ['pH = 0', 'pH = 5', 'pH = 7 (Neutral)', 'pH = 14'],
-          correctOptionIndex: 2,
-          explanation: 'At 25°C, pure water is chemically neutral with a pH of 7.0 where [H+] = [OH-] = 10^-7 M.',
-          subject: _selectedSubject.label,
-          difficulty: _selectedDifficulty.label,
-        ),
-      ],
+      questions: questions,
     );
+
+    // Save/publish to Supabase if available
+    await AiCreatorService().publishTestToApp(testItem: newTest);
+
+    if (!mounted) return;
 
     widget.onTestGenerated(newTest);
     Navigator.of(context).pop();
