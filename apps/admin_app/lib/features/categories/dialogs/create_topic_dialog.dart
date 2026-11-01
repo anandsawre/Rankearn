@@ -122,203 +122,47 @@ class _CreateTopicDialogState extends State<CreateTopicDialog> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.itemToEdit != null;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 640;
 
-    // 📱 Mobile Full Screen Mode
-    if (isMobile) {
-      return Dialog(
-        insetPadding: EdgeInsets.zero,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-        backgroundColor: Colors.white,
-        child: SizedBox.expand(
-          child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF5636F5),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            alignment: Alignment.center,
-                            child: Icon(
-                              isEditing ? Icons.edit_rounded : Icons.add_rounded,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            isEditing ? 'Edit Topic (Level 4)' : 'Create Topic (Level 4)',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF101A3A),
-                            ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Body
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildFields(),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Mobile Footer
-                Container(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFE2E8F0)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5636F5),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            elevation: 0,
-                          ),
-                          onPressed: _submit,
-                          child: Text(
-                            isEditing ? 'Save Changes' : 'Create Topic',
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    // 💻 Desktop AlertDialog
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-      actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF5636F5),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  isEditing ? Icons.edit_rounded : Icons.add_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                isEditing ? 'Edit Topic / Chapter (Level 4)' : 'Create Topic / Chapter (Level 4)',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF101A3A),
-                ),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.close_rounded, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 520,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildFields(),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return AppModalDialog(
+      title: isEditing ? 'Edit Topic' : 'Create Topic',
+      subtitle: isEditing
+          ? 'Update syllabus topic details and parent mapping'
+          : 'Define a new granular curriculum topic under a chapter',
+      iconData: isEditing ? Icons.edit_rounded : Icons.add_rounded,
+      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      maxWidth: 540,
+      maxHeight: 700,
+      scrollable: true,
       actions: [
-        TextButton(
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
         ),
+        const SizedBox(width: 8),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF5636F5),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             elevation: 0,
           ),
           onPressed: _submit,
           child: Text(
             isEditing ? 'Save Changes' : 'Create Topic',
-            style: const TextStyle(fontWeight: FontWeight.w700),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           ),
         ),
       ],
+      child: Form(
+        key: _formKey,
+        child: _buildFields(),
+      ),
     );
   }
 
@@ -339,7 +183,7 @@ class _CreateTopicDialogState extends State<CreateTopicDialog> {
           hint: 'Select Parent Category',
           isDense: true,
           fillColor: const Color(0xFFF8FAFC),
-          borderColor: const Color(0xFFE2E8F0),
+          borderColor: const Color(0xFFCBD5E1),
           focusedBorderColor: const Color(0xFF5636F5),
           selectedItemColor: const Color(0xFF5636F5),
           selectedItemBackgroundColor: const Color(0xFFEEF2FF),
@@ -372,7 +216,7 @@ class _CreateTopicDialogState extends State<CreateTopicDialog> {
           hint: subcategoriesList.isEmpty ? 'No Subcategories in this Subject' : 'Select Subcategory',
           isDense: true,
           fillColor: const Color(0xFFF8FAFC),
-          borderColor: const Color(0xFFE2E8F0),
+          borderColor: const Color(0xFFCBD5E1),
           focusedBorderColor: const Color(0xFF5636F5),
           selectedItemColor: const Color(0xFF5636F5),
           selectedItemBackgroundColor: const Color(0xFFEEF2FF),
@@ -459,7 +303,7 @@ class _CreateTopicDialogState extends State<CreateTopicDialog> {
           value: _status,
           isDense: true,
           fillColor: const Color(0xFFF8FAFC),
-          borderColor: const Color(0xFFE2E8F0),
+          borderColor: const Color(0xFFCBD5E1),
           focusedBorderColor: const Color(0xFF5636F5),
           selectedItemColor: const Color(0xFF5636F5),
           selectedItemBackgroundColor: const Color(0xFFEEF2FF),
@@ -505,11 +349,11 @@ class _CreateTopicDialogState extends State<CreateTopicDialog> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(8)),

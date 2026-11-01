@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import '../models/category_item.dart';
 
 class ReorderCategoriesDialog extends StatefulWidget {
@@ -45,136 +46,96 @@ class _ReorderCategoriesDialogState extends State<ReorderCategoriesDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 540, maxHeight: 650),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+    return AppModalDialog(
+      title: 'Reorder Categories',
+      subtitle: 'Drag and drop categories to reorder student visibility',
+      iconData: Icons.swap_vert_rounded,
+      gradientColors: const [Color(0xFFD97706), Color(0xFFF59E0B)],
+      maxWidth: 540,
+      maxHeight: 650,
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: _save,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFD97706),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            elevation: 0,
+          ),
+          child: const Text('Save Order', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Drag using the handles on the right to reorder categories.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 12),
+
+          SizedBox(
+            height: 380,
+            child: ReorderableListView.builder(
+              itemCount: _items.length,
+              // ignore: deprecated_member_use
+              onReorder: _onReorder,
+              itemBuilder: (context, idx) {
+                final item = _items[idx];
+                return Container(
+                  key: ValueKey(item.id),
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                  ),
+                  child: Row(
                     children: [
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: 28,
+                        height: 28,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B).withAlpha(20),
-                          borderRadius: BorderRadius.circular(8),
+                          color: item.parsedColor.withAlpha(20),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         alignment: Alignment.center,
-                        child: const Icon(Icons.swap_vert_rounded, color: Color(0xFFF59E0B), size: 18),
+                        child: Icon(item.iconData, color: item.parsedColor, size: 15),
                       ),
                       const SizedBox(width: 10),
-                      const Text(
-                        'Reorder Categories',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF101A3A),
+                      Text(
+                        '#${idx + 1}',
+                        style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF64748B), fontSize: 12),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          item.name,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const Icon(Icons.drag_handle_rounded, color: Color(0xFF94A3B8)),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Color(0xFF94A3B8)),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const Divider(height: 24, color: Color(0xFFE2E8F0)),
-
-              const Text(
-                'Drag and drop categories using the handle on the right to reorder how they appear to students.',
-                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-              ),
-              const SizedBox(height: 12),
-
-              // Reorderable List
-              Expanded(
-                child: ReorderableListView.builder(
-                  itemCount: _items.length,
-                  // ignore: deprecated_member_use
-                  onReorder: _onReorder,
-                  itemBuilder: (context, idx) {
-                    final item = _items[idx];
-                    return Container(
-                      key: ValueKey(item.id),
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: item.parsedColor.withAlpha(20),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            alignment: Alignment.center,
-                            child: Icon(item.iconData, color: item.parsedColor, size: 15),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            '#${idx + 1}',
-                            style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF64748B), fontSize: 12),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              item.name,
-                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const Icon(Icons.drag_handle_rounded, color: Color(0xFF94A3B8)),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _save,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF59E0B),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Save Order'),
-                  ),
-                ],
-              ),
-            ],
+                );
+              },
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

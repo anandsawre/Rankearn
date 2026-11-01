@@ -39,7 +39,7 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
   static const Color _primaryPurple = Color(0xFF5636F5);
   static const Color _textNavy = Color(0xFF101A3A);
   static const Color _textMuted = Color(0xFF64748B);
-  static const Color _borderSubtle = Color(0xFFE2E8F0);
+  static const Color _borderSubtle = Color(0xFFCBD5E1);
   static const Color _fillBg = Color(0xFFF8FAFC);
 
   final _testsRepo = TestsRepository();
@@ -332,23 +332,38 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
   }
 
   Future<void> _deleteExam(ExamCategoryModel exam) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppModalDialog.show<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Target Exam?'),
-        content: Text('Are you sure you want to delete "${exam.name}" (${exam.id})?'),
+      builder: (ctx) => AppModalDialog(
+        title: 'Delete Target Exam',
+        subtitle: 'Permanent deletion warning',
+        iconData: Icons.delete_outline_rounded,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 440,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: _textMuted, fontWeight: FontWeight.w600)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF43F5E)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            'Are you sure you want to delete "${exam.name}" (${exam.id})? This will also unlink its assigned subjects.',
+            style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.4),
+          ),
+        ),
       ),
     );
 
@@ -373,292 +388,72 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
   @override
   Widget build(BuildContext context) {
     final isEditing = _editingExam != null;
-    final screenSize = MediaQuery.of(context).size;
-    final isMobile = screenSize.width < 640;
 
-    // 📱 MOBILE FULL-SCREEN MODE ONLY ON MOBILE
-    if (isMobile) {
-      return Dialog(
-        insetPadding: EdgeInsets.zero,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-        backgroundColor: Colors.white,
-        child: SizedBox.expand(
-          child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: _primaryPurple,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              alignment: Alignment.center,
-                              child: Icon(
-                                _isCreatingOrEditing
-                                    ? (isEditing ? Icons.edit_rounded : Icons.add_rounded)
-                                    : Icons.explore_rounded,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _isCreatingOrEditing
-                                        ? (isEditing ? 'Edit Target Exam & Subjects' : 'New Target Exam & Subjects')
-                                        : 'Target Exams (Level 1 Categories)',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
-                                      color: _textNavy,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (!_isCreatingOrEditing)
-                                    const Text(
-                                      'Exams that appear on the user test series explorer',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: _textMuted,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Content Area
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _isCreatingOrEditing ? _buildForm() : _buildExamList(),
-                  ),
-                ),
-
-                // Mobile Footer
-                Container(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-                  ),
-                  child: _isCreatingOrEditing
-                      ? Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: _cancelForm,
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                                child: const Text('Cancel', style: TextStyle(color: _textMuted, fontWeight: FontWeight.w600)),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _primaryPurple,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  elevation: 0,
-                                ),
-                                onPressed: _saveExam,
-                                child: Text(
-                                  isEditing ? 'Save Changes' : 'Save Exam & Subjects',
-                                  style: const TextStyle(fontWeight: FontWeight.w700),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Center(
-                              child: Text(
-                                '${_exams.length} Target Exams configured',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: _textMuted,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.add_rounded, size: 18),
-                              label: const Text('Add Target Exam'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _primaryPurple,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              onPressed: _startCreateNew,
-                            ),
-                          ],
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    // 💻 DESKTOP: EXACT UNTOUCHED ORIGINAL AlertDialog!
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-      actionsPadding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: _primaryPurple,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    _isCreatingOrEditing
-                        ? (isEditing ? Icons.edit_rounded : Icons.add_rounded)
-                        : Icons.explore_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isCreatingOrEditing
-                            ? (isEditing ? 'Edit Target Exam & Subjects' : 'Create Target Exam & Subjects')
-                            : 'Target Exams (Level 1 Categories)',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: _textNavy,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (!_isCreatingOrEditing)
-                        const Text(
-                          'Exams that appear on the user test series explorer',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: _textMuted,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close_rounded, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 560,
-        child: _isCreatingOrEditing ? _buildForm() : _buildExamList(),
-      ),
+    return AppModalDialog(
+      title: _isCreatingOrEditing
+          ? (isEditing ? 'Edit Target Exam & Subjects' : 'Create Target Exam & Subjects')
+          : 'Target Exams (Level 1 Categories)',
+      subtitle: _isCreatingOrEditing
+          ? 'Configure exam identity and curriculum structure'
+          : '${_exams.length} target exams configured for student test explorer',
+      iconData: _isCreatingOrEditing
+          ? (isEditing ? Icons.edit_rounded : Icons.add_rounded)
+          : Icons.explore_rounded,
+      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      maxWidth: 620,
+      maxHeight: 740,
+      scrollable: !_isCreatingOrEditing,
       actions: _isCreatingOrEditing
           ? [
-              TextButton(
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFCBD5E1)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
                 onPressed: _cancelForm,
-                child: const Text('Cancel', style: TextStyle(color: _textMuted)),
+                child: const Text('Cancel', style: TextStyle(color: _textMuted, fontWeight: FontWeight.w600, fontSize: 13)),
               ),
+              const SizedBox(width: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _primaryPurple,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   elevation: 0,
                 ),
                 onPressed: _saveExam,
                 child: Text(
                   isEditing ? 'Save Changes' : 'Save Exam & Subjects',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                 ),
               ),
             ]
           : [
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 12,
-                runSpacing: 8,
-                children: [
-                  Text(
-                    '${_exams.length} Target Exams configured',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: _textMuted,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.add_rounded, size: 16),
-                    label: const Text('Add Target Exam'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primaryPurple,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: _startCreateNew,
-                  ),
-                ],
+              Text(
+                '${_exams.length} Target Exams configured',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: _textMuted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add_rounded, size: 16),
+                label: const Text('Add Target Exam', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primaryPurple,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: _startCreateNew,
               ),
             ],
+      child: _isCreatingOrEditing ? _buildForm() : _buildExamList(),
     );
   }
 

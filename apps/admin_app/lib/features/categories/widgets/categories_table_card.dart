@@ -88,19 +88,27 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
   }
 
   void _openFilterDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
-            children: [
-              Icon(Icons.filter_list_rounded, color: Color(0xFF5636F5), size: 20),
-              SizedBox(width: 8),
-              Text('Filter by Status', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            ],
-          ),
-          content: Column(
+        return AppModalDialog(
+          title: 'Filter by Status',
+          subtitle: 'Select status filter to narrow down subjects',
+          iconData: Icons.filter_list_rounded,
+          gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+          maxWidth: 420,
+          actions: [
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Close', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
+            ),
+          ],
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildFilterOption('All Statuses', 'all', ctx),
@@ -109,12 +117,6 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
               _buildFilterOption('Archived Only', 'archived', ctx),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Close'),
-            ),
-          ],
         );
       },
     );
@@ -122,27 +124,36 @@ class _CategoriesTableCardState extends State<CategoriesTableCard> {
 
   Widget _buildFilterOption(String title, String val, BuildContext ctx) {
     final isSelected = widget.statusFilter == val;
-    return ListTile(
-      dense: true,
-      title: Text(title, style: TextStyle(fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500)),
-      // ignore: deprecated_member_use
-      leading: Radio<String>(
-        value: val,
-        // ignore: deprecated_member_use
-        groupValue: widget.statusFilter,
-        activeColor: const Color(0xFF5636F5),
-        // ignore: deprecated_member_use
-        onChanged: (newVal) {
-          if (newVal != null) {
-            widget.onStatusFilterChanged(newVal);
-            Navigator.of(ctx).pop();
-          }
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSelected ? const Color(0xFF5636F5) : const Color(0xFFCBD5E1),
+          width: isSelected ? 1.4 : 1,
+        ),
+      ),
+      child: ListTile(
+        dense: true,
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? const Color(0xFF5636F5) : const Color(0xFF1E293B),
+            fontSize: 13,
+          ),
+        ),
+        trailing: Icon(
+          isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+          color: isSelected ? const Color(0xFF5636F5) : const Color(0xFF94A3B8),
+          size: 18,
+        ),
+        onTap: () {
+          widget.onStatusFilterChanged(val);
+          Navigator.of(ctx).pop();
         },
       ),
-      onTap: () {
-        widget.onStatusFilterChanged(val);
-        Navigator.of(ctx).pop();
-      },
     );
   }
 

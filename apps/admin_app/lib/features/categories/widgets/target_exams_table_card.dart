@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
+import 'package:design_system/design_system.dart';
 import '../models/category_item.dart';
 
 class TargetExamsTableCard extends StatefulWidget {
@@ -122,147 +123,35 @@ class _TargetExamsTableCardState extends State<TargetExamsTableCard> {
   void _showCurriculumDialog(ExamCategoryModel exam) {
     final subjects = _getSubjectsForExam(exam.id);
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        titlePadding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-        actionsPadding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFC7D2FE)),
-                  ),
-                  alignment: Alignment.center,
-                  child: _buildExamIcon(exam.iconUrl),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      exam.name,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF101A3A)),
-                    ),
-                    Text(
-                      'Exam Curriculum (${subjects.length} Subjects)',
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            IconButton(
-              icon: const Icon(Icons.close_rounded, size: 20),
-              onPressed: () => Navigator.pop(ctx),
-            ),
-          ],
-        ),
-        content: SizedBox(
-          width: 500,
-          child: subjects.isEmpty
-              ? Container(
-                  padding: const EdgeInsets.symmetric(vertical: 30),
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.menu_book_outlined, size: 36, color: Color(0xFFCBD5E1)),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No subjects linked to ${exam.name} yet.',
-                        style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Click "Edit Exam" to add subjects and chapters.',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: subjects.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (context, idx) {
-                    final sub = subjects[idx];
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: sub.parsedColor,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            alignment: Alignment.center,
-                            child: Icon(sub.iconData, color: Colors.white, size: 16),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  sub.name,
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-                                ),
-                                if (sub.description.isNotEmpty)
-                                  Text(
-                                    sub.description,
-                                    style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEFF6FF),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '${sub.subcategoriesCount} Chapters',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF0284C7)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-        ),
+      builder: (ctx) => AppModalDialog(
+        title: exam.name,
+        subtitle: 'Exam Curriculum (${subjects.length} Subjects mapped)',
+        iconData: Icons.menu_book_outlined,
+        gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+        maxWidth: 540,
+        maxHeight: 650,
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close', style: TextStyle(color: Color(0xFF64748B))),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            child: const Text('Close', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton.icon(
             icon: const Icon(Icons.edit_rounded, size: 16),
-            label: const Text('Edit Curriculum'),
+            label: const Text('Edit Curriculum', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5636F5),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
             ),
             onPressed: () {
               Navigator.pop(ctx);
@@ -270,6 +159,88 @@ class _TargetExamsTableCardState extends State<TargetExamsTableCard> {
             },
           ),
         ],
+        child: subjects.isEmpty
+            ? Container(
+                padding: const EdgeInsets.symmetric(vertical: 36),
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.menu_book_outlined, size: 40, color: Color(0xFFCBD5E1)),
+                    const SizedBox(height: 10),
+                    Text(
+                      'No subjects linked to ${exam.name} yet.',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Click "Edit Curriculum" to add subjects and chapters.',
+                      style: TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
+                    ),
+                  ],
+                ),
+              )
+            : ListView.separated(
+                shrinkWrap: true,
+                itemCount: subjects.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, idx) {
+                  final sub = subjects[idx];
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: sub.parsedColor,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(sub.iconData, color: Colors.white, size: 16),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                sub.name,
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
+                              ),
+                              if (sub.description.isNotEmpty)
+                                Text(
+                                  sub.description,
+                                  style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFBFDBFE)),
+                          ),
+                          child: Text(
+                            '${sub.subcategoriesCount} Chapters',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF0284C7)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
       ),
     );
   }
