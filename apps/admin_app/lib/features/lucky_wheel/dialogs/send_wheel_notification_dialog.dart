@@ -15,6 +15,13 @@ class _SendWheelNotificationDialogState extends State<SendWheelNotificationDialo
   );
   String _target = 'All Users';
 
+  static const List<Map<String, String>> _targetOptions = [
+    {'value': 'All Users', 'label': 'All Registered Users (24,560)'},
+    {'value': 'Active Today', 'label': 'Active Today (6,820)'},
+    {'value': 'Inactive Users', 'label': 'Inactive for >3 days (8,410)'},
+    {'value': 'New Users', 'label': 'New Users (<7 days) (2,120)'},
+  ];
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -34,135 +41,100 @@ class _SendWheelNotificationDialogState extends State<SendWheelNotificationDialo
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 520),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF04483).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.campaign_rounded, color: Color(0xFFF04483), size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Send Lucky Wheel Notification',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF101A3A),
-                            ),
-                          ),
-                          Text(
-                            'Remind users to spin the wheel and boost daily engagement',
-                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textSecondary),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              const Divider(height: 1, color: Color(0xFFE2E8F0)),
-              const SizedBox(height: 14),
-
-              // Title
-              const Text('Notification Title', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Message
-              const Text('Message Body', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _messageController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Target audience
-              const Text('Target Audience', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                initialValue: _target,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'All Users', child: Text('All Registered Users (24,560)')),
-                  DropdownMenuItem(value: 'Active Today', child: Text('Active Today (6,820)')),
-                  DropdownMenuItem(value: 'Inactive Users', child: Text('Inactive for >3 days (8,410)')),
-                  DropdownMenuItem(value: 'New Users', child: Text('New Users (<7 days) (2,120)')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _target = val);
-                },
-              ),
-              const Spacer(),
-
-              // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton.icon(
-                    onPressed: _send,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5636F5),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                    ),
-                    icon: const Icon(Icons.send_rounded, size: 16),
-                    label: const Text('Broadcast Notification'),
-                  ),
-                ],
-              ),
-            ],
+    return AppModalDialog(
+      title: 'Send Lucky Wheel Notification',
+      subtitle: 'Remind users to spin the wheel and boost daily engagement',
+      iconData: Icons.campaign_rounded,
+      gradientColors: const [Color(0xFFF04483), Color(0xFFFB7185)],
+      maxWidth: 520,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
           ),
+          child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
         ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: _send,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5636F5),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          ),
+          icon: const Icon(Icons.send_rounded, size: 16),
+          label: const Text('Broadcast Notification'),
+        ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Title
+          const Text('Notification Title', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF101A3A))),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _titleController,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Message
+          const Text('Message Body', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF101A3A))),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _messageController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Target audience
+          AppDropdown<String>(
+            label: 'Target Audience',
+            value: _target,
+            items: _targetOptions.map((opt) {
+              return AppDropdownItem(value: opt['value']!, label: opt['label']!);
+            }).toList(),
+            onChanged: (val) {
+              if (val != null) setState(() => _target = val);
+            },
+          ),
+        ],
       ),
     );
   }

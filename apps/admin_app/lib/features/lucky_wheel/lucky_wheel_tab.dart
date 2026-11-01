@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart'
     hide WheelRewardType, WheelCampaignStatus, WheelRewardSegment;
 import 'models/lucky_wheel_item.dart';
@@ -111,7 +112,7 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
   }
 
   void _openCreateDialog([LuckyWheelCampaignItem? editItem]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => CreateLuckyWheelDialog(
         editItem: editItem,
@@ -161,7 +162,7 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
       orElse: () => _allCampaigns.first,
     );
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => SetRewardsDialog(
         initialSlices: active.slices.isNotEmpty ? active.slices : null,
@@ -192,7 +193,7 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
   }
 
   void _openManageCampaignsDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ManageCampaignsDialog(
         campaigns: _allCampaigns,
@@ -207,21 +208,21 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
   }
 
   void _openSpinHistoryDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => const SpinHistoryDialog(),
     );
   }
 
   void _openNotificationDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => const SendWheelNotificationDialog(),
     );
   }
 
   void _openExportDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => const ExportWheelReportsDialog(),
     );

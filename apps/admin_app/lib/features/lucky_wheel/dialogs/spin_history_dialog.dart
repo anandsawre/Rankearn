@@ -104,166 +104,130 @@ class _SpinHistoryDialogState extends State<SpinHistoryDialog> {
           r.id.toLowerCase().contains(q);
     }).toList();
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 820, maxHeight: 660),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF9F0A).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.history_rounded, color: Color(0xFFFF9F0A), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Authoritative Spin & Reward Ledger',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF101A3A),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          'Cryptographically verified server outcomes and transaction references',
-                          style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textSecondary),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              const Divider(height: 1, color: Color(0xFFE2E8F0)),
-              const SizedBox(height: 12),
-
-              // Search bar
-              SizedBox(
-                height: 36,
-                child: TextField(
-                  onChanged: (v) => setState(() => _search = v),
-                  decoration: InputDecoration(
-                    hintText: 'Search by user, campaign, reward, or spin ID...',
-                    prefixIcon: const Icon(Icons.search_rounded, size: 16),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
+    return AppModalDialog(
+      title: 'Authoritative Spin & Reward Ledger',
+      subtitle: 'Cryptographically verified server outcomes and transaction references',
+      iconData: Icons.history_rounded,
+      gradientColors: const [Color(0xFFFF9F0A), Color(0xFFFBBF24)],
+      maxWidth: 820,
+      maxHeight: 680,
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5636F5),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          ),
+          child: const Text('Close Ledger'),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Search bar
+          SizedBox(
+            height: 40,
+            child: TextField(
+              onChanged: (v) => setState(() => _search = v),
+              decoration: InputDecoration(
+                hintText: 'Search by user, campaign, reward, or spin ID...',
+                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                prefixIcon: const Icon(Icons.search_rounded, size: 16),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
                 ),
-              ),
-              const SizedBox(height: 12),
-
-              // Ledger Table
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                    headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
-                    headingRowHeight: 38,
-                    dataRowMinHeight: 52,
-                    dataRowMaxHeight: 52,
-                    horizontalMargin: 12,
-                    columnSpacing: 16,
-                    columns: const [
-                      DataColumn(label: Text('Spin ID', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
-                      DataColumn(label: Text('Participant', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
-                      DataColumn(label: Text('Campaign', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
-                      DataColumn(label: Text('Outcome Reward', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
-                      DataColumn(label: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
-                      DataColumn(label: Text('Ledger Txn', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
-                    ],
-                    rows: filtered.map((r) {
-                      return DataRow(
-                        cells: [
-                          DataCell(Text(r.id, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
-                          DataCell(
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                CircleAvatar(
-                                  radius: 12,
-                                  backgroundColor: const Color(0xFF5636F5),
-                                  child: Text(r.userAvatar, style: const TextStyle(fontSize: 9, color: Colors.white)),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(r.userName, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                          ),
-                          DataCell(Text(r.campaignTitle, style: const TextStyle(fontSize: 11.5))),
-                          DataCell(
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: r.rewardType.backgroundColor,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                r.rewardLabel,
-                                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: r.rewardType.color),
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              r.status,
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF10B981)),
-                            ),
-                          ),
-                          DataCell(
-                            Text(
-                              r.transactionId,
-                              style: const TextStyle(fontSize: 10.5, fontFamily: 'monospace', color: Color(0xFF475569)),
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                  ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                 ),
               ),
             ),
-              const SizedBox(height: 14),
-
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5636F5),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('Close Ledger'),
-                ),
-              ),
-            ],
           ),
-        ),
+          const SizedBox(height: 14),
+
+          // Ledger Table
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+                headingRowHeight: 38,
+                dataRowMinHeight: 52,
+                dataRowMaxHeight: 52,
+                horizontalMargin: 12,
+                columnSpacing: 16,
+                columns: const [
+                  DataColumn(label: Text('Spin ID', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                  DataColumn(label: Text('Participant', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                  DataColumn(label: Text('Campaign', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                  DataColumn(label: Text('Outcome Reward', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                  DataColumn(label: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                  DataColumn(label: Text('Ledger Txn', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                ],
+                rows: filtered.map((r) {
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(r.id, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
+                      DataCell(
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 12,
+                              backgroundColor: const Color(0xFF5636F5),
+                              child: Text(r.userAvatar, style: const TextStyle(fontSize: 9, color: Colors.white)),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(r.userName, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                      DataCell(Text(r.campaignTitle, style: const TextStyle(fontSize: 11.5))),
+                      DataCell(
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: r.rewardType.backgroundColor,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            r.rewardLabel,
+                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: r.rewardType.color),
+                          ),
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          r.status,
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF10B981)),
+                        ),
+                      ),
+                      DataCell(
+                        Text(
+                          r.transactionId,
+                          style: const TextStyle(fontSize: 10.5, fontFamily: 'monospace', color: Color(0xFF475569)),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

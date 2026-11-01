@@ -255,61 +255,25 @@ class _LuckyWheelTableCardState extends State<LuckyWheelTableCard> {
         ),
 
         // Status Filter Dropdown
-        Container(
-          height: 32,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _statusOptions.contains(widget.selectedStatus)
-                  ? widget.selectedStatus
-                  : _statusOptions.first,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textSecondary),
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-              onChanged: (val) {
-                if (val != null) widget.onStatusChanged(val);
-              },
-              items: _statusOptions.map((opt) {
-                return DropdownMenuItem<String>(
-                  value: opt,
-                  child: Text(opt),
-                );
-              }).toList(),
-            ),
-          ),
+        AppDropdownFilter<String>(
+          value: _statusOptions.contains(widget.selectedStatus)
+              ? widget.selectedStatus
+              : _statusOptions.first,
+          items: _statusOptions,
+          onChanged: (val) {
+            if (val != null) widget.onStatusChanged(val);
+          },
         ),
 
         // Reward Type Filter Dropdown
-        Container(
-          height: 32,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _rewardTypeOptions.contains(widget.selectedRewardType)
-                  ? widget.selectedRewardType
-                  : _rewardTypeOptions.first,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textSecondary),
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-              onChanged: (val) {
-                if (val != null) widget.onRewardTypeChanged(val);
-              },
-              items: _rewardTypeOptions.map((opt) {
-                return DropdownMenuItem<String>(
-                  value: opt,
-                  child: Text(opt),
-                );
-              }).toList(),
-            ),
-          ),
+        AppDropdownFilter<String>(
+          value: _rewardTypeOptions.contains(widget.selectedRewardType)
+              ? widget.selectedRewardType
+              : _rewardTypeOptions.first,
+          items: _rewardTypeOptions,
+          onChanged: (val) {
+            if (val != null) widget.onRewardTypeChanged(val);
+          },
         ),
 
         // Date Range Picker
@@ -948,30 +912,15 @@ class _LuckyWheelTableCardState extends State<LuckyWheelTableCard> {
             children: [
               const Text('Show', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
               const SizedBox(width: 6),
-              Container(
+              AppDropdownFilter<int>(
+                value: widget.rowsPerPage,
+                items: const [5, 10, 20, 50],
                 height: 28,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<int>(
-                    value: widget.rowsPerPage,
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textSecondary),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                    onChanged: (val) {
-                      if (val != null) widget.onRowsPerPageChanged(val);
-                    },
-                    items: const [
-                      DropdownMenuItem(value: 5, child: Text('5')),
-                      DropdownMenuItem(value: 10, child: Text('10')),
-                      DropdownMenuItem(value: 20, child: Text('20')),
-                      DropdownMenuItem(value: 50, child: Text('50')),
-                    ],
-                  ),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                borderRadius: BorderRadius.circular(6),
+                onChanged: (val) {
+                  if (val != null) widget.onRowsPerPageChanged(val);
+                },
               ),
             ],
           ),
@@ -1030,30 +979,15 @@ class _LuckyWheelTableCardState extends State<LuckyWheelTableCard> {
           children: [
             const Text('Show', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
             const SizedBox(width: 6),
-            Container(
+            AppDropdownFilter<int>(
+              value: widget.rowsPerPage,
+              items: const [5, 10, 20, 50],
               height: 28,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: widget.rowsPerPage,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textSecondary),
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                  onChanged: (val) {
-                    if (val != null) widget.onRowsPerPageChanged(val);
-                  },
-                  items: const [
-                    DropdownMenuItem(value: 5, child: Text('5')),
-                    DropdownMenuItem(value: 10, child: Text('10')),
-                    DropdownMenuItem(value: 20, child: Text('20')),
-                    DropdownMenuItem(value: 50, child: Text('50')),
-                  ],
-                ),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              borderRadius: BorderRadius.circular(6),
+              onChanged: (val) {
+                if (val != null) widget.onRowsPerPageChanged(val);
+              },
             ),
             const SizedBox(width: 6),
             const Text('per page', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
