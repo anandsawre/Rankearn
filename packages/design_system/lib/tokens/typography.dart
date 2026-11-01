@@ -89,6 +89,15 @@ class AppTypography {
     fontFamilyFallback: headingFallbacks,
   );
 
+  static const TextStyle headingSmall = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: headingFallbacks,
+  );
+
   static const TextStyle titleLarge = TextStyle(
     fontFamily: fontHeading,
     fontSize: 18,
@@ -182,6 +191,20 @@ class AppTypography {
     fontSize: 12,
     fontWeight: FontWeight.w700,
     color: AppColors.textSecondary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle labelMedium = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle labelSmall = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textMuted,
     fontFamilyFallback: fontFallbacks,
   );
 

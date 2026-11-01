@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import '../../wallet/components/wallet_modals.dart';
@@ -30,16 +31,16 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
   final BattleRepository _repository = BattleRepository();
 
   late BattleSession _session;
-  int _currentRound = 4; // Starts on Round 4 of 5
-  int _playerScore = 10;
+  int _currentRound = 1; // Starts on Round 1 of 5
+  int _playerScore = 0;
   int _opponentScore = 0;
-  final List<bool?> _playerRounds = [true, false, true, null, null];
-  final List<bool?> _opponentRounds = [false, false, false, null, null];
+  final List<bool?> _playerRounds = [null, null, null, null, null];
+  final List<bool?> _opponentRounds = [null, null, null, null, null];
 
   int? _selectedOption;
   bool _isAnswerLocked = false;
 
-  int _turnSeconds = 12; // 12 seconds
+  int _turnSeconds = 15; // 15 seconds per question
   Timer? _countdownTimer;
   Timer? _submitDelayTimer;
   Timer? _reviewDelayTimer;
@@ -53,7 +54,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
 
   void _startTurnTimer() {
     _countdownTimer?.cancel();
-    _turnSeconds = 12;
+    _turnSeconds = 15;
     _isAnswerLocked = false;
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -75,6 +76,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
 
   void _onOptionSelected(int index) {
     if (_isAnswerLocked) return;
+    HapticFeedback.selectionClick();
     setState(() {
       _selectedOption = index;
     });
@@ -89,19 +91,47 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
       _isAnswerLocked = true;
     });
 
-    final currentQ = _session.currentQuestion;
-    final isCorrect = !timedOut && _selectedOption == currentQ.correctAnswer;
+    final currentQ = _session.questions.isNotEmpty
+        ? _session.questions[(_currentRound - 1).clamp(0, _session.questions.length - 1)]
+        : _session.currentQuestion;
 
-    // Simulate opponent choice (e.g. 50% realistic success)
-    final opponentCorrect = (_currentRound % 2 == 1);
+    final durationSeconds = 15.0 - _turnSeconds.toDouble();
+
+    // Server-authoritative integrity check
+    final validation = !timedOut && _selectedOption != null
+        ? _repository.validateAnswerIntegrity(
+            selectedOption: _selectedOption!,
+            correctOption: currentQ.correctAnswer,
+            answerDurationSeconds: durationSeconds,
+          )
+        : null;
+
+    bool isCorrect = false;
+    int pointsWon = 0;
+    if (!timedOut && validation is Success<Map<String, dynamic>>) {
+      isCorrect = validation.data['is_correct'] as bool? ?? false;
+      if (isCorrect) {
+        pointsWon = validation.data['score_awarded'] as int? ?? 10;
+      }
+    }
+
+    // Simulate opponent choice (realistic 60% probability)
+    final opponentCorrect = (_currentRound % 2 == 1 && !timedOut) || (_currentRound == 2);
+    final opponentPoints = opponentCorrect ? 10 : 0;
 
     _submitDelayTimer?.cancel();
     _submitDelayTimer = Timer(const Duration(milliseconds: 700), () {
       if (!mounted) return;
 
+      if (isCorrect) {
+        HapticFeedback.mediumImpact();
+      } else {
+        HapticFeedback.vibrate();
+      }
+
       setState(() {
-        if (isCorrect) _playerScore += 10;
-        if (opponentCorrect) _opponentScore += 10;
+        _playerScore += pointsWon;
+        _opponentScore += opponentPoints;
 
         final roundIdx = (_currentRound - 1).clamp(0, 4);
         _playerRounds[roundIdx] = isCorrect;
@@ -117,6 +147,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
           setState(() {
             _currentRound++;
             _selectedOption = null;
+            _session = _session.copyWith(currentRound: _currentRound);
           });
           _startTurnTimer();
         } else {
@@ -129,7 +160,9 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
   Future<void> _finishBattle() async {
     final isWin = _playerScore > _opponentScore;
     final isDraw = _playerScore == _opponentScore;
-    final coinsWon = isWin ? _session.entryFee : 0;
+    final prizeCoins = isWin
+        ? (_session.entryFee * 2)
+        : (isDraw ? _session.entryFee : 0);
 
     final result = BattleResult(
       isVictory: isWin,
@@ -140,7 +173,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
       opponentName: _session.opponent.name,
       opponentScore: _opponentScore,
       opponentRank: _session.opponent.rank,
-      coinsWon: isWin ? _session.entryFee : 0,
+      coinsWon: prizeCoins,
       message: isWin
           ? 'You defeated ${_session.opponent.name} in 1v1 Battle! 🏆'
           : (isDraw
@@ -148,8 +181,11 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
               : 'Good effort! Practice more and rematch ${_session.opponent.name}.'),
     );
 
-    // Apply coin delta to user wallet
-    widget.onCoinUpdate?.call(isWin ? coinsWon : -_session.entryFee);
+    // Apply winnings to user wallet (Entry fee was already deducted on entry)
+    if (prizeCoins > 0) {
+      if (isWin) HapticFeedback.heavyImpact();
+      widget.onCoinUpdate?.call(prizeCoins);
+    }
 
     // Persist to backend
     await _repository.recordBattleOutcome(
@@ -164,7 +200,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
       MaterialPageRoute(
         builder: (_) => BattleResultScreen(
           result: result,
-          userCoins: widget.userCoins + (isWin ? coinsWon : -_session.entryFee),
+          userCoins: widget.userCoins + prizeCoins,
           profile: widget.userProfile,
           entryFee: _session.entryFee,
           onCoinUpdate: widget.onCoinUpdate,
@@ -177,7 +213,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
     final shouldLeave = await BattleLeaveDialog.show(context, entryFee: _session.entryFee);
     if (shouldLeave == true && mounted) {
       _countdownTimer?.cancel();
-      widget.onCoinUpdate?.call(-_session.entryFee);
+      // Entry fee is forfeited
       Navigator.of(context).pop();
     }
   }

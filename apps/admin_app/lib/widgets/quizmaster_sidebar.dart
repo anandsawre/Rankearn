@@ -118,6 +118,13 @@ class QuizMasterSidebar extends StatelessWidget {
                   badgeColor: const Color(0xFFEF4444),
                 ),
                 _buildNavItem(
+                  tab: AdminNavTab.battles,
+                  icon: Icons.sports_esports_rounded,
+                  label: 'Battle Management',
+                  badgeText: 'LIVE',
+                  badgeColor: const Color(0xFF7C3AED),
+                ),
+                _buildNavItem(
                   tab: AdminNavTab.leaderboard,
                   icon: Icons.emoji_events_outlined,
                   label: 'Tournaments',

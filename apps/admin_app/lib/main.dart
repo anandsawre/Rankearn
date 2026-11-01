@@ -26,6 +26,7 @@ import 'package:flutter/services.dart';
 import 'features/polls/polls_tab.dart';
 import 'features/settings/settings_tab.dart';
 import 'features/auth/admin_login_screen.dart';
+import 'features/battle_dashboard/battle_dashboard_tab.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -173,6 +174,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   AdminNavTab.support => const SupportTab(),
                   AdminNavTab.feedback => const FeedbackTab(),
                   AdminNavTab.battleQs => const QuestionsTab(),
+                  AdminNavTab.battles => const BattleDashboardTab(),
                   AdminNavTab.polls => const PollsTab(),
                   AdminNavTab.settings => const SettingsTab(),
                 },
@@ -317,6 +319,12 @@ class _AdminAppShellState extends State<AdminAppShell> {
                       label: 'Test Series',
                       icon: Icons.menu_book_outlined,
                       isActive: _activeTab == AdminNavTab.tests,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.battles,
+                      label: 'Live Battles',
+                      icon: Icons.sports_kabaddi_rounded,
+                      isActive: _activeTab == AdminNavTab.battles,
                     ),
                     _buildNavPill(
                       tab: AdminNavTab.battleQs,
@@ -957,6 +965,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   _buildDrawerSectionHeader('CORE MODULES'),
                   _buildDrawerItem(AdminNavTab.overview, 'Dashboard', Icons.dashboard_rounded),
                   _buildDrawerItem(AdminNavTab.tests, 'Test Series', Icons.menu_book_rounded),
+                  _buildDrawerItem(AdminNavTab.battles, 'Battle Management', Icons.sports_kabaddi_rounded),
                   _buildDrawerItem(AdminNavTab.battleQs, 'Questions Management', Icons.help_outline_rounded),
                   _buildDrawerItem(AdminNavTab.patterns, 'Target Exams', Icons.explore_outlined),
                   _buildDrawerItem(AdminNavTab.users, 'Users & Students', Icons.people_outline_rounded),

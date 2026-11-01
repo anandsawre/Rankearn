@@ -10,6 +10,12 @@ class AppColors {
   static const Color brandPurpleDark = Color(0xFF3920C9);
   static const Color brandPurpleLight = Color(0xFFEEE9FF);
 
+  // --- Battle Management Dashboard (Admin) Tokens ---
+  static const Color battleAdminPurple = Color(0xFF7C3AED);
+  static const Color battleAdminPurpleSecondary = Color(0xFFA855F7);
+  static const Color battleAdminPurpleLight = Color(0xFFEDE9FE);
+  static const Color battleAdminDarkText = Color(0xFF10143A);
+
   // --- Brand Green / Emerald Tokens (Earnings & Success) ---
   static const Color brandGreen = Color(0xFF10B981);
   static const Color brandGreenDark = Color(0xFF07884F);

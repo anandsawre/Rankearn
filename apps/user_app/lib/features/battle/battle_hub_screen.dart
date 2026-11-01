@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'battle_screen.dart';
@@ -77,6 +78,37 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
     );
   }
 
+  // --- Multiplayer Tournament Arena Flow (Phase 3) ---
+  void _openMultiplayerArena({
+    String title = 'Maha GK Clash (50 Players)',
+    String subject = 'General Knowledge & Science',
+    int fee = 50,
+    int prizePool = 2250,
+  }) {
+    if (widget.userCoins < fee) {
+      _showInsufficientCoinsDialog(fee);
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MultiplayerArenaScreen(
+          arenaTitle: title,
+          subject: subject,
+          totalPlayers: 50,
+          entryFee: fee,
+          prizePool: prizePool,
+          profile: widget.profile,
+          userCoins: widget.userCoins,
+          onCoinUpdate: (delta) {
+            widget.onCoinUpdate?.call(delta);
+            _loadBattleData();
+          },
+        ),
+      ),
+    );
+  }
+
   void _showInsufficientCoinsDialog(int requiredCoins) {
     showDialog(
       context: context,
@@ -121,17 +153,113 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
         userCoins: widget.userCoins,
         onRoomCreated: (roomCode, fee) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Room $roomCode created! Waiting for friend to join...'),
-              backgroundColor: const Color(0xFF10B981),
-            ),
-          );
+          _showRoomCreatedLobbyDialog(roomCode, fee);
         },
         onJoinRoom: (roomCode) {
           Navigator.pop(context);
           _startMatchmaking(battleType: 'Friends Battle ($roomCode)', entryFee: 20);
         },
+      ),
+    );
+  }
+
+  void _showRoomCreatedLobbyDialog(String roomCode, int fee) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.meeting_room_rounded, color: Color(0xFFF97316)),
+            SizedBox(width: 8),
+            Text('Custom Room Ready!', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              'Share this code with your friend to play together:',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFF97316), width: 1.5),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    roomCode,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFEA580C),
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton(
+                    icon: const Icon(Icons.copy_rounded, color: Color(0xFFEA580C)),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: roomCode));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Room code copied!'), duration: Duration(seconds: 1)),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                final text =
+                    'Hey! Challenge me in a Quiz Battle on Rankearn ⚔️!\n'
+                    'Room Code: $roomCode (Entry: $fee Coins)\n'
+                    'Open app and enter code to play: https://rankearn.in/battle';
+                Clipboard.setData(ClipboardData(text: text));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Invite copied! Share on WhatsApp!'),
+                    backgroundColor: Color(0xFF25D366),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.share_rounded, size: 18),
+              label: const Text('Share on WhatsApp', style: TextStyle(fontWeight: FontWeight.w800)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF25D366),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                minimumSize: const Size(double.infinity, 42),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _startMatchmaking(battleType: 'Custom Room ($roomCode)', entryFee: fee);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF97316),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Enter Arena'),
+          ),
+        ],
       ),
     );
   }
@@ -540,6 +668,8 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
                 setState(() => _selectedTab = tab);
                 if (tab == BattleNavTab.customRoom) {
                   _openCustomRoomDialog();
+                } else if (tab == BattleNavTab.twoPlayers) {
+                  _openMultiplayerArena();
                 }
               },
             ),

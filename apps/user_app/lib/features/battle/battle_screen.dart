@@ -5,6 +5,7 @@ import 'screens/finding_opponent_screen.dart';
 export 'screens/finding_opponent_screen.dart';
 export 'screens/live_arena_screen.dart';
 export 'screens/battle_result_screen.dart';
+export 'screens/multiplayer_arena_screen.dart';
 
 /// Legacy BattleScreen wrapper routing directly to the Master FindingOpponentScreen flow
 class BattleScreen extends StatelessWidget {

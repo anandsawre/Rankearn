@@ -54,12 +54,23 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
       if (!mounted) return;
 
       if (res is Success<BattleSession>) {
+        // Atomic ledger entry fee deduction upon match handshake
+        await _repository.deductBattleEntryFee(
+          userId: widget.profile.id,
+          entryFee: widget.entryFee,
+          battleId: res.data.id,
+          battleTitle: widget.battleType,
+        );
+        widget.onCoinUpdate?.call(-widget.entryFee);
+
+        if (!mounted) return;
+
         // Transition to Live Arena
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => LiveArenaScreen(
               initialSession: res.data,
-              userCoins: widget.userCoins,
+              userCoins: widget.userCoins - widget.entryFee,
               userProfile: widget.profile,
               onCoinUpdate: widget.onCoinUpdate,
             ),

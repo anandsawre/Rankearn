@@ -22,6 +22,7 @@ enum AdminNavTab {
   battleQs,
   polls,
   settings,
+  battles,
 }
 
 /// Rankearn Desktop Admin Sidebar Navigation Rail (18 Tabs)
@@ -57,6 +58,7 @@ class AdminSidebar extends StatelessWidget {
       (AdminNavTab.support, Icons.chat_bubble_outline, 'Support Chat'),
       (AdminNavTab.feedback, Icons.star_outline, 'Give Feedback'),
       (AdminNavTab.battleQs, Icons.sports_kabaddi, 'Battle Questions'),
+      (AdminNavTab.battles, Icons.sports_kabaddi_rounded, 'Battle Management'),
       (AdminNavTab.polls, Icons.poll_outlined, 'Community Polls'),
       (AdminNavTab.settings, Icons.settings_outlined, 'Settings'),
     ];

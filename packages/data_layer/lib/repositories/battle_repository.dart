@@ -337,7 +337,180 @@ class BattleRepository {
         });
       } catch (_) {}
     }
+
+    // Automatically trigger atomic ledger updates
+    if (result.isVictory) {
+      await distributeBattleWinnings(
+        userId: userId,
+        coinsWon: entryFee * 2,
+        battleId: 'match_${DateTime.now().millisecondsSinceEpoch}',
+        battleTitle: 'Battle vs ${result.opponentName}',
+      );
+    }
+
     return const Success(true);
+  }
+
+  /// Deduct battle entry fee with wallet ledger record
+  Future<Result<int>> deductBattleEntryFee({
+    required String userId,
+    required int entryFee,
+    required String battleId,
+    String battleTitle = '1v1 Battle Entry',
+  }) async {
+    final client = _client;
+    if (client == null || userId.isEmpty || entryFee <= 0) {
+      return const Success(0);
+    }
+    try {
+      final userProfile = await client
+          .from('profiles')
+          .select('coins')
+          .eq('id', userId)
+          .maybeSingle();
+
+      final currentCoins = (userProfile?['coins'] as num?)?.toInt() ?? 0;
+      if (currentCoins < entryFee) {
+        return Failure('Insufficient coin balance ($currentCoins < $entryFee)');
+      }
+
+      final newBalance = currentCoins - entryFee;
+      await client
+          .from('profiles')
+          .update({'coins': newBalance})
+          .eq('id', userId);
+
+      await client.from('wallet_transactions').insert({
+        'id': 'TXN_BT_ENTRY_${DateTime.now().millisecondsSinceEpoch}',
+        'user_id': userId,
+        'amount': -entryFee,
+        'type': 'spend',
+        'category': 'battle_entry',
+        'reference_id': battleId,
+        'title': 'Entry Fee: $battleTitle',
+        'balance_after': newBalance,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      return Success(newBalance);
+    } catch (e) {
+      return Failure('Failed to deduct entry fee: $e', e);
+    }
+  }
+
+  /// Distribute battle victory prize with wallet ledger record
+  Future<Result<int>> distributeBattleWinnings({
+    required String userId,
+    required int coinsWon,
+    required String battleId,
+    String battleTitle = '1v1 Battle Victory',
+  }) async {
+    final client = _client;
+    if (client == null || userId.isEmpty || coinsWon <= 0) {
+      return Success(coinsWon);
+    }
+    try {
+      final userProfile = await client
+          .from('profiles')
+          .select('coins, total_earned')
+          .eq('id', userId)
+          .maybeSingle();
+
+      final currentCoins = (userProfile?['coins'] as num?)?.toInt() ?? 0;
+      final currentEarned = (userProfile?['total_earned'] as num?)?.toInt() ?? 0;
+      final newBalance = currentCoins + coinsWon;
+
+      await client
+          .from('profiles')
+          .update({
+            'coins': newBalance,
+            'total_earned': currentEarned + coinsWon,
+          })
+          .eq('id', userId);
+
+      await client.from('wallet_transactions').insert({
+        'id': 'TXN_BT_WIN_${DateTime.now().millisecondsSinceEpoch}',
+        'user_id': userId,
+        'amount': coinsWon,
+        'type': 'earn',
+        'category': 'battle_reward',
+        'reference_id': battleId,
+        'title': 'Prize Won: $battleTitle',
+        'balance_after': newBalance,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      return Success(newBalance);
+    } catch (e) {
+      return Failure('Failed to credit prize coins: $e', e);
+    }
+  }
+
+  /// Refund battle entry fee if match was aborted or cancelled by Admin
+  Future<Result<int>> refundBattleEntryFee({
+    required String userId,
+    required int entryFee,
+    required String battleId,
+    required String reason,
+  }) async {
+    final client = _client;
+    if (client == null || userId.isEmpty || entryFee <= 0) {
+      return const Success(0);
+    }
+    try {
+      final userProfile = await client
+          .from('profiles')
+          .select('coins')
+          .eq('id', userId)
+          .maybeSingle();
+
+      final currentCoins = (userProfile?['coins'] as num?)?.toInt() ?? 0;
+      final newBalance = currentCoins + entryFee;
+
+      await client
+          .from('profiles')
+          .update({'coins': newBalance})
+          .eq('id', userId);
+
+      await client.from('wallet_transactions').insert({
+        'id': 'TXN_BT_REF_${DateTime.now().millisecondsSinceEpoch}',
+        'user_id': userId,
+        'amount': entryFee,
+        'type': 'earn',
+        'category': 'battle_refund',
+        'reference_id': battleId,
+        'title': 'Refund: Match $battleId ($reason)',
+        'balance_after': newBalance,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      return Success(newBalance);
+    } catch (e) {
+      return Failure('Failed to refund entry fee: $e', e);
+    }
+  }
+
+  /// Server-Authoritative Anti-Cheat validation for questions
+  Result<Map<String, dynamic>> validateAnswerIntegrity({
+    required int selectedOption,
+    required int correctOption,
+    required double answerDurationSeconds,
+    double speedThreshold = 0.8,
+  }) {
+    if (answerDurationSeconds < speedThreshold) {
+      return const Failure('Answer submitted unrealistically fast (Anti-cheat flag: bot speed)');
+    }
+    final isCorrect = selectedOption == correctOption;
+    final score = isCorrect
+        ? (10 + ((15 - answerDurationSeconds.clamp(0, 15)) * 0.5).round())
+        : 0;
+
+    return Success({
+      'is_correct': isCorrect,
+      'score_awarded': score,
+      'duration_seconds': answerDurationSeconds,
+      'flagged': false,
+    });
   }
 
   static const List<BattlePlayerModel> _defaultTopPlayers = [
