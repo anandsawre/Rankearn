@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import '../models/user_management_item.dart';
 
 class ImportUsersDialog extends StatefulWidget {
@@ -80,165 +81,133 @@ class _ImportUsersDialogState extends State<ImportUsersDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 580),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0284C7).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.cloud_upload_rounded, color: Color(0xFF0284C7), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Import Users (CSV / JSON)',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF101A3A),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // Upload Drag/Drop Box
-              InkWell(
-                onTap: _simulateFileSelect,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFCBD5E1), style: BorderStyle.solid),
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.file_upload_outlined, size: 36, color: Color(0xFF6B4EFF)),
-                      const SizedBox(height: 8),
-                      Text(
-                        _selectedFileName ?? 'Click to browse or drop CSV/JSON file here',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: _selectedFileName != null ? FontWeight.w700 : FontWeight.w500,
-                          color: _selectedFileName != null ? const Color(0xFF101A3A) : const Color(0xFF475569),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Expected columns: name, email, phone, role, status (Max 5MB)',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Preview Section if file selected
-              if (_previewRows.isNotEmpty) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Previewing ${_previewRows.length} records ready to import',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
-                    ),
-                    const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF10B981)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 140),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: _previewRows.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                    itemBuilder: (context, i) {
-                      final item = _previewRows[i];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        child: Row(
-                          children: [
-                            Text('${i + 1}.', style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              flex: 2,
-                              child: Text(item.name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: Text(item.email, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: item.role.bgColor, borderRadius: BorderRadius.circular(4)),
-                              child: Text(item.role.label, style: TextStyle(fontSize: 10, color: item.role.color, fontWeight: FontWeight.w600)),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: _previewRows.isEmpty || _isProcessing ? null : _confirmImport,
-                    icon: _isProcessing
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Icon(Icons.check_rounded, size: 16),
-                    label: const Text('Confirm Import'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5636F5),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    return AppModalDialog(
+      title: 'Import Users (CSV / JSON)',
+      subtitle: 'Upload structured CSV or JSON to batch import user accounts',
+      iconData: Icons.cloud_upload_rounded,
+      gradientColors: const [Color(0xFF0284C7), Color(0xFF0EA5E9)],
+      maxWidth: 580,
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           ),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
         ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: _previewRows.isNotEmpty && !_isProcessing ? _confirmImport : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0284C7),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            elevation: 0,
+          ),
+          child: _isProcessing
+              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : Text('Import ${_previewRows.isNotEmpty ? "(${_previewRows.length}) Rows" : ""}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Upload Drag/Drop Box
+          InkWell(
+            onTap: _simulateFileSelect,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFCBD5E1)),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.file_upload_outlined, size: 36, color: Color(0xFF0284C7)),
+                  const SizedBox(height: 8),
+                  Text(
+                    _selectedFileName ?? 'Click to browse CSV / Excel file or drag & drop',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _selectedFileName != null ? const Color(0xFF0284C7) : const Color(0xFF334155),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Supported columns: full_name, email, phone, role, status',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Preview Table if file selected
+          if (_previewRows.isNotEmpty) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Data Preview (${_previewRows.length} valid rows found):',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                ),
+                TextButton(
+                  onPressed: () => setState(() {
+                    _selectedFileName = null;
+                    _previewRows.clear();
+                  }),
+                  child: const Text('Clear File', style: TextStyle(color: Color(0xFFE11D48), fontSize: 11.5)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFCBD5E1)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    headingRowHeight: 36,
+                    dataRowMinHeight: 36,
+                    dataRowMaxHeight: 40,
+                    horizontalMargin: 12,
+                    columnSpacing: 18,
+                    headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+                    columns: const [
+                      DataColumn(label: Text('#', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                      DataColumn(label: Text('Name', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                      DataColumn(label: Text('Email', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                      DataColumn(label: Text('Role', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                      DataColumn(label: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700))),
+                    ],
+                    rows: _previewRows.map((u) {
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(u.rowNumber.toString(), style: const TextStyle(fontSize: 11))),
+                          DataCell(Text(u.name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+                          DataCell(Text(u.email, style: const TextStyle(fontSize: 11))),
+                          DataCell(Text(u.role.label, style: TextStyle(fontSize: 11, color: u.role.color, fontWeight: FontWeight.w700))),
+                          DataCell(Text(u.status.label, style: TextStyle(fontSize: 11, color: u.status.color, fontWeight: FontWeight.w700))),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

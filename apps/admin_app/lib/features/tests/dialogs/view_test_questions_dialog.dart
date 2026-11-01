@@ -104,7 +104,7 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
   }
 
   void _openAddQuestionDialog([QuestionItem? itemToEdit]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => CreateQuestionDialog(
         initialItem: itemToEdit,
@@ -187,7 +187,7 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
   }
 
   void _openImportQuestionsDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ImportQuestionsDialog(
         onImport: (importedQuestions) async {
@@ -255,19 +255,33 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
   }
 
   void _deleteQuestion(QuestionItem question) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Question', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-        content: Text('Are you sure you want to delete Question #${question.questionNumber}?'),
+      builder: (ctx) => AppModalDialog(
+        title: 'Delete Question',
+        subtitle: 'Question #${question.questionNumber}',
+        iconData: Icons.delete_outline_rounded,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 420,
         actions: [
-          TextButton(
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
+            ),
             onPressed: () async {
               Navigator.pop(ctx);
               setState(() {
@@ -297,9 +311,13 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
                 );
               }
             },
-            child: const Text('Delete'),
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
+        child: Text(
+          'Are you sure you want to delete Question #${question.questionNumber}? This action cannot be undone.',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF334155), height: 1.45),
+        ),
       ),
     );
   }

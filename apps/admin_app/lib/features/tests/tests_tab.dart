@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
@@ -15,10 +14,12 @@ import 'dialogs/create_test_series_dialog.dart';
 import 'dialogs/view_test_series_dialog.dart';
 import 'dialogs/view_test_questions_dialog.dart';
 import 'dialogs/analytics_test_series_dialog.dart';
+import 'dialogs/add_test_paper_dialog.dart';
+import 'dialogs/manage_subjects_dialog.dart';
+import 'dialogs/import_tests_dialog.dart';
+import 'dialogs/ai_generate_test_series_dialog.dart';
 
 import '../questions/dialogs/create_question_dialog.dart';
-import '../questions/dialogs/import_questions_dialog.dart';
-import '../questions/dialogs/ai_generate_questions_dialog.dart';
 
 /// Test Series Management Screen
 /// Pixel-accurate reproduction of the Rankearn reference specification.
@@ -317,72 +318,28 @@ class _TestsTabState extends State<TestsTab> {
     );
   }
 
-  void _openImportQuestionsDialog([TestSeriesItem? item]) {
-    final targetTest = item ?? (_allItems.isNotEmpty ? _allItems.first : null);
-
+  void _openAddTestPaperDialog() {
     AppModalDialog.show(
       context: context,
-      builder: (ctx) => ImportQuestionsDialog(
-        onImport: (importedQuestions) async {
-          if (importedQuestions.isEmpty) return;
-          String? syncNotice;
+      builder: (ctx) => AddTestPaperDialog(
+        existingSeries: _allItems,
+        onSave: (newItem) async {
+          setState(() {
+            _allItems.insert(0, newItem);
+          });
           final client = SupabaseConfig.clientSafe;
-          if (client != null && targetTest != null) {
+          if (client != null) {
             try {
-              try {
-                await client.from('tests').upsert(targetTest.toMap());
-              } catch (tErr) {
-                debugPrint('Parent test upsert note: $tErr');
-              }
-              final seenIds = <String>{};
-              final payload = <Map<String, dynamic>>[];
-              for (int i = 0; i < importedQuestions.length; i++) {
-                final m = importedQuestions[i].toMap();
-                m['test_id'] = targetTest.id;
-                String qId = m['id']?.toString() ?? '';
-                if (qId.isEmpty || seenIds.contains(qId)) {
-                  qId = 'q_${DateTime.now().microsecondsSinceEpoch}_${i + 1}_${math.Random().nextInt(999999)}';
-                  m['id'] = qId;
-                }
-                seenIds.add(qId);
-                m['question_number'] = targetTest.totalQuestions + i + 1;
-                payload.add(m);
-              }
-              await client.from('questions').upsert(payload);
-
-              final newCount = targetTest.totalQuestions + importedQuestions.length;
-              try {
-                await client.from('tests').update({
-                  'total_questions': newCount,
-                }).eq('id', targetTest.id);
-              } catch (_) {}
-
-              setState(() {
-                final idx = _allItems.indexWhere((i) => i.id == targetTest.id);
-                if (idx >= 0) {
-                  _allItems[idx] = _allItems[idx].copyWith(totalQuestions: newCount);
-                }
-              });
+              await client.from('tests').upsert(newItem.toMap());
             } catch (e) {
-              debugPrint('Error importing questions to Supabase: $e');
-              if (e.toString().contains('42501') || e.toString().contains('row-level security')) {
-                syncNotice = 'Imported locally! (Run Supabase RLS SQL migration to enable cloud sync)';
-              } else if (e.toString().contains('23502') || e.toString().contains('test_id')) {
-                syncNotice = 'Imported locally! (Run test_id DROP NOT NULL SQL migration in Supabase)';
-              }
+              debugPrint('Error saving test paper to Supabase: $e');
             }
           }
-
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  syncNotice ??
-                      (targetTest != null
-                          ? 'Imported ${importedQuestions.length} questions into "${targetTest.title}" successfully!'
-                          : 'Imported ${importedQuestions.length} questions successfully!'),
-                ),
-                backgroundColor: syncNotice != null ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
+                content: Text('Test Paper "${newItem.title}" added successfully!'),
+                backgroundColor: const Color(0xFF0084FF),
               ),
             );
           }
@@ -391,46 +348,71 @@ class _TestsTabState extends State<TestsTab> {
     );
   }
 
-  void _openAiGenerateQuestionsDialog([TestSeriesItem? item]) {
+  void _openManageSubjectsDialog() {
     AppModalDialog.show(
       context: context,
-      builder: (ctx) => AiGenerateQuestionsDialog(
-        onSaveGenerated: (generatedQuestions) async {
+      builder: (ctx) => ManageSubjectsDialog(
+        onSubjectsChanged: () {
+          _loadFromSupabase();
+        },
+      ),
+    );
+  }
+
+  void _openImportTestsDialog() {
+    AppModalDialog.show(
+      context: context,
+      builder: (ctx) => ImportTestsDialog(
+        existingTests: _allItems,
+        onImportTests: (imported) async {
+          setState(() {
+            _allItems.insertAll(0, imported);
+          });
           final client = SupabaseConfig.clientSafe;
           if (client != null) {
             try {
-              final payload = generatedQuestions.map((q) {
-                var map = q.toMap();
-                if (item != null) {
-                  map['test_id'] = item.id;
-                }
-                return map;
-              }).toList();
-              await client.from('questions').upsert(payload);
-
-              if (item != null) {
-                final newCount = item.totalQuestions + generatedQuestions.length;
-                await client.from('tests').update({
-                  'total_questions': newCount,
-                }).eq('id', item.id);
-
-                setState(() {
-                  final idx = _allItems.indexWhere((i) => i.id == item.id);
-                  if (idx >= 0) {
-                    _allItems[idx] = _allItems[idx].copyWith(totalQuestions: newCount);
-                  }
-                });
-              }
+              final payload = imported.map((i) => i.toMap()).toList();
+              await client.from('tests').upsert(payload);
             } catch (e) {
-              debugPrint('Error saving AI generated questions to Supabase: $e');
+              debugPrint('Error bulk inserting tests to Supabase: $e');
             }
           }
-
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Generated & saved ${generatedQuestions.length} questions!'),
-                backgroundColor: const Color(0xFF10B981),
+                content: Text('Successfully imported ${imported.length} test papers!'),
+                backgroundColor: const Color(0xFFFF9500),
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  void _openAiGenerateTestSeriesDialog() {
+    AppModalDialog.show(
+      context: context,
+      builder: (ctx) => AiGenerateTestSeriesDialog(
+        onSaveGenerated: (testItem, questions) async {
+          setState(() {
+            _allItems.insert(0, testItem);
+          });
+          final client = SupabaseConfig.clientSafe;
+          if (client != null) {
+            try {
+              await client.from('tests').upsert(testItem.toMap());
+              final payload = questions.map((q) => q.toMap()).toList();
+              await client.from('questions').upsert(payload);
+            } catch (e) {
+              debugPrint('Error saving AI generated test & questions: $e');
+            }
+          }
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('AI Test Series "${testItem.title}" with ${questions.length} questions generated!'),
+                backgroundColor: const Color(0xFFFF3385),
               ),
             );
           }
@@ -527,76 +509,6 @@ class _TestsTabState extends State<TestsTab> {
     }
   }
 
-  void _openGenericActionModal(String title, String description) {
-    AppModalDialog.show(
-      context: context,
-      builder: (ctx) => AppModalDialog(
-        title: title,
-        subtitle: description,
-        iconData: Icons.folder_outlined,
-        gradientColors: const [Color(0xFF00B368), Color(0xFF10B981)],
-        maxWidth: 520,
-        actions: [
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00B368),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              elevation: 0,
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('$title workflow executed successfully.'),
-                  backgroundColor: const Color(0xFF00B368),
-                ),
-              );
-            },
-            child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
-          ),
-        ],
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFCBD5E1)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF00B368)),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Ready to process batch configuration, syllabus tags, and sync with database.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF334155), height: 1.4),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -628,13 +540,10 @@ class _TestsTabState extends State<TestsTab> {
                     flex: 37,
                     child: TestSeriesQuickActions(
                       onCreateTestSeries: () => _openCreateDialog(),
-                      onAddTestPaper: () => _openAddQuestionDialog(),
-                      onManageSubjects: () => _openGenericActionModal(
-                        'Manage Subjects',
-                        'Configure subjects, categories, syllabus tags, and icon color themes.',
-                      ),
-                      onImportTests: () => _openImportQuestionsDialog(),
-                      onAiGenerate: () => _openAiGenerateQuestionsDialog(),
+                      onAddTestPaper: () => _openAddTestPaperDialog(),
+                      onManageSubjects: () => _openManageSubjectsDialog(),
+                      onImportTests: () => _openImportTestsDialog(),
+                      onAiGenerate: () => _openAiGenerateTestSeriesDialog(),
                     ),
                   ),
                 ],
@@ -646,10 +555,10 @@ class _TestsTabState extends State<TestsTab> {
                   const SizedBox(height: 16),
                   TestSeriesQuickActions(
                     onCreateTestSeries: () => _openCreateDialog(),
-                    onAddTestPaper: () => _openAddQuestionDialog(),
-                    onManageSubjects: () => _openGenericActionModal('Manage Subjects', 'Configure subjects.'),
-                    onImportTests: () => _openImportQuestionsDialog(),
-                    onAiGenerate: () => _openAiGenerateQuestionsDialog(),
+                    onAddTestPaper: () => _openAddTestPaperDialog(),
+                    onManageSubjects: () => _openManageSubjectsDialog(),
+                    onImportTests: () => _openImportTestsDialog(),
+                    onAiGenerate: () => _openAiGenerateTestSeriesDialog(),
                   ),
                 ],
               ),

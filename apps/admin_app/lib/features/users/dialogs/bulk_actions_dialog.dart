@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import '../models/user_management_item.dart';
 
 class BulkActionsDialog extends StatelessWidget {
@@ -19,121 +20,79 @@ class BulkActionsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 480),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF5636F5).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.tune_rounded, color: Color(0xFF5636F5), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Bulk Actions',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF101A3A),
-                          ),
-                        ),
-                        Text(
-                          '$selectedCount users currently selected',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Action 1: Change Role
-              _buildActionTile(
-                icon: Icons.shield_outlined,
-                iconColor: const Color(0xFF6B4EFF),
-                title: 'Change User Role',
-                subtitle: 'Update role for all $selectedCount users',
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _showRoleSelection(context);
-                },
-              ),
-              const SizedBox(height: 10),
-
-              // Action 2: Change Status
-              _buildActionTile(
-                icon: Icons.toggle_on_outlined,
-                iconColor: const Color(0xFF10B981),
-                title: 'Change Account Status',
-                subtitle: 'Activate, deactivate, or block selected accounts',
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _showStatusSelection(context);
-                },
-              ),
-              const SizedBox(height: 10),
-
-              // Action 3: Export Selected
-              _buildActionTile(
-                icon: Icons.file_download_outlined,
-                iconColor: const Color(0xFF0284C7),
-                title: 'Export Selected Users',
-                subtitle: 'Download selected $selectedCount records as CSV/JSON',
-                onTap: () {
-                  Navigator.of(context).pop();
-                  onExportSelected();
-                },
-              ),
-              const SizedBox(height: 10),
-
-              // Action 4: Delete Selected
-              _buildActionTile(
-                icon: Icons.delete_outline_rounded,
-                iconColor: const Color(0xFFF43F5E),
-                title: 'Delete Selected Accounts',
-                subtitle: 'Permanently remove selected user records',
-                isDestructive: true,
-                onTap: () {
-                  Navigator.of(context).pop();
-                  onDeleteSelected();
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Cancel
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
-                ),
-              ),
-            ],
+    return AppModalDialog(
+      title: 'Bulk Actions',
+      subtitle: '$selectedCount users currently selected for batch update',
+      iconData: Icons.tune_rounded,
+      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      maxWidth: 480,
+      actions: [
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           ),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
         ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Action 1: Change Role
+          _buildActionTile(
+            icon: Icons.shield_outlined,
+            iconColor: const Color(0xFF6B4EFF),
+            title: 'Change User Role',
+            subtitle: 'Update role for all $selectedCount users',
+            onTap: () {
+              Navigator.of(context).pop();
+              _showRoleSelection(context);
+            },
+          ),
+          const SizedBox(height: 8),
+
+          // Action 2: Change Status
+          _buildActionTile(
+            icon: Icons.toggle_on_outlined,
+            iconColor: const Color(0xFF00B368),
+            title: 'Update Account Status',
+            subtitle: 'Activate, deactivate, or suspend accounts',
+            onTap: () {
+              Navigator.of(context).pop();
+              _showStatusSelection(context);
+            },
+          ),
+          const SizedBox(height: 8),
+
+          // Action 3: Export
+          _buildActionTile(
+            icon: Icons.file_download_outlined,
+            iconColor: const Color(0xFF0284C7),
+            title: 'Export Selected Records',
+            subtitle: 'Download $selectedCount rows as CSV / Excel',
+            onTap: () {
+              Navigator.of(context).pop();
+              onExportSelected();
+            },
+          ),
+          const SizedBox(height: 8),
+
+          // Action 4: Delete
+          _buildActionTile(
+            icon: Icons.delete_outline_rounded,
+            iconColor: const Color(0xFFE11D48),
+            title: 'Delete Selected Users',
+            subtitle: 'Permanently remove selected user accounts',
+            isDestructive: true,
+            onTap: () {
+              Navigator.of(context).pop();
+              _confirmDelete(context);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -154,19 +113,21 @@ class BulkActionsDialog extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDestructive ? const Color(0xFFFFF1F2) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: isDestructive ? const Color(0xFFFECDD3) : const Color(0xFFE2E8F0)),
+          border: Border.all(
+            color: isDestructive ? const Color(0xFFFECDD3) : const Color(0xFFCBD5E1),
+          ),
         ),
         child: Row(
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.center,
-              child: Icon(icon, color: iconColor, size: 18),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -181,12 +142,11 @@ class BulkActionsDialog extends StatelessWidget {
                       color: isDestructive ? const Color(0xFFE11D48) : const Color(0xFF101A3A),
                     ),
                   ),
-                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: TextStyle(
                       fontSize: 11,
-                      color: isDestructive ? const Color(0xFFFB7185) : const Color(0xFF64748B),
+                      color: isDestructive ? const Color(0xFFFDA4AF) : const Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -200,23 +160,44 @@ class BulkActionsDialog extends StatelessWidget {
   }
 
   void _showRoleSelection(BuildContext context) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: const Text('Select New Role', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          content: Column(
+        return AppModalDialog(
+          title: 'Select New Role',
+          subtitle: 'Apply role to all $selectedCount selected users',
+          iconData: Icons.shield_outlined,
+          gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+          maxWidth: 420,
+          actions: [
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+            ),
+          ],
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: UserRole.values.map((r) {
-              return ListTile(
-                dense: true,
-                title: Text(r.label, style: const TextStyle(fontWeight: FontWeight.w600)),
-                leading: Container(width: 10, height: 10, decoration: BoxDecoration(color: r.color, shape: BoxShape.circle)),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  onChangeRole(r);
-                },
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                ),
+                child: ListTile(
+                  dense: true,
+                  title: Text(r.label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  leading: Container(width: 10, height: 10, decoration: BoxDecoration(color: r.color, shape: BoxShape.circle)),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    onChangeRole(r);
+                  },
+                ),
               );
             }).toList(),
           ),
@@ -226,28 +207,89 @@ class BulkActionsDialog extends StatelessWidget {
   }
 
   void _showStatusSelection(BuildContext context) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          title: const Text('Select Account Status', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          content: Column(
+        return AppModalDialog(
+          title: 'Select Account Status',
+          subtitle: 'Apply status to all $selectedCount selected users',
+          iconData: Icons.toggle_on_outlined,
+          gradientColors: const [Color(0xFF00B368), Color(0xFF10B981)],
+          maxWidth: 420,
+          actions: [
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+            ),
+          ],
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: UserStatus.values.map((s) {
-              return ListTile(
-                dense: true,
-                title: Text(s.label, style: const TextStyle(fontWeight: FontWeight.w600)),
-                leading: Container(width: 10, height: 10, decoration: BoxDecoration(color: s.color, shape: BoxShape.circle)),
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  onChangeStatus(s);
-                },
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                ),
+                child: ListTile(
+                  dense: true,
+                  title: Text(s.label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  leading: Container(width: 10, height: 10, decoration: BoxDecoration(color: s.color, shape: BoxShape.circle)),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    onChangeStatus(s);
+                  },
+                ),
               );
             }).toList(),
           ),
         );
       },
+    );
+  }
+
+  void _confirmDelete(BuildContext context) {
+    AppModalDialog.show(
+      context: context,
+      builder: (ctx) => AppModalDialog(
+        title: 'Delete Selected Users',
+        subtitle: 'Destructive deletion warning',
+        iconData: Icons.delete_outline_rounded,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 420,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              onDeleteSelected();
+            },
+            child: const Text('Delete Users', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            'Are you sure you want to permanently delete $selectedCount selected users? This action cannot be undone.',
+            style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.4),
+          ),
+        ),
+      ),
     );
   }
 }
