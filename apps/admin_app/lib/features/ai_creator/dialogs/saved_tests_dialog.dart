@@ -16,85 +16,32 @@ class SavedTestsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final savedTests = tests.where((t) => t.status != AiTestStatus.processing).toList();
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF9F0A).withAlpha(25),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.bookmark_outline_rounded, color: Color(0xFFFF9F0A), size: 20),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Saved AI Tests (${savedTests.length})',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-                              ),
-                              const Text(
-                                'Inspect, review or resume publishing drafted tests',
-                                style: TextStyle(fontSize: 11, color: AppColors.textMuted),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const Divider(height: 24, color: AppColors.borderSubtle),
-
-              // Tests List
-              if (savedTests.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(
-                    child: Text('No saved AI tests available.', style: TextStyle(color: AppColors.textMuted)),
-                  ),
-                )
-              else
-                ...savedTests.take(4).map((t) => _buildSavedTestTile(context, t)),
-
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ],
-              ),
-            ],
-          ),
+    return AppModalDialog(
+      iconData: Icons.bookmark_outline_rounded,
+      iconColor: const Color(0xFFFF9F0A),
+      title: 'Saved AI Tests (${savedTests.length})',
+      subtitle: 'Inspect, review or resume publishing drafted tests',
+      maxWidth: 620,
+      scrollable: true,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close'),
         ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (savedTests.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: Text('No saved AI tests available.', style: TextStyle(color: AppColors.textMuted)),
+              ),
+            )
+          else
+            ...savedTests.map((t) => _buildSavedTestTile(context, t)),
+        ],
       ),
     );
   }

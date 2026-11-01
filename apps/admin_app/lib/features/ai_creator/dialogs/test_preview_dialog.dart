@@ -100,140 +100,78 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720, maxHeight: 680),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: widget.test.iconBgColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(widget.test.icon, color: widget.test.iconColor, size: 20),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.test.title,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                '${widget.test.subject.label} • ${widget.test.difficulty.label} • ${widget.test.questionCount} Questions • ${widget.test.durationMinutes} min',
-                                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const Divider(height: 20, color: AppColors.borderSubtle),
-
-              // Questions scrollable body
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _questions.length,
-                  separatorBuilder: (ctx, idx) => const SizedBox(height: 14),
-                  itemBuilder: (ctx, idx) => _buildQuestionItem(_questions[idx], idx),
-                ),
-              ),
-
-              const Divider(height: 20, color: AppColors.borderSubtle),
-
-              // Footer Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${_questions.length} questions ready for publishing',
-                    style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: widget.onExport,
-                        icon: const Icon(Icons.ios_share_rounded, size: 15),
-                        label: const Text('Export'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF5636F5),
-                          side: const BorderSide(color: Color(0xFFC7D2FE)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: _isPushingToBattle ? null : _pushToBattlePool,
-                        icon: _isPushingToBattle
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Icons.bolt_rounded, size: 16),
-                        label: Text(_isPushingToBattle ? 'Pushing...' : 'Push to Battle Pool'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF59E0B),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: _isPublishing ? null : _publishTest,
-                        icon: _isPublishing
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Icons.publish_rounded, size: 16),
-                        label: Text(_isPublishing ? 'Publishing...' : 'Publish Test'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
+    return AppModalDialog(
+      icon: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: widget.test.iconBgColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        alignment: Alignment.center,
+        child: Icon(widget.test.icon, color: widget.test.iconColor, size: 20),
+      ),
+      title: widget.test.title,
+      subtitle:
+          '${widget.test.subject.label} • ${widget.test.difficulty.label} • ${widget.test.questionCount} Questions • ${widget.test.durationMinutes} min',
+      maxWidth: 740,
+      footerLeft: Text(
+        '${_questions.length} questions ready for publishing',
+        style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+      ),
+      actions: [
+        OutlinedButton.icon(
+          onPressed: widget.onExport,
+          icon: const Icon(Icons.ios_share_rounded, size: 15),
+          label: const Text('Export'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF5636F5),
+            side: const BorderSide(color: Color(0xFFC7D2FE)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
+        ElevatedButton.icon(
+          onPressed: _isPushingToBattle ? null : _pushToBattlePool,
+          icon: _isPushingToBattle
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Icon(Icons.bolt_rounded, size: 16),
+          label: Text(_isPushingToBattle ? 'Pushing...' : 'Push to Battle Pool'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFF59E0B),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          ),
+        ),
+        ElevatedButton.icon(
+          onPressed: _isPublishing ? null : _publishTest,
+          icon: _isPublishing
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Icon(Icons.publish_rounded, size: 16),
+          label: Text(_isPublishing ? 'Publishing...' : 'Publish Test'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF10B981),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+        ),
+      ],
+      child: ListView.separated(
+        itemCount: _questions.length,
+        separatorBuilder: (ctx, idx) => const SizedBox(height: 14),
+        itemBuilder: (ctx, idx) => _buildQuestionItem(_questions[idx], idx),
       ),
     );
   }

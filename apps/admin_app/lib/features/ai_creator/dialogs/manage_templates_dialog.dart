@@ -12,77 +12,22 @@ class ManageTemplatesDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withAlpha(25),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.folder_outlined, color: Color(0xFF10B981), size: 20),
-                        ),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Manage Test Templates',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-                              ),
-                              Text(
-                                'Rapid 1-click test generation blueprints for competitive exams',
-                                style: TextStyle(fontSize: 11, color: AppColors.textMuted),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const Divider(height: 24, color: AppColors.borderSubtle),
-
-              // Templates List
-              ...kPrebuiltTemplates.map((tpl) => _buildTemplateCard(context, tpl)),
-
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Close'),
-                  ),
-                ],
-              ),
-            ],
-          ),
+    return AppModalDialog(
+      iconData: Icons.folder_outlined,
+      iconColor: const Color(0xFF10B981),
+      title: 'Manage Test Templates',
+      subtitle: 'Rapid 1-click test generation blueprints for competitive exams',
+      maxWidth: 620,
+      scrollable: true,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close'),
         ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: kPrebuiltTemplates.map((tpl) => _buildTemplateCard(context, tpl)).toList(),
       ),
     );
   }

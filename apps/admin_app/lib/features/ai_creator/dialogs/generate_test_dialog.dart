@@ -131,117 +131,95 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 620),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: _isGenerating ? _buildGeneratingView() : _buildFormView(),
-        ),
-      ),
+    return AppModalDialog(
+      iconData: Icons.auto_awesome_rounded,
+      iconColor: const Color(0xFF5636F5),
+      title: _isGenerating ? 'Synthesizing Test' : 'Generate Test with AI',
+      subtitle: _isGenerating
+          ? 'Generating verified bilingual questions via AI pipeline'
+          : 'Synthesize complete test series with solutions and explanations',
+      maxWidth: 640,
+      scrollable: !_isGenerating,
+      showCloseButton: !_isGenerating,
+      actions: _isGenerating
+          ? null
+          : [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton.icon(
+                onPressed: _startGeneration,
+                icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                label: const Text('Generate with AI'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF5636F5),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                ),
+              ),
+            ],
+      child: _isGenerating ? _buildGeneratingView() : _buildFormView(),
     );
   }
 
   Widget _buildGeneratingView() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const SizedBox(height: 20),
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: const Color(0xFF5636F5).withAlpha(20),
-            shape: BoxShape.circle,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: const Color(0xFF5636F5).withAlpha(20),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF5636F5), size: 30),
           ),
-          alignment: Alignment.center,
-          child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF5636F5), size: 36),
-        ),
-        const SizedBox(height: 18),
-        const Text(
-          'Generating Test with AI',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF101A3A)),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          _progressStatus,
-          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 24),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: _generationProgress,
-            minHeight: 8,
-            backgroundColor: const Color(0xFFEEF0FF),
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5636F5)),
+          const SizedBox(height: 16),
+          const Text(
+            'Creating Your Competitive Test Series...',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
           ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          '${(_generationProgress * 100).toInt()}% completed',
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF5636F5)),
-        ),
-        const SizedBox(height: 24),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            _progressStatus,
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: _generationProgress,
+              minHeight: 8,
+              backgroundColor: const Color(0xFFEEF0FF),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5636F5)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '${(_generationProgress * 100).toInt()}% completed',
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF5636F5)),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildFormView() {
     return Form(
       key: _formKey,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF5636F5).withAlpha(25),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF5636F5), size: 20),
-                      ),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Generate Test with AI',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-                            ),
-                            Text(
-                              'Synthesize complete test series with solutions and explanations',
-                              style: TextStyle(fontSize: 11, color: AppColors.textMuted),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const Divider(height: 24, color: AppColors.borderSubtle),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
 
             // Test Title
             const Text('Test Title *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
@@ -456,34 +434,8 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 18),
-
-            // Action Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton.icon(
-                  onPressed: _startGeneration,
-                  icon: const Icon(Icons.auto_awesome_rounded, size: 16),
-                  label: const Text('Generate with AI'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5636F5),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
-      ),
-    );
+      );
   }
 }

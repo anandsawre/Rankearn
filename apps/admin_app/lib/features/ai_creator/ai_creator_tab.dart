@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'models/ai_test_item.dart';
 import 'widgets/ai_test_creator_hero_card.dart';
@@ -101,7 +102,7 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
   }
 
   void _openGenerateDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => GenerateTestDialog(
         onTestGenerated: (newTest) {
@@ -114,7 +115,7 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
   }
 
   void _openCustomPromptDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => CustomPromptDialog(
         onOpenGenerate: _openGenerateDialog,
@@ -123,7 +124,7 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
   }
 
   void _openManageTemplatesDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ManageTemplatesDialog(
         onUseTemplate: (tpl) {
@@ -134,7 +135,7 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
   }
 
   void _openSavedTestsDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => SavedTestsDialog(
         tests: _allTests,
@@ -144,7 +145,7 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
   }
 
   void _openExportDialog([AiGeneratedTestItem? item]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ExportTestDialog(
         initialTest: item,
@@ -154,7 +155,7 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
   }
 
   void _openPreviewDialog(AiGeneratedTestItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => TestPreviewDialog(
         test: item,
