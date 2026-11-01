@@ -50,24 +50,31 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
     try {
       final client = SupabaseConfig.clientSafe;
       if (client == null) return;
-      final response = await client
-          .from('ai_generated_tests')
-          .select()
-          .order('created_at', ascending: false)
-          .limit(50);
 
-      if (response.isNotEmpty && mounted) {
+      dynamic response;
+      try {
+        response = await client
+            .from('ai_generated_tests')
+            .select()
+            .order('created_at', ascending: false)
+            .limit(50);
+      } catch (_) {
+        // If ai_generated_tests migration not yet executed in Supabase, try 'tests' table
+        try {
+          response = await client.from('tests').select().limit(50);
+        } catch (_) {}
+      }
+
+      if (response != null && response is List && response.isNotEmpty && mounted) {
         final List<AiGeneratedTestItem> loaded = [];
         for (int i = 0; i < response.length; i++) {
-          loaded.add(AiGeneratedTestItem.fromJson(response[i], i));
+          loaded.add(AiGeneratedTestItem.fromJson(response[i] as Map<String, dynamic>, i));
         }
         setState(() {
           _allTests = loaded;
         });
       }
-    } catch (e) {
-      debugPrint('Supabase fetch notice (using robust local dataset): $e');
-    }
+    } catch (_) {}
   }
 
   List<AiGeneratedTestItem> get _filteredItems {

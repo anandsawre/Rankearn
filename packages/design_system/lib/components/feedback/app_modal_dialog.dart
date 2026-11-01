@@ -137,9 +137,7 @@ class AppModalDialog extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF0F172A).withAlpha(35),
@@ -152,10 +150,17 @@ class AppModalDialog extends StatelessWidget {
           maxWidth: effectiveMaxWidth,
           maxHeight: effectiveMaxHeight,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        child: Material(
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // Rich Gradient Hero Header
             Container(
               padding: EdgeInsets.fromLTRB(
@@ -303,12 +308,14 @@ class AppModalDialog extends StatelessWidget {
                           else
                             const SizedBox.shrink(),
                           const SizedBox(width: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            alignment: WrapAlignment.end,
-                            children: actions ?? [],
+                          Flexible(
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              alignment: WrapAlignment.end,
+                              children: actions ?? [],
+                            ),
                           ),
                         ],
                       ),
@@ -317,6 +324,7 @@ class AppModalDialog extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }

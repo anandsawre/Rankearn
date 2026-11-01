@@ -407,10 +407,13 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             ),
             const SizedBox(height: 12),
 
-            // Toggles Row
-            Row(
+            // Toggles Wrap (Responsive to prevent overflow)
+            Wrap(
+              spacing: 16,
+              runSpacing: 4,
               children: [
-                Expanded(
+                SizedBox(
+                  width: 240,
                   child: CheckboxListTile(
                     title: const Text('Detailed Explanations', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
                     value: _includeExplanations,
@@ -421,9 +424,10 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
                     activeColor: const Color(0xFF5636F5),
                   ),
                 ),
-                Expanded(
+                SizedBox(
+                  width: 240,
                   child: CheckboxListTile(
-                    title: const Text('Apply Negative Marking (1/3rd)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                    title: const Text('Negative Marking (1/3rd)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
                     value: _negativeMarking,
                     onChanged: (val) => setState(() => _negativeMarking = val ?? true),
                     controlAffinity: ListTileControlAffinity.leading,
