@@ -386,22 +386,34 @@ class _BannersTabState extends State<BannersTab> {
     final titleController = TextEditingController();
     final linkController = TextEditingController(text: '/tests');
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Promotional Banner'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppTextField(label: 'Banner Title', controller: titleController, hintText: 'e.g. 70th BPSC Mega League'),
-            const SizedBox(height: 12),
-            AppTextField(label: 'Redirect Route / URL', controller: linkController, hintText: '/tests/bpsc'),
-          ],
-        ),
+      builder: (ctx) => AppModalDialog(
+        title: 'Add Promotional Banner',
+        subtitle: 'Create a responsive promo banner for home carousel',
+        iconData: Icons.view_carousel_rounded,
+        gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+        maxWidth: 500,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          AppButton(
-            label: 'Add Banner',
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+              ),
+            ),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5636F5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () {
               if (titleController.text.isNotEmpty) {
                 setState(() {
@@ -420,8 +432,27 @@ class _BannersTabState extends State<BannersTab> {
                 );
               }
             },
+            child: const Text('Add Banner'),
           ),
         ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppTextField(
+              label: 'Banner Title',
+              controller: titleController,
+              hintText: 'e.g. 70th BPSC Mega League',
+              borderRadius: BorderRadius.circular(8),
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              label: 'Redirect Route / URL',
+              controller: linkController,
+              hintText: '/tests/bpsc',
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -433,34 +464,34 @@ class _BannersTabState extends State<BannersTab> {
     final scoreController = TextEditingController(text: '145 / 150');
     final quoteController = TextEditingController();
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Candidate Spotlight'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(label: 'Candidate Name', controller: nameController, hintText: 'e.g. Sneha Patel'),
-              const SizedBox(height: 12),
-              AppTextField(label: 'Exam Target', controller: examController, hintText: '70th BPSC'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: AppTextField(label: 'Rank', controller: rankController, hintText: 'AIR 1')),
-                  const SizedBox(width: 12),
-                  Expanded(child: AppTextField(label: 'Score', controller: scoreController, hintText: '145 / 150')),
-                ],
-              ),
-              const SizedBox(height: 12),
-              AppTextField(label: 'Testimonial Quote', controller: quoteController, hintText: 'How Rankearn helped...', maxLines: 2),
-            ],
-          ),
-        ),
+      builder: (ctx) => AppModalDialog(
+        title: 'Add Candidate Spotlight',
+        subtitle: 'Celebrate candidate achievements with testimonial quote',
+        iconData: Icons.stars_rounded,
+        gradientColors: const [Color(0xFFFF9F0A), Color(0xFFFBBF24)],
+        maxWidth: 520,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          AppButton(
-            label: 'Save Spotlight',
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+              ),
+            ),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5636F5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () {
               if (nameController.text.isNotEmpty) {
                 setState(() {
@@ -481,8 +512,59 @@ class _BannersTabState extends State<BannersTab> {
                 );
               }
             },
+            child: const Text('Save Spotlight'),
           ),
         ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppTextField(
+                label: 'Candidate Name',
+                controller: nameController,
+                hintText: 'e.g. Sneha Patel',
+                borderRadius: BorderRadius.circular(8),
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                label: 'Exam Target',
+                controller: examController,
+                hintText: '70th BPSC',
+                borderRadius: BorderRadius.circular(8),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      label: 'Rank',
+                      controller: rankController,
+                      hintText: 'AIR 1',
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppTextField(
+                      label: 'Score',
+                      controller: scoreController,
+                      hintText: '145 / 150',
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              AppTextField(
+                label: 'Testimonial Quote',
+                controller: quoteController,
+                hintText: 'How Rankearn helped...',
+                maxLines: 2,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
