@@ -244,7 +244,7 @@ class _TestsTabState extends State<TestsTab> {
   }
 
   void _openAddQuestionDialog([TestSeriesItem? item]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => CreateQuestionDialog(
         initialTestSeriesTitle: item?.title,
@@ -320,7 +320,7 @@ class _TestsTabState extends State<TestsTab> {
   void _openImportQuestionsDialog([TestSeriesItem? item]) {
     final targetTest = item ?? (_allItems.isNotEmpty ? _allItems.first : null);
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ImportQuestionsDialog(
         onImport: (importedQuestions) async {
@@ -392,7 +392,7 @@ class _TestsTabState extends State<TestsTab> {
   }
 
   void _openAiGenerateQuestionsDialog([TestSeriesItem? item]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => AiGenerateQuestionsDialog(
         onSaveGenerated: (generatedQuestions) async {
@@ -528,38 +528,64 @@ class _TestsTabState extends State<TestsTab> {
   }
 
   void _openGenericActionModal(String title, String description) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderLg),
-        title: Row(
-          children: [
-            const Icon(Icons.tune_rounded, color: Color(0xFF5636F5), size: 20),
-            const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-          ],
-        ),
-        content: Column(
+      builder: (ctx) => AppModalDialog(
+        title: title,
+        subtitle: description,
+        iconData: Icons.folder_outlined,
+        gradientColors: const [Color(0xFF00B368), Color(0xFF10B981)],
+        maxWidth: 520,
+        actions: [
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00B368),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$title workflow executed successfully.'),
+                  backgroundColor: const Color(0xFF00B368),
+                ),
+              );
+            },
+            child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+          ),
+        ],
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(description, style: const TextStyle(fontSize: 13, color: Color(0xFF64748B))),
-            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFC),
-                borderRadius: AppRadii.borderSm,
-                border: Border.all(color: AppColors.borderSubtle),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFCBD5E1)),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF5636F5)),
-                  SizedBox(width: 8),
+                  Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFF00B368)),
+                  SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Ready to process batch configuration & sync with database.',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF334155)),
+                      'Ready to process batch configuration, syllabus tags, and sync with database.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF334155), height: 1.4),
                     ),
                   ),
                 ],
@@ -567,29 +593,6 @@ class _TestsTabState extends State<TestsTab> {
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5636F5),
-              foregroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderSm),
-            ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('$title workflow executed successfully.'),
-                  backgroundColor: AppColors.brandPrimary,
-                ),
-              );
-            },
-            child: const Text('Continue'),
-          ),
-        ],
       ),
     );
   }

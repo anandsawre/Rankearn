@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 import '../models/question_item.dart';
 
 class ImportQuestionsDialog extends StatefulWidget {
@@ -248,208 +249,45 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 700;
-
-    if (isMobile) {
-      return Dialog.fullscreen(
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            backgroundColor: Colors.white,
+    return AppModalDialog(
+      title: 'Import Questions',
+      subtitle: 'Bulk upload MCQs from Excel, CSV, or formatted JSON',
+      iconData: Icons.cloud_upload_outlined,
+      gradientColors: const [Color(0xFFEA580C), Color(0xFFF97316)],
+      maxWidth: 740,
+      maxHeight: 740,
+      actions: [
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFEA580C),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            titleSpacing: 0,
-            title: Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF5636F5),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.cloud_upload_rounded, color: Colors.white, size: 16),
-                ),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Import Questions',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF101A3A),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1, color: Color(0xFFF1F5F9)),
-            ),
           ),
-          body: _buildBody(true),
-          bottomNavigationBar: Container(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5636F5),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      icon: _isImporting
-                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Icon(Icons.check_rounded, size: 16),
-                      label: Text(
-                        _validQuestions.isNotEmpty
-                            ? 'Confirm Import (${_validQuestions.length} Items)'
-                            : 'Confirm Import',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      onPressed: _validQuestions.isNotEmpty && !_isImporting ? _confirmImport : null,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          icon: _isImporting
+              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Icon(Icons.check_rounded, size: 16),
+          label: Text(
+            _validQuestions.isNotEmpty
+                ? 'Confirm Import (${_validQuestions.length} Items)'
+                : 'Confirm Import',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
           ),
+          onPressed: _validQuestions.isNotEmpty && !_isImporting ? _confirmImport : null,
         ),
-      );
-    }
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      clipBehavior: Clip.antiAlias,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 720,
-          maxHeight: (MediaQuery.of(context).size.height * 0.90).clamp(450.0, 720.0),
-        ),
-        child: Container(
-          width: 720,
-          color: Colors.white,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF5636F5),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.cloud_upload_rounded, color: Colors.white, size: 18),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'Import Questions (Excel / CSV / JSON)',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF101A3A),
-                          ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-
-              // Content
-              Expanded(
-                child: _buildBody(false),
-              ),
-
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-
-              // Footer
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 18),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12)),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5636F5),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      icon: _isImporting
-                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Icon(Icons.check_rounded, size: 16),
-                      label: Text(
-                        _validQuestions.isNotEmpty
-                            ? 'Confirm Import (${_validQuestions.length} Items)'
-                            : 'Confirm Import',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-                      ),
-                      onPressed: _validQuestions.isNotEmpty && !_isImporting ? _confirmImport : null,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      ],
+      child: _buildBody(false),
     );
   }
 
@@ -527,15 +365,15 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
               contentPadding: const EdgeInsets.all(12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFFEA580C), width: 1.5),
               ),
             ),
           ),

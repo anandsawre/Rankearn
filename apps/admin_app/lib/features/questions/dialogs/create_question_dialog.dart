@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
+import 'package:design_system/design_system.dart';
 import '../models/question_item.dart';
 import 'import_questions_dialog.dart';
 
@@ -336,270 +337,82 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.initialItem != null;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 700;
 
-    if (isMobile) {
-      return Dialog.fullscreen(
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            backgroundColor: Colors.white,
+    return AppModalDialog(
+      title: isEdit ? 'Edit Question' : 'Add New Question',
+      subtitle: _selectedTestSeries.isNotEmpty ? _selectedTestSeries : 'Configure question text, options and grading',
+      iconData: isEdit ? Icons.edit_rounded : Icons.post_add_rounded,
+      gradientColors: const [Color(0xFF0084FF), Color(0xFF2563EB)],
+      maxWidth: 760,
+      maxHeight: 740,
+      actions: [
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          icon: Icon(
+            _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
+            size: 15,
+            color: const Color(0xFF0084FF),
+          ),
+          label: Text(
+            _showPreview ? 'Edit Form' : 'Live Preview',
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF0084FF)),
+          ),
+          onPressed: () => setState(() => _showPreview = !_showPreview),
+        ),
+        const SizedBox(width: 6),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          icon: const Icon(
+            Icons.cloud_upload_outlined,
+            size: 15,
+            color: Color(0xFF0284C7),
+          ),
+          label: const Text(
+            'Import',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF0284C7),
+            ),
+          ),
+          onPressed: _openImportDialog,
+        ),
+        const Spacer(),
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12)),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0084FF),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            titleSpacing: 0,
-            title: Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF5636F5),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    isEdit ? Icons.edit_rounded : Icons.post_add_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    isEdit ? 'Edit Question' : 'Add New Question',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF101A3A),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
-                  size: 20,
-                  color: const Color(0xFF5636F5),
-                ),
-                tooltip: _showPreview ? 'Edit Form' : 'Preview',
-                onPressed: () => setState(() => _showPreview = !_showPreview),
-              ),
-              IconButton(
-                icon: const Icon(Icons.cloud_upload_outlined, size: 20, color: Color(0xFF0284C7)),
-                tooltip: 'Import Questions',
-                onPressed: _openImportDialog,
-              ),
-              const SizedBox(width: 4),
-            ],
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1, color: Color(0xFFF1F5F9)),
-            ),
           ),
-          body: _showPreview ? _buildPreviewBody() : _buildFormBody(true),
-          bottomNavigationBar: Container(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5636F5),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      icon: const Icon(Icons.check_rounded, size: 16),
-                      label: Text(
-                        isEdit ? 'Save Changes' : 'Create Question',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      onPressed: _submit,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          icon: const Icon(Icons.check_rounded, size: 16),
+          label: Text(
+            isEdit ? 'Save Changes' : 'Create Question',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
           ),
+          onPressed: _submit,
         ),
-      );
-    }
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      clipBehavior: Clip.antiAlias,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 720,
-          maxHeight: (MediaQuery.of(context).size.height * 0.90).clamp(450.0, 720.0),
-        ),
-        child: Container(
-          width: 720,
-          color: Colors.white,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF5636F5),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            isEdit ? Icons.edit_rounded : Icons.post_add_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          isEdit ? 'Edit Question' : 'Add New Question',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF101A3A),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            side: const BorderSide(color: Color(0xFFE2E8F0)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          icon: Icon(
-                            _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
-                            size: 15,
-                            color: const Color(0xFF5636F5),
-                          ),
-                          label: Text(
-                            _showPreview ? 'Edit Form' : 'Live Preview',
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF5636F5)),
-                          ),
-                          onPressed: () => setState(() => _showPreview = !_showPreview),
-                        ),
-                        const SizedBox(width: 6),
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            side: const BorderSide(color: Color(0xFFE2E8F0)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          icon: const Icon(
-                            Icons.cloud_upload_outlined,
-                            size: 15,
-                            color: Color(0xFF0284C7),
-                          ),
-                          label: const Text(
-                            'Import',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF0284C7),
-                            ),
-                          ),
-                          onPressed: _openImportDialog,
-                        ),
-                        const SizedBox(width: 6),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-
-              // Content
-              Expanded(
-                child: _showPreview ? _buildPreviewBody() : _buildFormBody(false),
-              ),
-
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-
-              // Footer
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 18),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12)),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5636F5),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      icon: const Icon(Icons.check_rounded, size: 16),
-                      label: Text(
-                        isEdit ? 'Save Changes' : 'Create Question',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-                      ),
-                      onPressed: _submit,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      ],
+      child: _showPreview ? _buildPreviewBody() : _buildFormBody(false),
     );
   }
 
@@ -612,168 +425,92 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Row 1: Subject, Test Series
-            if (isMobile) ...[
-              _buildFormFieldLabel(
-                label: 'Subject',
-                child: DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  initialValue: _selectedSubject,
-                  items: _subjects
-                      .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                      .toList(),
-                  onChanged: (val) => setState(() => _selectedSubject = val!),
-                  decoration: _inputDecoration(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildFormFieldLabel(
-                label: 'Test Series',
-                child: DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  initialValue: _selectedTestSeries,
-                  items: _testSeriesList
-                      .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                      .toList(),
-                  onChanged: (val) => setState(() => _selectedTestSeries = val!),
-                  decoration: _inputDecoration(),
-                ),
-              ),
-            ] else ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFormFieldLabel(
-                      label: 'Subject',
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: _selectedSubject,
-                        items: _subjects
-                            .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: (val) => setState(() => _selectedSubject = val!),
-                        decoration: _inputDecoration(),
-                      ),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildFormFieldLabel(
+                    label: 'Subject',
+                    child: AppDropdown<String>(
+                      value: _subjects.contains(_selectedSubject) ? _selectedSubject : _subjects.first,
+                      items: _subjects
+                          .map((s) => AppDropdownItem(value: s, label: s))
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedSubject = val);
+                      },
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildFormFieldLabel(
-                      label: 'Test Series',
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: _selectedTestSeries,
-                        items: _testSeriesList
-                            .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: (val) => setState(() => _selectedTestSeries = val!),
-                        decoration: _inputDecoration(),
-                      ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildFormFieldLabel(
+                    label: 'Test Series',
+                    child: AppDropdown<String>(
+                      value: _testSeriesList.contains(_selectedTestSeries)
+                          ? _selectedTestSeries
+                          : (_testSeriesList.isNotEmpty ? _testSeriesList.first : null),
+                      items: _testSeriesList
+                          .map((t) => AppDropdownItem(value: t, label: t))
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedTestSeries = val);
+                      },
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
 
             // Row 2: Type, Difficulty, Status
-            if (isMobile) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFormFieldLabel(
-                      label: 'Question Type',
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: _selectedType,
-                        items: _questionTypes
-                            .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: (val) => setState(() => _selectedType = val!),
-                        decoration: _inputDecoration(),
-                      ),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildFormFieldLabel(
+                    label: 'Question Type',
+                    child: AppDropdown<String>(
+                      value: _selectedType,
+                      items: _questionTypes
+                          .map((t) => AppDropdownItem(value: t, label: t))
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedType = val);
+                      },
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildFormFieldLabel(
-                      label: 'Difficulty',
-                      child: DropdownButtonFormField<QuestionDifficulty>(
-                        isExpanded: true,
-                        initialValue: _selectedDifficulty,
-                        items: QuestionDifficulty.values
-                            .map((d) => DropdownMenuItem(value: d, child: Text(d.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: (val) => setState(() => _selectedDifficulty = val!),
-                        decoration: _inputDecoration(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _buildFormFieldLabel(
-                label: 'Status',
-                child: DropdownButtonFormField<QuestionStatus>(
-                  isExpanded: true,
-                  initialValue: _selectedStatus,
-                  items: QuestionStatus.values
-                      .map((s) => DropdownMenuItem(value: s, child: Text(s.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                      .toList(),
-                  onChanged: (val) => setState(() => _selectedStatus = val!),
-                  decoration: _inputDecoration(),
                 ),
-              ),
-            ] else ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFormFieldLabel(
-                      label: 'Question Type',
-                      child: DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: _selectedType,
-                        items: _questionTypes
-                            .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: (val) => setState(() => _selectedType = val!),
-                        decoration: _inputDecoration(),
-                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildFormFieldLabel(
+                    label: 'Difficulty Level',
+                    child: AppDropdown<QuestionDifficulty>(
+                      value: _selectedDifficulty,
+                      items: QuestionDifficulty.values
+                          .map((d) => AppDropdownItem(value: d, label: d.label))
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedDifficulty = val);
+                      },
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildFormFieldLabel(
-                      label: 'Difficulty Level',
-                      child: DropdownButtonFormField<QuestionDifficulty>(
-                        isExpanded: true,
-                        initialValue: _selectedDifficulty,
-                        items: QuestionDifficulty.values
-                            .map((d) => DropdownMenuItem(value: d, child: Text(d.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: (val) => setState(() => _selectedDifficulty = val!),
-                        decoration: _inputDecoration(),
-                      ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildFormFieldLabel(
+                    label: 'Status',
+                    child: AppDropdown<QuestionStatus>(
+                      value: _selectedStatus,
+                      items: QuestionStatus.values
+                          .map((s) => AppDropdownItem(value: s, label: s.label))
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedStatus = val);
+                      },
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildFormFieldLabel(
-                      label: 'Status',
-                      child: DropdownButtonFormField<QuestionStatus>(
-                        isExpanded: true,
-                        initialValue: _selectedStatus,
-                        items: QuestionStatus.values
-                            .map((s) => DropdownMenuItem(value: s, child: Text(s.label, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: (val) => setState(() => _selectedStatus = val!),
-                        decoration: _inputDecoration(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-
+                ),
+              ],
+            ),
             const SizedBox(height: 14),
 
             // Question Text (English)
@@ -1073,18 +810,18 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
       hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
       filled: true,
       fillColor: const Color(0xFFF8FAFC),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.2),
+        borderSide: const BorderSide(color: Color(0xFF0084FF), width: 1.5),
       ),
     );
   }
