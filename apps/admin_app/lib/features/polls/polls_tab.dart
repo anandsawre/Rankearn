@@ -303,24 +303,34 @@ class _PollsTabState extends State<PollsTab> {
     final opt1Controller = TextEditingController();
     final opt2Controller = TextEditingController();
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Create Community Poll'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppTextField(label: 'Poll Question', controller: qController, hintText: 'e.g. Which subject is most challenging?'),
-            const SizedBox(height: 12),
-            AppTextField(label: 'Option 1', controller: opt1Controller, hintText: 'Option A'),
-            const SizedBox(height: 12),
-            AppTextField(label: 'Option 2', controller: opt2Controller, hintText: 'Option B'),
-          ],
-        ),
+      builder: (ctx) => AppModalDialog(
+        title: 'Create Community Poll',
+        subtitle: 'Engage candidates with real-time feedback & opinion polls',
+        iconData: Icons.poll_rounded,
+        gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+        maxWidth: 500,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          AppButton(
-            label: 'Publish Poll',
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+              ),
+            ),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5636F5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () async {
               if (qController.text.isNotEmpty && opt1Controller.text.isNotEmpty) {
                 final newPollId = 'poll-${DateTime.now().millisecondsSinceEpoch}';
@@ -364,8 +374,34 @@ class _PollsTabState extends State<PollsTab> {
                 }
               }
             },
+            child: const Text('Publish Poll'),
           ),
         ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppTextField(
+              label: 'Poll Question',
+              controller: qController,
+              hintText: 'e.g. Which subject is most challenging?',
+              borderRadius: BorderRadius.circular(8),
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              label: 'Option 1',
+              controller: opt1Controller,
+              hintText: 'Option A',
+              borderRadius: BorderRadius.circular(8),
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              label: 'Option 2',
+              controller: opt2Controller,
+              hintText: 'Option B',
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ],
+        ),
       ),
     );
   }
