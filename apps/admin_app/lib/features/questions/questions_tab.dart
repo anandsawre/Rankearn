@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
+import 'package:design_system/design_system.dart';
 
 import 'models/question_item.dart';
 import 'widgets/questions_hero_card.dart';
@@ -154,7 +155,7 @@ class _QuestionsTabState extends State<QuestionsTab> {
 
   // Actions
   void _openCreateDialog([QuestionItem? itemToEdit]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => CreateQuestionDialog(
         initialItem: itemToEdit,
@@ -199,14 +200,14 @@ class _QuestionsTabState extends State<QuestionsTab> {
   }
 
   void _openViewDialog(QuestionItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ViewQuestionDialog(item: item),
     );
   }
 
   void _openImportDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ImportQuestionsDialog(
         onImport: (importedItems) async {
@@ -238,7 +239,7 @@ class _QuestionsTabState extends State<QuestionsTab> {
   }
 
   void _openAiGenerateDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => AiGenerateQuestionsDialog(
         onSaveGenerated: (generatedItems) async {
@@ -270,7 +271,7 @@ class _QuestionsTabState extends State<QuestionsTab> {
   }
 
   void _openManageQuestionSetsDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => const ManageQuestionSetsDialog(),
     );
@@ -305,20 +306,27 @@ class _QuestionsTabState extends State<QuestionsTab> {
   }
 
   void _deleteQuestion(QuestionItem item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Question', style: TextStyle(fontWeight: FontWeight.w700)),
-        content: Text(
-            'Are you sure you want to delete question "${item.questionText}"? This action cannot be undone.'),
+      builder: (ctx) => AppModalDialog(
+        title: 'Delete Question',
+        subtitle: 'Permanent deletion warning',
+        iconData: Icons.delete_outline_rounded,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 440,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
             onPressed: () {
               Navigator.pop(ctx);
               setState(() {
@@ -335,9 +343,16 @@ class _QuestionsTabState extends State<QuestionsTab> {
                 SnackBar(content: Text('Deleted question #${item.questionNumber}')),
               );
             },
-            child: const Text('Delete'),
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            'Are you sure you want to delete question "${item.questionText}"? This action cannot be undone.',
+            style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.4),
+          ),
+        ),
       ),
     );
   }
@@ -379,7 +394,7 @@ class _QuestionsTabState extends State<QuestionsTab> {
       return;
     }
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => BulkActionsDialog(
         selectedCount: _selectedIds.length,
