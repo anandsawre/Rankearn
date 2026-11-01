@@ -49,166 +49,152 @@ class _ScheduleQuizDialogState extends State<ScheduleQuizDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 480),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return AppModalDialog(
+      title: 'Schedule Live Quiz',
+      subtitle: 'Pick a live contest and set audience broadcast launch time',
+      iconData: Icons.schedule_rounded,
+      gradientColors: const [Color(0xFF0084FF), Color(0xFF00B4D8)],
+      maxWidth: 480,
+      scrollable: true,
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFCBD5E1)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          ),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0084FF),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            elevation: 0,
+          ),
+          child: const Text('Schedule Quiz', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Select Quiz Dropdown
+          const Text('Select Quiz *', style: _labelStyle),
+          const SizedBox(height: 6),
+          AppDropdown<String>(
+            value: _selectedQuizId ?? (widget.quizzes.isNotEmpty ? widget.quizzes.first.id : null),
+            items: widget.quizzes.isNotEmpty
+                ? widget.quizzes
+                    .map((q) => AppDropdownItem(
+                          value: q.id,
+                          label: '${q.title} (${q.category})',
+                        ))
+                    .toList()
+                : const [
+                    AppDropdownItem(value: 'none', label: 'No Quizzes Available'),
+                  ],
+            onChanged: (val) {
+              if (val != null && val != 'none') {
+                setState(() => _selectedQuizId = val);
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Date & Time Row
+          Row(
             children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Broadcast Date *', style: _labelStyle),
+                    const SizedBox(height: 6),
+                    InkWell(
+                      onTap: () async {
+                        final d = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (d != null) setState(() => _selectedDate = d);
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0084FF),
+                          color: const Color(0xFFF8FAFC),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.schedule_rounded, color: Colors.white, size: 18),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Schedule Live Quiz',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF0084FF)),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
+                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // Select Quiz Dropdown
-              const Text('Select Quiz', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                initialValue: widget.quizzes.any((q) => q.id == _selectedQuizId)
-                    ? _selectedQuizId
-                    : (widget.quizzes.isNotEmpty ? widget.quizzes.first.id : null),
-                isExpanded: true,
-                items: widget.quizzes.map((q) {
-                  return DropdownMenuItem<String>(
-                    value: q.id,
-                    child: Text(
-                      '${q.title} (${q.category})',
-                      style: const TextStyle(fontSize: 12),
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedQuizId = val);
-                },
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Date & Time Selectors
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Date', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 6),
-                        OutlinedButton.icon(
-                          onPressed: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _selectedDate,
-                              firstDate: DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
-                            );
-                            if (picked != null) setState(() => _selectedDate = picked);
-                          },
-                          icon: const Icon(Icons.calendar_today_rounded, size: 15),
-                          label: Text(
-                            '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                            style: const TextStyle(fontSize: 11.5),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                          ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Broadcast Time *', style: _labelStyle),
+                    const SizedBox(height: 6),
+                    InkWell(
+                      onTap: () async {
+                        final t = await showTimePicker(
+                          context: context,
+                          initialTime: _selectedTime,
+                        );
+                        if (t != null) setState(() => _selectedTime = t);
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Start Time', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 6),
-                        OutlinedButton.icon(
-                          onPressed: () async {
-                            final picked = await showTimePicker(
-                              context: context,
-                              initialTime: _selectedTime,
-                            );
-                            if (picked != null) setState(() => _selectedTime = picked);
-                          },
-                          icon: const Icon(Icons.access_time_rounded, size: 15),
-                          label: Text(
-                            _selectedTime.format(context),
-                            style: const TextStyle(fontSize: 11.5),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                          ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF0084FF)),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
+                              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-
-              // Action buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0084FF),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Schedule Quiz'),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
+
+  static const TextStyle _labelStyle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: Color(0xFF334155),
+  );
 }

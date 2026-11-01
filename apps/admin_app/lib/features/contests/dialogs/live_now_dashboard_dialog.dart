@@ -66,26 +66,45 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
   }
 
   void _endSession() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('End Live Quiz Session?'),
-        content: const Text('Ending the session will calculate final scores and publish the leaderboard to all participants.'),
+      builder: (ctx) => AppModalDialog(
+        title: 'End Live Quiz Session?',
+        subtitle: 'Final score computation & leaderboard publication',
+        iconData: Icons.stop_circle_outlined,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 440,
         actions: [
-          TextButton(
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
+            ),
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.pop(context);
               widget.onSessionEnded?.call();
             },
-            child: const Text('Confirm End'),
+            child: const Text('Confirm End', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
+        child: const Text(
+          'Ending the session will calculate final scores and publish the leaderboard to all participants.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF334155), height: 1.45),
+        ),
       ),
     );
   }
@@ -101,231 +120,178 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
     final totalQ = widget.item.totalQuestions;
     final progress = _currentQ / totalQ;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return AppModalDialog(
+      title: widget.item.title,
+      subtitle: 'LIVE NOW • Real-time Session Monitor (${widget.item.category})',
+      iconData: Icons.podcasts_rounded,
+      gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+      maxWidth: 680,
+      scrollable: true,
+      actions: [
+        OutlinedButton.icon(
+          onPressed: _endSession,
+          icon: const Icon(Icons.stop_circle_outlined, size: 16, color: Color(0xFFEF4444)),
+          label: const Text('End Session', style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w700, fontSize: 12.5)),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFFCA5A5)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: _togglePause,
+          icon: Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded, size: 16),
+          label: Text(_isPaused ? 'Resume' : 'Pause', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _isPaused ? const Color(0xFF10B981) : const Color(0xFFFF9F0A),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            elevation: 0,
+          ),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: _currentQ < totalQ ? _nextQuestion : null,
+          icon: const Icon(Icons.skip_next_rounded, size: 16),
+          label: const Text('Next Question', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5636F5),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            elevation: 0,
+          ),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Metric Cards Row
+          Row(
             children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFEE2E2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.circle, color: Color(0xFFEF4444), size: 8),
-                            SizedBox(width: 5),
-                            Text(
-                              'LIVE NOW',
-                              style: TextStyle(
-                                color: Color(0xFFEF4444),
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        widget.item.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Metric Cards Row
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMetricTile(
-                      label: 'Connected Users',
-                      value: _connectedUsers.toString(),
-                      icon: Icons.people_alt_rounded,
-                      color: const Color(0xFF2587F8),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildMetricTile(
-                      label: 'Serving Question',
-                      value: '$_currentQ / $totalQ',
-                      icon: Icons.help_outline_rounded,
-                      color: const Color(0xFF5636F5),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildMetricTile(
-                      label: 'Question Timer',
-                      value: '${_secondsLeft}s',
-                      icon: Icons.timer_outlined,
-                      color: _secondsLeft < 10 ? const Color(0xFFEF4444) : const Color(0xFFFF9F0A),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // Progress Bar
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Session Progress (Question $_currentQ of $totalQ)',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-                      ),
-                      Text(
-                        '${(progress * 100).toInt()}%',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(4),
-                    backgroundColor: const Color(0xFFE2E8F0),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5636F5)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // Responses Distribution
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.borderSubtle),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 28,
-                            height: 28,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFDCFCE7),
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.check_rounded, color: Color(0xFF16A34A), size: 16),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('$_correctAnswers Correct', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF16A34A))),
-                              const Text('Submitted answers', style: TextStyle(fontSize: 9.5, color: AppColors.textMuted)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 28,
-                            height: 28,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFEE2E2),
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.close_rounded, color: Color(0xFFDC2626), size: 16),
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('$_incorrectAnswers Incorrect', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFDC2626))),
-                              const Text('Submitted answers', style: TextStyle(fontSize: 9.5, color: AppColors.textMuted)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              Expanded(
+                child: _buildMetricTile(
+                  label: 'Connected Users',
+                  value: _connectedUsers.toString(),
+                  icon: Icons.people_alt_rounded,
+                  color: const Color(0xFF2587F8),
                 ),
               ),
-              const SizedBox(height: 22),
-
-              // Session Controls
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: _endSession,
-                    icon: const Icon(Icons.stop_circle_outlined, size: 16, color: Color(0xFFEF4444)),
-                    label: const Text('End Session', style: TextStyle(color: Color(0xFFEF4444))),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFFCA5A5)),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _togglePause,
-                        icon: Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded, size: 16),
-                        label: Text(_isPaused ? 'Resume' : 'Pause'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isPaused ? const Color(0xFF10B981) : const Color(0xFFFF9F0A),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton.icon(
-                        onPressed: _currentQ < totalQ ? _nextQuestion : null,
-                        icon: const Icon(Icons.skip_next_rounded, size: 16),
-                        label: const Text('Next Question'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5636F5),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildMetricTile(
+                  label: 'Serving Question',
+                  value: '$_currentQ / $totalQ',
+                  icon: Icons.help_outline_rounded,
+                  color: const Color(0xFF5636F5),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildMetricTile(
+                  label: 'Question Timer',
+                  value: '${_secondsLeft}s',
+                  icon: Icons.timer_outlined,
+                  color: _secondsLeft < 10 ? const Color(0xFFEF4444) : const Color(0xFFFF9F0A),
+                ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 18),
+
+          // Progress Bar
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Session Progress (Question $_currentQ of $totalQ)',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                  ),
+                  Text(
+                    '${(progress * 100).toInt()}%',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              LinearProgressIndicator(
+                value: progress,
+                minHeight: 8,
+                borderRadius: BorderRadius.circular(4),
+                backgroundColor: const Color(0xFFE2E8F0),
+                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5636F5)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Responses Distribution
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFDCFCE7),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.check_rounded, color: Color(0xFF16A34A), size: 16),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('$_correctAnswers Correct', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF16A34A))),
+                          const Text('Submitted answers', style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFEE2E2),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.close_rounded, color: Color(0xFFDC2626), size: 16),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('$_incorrectAnswers Incorrect', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFDC2626))),
+                          const Text('Submitted answers', style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -341,7 +307,7 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: const Color(0xFFCBD5E1)),
       ),
       child: Row(
         children: [
@@ -360,9 +326,9 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
                 const SizedBox(height: 1),
-                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E293B))),
               ],
             ),
           ),

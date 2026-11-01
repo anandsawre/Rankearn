@@ -9,118 +9,79 @@ class ViewLiveQuizDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 580),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF5636F5),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.podcasts_rounded, color: Colors.white, size: 18),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        item.title,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded, size: 20),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+    return AppModalDialog(
+      title: item.title,
+      subtitle: '${item.category} • ${item.statusLabel}',
+      iconData: Icons.podcasts_rounded,
+      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      maxWidth: 580,
+      scrollable: true,
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5636F5),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+            elevation: 0,
+          ),
+          child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Description
+          Text(
+            item.description.isNotEmpty ? item.description : 'Live competitive showdown with instant ranking & coin distribution.',
+            style: const TextStyle(fontSize: 12.5, color: Color(0xFF475569), height: 1.4),
+          ),
+          const SizedBox(height: 14),
 
-              // Description & Category
-              Text(
-                item.description,
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 14),
-
-              // Key Parameters Grid
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.borderSubtle),
-                ),
-                child: Column(
+          // Key Parameters Grid
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildParam('Category', item.category),
-                        _buildParam('Status', item.statusLabel),
-                        _buildParam('Duration', '${item.durationMinutes} min'),
-                      ],
-                    ),
-                    const Divider(height: 20, color: AppColors.borderSubtle),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildParam('Participants', item.participantsCount.toString()),
-                        _buildParam('Questions', item.questionsCount.toString()),
-                        _buildParam('Reward Coins', '${item.rewardCoins} pts'),
-                      ],
-                    ),
+                    _buildParam('Category', item.category),
+                    _buildParam('Status', item.statusLabel),
+                    _buildParam('Duration', '${item.durationMinutes} min'),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              // Top Leaderboard Preview
-              const Text(
-                'Top Participants / Leaderboard',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-              ),
-              const SizedBox(height: 8),
-
-              _buildLeaderboardRow(rank: 1, name: 'Priya Sharma', score: '98 pts', time: '12m 40s', avatarColor: const Color(0xFF5636F5)),
-              _buildLeaderboardRow(rank: 2, name: 'Amit Verma', score: '94 pts', time: '13m 15s', avatarColor: const Color(0xFF2587F8)),
-              _buildLeaderboardRow(rank: 3, name: 'Rahul Kumar', score: '91 pts', time: '14m 02s', avatarColor: const Color(0xFF10B981)),
-              const SizedBox(height: 20),
-
-              // Close Button
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5636F5),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text('Close'),
+                const Divider(height: 20, color: Color(0xFFE2E8F0)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildParam('Participants', item.participantsCount.toString()),
+                    _buildParam('Questions', item.questionsCount.toString()),
+                    _buildParam('Reward Coins', '${item.rewardCoins} pts'),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 16),
+
+          // Top Leaderboard Preview
+          const Text(
+            'Top Participants / Leaderboard',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+          ),
+          const SizedBox(height: 8),
+
+          _buildLeaderboardRow(rank: 1, name: 'Priya Sharma', score: '98 pts', time: '12m 40s', avatarColor: const Color(0xFF5636F5)),
+          _buildLeaderboardRow(rank: 2, name: 'Amit Verma', score: '94 pts', time: '13m 15s', avatarColor: const Color(0xFF2587F8)),
+          _buildLeaderboardRow(rank: 3, name: 'Rahul Kumar', score: '91 pts', time: '14m 02s', avatarColor: const Color(0xFF10B981)),
+        ],
       ),
     );
   }
@@ -129,9 +90,9 @@ class ViewLiveQuizDialog extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
         const SizedBox(height: 2),
-        Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+        Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
       ],
     );
   }
@@ -143,8 +104,14 @@ class ViewLiveQuizDialog extends StatelessWidget {
     required String time,
     required Color avatarColor,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFCBD5E1)),
+      ),
       child: Row(
         children: [
           Container(
@@ -160,7 +127,7 @@ class ViewLiveQuizDialog extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
-                color: rank == 1 ? const Color(0xFFD97706) : AppColors.textSecondary,
+                color: rank == 1 ? const Color(0xFFD97706) : const Color(0xFF64748B),
               ),
             ),
           ),
@@ -180,11 +147,11 @@ class ViewLiveQuizDialog extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B))),
           ),
           Text(score, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF10B981))),
           const SizedBox(width: 12),
-          Text(time, style: const TextStyle(fontSize: 10.5, color: AppColors.textMuted)),
+          Text(time, style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B))),
         ],
       ),
     );
