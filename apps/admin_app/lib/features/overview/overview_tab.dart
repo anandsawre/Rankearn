@@ -403,149 +403,103 @@ class _OverviewTabState extends State<OverviewTab> {
   }
 
   void _showCustomizeQuickActionsDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (dialogCtx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              backgroundColor: Colors.white,
-              child: Container(
-                width: 480,
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: const [
-                            Icon(Icons.tune_rounded, color: Color(0xFFEC4899), size: 22),
-                            SizedBox(width: 10),
-                            Text(
-                              'Customize Quick Actions',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                          ],
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.of(dialogCtx).pop(),
-                          icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Choose which quick action shortcuts appear on your dashboard overview.',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
-                    const SizedBox(height: 12),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 320),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: _quickActions.length,
-                        separatorBuilder: (ctx, idx) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                        itemBuilder: (context, index) {
-                          final action = _quickActions[index];
-                          final isEnabled = action['enabled'] as bool;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: action['color'] as Color,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(
-                                    action['icon'] as IconData,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    action['label'] as String,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF1E293B),
-                                    ),
-                                  ),
-                                ),
-                                Switch(
-                                  value: isEnabled,
-                                  activeTrackColor: const Color(0xFFEC4899),
-                                  onChanged: (val) {
-                                    setDialogState(() {
-                                      action['enabled'] = val;
-                                    });
-                                    setState(() {});
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+            return AppModalDialog(
+              title: 'Customize Quick Actions',
+              subtitle: 'Choose which quick action shortcuts appear on your dashboard overview',
+              iconData: Icons.tune_rounded,
+              gradientColors: const [Color(0xFFEC4899), Color(0xFFF43F5E)],
+              maxWidth: 520,
+              footerLeft: TextButton(
+                onPressed: () {
+                  setDialogState(() {
+                    for (var action in _quickActions) {
+                      action['enabled'] = true;
+                    }
+                  });
+                  setState(() {});
+                },
+                child: const Text(
+                  'Reset to Default',
+                  style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(dialogCtx).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Quick Actions updated successfully'),
+                        duration: Duration(seconds: 2),
+                        backgroundColor: Color(0xFF0F172A),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            setDialogState(() {
-                              for (var action in _quickActions) {
-                                action['enabled'] = true;
-                              }
-                            });
-                            setState(() {});
-                          },
-                          child: const Text(
-                            'Reset to Default',
-                            style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w600)),
+                ),
+              ],
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 320),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: _quickActions.length,
+                  separatorBuilder: (ctx, idx) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  itemBuilder: (context, index) {
+                    final action = _quickActions[index];
+                    final isEnabled = action['enabled'] as bool;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: action['color'] as Color,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              action['icon'] as IconData,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(dialogCtx).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Quick Actions updated successfully'),
-                                duration: Duration(seconds: 2),
-                                backgroundColor: Color(0xFF0F172A),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              action['label'] as String,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1E293B),
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F172A),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
                           ),
-                          child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w600)),
-                        ),
-                      ],
-                    ),
-                  ],
+                          Switch(
+                            value: isEnabled,
+                            activeTrackColor: const Color(0xFFEC4899),
+                            onChanged: (val) {
+                              setDialogState(() {
+                                action['enabled'] = val;
+                              });
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             );
