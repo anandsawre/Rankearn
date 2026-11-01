@@ -109,11 +109,24 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             controller: _apiKeyController,
             obscureText: true,
             decoration: InputDecoration(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFF2587F8), width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               hintText: 'AIzaSy... (Paste Google AI Studio Key for direct 0-delay generation)',
               hintStyle: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-              prefixIcon: const Icon(Icons.key_rounded, size: 16, color: Color(0xFF5636F5)),
+              prefixIcon: const Icon(Icons.key_rounded, size: 16, color: Color(0xFF2587F8)),
             ),
             style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
             onChanged: (_) => setState(() {}),
@@ -127,7 +140,20 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             controller: _systemPromptController,
             maxLines: 4,
             decoration: InputDecoration(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFF2587F8), width: 1.5),
+              ),
               contentPadding: const EdgeInsets.all(12),
             ),
             style: const TextStyle(fontSize: 12),
@@ -177,7 +203,20 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             controller: _antiHallucinationController,
             maxLines: 3,
             decoration: InputDecoration(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFF2587F8), width: 1.5),
+              ),
               contentPadding: const EdgeInsets.all(12),
             ),
             style: const TextStyle(fontSize: 11.5, fontFamily: 'monospace'),

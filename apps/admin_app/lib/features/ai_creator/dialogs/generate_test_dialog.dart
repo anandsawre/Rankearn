@@ -228,10 +228,24 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               controller: _titleController,
               decoration: InputDecoration(
                 hintText: 'e.g. RRB Technician Mock Test 2026',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
+                ),
               ),
-              style: const TextStyle(fontSize: 12),
+              style: const TextStyle(fontSize: 12.5),
               validator: (val) => val == null || val.trim().isEmpty ? 'Enter a test title' : null,
             ),
             const SizedBox(height: 12),
@@ -332,10 +346,24 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               maxLines: 2,
               decoration: InputDecoration(
                 hintText: 'e.g. Kinematics, Newton Laws, Periodic Table, Modern Indian History',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
+                ),
               ),
-              style: const TextStyle(fontSize: 12),
+              style: const TextStyle(fontSize: 12.5),
             ),
             const SizedBox(height: 12),
 

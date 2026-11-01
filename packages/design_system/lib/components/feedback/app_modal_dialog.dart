@@ -94,15 +94,15 @@ class AppModalDialog extends StatelessWidget {
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: AppRadii.borderMd,
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: AppRadii.borderMd,
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: AppRadii.borderMd,
-        borderSide: BorderSide(color: activeFocus, width: 1.6),
+        borderSide: BorderSide(color: activeFocus, width: 1.5),
       ),
     );
   }
