@@ -94,70 +94,35 @@ class _UsersTableCardState extends State<UsersTableCard> {
   }
 
   void _openFilterDialog() {
-    showDialog(
+    String tempRole = widget.roleFilter;
+    String tempStatus = widget.statusFilter;
+
+    AppModalDialog.show(
       context: context,
       builder: (ctx) {
-        String tempRole = widget.roleFilter;
-        String tempStatus = widget.statusFilter;
-
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Row(
-                children: [
-                  Icon(Icons.tune_rounded, color: Color(0xFF5636F5), size: 20),
-                  SizedBox(width: 8),
-                  Text('Filter Users', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppDropdown<String>.simple(
-                    label: 'Role',
-                    value: tempRole,
-                    isDense: true,
-                    items: const ['all', 'student', 'premium', 'teacher', 'moderator'],
-                    itemLabel: (v) => {
-                      'all': 'All Roles',
-                      'student': 'Student',
-                      'premium': 'Premium',
-                      'teacher': 'Teacher',
-                      'moderator': 'Moderator',
-                    }[v] ?? v,
-                    onChanged: (v) {
-                      if (v != null) setModalState(() => tempRole = v);
-                    },
-                  ),
-                  const SizedBox(height: 14),
-                  AppDropdown<String>.simple(
-                    label: 'Status',
-                    value: tempStatus,
-                    isDense: true,
-                    items: const ['all', 'active', 'inactive', 'blocked'],
-                    itemLabel: (v) => {
-                      'all': 'All Status',
-                      'active': 'Active',
-                      'inactive': 'Inactive',
-                      'blocked': 'Blocked',
-                    }[v] ?? v,
-                    onChanged: (v) {
-                      if (v != null) setModalState(() => tempStatus = v);
-                    },
-                  ),
-                ],
-              ),
+            return AppModalDialog(
+              title: 'Filter Users',
+              subtitle: 'Refine table by role and user account status',
+              iconData: Icons.tune_rounded,
+              gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+              maxWidth: 440,
               actions: [
-                TextButton(
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  ),
                   onPressed: () {
                     widget.onRoleFilterChanged('all');
                     widget.onStatusFilterChanged('all');
                     Navigator.of(ctx).pop();
                   },
-                  child: const Text('Reset', style: TextStyle(color: Color(0xFF64748B))),
+                  child: const Text('Reset', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
                 ),
+                const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () {
                     widget.onRoleFilterChanged(tempRole);
@@ -168,10 +133,48 @@ class _UsersTableCardState extends State<UsersTableCard> {
                     backgroundColor: const Color(0xFF5636F5),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    elevation: 0,
                   ),
-                  child: const Text('Apply Filters'),
+                  child: const Text('Apply Filters', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
                 ),
               ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Role', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
+                  const SizedBox(height: 6),
+                  AppDropdown<String>(
+                    value: tempRole,
+                    items: const [
+                      AppDropdownItem(value: 'all', label: 'All Roles'),
+                      AppDropdownItem(value: 'student', label: 'Student'),
+                      AppDropdownItem(value: 'premium', label: 'Premium'),
+                      AppDropdownItem(value: 'teacher', label: 'Teacher'),
+                      AppDropdownItem(value: 'moderator', label: 'Moderator'),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setModalState(() => tempRole = v);
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
+                  const SizedBox(height: 6),
+                  AppDropdown<String>(
+                    value: tempStatus,
+                    items: const [
+                      AppDropdownItem(value: 'all', label: 'All Status'),
+                      AppDropdownItem(value: 'active', label: 'Active'),
+                      AppDropdownItem(value: 'inactive', label: 'Inactive'),
+                      AppDropdownItem(value: 'blocked', label: 'Blocked'),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setModalState(() => tempStatus = v);
+                    },
+                  ),
+                ],
+              ),
             );
           },
         );

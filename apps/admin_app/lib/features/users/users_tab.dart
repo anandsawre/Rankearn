@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
+import 'package:design_system/design_system.dart';
 import 'models/user_management_item.dart';
 import 'widgets/users_hero_card.dart';
 import 'widgets/users_quick_actions.dart';
@@ -128,7 +129,7 @@ class _UsersTabState extends State<UsersTab> {
 
   // Dialog Helpers
   void _openAddUserDialog([UserManagementItem? userToEdit]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => AddUserDialog(
         initialUser: userToEdit,
@@ -159,7 +160,7 @@ class _UsersTabState extends State<UsersTab> {
   }
 
   void _openImportDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ImportUsersDialog(
         onImport: (newUsers) {
@@ -172,14 +173,14 @@ class _UsersTabState extends State<UsersTab> {
   }
 
   void _openManageRolesDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => const ManageRolesDialog(),
     );
   }
 
   void _openSendNotificationDialog([UserManagementItem? singleUser]) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => SendNotificationDialog(
         selectedUsersCount: singleUser != null ? 1 : _selectedIds.length,
@@ -188,7 +189,7 @@ class _UsersTabState extends State<UsersTab> {
   }
 
   void _openExportDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ExportUsersDialog(
         totalCount: _allUsers.length,
@@ -209,7 +210,7 @@ class _UsersTabState extends State<UsersTab> {
       return;
     }
 
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => BulkActionsDialog(
         selectedCount: _selectedIds.length,
@@ -261,7 +262,7 @@ class _UsersTabState extends State<UsersTab> {
   }
 
   void _openViewDialog(UserManagementItem user) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
       builder: (ctx) => ViewUserDialog(
         user: user,
@@ -312,19 +313,33 @@ class _UsersTabState extends State<UsersTab> {
   }
 
   void _deleteUser(UserManagementItem user) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete User Account', style: TextStyle(fontWeight: FontWeight.w700)),
-        content: Text('Are you sure you want to permanently delete "${user.name}"? This action cannot be undone.'),
+      builder: (ctx) => AppModalDialog(
+        title: 'Delete User Account',
+        subtitle: 'Permanent deletion warning',
+        iconData: Icons.delete_outline_rounded,
+        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        maxWidth: 440,
         actions: [
-          TextButton(
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
           ),
+          const SizedBox(width: 8),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF43F5E), foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
+            ),
             onPressed: () {
               Navigator.of(ctx).pop();
               setState(() {
@@ -338,15 +353,16 @@ class _UsersTabState extends State<UsersTab> {
               }
 
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Deleted user "${user.name}"'),
-                  backgroundColor: const Color(0xFFF43F5E),
-                ),
+                SnackBar(content: Text('User "${user.name}" permanently deleted.')),
               );
             },
-            child: const Text('Delete'),
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
+        child: Text(
+          'Are you sure you want to permanently delete "${user.name}"? This action cannot be undone and will delete user records.',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF334155), height: 1.45),
+        ),
       ),
     );
   }
