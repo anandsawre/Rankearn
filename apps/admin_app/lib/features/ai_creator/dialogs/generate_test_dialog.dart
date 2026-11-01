@@ -240,48 +240,26 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Subject *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      const SizedBox(height: 4),
-                      DropdownButtonFormField<AiTestSubject>(
-                        initialValue: _selectedSubject,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        ),
-                        items: AiTestSubject.values.map((s) {
-                          return DropdownMenuItem(value: s, child: Text(s.label, style: const TextStyle(fontSize: 12)));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedSubject = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown.simple(
+                    label: 'Subject *',
+                    value: _selectedSubject,
+                    items: AiTestSubject.values,
+                    itemLabel: (s) => s.label,
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedSubject = val);
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Difficulty Level *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      const SizedBox(height: 4),
-                      DropdownButtonFormField<AiTestDifficulty>(
-                        initialValue: _selectedDifficulty,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        ),
-                        items: AiTestDifficulty.values.map((d) {
-                          return DropdownMenuItem(value: d, child: Text(d.label, style: const TextStyle(fontSize: 12)));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedDifficulty = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown.simple(
+                    label: 'Difficulty Level *',
+                    value: _selectedDifficulty,
+                    items: AiTestDifficulty.values,
+                    itemLabel: (d) => d.label,
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedDifficulty = val);
+                    },
                   ),
                 ),
               ],
@@ -292,48 +270,26 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Number of Questions', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      const SizedBox(height: 4),
-                      DropdownButtonFormField<int>(
-                        initialValue: _questionCount,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        ),
-                        items: [10, 25, 40, 50, 75, 100].map((n) {
-                          return DropdownMenuItem(value: n, child: Text('$n Questions', style: const TextStyle(fontSize: 12)));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _questionCount = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown.simple(
+                    label: 'Number of Questions',
+                    value: _questionCount,
+                    items: const [10, 25, 40, 50, 75, 100],
+                    itemLabel: (n) => '$n Questions',
+                    onChanged: (val) {
+                      if (val != null) setState(() => _questionCount = val);
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Duration (Minutes)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      const SizedBox(height: 4),
-                      DropdownButtonFormField<int>(
-                        initialValue: _durationMinutes,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        ),
-                        items: [20, 30, 45, 60, 90, 120].map((n) {
-                          return DropdownMenuItem(value: n, child: Text('$n Minutes', style: const TextStyle(fontSize: 12)));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _durationMinutes = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown.simple(
+                    label: 'Duration (Minutes)',
+                    value: _durationMinutes,
+                    items: const [20, 30, 45, 60, 90, 120],
+                    itemLabel: (n) => '$n Minutes',
+                    onChanged: (val) {
+                      if (val != null) setState(() => _durationMinutes = val);
+                    },
                   ),
                 ),
               ],
@@ -344,48 +300,24 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Target Exam / Pattern', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      const SizedBox(height: 4),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedExam,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        ),
-                        items: _examOptions.map((e) {
-                          return DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 12)));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedExam = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown.simple(
+                    label: 'Target Exam / Pattern',
+                    value: _selectedExam,
+                    items: _examOptions,
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedExam = val);
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Language Mode', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      const SizedBox(height: 4),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedLanguage,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        ),
-                        items: _languageOptions.map((l) {
-                          return DropdownMenuItem(value: l, child: Text(l, style: const TextStyle(fontSize: 12)));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedLanguage = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown.simple(
+                    label: 'Language Mode',
+                    value: _selectedLanguage,
+                    items: _languageOptions,
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedLanguage = val);
+                    },
                   ),
                 ),
               ],

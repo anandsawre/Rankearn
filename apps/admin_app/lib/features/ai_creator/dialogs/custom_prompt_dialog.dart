@@ -160,17 +160,10 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
           const SizedBox(height: 10),
 
           // Cognitive Depth
-          const Text("Bloom's Taxonomy Cognitive Level", style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-          const SizedBox(height: 4),
-          DropdownButtonFormField<String>(
-            initialValue: _bloomsLevel,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            ),
-            items: _bloomsLevels.map((l) {
-              return DropdownMenuItem(value: l, child: Text(l, style: const TextStyle(fontSize: 12)));
-            }).toList(),
+          AppDropdown.simple(
+            label: "Bloom's Taxonomy Cognitive Level",
+            value: _bloomsLevel,
+            items: _bloomsLevels,
             onChanged: (val) {
               if (val != null) setState(() => _bloomsLevel = val);
             },

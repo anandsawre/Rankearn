@@ -69,20 +69,11 @@ class _ExportTestDialogState extends State<ExportTestDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Select Test to Export
-          const Text('Select Test to Export', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-          const SizedBox(height: 4),
-          DropdownButtonFormField<AiGeneratedTestItem>(
-            initialValue: _selectedTest,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            ),
-            items: widget.allTests.map((t) {
-              return DropdownMenuItem(
-                value: t,
-                child: Text(t.title, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis),
-              );
-            }).toList(),
+          AppDropdown.simple(
+            label: 'Select Test to Export',
+            value: _selectedTest,
+            items: widget.allTests,
+            itemLabel: (t) => t.title,
             onChanged: (val) {
               if (val != null) setState(() => _selectedTest = val);
             },
