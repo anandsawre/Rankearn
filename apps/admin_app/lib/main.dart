@@ -430,24 +430,75 @@ class _AdminAppShellState extends State<AdminAppShell> {
               // User Profile Avatar & Title
               InkWell(
                 onTap: () {
-                  showDialog(
+                  AppModalDialog.show(
                     context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Admin Session'),
-                      content: const Text('Logged in as Admin User (admin@quizmaster.com)'),
+                    builder: (ctx) => AppModalDialog(
+                      title: 'Admin Session',
+                      subtitle: 'Active administrative session',
+                      iconData: Icons.account_circle_rounded,
+                      gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+                      maxWidth: 420,
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Close'),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: const BorderSide(color: Color(0xFFCBD5E1)),
+                            ),
+                          ),
+                          child: const Text('Close', style: TextStyle(color: AppColors.textSecondary)),
                         ),
-                        TextButton(
+                        const SizedBox(width: 8),
+                        ElevatedButton.icon(
                           onPressed: () {
                             Navigator.pop(ctx);
                             setState(() => _isLoggedIn = false);
                           },
-                          child: const Text('Sign Out', style: TextStyle(color: Colors.red)),
+                          icon: const Icon(Icons.logout_rounded, size: 16),
+                          label: const Text('Sign Out'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEF4444),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
                         ),
                       ],
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                        ),
+                        child: const Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: Color(0xFF5636F5),
+                              child: Text('AD', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Admin User',
+                                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary),
+                                  ),
+                                  Text(
+                                    'admin@quizmaster.com',
+                                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },
