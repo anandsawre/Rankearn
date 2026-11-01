@@ -12,6 +12,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      fontFamily: AppTypography.fontBody,
       primaryColor: AppColors.brandPurple,
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme(

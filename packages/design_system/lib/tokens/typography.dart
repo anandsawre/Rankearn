@@ -6,90 +6,112 @@ import 'colors.dart';
 class AppTypography {
   AppTypography._();
 
+  static const String fontHeading = 'Plus Jakarta Sans';
+  static const String fontBody = 'Inter';
+  static const String fontHindi = 'Noto Sans Devanagari';
+
   static const List<String> fontFallbacks = [
     'Inter',
-    'Roboto',
     'Noto Sans Devanagari',
+    'Roboto',
     'sans-serif',
   ];
 
-  // --- Display & Hero ---
+  static const List<String> headingFallbacks = [
+    'Plus Jakarta Sans',
+    'Inter',
+    'Noto Sans Devanagari',
+    'Roboto',
+    'sans-serif',
+  ];
+
+  // --- Display & Hero (Plus Jakarta Sans) ---
   static const TextStyle displayHero = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 34,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.8,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle displayLarge = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 28,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.6,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle displayMedium = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 22,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.5,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle displaySmall = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 20,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.4,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
-  // --- Headings ---
+  // --- Headings (Plus Jakarta Sans) ---
   static const TextStyle pageHeading = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 24,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.4,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle sectionHeading = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 18,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.2,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle cardHeading = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 16,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle titleLarge = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 18,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.3,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle titleMedium = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 16,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle titleSmall = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 14,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   // --- Body & Supporting ---
@@ -217,65 +239,72 @@ class AppTypography {
 
   // --- Auth Specialized Typography Tokens ---
   static const TextStyle authHeroHeading = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 28,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.6,
     height: 1.14,
     color: AppColors.textPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle authHeroAccent = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 28,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.6,
     height: 1.14,
     color: AppColors.brandPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle authMobileHeroHeading = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 25,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.5,
     height: 1.15,
     color: Color(0xFF0F172A),
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle authMobileHeroAccent = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 25,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.5,
     height: 1.15,
     color: AppColors.brandPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle authMobileHeroHeadingNarrow = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 21,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.5,
     height: 1.15,
     color: Color(0xFF0F172A),
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle authMobileHeroAccentNarrow = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 21,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.5,
     height: 1.15,
     color: AppColors.brandPrimary,
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle authCardHeading = TextStyle(
+    fontFamily: fontHeading,
     fontSize: 19,
     fontWeight: FontWeight.w900,
     letterSpacing: -0.3,
     color: Color(0xFF0F172A),
-    fontFamilyFallback: fontFallbacks,
+    fontFamilyFallback: headingFallbacks,
   );
 
   static const TextStyle authSubtitle = TextStyle(
