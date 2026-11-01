@@ -298,9 +298,9 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
     final spaceBelow = screenHeight - (offset.dy + size.height);
     final openUpward = spaceBelow < 200 && offset.dy > spaceBelow;
 
-    final effectiveRadius = widget.borderRadius ?? AppRadii.borderMd;
+    final effectiveRadius = widget.borderRadius ?? AppRadii.borderSm;
     final effectiveDropdownColor = widget.dropdownColor ?? AppColors.surface;
-    final effectiveBorderColor = widget.borderColor ?? AppColors.borderSubtle;
+    final effectiveBorderColor = widget.borderColor ?? const Color(0xFFCBD5E1);
     final effectiveTextStyle =
         widget.style ??
         AppTypography.bodyMedium.copyWith(
@@ -442,15 +442,15 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBorderRadius = widget.borderRadius ?? AppRadii.borderMd;
+    final effectiveBorderRadius = widget.borderRadius ?? AppRadii.borderSm;
     final effectiveFillColor =
         widget.fillColor ??
-        (widget.enabled ? AppColors.surfaceSubtle : AppColors.surfaceMuted);
+        (widget.enabled ? const Color(0xFFF8FAFC) : AppColors.surfaceMuted);
     final effectiveBorderColor = _isOpen
-        ? (widget.focusedBorderColor ?? AppColors.brandPrimary)
+        ? (widget.focusedBorderColor ?? AppColors.brandPurple)
         : _isHovered
-        ? (widget.borderColor ?? AppColors.borderSubtle).withValues(alpha: 0.8)
-        : (widget.borderColor ?? AppColors.borderSubtle);
+        ? (widget.borderColor ?? const Color(0xFFCBD5E1)).withValues(alpha: 0.8)
+        : (widget.borderColor ?? const Color(0xFFCBD5E1));
 
     final effectiveTextStyle =
         widget.style ??
