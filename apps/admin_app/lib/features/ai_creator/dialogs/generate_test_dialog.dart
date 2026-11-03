@@ -226,24 +226,9 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             const SizedBox(height: 4),
             TextFormField(
               controller: _titleController,
-              decoration: InputDecoration(
-                hintText: 'e.g. RRB Technician Mock Test 2026',
-                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
-                ),
+              decoration: AppModalDialog.inputDecoration(
+                'e.g. RRB Technician Mock Test 2026',
+                focusColor: const Color(0xFF5636F5),
               ),
               style: const TextStyle(fontSize: 12.5),
               validator: (val) => val == null || val.trim().isEmpty ? 'Enter a test title' : null,
@@ -344,24 +329,9 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             TextFormField(
               controller: _topicController,
               maxLines: 2,
-              decoration: InputDecoration(
-                hintText: 'e.g. Kinematics, Newton Laws, Periodic Table, Modern Indian History',
-                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
-                ),
+              decoration: AppModalDialog.inputDecoration(
+                'e.g. Kinematics, Newton Laws, Periodic Table, Modern Indian History',
+                focusColor: const Color(0xFF5636F5),
               ),
               style: const TextStyle(fontSize: 12.5),
             ),

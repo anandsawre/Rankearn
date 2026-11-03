@@ -129,20 +129,10 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
                   TextField(
                     controller: _nameController,
                     style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-                    decoration: InputDecoration(
-                      hintText: 'Enter question set name (e.g. Current Affairs Part 2)',
-                      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                      filled: true,
-                      fillColor: Colors.white,
+                    decoration: AppModalDialog.inputDecoration(
+                      'Enter question set name (e.g. Current Affairs Part 2)',
+                      focusColor: const Color(0xFFF59E0B),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFF59E0B), width: 1.5),
-                      ),
                     ),
                   ),
                   const SizedBox(height: 10),

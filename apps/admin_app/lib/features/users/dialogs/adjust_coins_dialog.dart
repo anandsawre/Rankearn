@@ -350,21 +350,11 @@ class _AdjustCoinsDialogState extends State<AdjustCoinsDialog> {
               controller: _amountController,
               keyboardType: TextInputType.number,
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-              decoration: InputDecoration(
-                hintText: 'Enter coin amount',
-                hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                filled: true,
-                fillColor: Colors.white,
+              decoration: AppModalDialog.inputDecoration(
+                'Enter coin amount',
                 prefixIcon: const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 20),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFD97706), width: 1.5),
-                ),
+                focusColor: const Color(0xFFD97706),
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Please enter coins';
@@ -416,21 +406,11 @@ class _AdjustCoinsDialogState extends State<AdjustCoinsDialog> {
             TextFormField(
               controller: _reasonController,
               style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-              decoration: InputDecoration(
-                hintText: 'e.g. Winner of Weekly Battle #42',
-                hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                filled: true,
-                fillColor: Colors.white,
+              decoration: AppModalDialog.inputDecoration(
+                'e.g. Winner of Weekly Battle #42',
                 prefixIcon: const Icon(Icons.history_edu_rounded, color: Color(0xFF64748B), size: 18),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFD97706), width: 1.5),
-                ),
+                focusColor: const Color(0xFFD97706),
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) {

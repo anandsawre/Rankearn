@@ -297,25 +297,6 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
     );
   }
 
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.battleAdminPurple, width: 1.5),
-      ),
-    );
-  }
+  InputDecoration _inputDecoration(String hint) =>
+      AppModalDialog.inputDecoration(hint, focusColor: AppColors.battleAdminPurple);
 }

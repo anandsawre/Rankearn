@@ -394,9 +394,8 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
                     controller: _searchController,
                     style: const TextStyle(fontSize: 12),
                     onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                    decoration: InputDecoration(
-                      hintText: 'Search questions, options, or explanations...',
-                      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                    decoration: AppModalDialog.inputDecoration(
+                      'Search questions, options, or explanations...',
                       prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
@@ -408,21 +407,7 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
                             )
                           : null,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      isDense: true,
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
-                      ),
+                      focusColor: const Color(0xFF5636F5),
                     ),
                   ),
                 ),

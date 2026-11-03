@@ -174,18 +174,10 @@ class _ImportCategoriesDialogState extends State<ImportCategoriesDialog> {
               maxLines: null,
               expands: true,
               style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Color(0xFF1E293B)),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.white,
+              decoration: AppModalDialog.inputDecoration(
+                '',
+                focusColor: const Color(0xFF0284C7),
                 contentPadding: const EdgeInsets.all(12),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF0284C7), width: 1.5),
-                ),
               ),
             ),
           ),

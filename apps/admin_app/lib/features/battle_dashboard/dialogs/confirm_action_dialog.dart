@@ -110,27 +110,10 @@ class _ConfirmActionDialogState extends State<ConfirmActionDialog> {
               controller: _reasonController,
               maxLines: 3,
               style: const TextStyle(fontSize: 12.5),
-              decoration: InputDecoration(
-                hintText: 'e.g., Match disconnection abuse, server flush, cheating investigation...',
-                hintStyle: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
-                filled: true,
-                fillColor: Colors.white,
+              decoration: AppModalDialog.inputDecoration(
+                'e.g., Match disconnection abuse, server flush, cheating investigation...',
+                focusColor: widget.isDestructive ? const Color(0xFFDC2626) : AppColors.battleAdminPurple,
                 contentPadding: const EdgeInsets.all(12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: widget.isDestructive ? const Color(0xFFDC2626) : AppColors.battleAdminPurple,
-                    width: 1.5,
-                  ),
-                ),
               ),
             ),
             const SizedBox(height: 12),

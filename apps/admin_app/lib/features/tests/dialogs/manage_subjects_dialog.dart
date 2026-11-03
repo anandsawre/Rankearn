@@ -341,26 +341,6 @@ class _ManageSubjectsDialogState extends State<ManageSubjectsDialog> {
     color: Color(0xFF334155),
   );
 
-  static InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      isDense: true,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF00B368), width: 1.5),
-      ),
-    );
-  }
+  static InputDecoration _inputDecoration(String hint) =>
+      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFF00B368));
 }

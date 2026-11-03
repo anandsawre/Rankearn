@@ -66,32 +66,12 @@ class _AddUserDialogState extends State<AddUserDialog> {
     Navigator.of(context).pop();
   }
 
-  InputDecoration _inputDec({required String hintText, required IconData prefixIcon}) {
-    return InputDecoration(
-      hintText: hintText,
-      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-      filled: true,
-      fillColor: Colors.white,
-      prefixIcon: Icon(prefixIcon, size: 18, color: const Color(0xFF64748B)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFEF4444)),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
-      ),
-    );
-  }
+  InputDecoration _inputDec({required String hintText, required IconData prefixIcon}) =>
+      AppModalDialog.inputDecoration(
+        hintText,
+        prefixIcon: Icon(prefixIcon, size: 18, color: const Color(0xFF64748B)),
+        focusColor: const Color(0xFF5636F5),
+      );
 
   @override
   Widget build(BuildContext context) {

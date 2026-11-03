@@ -637,24 +637,13 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
           child: TextFormField(
             controller: _optionControllers[index],
             style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              hintText: 'Enter Option ${labels[index]} text...',
+            decoration: AppModalDialog.inputDecoration(
+              'Enter Option ${labels[index]} text...',
               hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-              filled: true,
-              fillColor: isCorrect ? const Color(0xFFF5F3FF) : const Color(0xFFF8FAFC),
+              fillColor: isCorrect ? const Color(0xFFF5F3FF) : Colors.white,
+              borderColor: isCorrect ? const Color(0xFF5636F5) : const Color(0xFFCBD5E1),
+              focusColor: const Color(0xFF5636F5),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: isCorrect ? const Color(0xFF5636F5) : const Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: isCorrect ? const Color(0xFF5636F5) : const Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.2),
-              ),
             ),
           ),
         ),
@@ -804,25 +793,6 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
     );
   }
 
-  InputDecoration _inputDecoration({String? hint}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF0084FF), width: 1.5),
-      ),
-    );
-  }
+  InputDecoration _inputDecoration({String? hint}) =>
+      AppModalDialog.inputDecoration(hint ?? '', focusColor: const Color(0xFF0084FF));
 }

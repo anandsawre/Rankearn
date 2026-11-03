@@ -971,33 +971,6 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
     color: Color(0xFF1E293B),
   );
 
-  InputDecoration _inputDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-      filled: true,
-      fillColor: _fillBg,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: _borderSubtle),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: _borderSubtle),
-      ),
-      focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(8)),
-        borderSide: BorderSide(color: _primaryPurple, width: 1.5),
-      ),
-      errorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(8)),
-        borderSide: BorderSide(color: Color(0xFFEF4444)),
-      ),
-      focusedErrorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(8)),
-        borderSide: BorderSide(color: Color(0xFFEF4444), width: 1.5),
-      ),
-    );
-  }
+  InputDecoration _inputDecoration(String hint) =>
+      AppModalDialog.inputDecoration(hint, focusColor: _primaryPurple);
 }

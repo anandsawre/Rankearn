@@ -118,12 +118,10 @@ class _DuplicateExamDialogState extends State<DuplicateExamDialog> {
           const SizedBox(height: 6),
           TextField(
             controller: _nameCtrl,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
+            decoration: AppModalDialog.inputDecoration(
+              '',
+              focusColor: const Color(0xFFE11D48),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE11D48), width: 1.5)),
             ),
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
           ),
@@ -134,12 +132,10 @@ class _DuplicateExamDialogState extends State<DuplicateExamDialog> {
           const SizedBox(height: 6),
           TextField(
             controller: _idCtrl,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
+            decoration: AppModalDialog.inputDecoration(
+              '',
+              focusColor: const Color(0xFFE11D48),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE11D48), width: 1.5)),
             ),
             style: const TextStyle(fontSize: 13, fontFamily: 'monospace', color: Color(0xFF1E293B)),
           ),

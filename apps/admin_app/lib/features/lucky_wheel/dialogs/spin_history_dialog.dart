@@ -131,23 +131,11 @@ class _SpinHistoryDialogState extends State<SpinHistoryDialog> {
             height: 40,
             child: TextField(
               onChanged: (v) => setState(() => _search = v),
-              decoration: InputDecoration(
-                hintText: 'Search by user, campaign, reward, or spin ID...',
-                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+              decoration: AppModalDialog.inputDecoration(
+                'Search by user, campaign, reward, or spin ID...',
                 prefixIcon: const Icon(Icons.search_rounded, size: 16),
+                focusColor: AppColors.primary,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                ),
               ),
             ),
           ),

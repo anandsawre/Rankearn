@@ -79,29 +79,48 @@ class AppModalDialog extends StatelessWidget {
   /// Standard input decoration matching Rankearn design system
   static InputDecoration inputDecoration(
     String hint, {
+    String? labelText,
+    TextStyle? hintStyle,
     Widget? prefixIcon,
     Widget? suffixIcon,
+    String? prefixText,
+    TextStyle? prefixStyle,
+    String? suffixText,
+    TextStyle? suffixStyle,
     Color? focusColor,
+    Color? fillColor,
+    Color? borderColor,
+    BorderRadius? borderRadius,
+    EdgeInsetsGeometry? contentPadding,
+    bool? isDense,
   }) {
     final activeFocus = focusColor ?? AppColors.brandPurple;
+    final effectiveRadius = borderRadius ?? AppRadii.borderSm;
+    final effectiveBorderColor = borderColor ?? const Color(0xFFCBD5E1);
     return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+      labelText: labelText,
+      hintText: hint.isEmpty ? null : hint,
+      hintStyle: hintStyle ?? const TextStyle(fontSize: 12, color: AppColors.textMuted),
+      prefixText: prefixText,
+      prefixStyle: prefixStyle,
+      suffixText: suffixText,
+      suffixStyle: suffixStyle,
       filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      fillColor: fillColor ?? Colors.white,
+      isDense: isDense ?? true,
+      contentPadding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
-        borderRadius: AppRadii.borderMd,
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+        borderRadius: effectiveRadius,
+        borderSide: BorderSide(color: effectiveBorderColor, width: 1.0),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: AppRadii.borderMd,
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+        borderRadius: effectiveRadius,
+        borderSide: BorderSide(color: effectiveBorderColor, width: 1.0),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: AppRadii.borderMd,
+        borderRadius: effectiveRadius,
         borderSide: BorderSide(color: activeFocus, width: 1.5),
       ),
     );

@@ -302,25 +302,10 @@ class _ImportTestsDialogState extends State<ImportTestsDialog> {
             controller: _rawInputController,
             maxLines: 7,
             style: const TextStyle(fontFamily: 'monospace', fontSize: 11.5, color: Color(0xFF1E293B)),
-            decoration: InputDecoration(
-              hintText: 'Paste formatted CSV or JSON data here...',
-              hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+            decoration: AppModalDialog.inputDecoration(
+              'Paste formatted CSV or JSON data here...',
+              focusColor: const Color(0xFFFF9500),
               contentPadding: const EdgeInsets.all(12),
-              isDense: true,
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFFF9500), width: 1.5),
-              ),
             ),
           ),
           const SizedBox(height: 10),

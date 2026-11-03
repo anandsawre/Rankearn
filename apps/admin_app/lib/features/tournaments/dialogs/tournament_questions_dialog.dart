@@ -604,9 +604,8 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
                     controller: _searchController,
                     onChanged: (val) => setState(() => _searchQuery = val),
                     style: const TextStyle(fontSize: 12),
-                    decoration: InputDecoration(
-                      hintText: 'Search questions by text, explanation, or options...',
-                      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                    decoration: AppModalDialog.inputDecoration(
+                      'Search questions by text, explanation, or options...',
                       prefixIcon: const Icon(Icons.search_rounded, size: 17, color: Color(0xFF94A3B8)),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
@@ -618,21 +617,7 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
                             )
                           : null,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      isDense: true,
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.5),
-                      ),
+                      focusColor: const Color(0xFF5636F5),
                     ),
                   ),
                 ),

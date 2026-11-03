@@ -152,22 +152,9 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
             TextFormField(
               controller: _titleController,
               validator: (v) => v == null || v.trim().isEmpty ? 'Please enter a campaign name' : null,
-              decoration: InputDecoration(
-                hintText: 'e.g. Festive Diwali Mega Spin',
-                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                ),
+              decoration: AppModalDialog.inputDecoration(
+                'e.g. Festive Diwali Mega Spin',
+                focusColor: AppColors.primary,
               ),
             ),
             const SizedBox(height: 14),
@@ -181,22 +168,9 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
             TextFormField(
               controller: _subtitleController,
               validator: (v) => v == null || v.trim().isEmpty ? 'Please enter a description' : null,
-              decoration: InputDecoration(
-                hintText: 'e.g. Spin daily and win coins, cashback and gift vouchers',
-                hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                ),
+              decoration: AppModalDialog.inputDecoration(
+                'e.g. Spin daily and win coins, cashback and gift vouchers',
+                focusColor: AppColors.primary,
               ),
             ),
             const SizedBox(height: 14),
@@ -248,23 +222,7 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
                       TextFormField(
                         controller: _spinCostController,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: '10',
-                          hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                          ),
-                        ),
+                        decoration: AppModalDialog.inputDecoration('10', focusColor: AppColors.primary),
                       ),
                     ],
                   ),
@@ -282,23 +240,7 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
                       TextFormField(
                         controller: _dailyLimitController,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: '5',
-                          hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                          ),
-                        ),
+                        decoration: AppModalDialog.inputDecoration('5', focusColor: AppColors.primary),
                       ),
                     ],
                   ),
@@ -316,23 +258,7 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
                       TextFormField(
                         controller: _campaignLimitController,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          hintText: '10',
-                          hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                          ),
-                        ),
+                        decoration: AppModalDialog.inputDecoration('10', focusColor: AppColors.primary),
                       ),
                     ],
                   ),

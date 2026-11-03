@@ -173,22 +173,12 @@ class _SetRewardsDialogState extends State<SetRewardsDialog> {
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xFF00B96B)),
-                    decoration: InputDecoration(
+                    decoration: AppModalDialog.inputDecoration(
+                      '',
                       suffixText: 'Spins',
                       suffixStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                      ),
+                      focusColor: AppColors.primary,
                     ),
                   ),
                 ),
@@ -314,21 +304,10 @@ class _SetRewardsDialogState extends State<SetRewardsDialog> {
                               child: TextFormField(
                                 initialValue: slice['label'] as String,
                                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                decoration: InputDecoration(
-                                  isDense: true,
+                                decoration: AppModalDialog.inputDecoration(
+                                  '',
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                                  ),
+                                  focusColor: AppColors.primary,
                                 ),
                                 onChanged: (v) => slice['label'] = v,
                               ),
@@ -340,22 +319,11 @@ class _SetRewardsDialogState extends State<SetRewardsDialog> {
                                 initialValue: (slice['probability'] as int).toString(),
                                 keyboardType: TextInputType.number,
                                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                decoration: InputDecoration(
+                                decoration: AppModalDialog.inputDecoration(
+                                  '',
                                   suffixText: '%',
-                                  isDense: true,
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                                  ),
+                                  focusColor: AppColors.primary,
                                 ),
                                 onChanged: (v) {
                                   final val = int.tryParse(v) ?? 0;

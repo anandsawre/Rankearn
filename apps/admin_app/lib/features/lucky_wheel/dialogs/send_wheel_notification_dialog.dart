@@ -81,21 +81,7 @@ class _SendWheelNotificationDialogState extends State<SendWheelNotificationDialo
           const SizedBox(height: 6),
           TextField(
             controller: _titleController,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-              ),
-            ),
+            decoration: AppModalDialog.inputDecoration('', focusColor: AppColors.primary),
           ),
           const SizedBox(height: 12),
 
@@ -105,21 +91,7 @@ class _SendWheelNotificationDialogState extends State<SendWheelNotificationDialo
           TextField(
             controller: _messageController,
             maxLines: 3,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-              ),
-            ),
+            decoration: AppModalDialog.inputDecoration('', focusColor: AppColors.primary),
           ),
           const SizedBox(height: 12),
 

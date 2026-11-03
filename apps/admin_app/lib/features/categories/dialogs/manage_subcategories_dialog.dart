@@ -137,20 +137,10 @@ class _ManageSubcategoriesDialogState extends State<ManageSubcategoriesDialog> {
               Expanded(
                 child: TextField(
                   controller: _newSubcategoryCtrl,
-                  decoration: InputDecoration(
-                    hintText: 'Enter new subcategory / chapter name...',
-                    hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                  decoration: AppModalDialog.inputDecoration(
+                    'Enter new subcategory / chapter name...',
+                    focusColor: const Color(0xFF00B368),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    filled: true,
-                    fillColor: Colors.white,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF00B368), width: 1.5),
-                    ),
                   ),
                   style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
                   onSubmitted: (_) => _addSubcategory(),

@@ -353,28 +353,15 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
             controller: _rawInputController,
             maxLines: 8,
             style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
-            decoration: InputDecoration(
-              hintText: _selectedFormat == 'Excel'
+            decoration: AppModalDialog.inputDecoration(
+              _selectedFormat == 'Excel'
                   ? 'Paste Excel spreadsheet rows here (columns: question_text, subject, difficulty, option_a, option_b, option_c, option_d, correct_answer, explanation)'
                   : (_selectedFormat == 'CSV'
                       ? 'Paste CSV content here with header: question_text,subject,difficulty,option_a,option_b,option_c,option_d,correct_answer,explanation'
                       : 'Paste JSON array of questions here...'),
               hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-              filled: true,
-              fillColor: Colors.white,
+              focusColor: const Color(0xFFEA580C),
               contentPadding: const EdgeInsets.all(12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFEA580C), width: 1.5),
-              ),
             ),
           ),
           const SizedBox(height: 12),

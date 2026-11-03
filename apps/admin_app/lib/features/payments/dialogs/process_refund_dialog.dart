@@ -220,23 +220,11 @@ class _ProcessRefundDialogState extends State<ProcessRefundDialog> {
               controller: _amountController,
               enabled: !_isFullRefund,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
+              decoration: AppModalDialog.inputDecoration(
+                '',
                 prefixText: '₹ ',
-                filled: true,
                 fillColor: _isFullRefund ? const Color(0xFFF1F5F9) : Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                ),
+                focusColor: AppColors.primary,
               ),
               validator: (val) {
                 if (val == null || val.trim().isEmpty) return 'Enter refund amount';
@@ -264,21 +252,10 @@ class _ProcessRefundDialogState extends State<ProcessRefundDialog> {
               const SizedBox(height: 10),
               TextFormField(
                 controller: _reasonController,
-                decoration: InputDecoration(
+                decoration: AppModalDialog.inputDecoration(
+                  '',
                   labelText: 'Specify Reason',
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                  ),
+                  focusColor: AppColors.primary,
                 ),
                 validator: (val) => val == null || val.trim().isEmpty ? 'Please specify reason' : null,
               ),

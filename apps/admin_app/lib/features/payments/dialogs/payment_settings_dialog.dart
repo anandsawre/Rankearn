@@ -121,22 +121,10 @@ class _PaymentSettingsDialogState extends State<PaymentSettingsDialog> {
           const SizedBox(height: 4),
           TextField(
             controller: _razorpayKeyController,
-            decoration: InputDecoration(
-              hintText: 'rzp_live_...',
-              hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+            decoration: AppModalDialog.inputDecoration(
+              'rzp_live_...',
+              focusColor: AppColors.primary,
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-              ),
             ),
             style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
           ),
@@ -147,22 +135,10 @@ class _PaymentSettingsDialogState extends State<PaymentSettingsDialog> {
           const SizedBox(height: 4),
           TextField(
             controller: _upiVpaController,
-            decoration: InputDecoration(
-              hintText: 'merchant@bank',
-              hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+            decoration: AppModalDialog.inputDecoration(
+              'merchant@bank',
+              focusColor: AppColors.primary,
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-              ),
             ),
             style: const TextStyle(fontSize: 12),
           ),

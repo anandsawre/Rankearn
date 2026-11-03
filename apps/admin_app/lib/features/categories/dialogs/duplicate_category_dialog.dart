@@ -130,21 +130,6 @@ class _DuplicateCategoryDialogState extends State<DuplicateCategoryDialog> {
     );
   }
 
-  InputDecoration _inputDec(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      filled: true,
-      fillColor: Colors.white,
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE11D48), width: 1.5),
-      ),
-    );
-  }
+  InputDecoration _inputDec(String hint) =>
+      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFFE11D48));
 }
