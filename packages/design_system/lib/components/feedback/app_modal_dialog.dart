@@ -169,53 +169,44 @@ class AppModalDialog extends StatelessWidget {
     );
   }
 
-  /// Helper to detect legacy blue gradients and map them to standard orange theme
-  static bool _isLegacyBlueGradient(List<Color>? colors) {
-    if (colors == null || colors.isEmpty) return true;
+  /// Checks whether a dialog header gradient is explicitly destructive (danger/delete)
+  static bool _isDestructiveGradient(List<Color>? colors) {
+    if (colors == null || colors.isEmpty) return false;
     final c0 = colors[0].toARGB32();
-    if (colors.length >= 2) {
-      final c1 = colors[1].toARGB32();
-      if ((c0 == 0xFF5636F5 && c1 == 0xFF2587F8) ||
-          (c0 == 0xFF0084FF && c1 == 0xFF00B4D8) ||
-          (c0 == 0xFF5636F5 && c1 == 0xFF7C3AED) ||
-          (c0 == 0xFF0284C7 && c1 == 0xFF0EA5E9) ||
-          (c0 == 0xFF2587F8 && c1 == 0xFF0D9488) ||
-          (c0 == 0xFF1D4ED8 && c1 == 0xFF3B82F6)) {
-        return true;
-      }
-    }
-    return c0 == 0xFF5636F5 || c0 == 0xFF0084FF || c0 == 0xFF2587F8;
+    return c0 == 0xFFDC2626 || c0 == 0xFFEF4444 || c0 == 0xFFE11D48;
   }
 
-  /// Automatically migrates legacy blue action buttons to the new orange theme
+  /// Checks whether a button color is explicitly destructive (danger/delete)
+  static bool _isDestructiveButton(Color bg) {
+    final argb = bg.toARGB32();
+    return argb == 0xFFDC2626 || argb == 0xFFEF4444 || argb == 0xFFE11D48;
+  }
+
+  /// Automatically standardizes action buttons to the unified orange theme
   static List<Widget>? _processActions(List<Widget>? rawActions) {
     if (rawActions == null) return null;
     return rawActions.map((widget) {
       if (widget is ElevatedButton) {
         final bg = widget.style?.backgroundColor?.resolve({WidgetState.selected}) ??
             widget.style?.backgroundColor?.resolve({});
-        if (bg != null) {
-          final argb = bg.toARGB32();
-          if (argb == 0xFF5636F5 ||
-              argb == 0xFF0084FF ||
-              argb == 0xFF2587F8 ||
-              argb == 0xFF1D4ED8) {
-            return ElevatedButton(
-              key: widget.key,
-              onPressed: widget.onPressed,
-              onLongPress: widget.onLongPress,
-              onHover: widget.onHover,
-              onFocusChange: widget.onFocusChange,
-              clipBehavior: widget.clipBehavior,
-              focusNode: widget.focusNode,
-              autofocus: widget.autofocus,
-              style: (widget.style ?? ElevatedButton.styleFrom()).copyWith(
-                backgroundColor: const WidgetStatePropertyAll(defaultPrimaryColor),
-              ),
-              child: widget.child,
-            );
-          }
+        if (bg != null && _isDestructiveButton(bg)) {
+          return widget; // Preserve red destructive button
         }
+        return ElevatedButton(
+          key: widget.key,
+          onPressed: widget.onPressed,
+          onLongPress: widget.onLongPress,
+          onHover: widget.onHover,
+          onFocusChange: widget.onFocusChange,
+          clipBehavior: widget.clipBehavior,
+          focusNode: widget.focusNode,
+          autofocus: widget.autofocus,
+          style: (widget.style ?? ElevatedButton.styleFrom()).copyWith(
+            backgroundColor: const WidgetStatePropertyAll(defaultPrimaryColor),
+            foregroundColor: const WidgetStatePropertyAll(Colors.white),
+          ),
+          child: widget.child,
+        );
       }
       return widget;
     }).toList();
@@ -231,7 +222,8 @@ class AppModalDialog extends StatelessWidget {
 
     final effectiveActions = _processActions(actions);
 
-    final effectiveGradientColors = (gradientColors == null || _isLegacyBlueGradient(gradientColors))
+    // Standardize all non-destructive dialogs to the unified orange gradient
+    final effectiveGradientColors = (gradientColors == null || !_isDestructiveGradient(gradientColors))
         ? defaultGradientColors
         : gradientColors!;
 
