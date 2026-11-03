@@ -136,6 +136,7 @@ class AppModalDialog extends StatelessWidget {
     BorderRadius? borderRadius,
     EdgeInsetsGeometry? contentPadding,
     bool? isDense,
+    BoxConstraints? constraints,
   }) {
     final activeFocus = focusColor ?? defaultPrimaryColor;
     final effectiveRadius = borderRadius ?? AppRadii.borderSm;
@@ -152,6 +153,7 @@ class AppModalDialog extends StatelessWidget {
       fillColor: fillColor ?? Colors.white,
       isDense: isDense ?? true,
       contentPadding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      constraints: constraints ?? const BoxConstraints(minHeight: 40.0),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(

@@ -57,6 +57,7 @@ class AppDropdown<T> extends StatefulWidget {
   final double? menuMaxHeight;
   final int elevation;
   final bool enabled;
+  final double height;
   final Color? selectedItemColor;
   final Color? selectedItemBackgroundColor;
 
@@ -80,6 +81,7 @@ class AppDropdown<T> extends StatefulWidget {
     this.isExpanded = true,
     this.isDense = false,
     this.contentPadding,
+    this.height = 40.0,
     this.fillColor,
     this.borderColor,
     this.focusedBorderColor,
@@ -116,6 +118,7 @@ class AppDropdown<T> extends StatefulWidget {
     bool isExpanded = true,
     bool isDense = false,
     EdgeInsetsGeometry? contentPadding,
+    double height = 40.0,
     Color? fillColor,
     Color? borderColor,
     Color? focusedBorderColor,
@@ -150,6 +153,7 @@ class AppDropdown<T> extends StatefulWidget {
       isExpanded: isExpanded,
       isDense: isDense,
       contentPadding: contentPadding,
+      height: height,
       fillColor: fillColor,
       borderColor: borderColor,
       focusedBorderColor: focusedBorderColor,
@@ -184,6 +188,7 @@ class AppDropdown<T> extends StatefulWidget {
     bool isExpanded = true,
     bool isDense = false,
     EdgeInsetsGeometry? contentPadding,
+    double height = 40.0,
     Color? fillColor,
     Color? borderColor,
     Color? focusedBorderColor,
@@ -216,6 +221,7 @@ class AppDropdown<T> extends StatefulWidget {
       isExpanded: isExpanded,
       isDense: isDense,
       contentPadding: contentPadding,
+      height: height,
       fillColor: fillColor,
       borderColor: borderColor,
       focusedBorderColor: focusedBorderColor,
@@ -470,9 +476,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
 
     final effectiveContentPadding =
         widget.contentPadding ??
-        (widget.isDense
-            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8.5)
-            : const EdgeInsets.symmetric(horizontal: 14, vertical: 12));
+        const EdgeInsets.symmetric(horizontal: 14, vertical: 0);
 
     // Find current selected label
     String? selectedLabel;
@@ -528,6 +532,8 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
               onTap: widget.enabled ? _toggleDropdown : null,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
+                height: widget.height,
+                alignment: Alignment.centerLeft,
                 padding: effectiveContentPadding,
                 decoration: BoxDecoration(
                   color: effectiveFillColor,

@@ -749,7 +749,6 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
               selectedItemBackgroundColor: const Color(0xFFFFFBEB),
               borderRadius: BorderRadius.circular(8),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
               items: [
                 AppDropdownItem<bool>(
                   value: true,
