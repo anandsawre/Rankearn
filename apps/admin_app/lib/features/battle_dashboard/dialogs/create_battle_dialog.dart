@@ -140,7 +140,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                     const Text('Battle Title', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 48,
+                      height: 40,
                       child: TextField(
                         controller: _titleController,
                         textAlignVertical: TextAlignVertical.center,
@@ -159,9 +159,9 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                     const Text('Subject', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 48,
+                      height: 40,
                       child: AppDropdown<String>(
-                        height: 48,
+                        height: 40,
                         value: _subject,
                         items: const [
                           AppDropdownItem(value: 'General Science', label: 'General Science'),
@@ -193,9 +193,9 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                     const Text('Questions', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 48,
+                      height: 40,
                       child: AppDropdown<int>(
-                        height: 48,
+                        height: 40,
                         value: _questionsCount,
                         items: const [
                           AppDropdownItem(value: 5, label: '5 Questions'),
@@ -219,9 +219,9 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                     const Text('Time / Question', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 48,
+                      height: 40,
                       child: AppDropdown<int>(
-                        height: 48,
+                        height: 40,
                         value: _timePerQuestion,
                         items: const [
                           AppDropdownItem(value: 10, label: '10 Seconds'),
@@ -245,7 +245,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                     const Text('Max Players', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 48,
+                      height: 40,
                       child: TextFormField(
                         enabled: _type != BattleType.oneVOne,
                         initialValue: _maxPlayers.toString(),
@@ -286,7 +286,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                       const Text('Entry Fee (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                       const SizedBox(height: 6),
                       SizedBox(
-                        height: 48,
+                        height: 40,
                         child: TextFormField(
                           initialValue: _entryFee.toString(),
                           keyboardType: TextInputType.number,
@@ -309,7 +309,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                       const Text('Prize Pool (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                       const SizedBox(height: 6),
                       SizedBox(
-                        height: 48,
+                        height: 40,
                         child: TextFormField(
                           key: ValueKey(_reward),
                           initialValue: _reward.toString(),
