@@ -85,7 +85,7 @@ class _OverviewTabState extends State<OverviewTab> {
     return SingleChildScrollView(
       padding: AppSpacing.pagePadding(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // ROW 1: Welcome Banner (Left) + Quick Actions (Right)
           LayoutBuilder(
@@ -107,6 +107,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 );
               } else {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildWelcomeBanner(),
                     const SizedBox(height: 16),
@@ -138,6 +139,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 );
               } else if (constraints.maxWidth > 768) {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,6 +155,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 );
               } else {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildQuizAttemptsOverviewCard(),
                     const SizedBox(height: 16),
@@ -184,6 +187,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 );
               } else if (constraints.maxWidth > 768) {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,6 +210,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 );
               } else {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildRecentQuizzesCard(),
                     const SizedBox(height: 16),
@@ -231,8 +236,10 @@ class _OverviewTabState extends State<OverviewTab> {
   Widget _buildWelcomeBanner() {
     return Builder(
       builder: (context) {
-        final isSmall = MediaQuery.sizeOf(context).width < 1100;
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final isSmall = screenWidth < 1100;
         return Container(
+          width: double.infinity,
           height: 124,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -259,7 +266,12 @@ class _OverviewTabState extends State<OverviewTab> {
             children: [
               // Content Left
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: EdgeInsets.only(
+                  left: 20,
+                  top: 12,
+                  bottom: 12,
+                  right: isSmall ? 20 : 140,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -289,19 +301,16 @@ class _OverviewTabState extends State<OverviewTab> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    SizedBox(
-                      width: isSmall ? 210 : 320,
-                      child: const Text(
-                        'Manage quizzes, users, content and track platform performance all in one place.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF64748B),
-                          height: 1.3,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    const Text(
+                      'Manage quizzes, users, content and track platform performance all in one place.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF64748B),
+                        height: 1.3,
+                        fontWeight: FontWeight.w400,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
