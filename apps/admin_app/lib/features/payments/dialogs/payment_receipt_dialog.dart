@@ -13,7 +13,7 @@ class PaymentReceiptDialog extends StatelessWidget {
       title: 'Payment Receipt',
       subtitle: payment.transactionId,
       iconData: Icons.receipt_rounded,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 520,
       actions: [
         TextButton(
@@ -41,7 +41,7 @@ class PaymentReceiptDialog extends StatelessWidget {
           icon: const Icon(Icons.print_rounded, size: 16),
           label: const Text('Print Receipt'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -63,7 +63,7 @@ class PaymentReceiptDialog extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF5636F5),
+                      color: const Color(0xFFFF9500),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.center,
@@ -178,7 +178,7 @@ class PaymentReceiptDialog extends StatelessWidget {
               const Text('Total Amount Paid', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF101A3A))),
               Text(
                 '₹${payment.amount.toInt()}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF5636F5)),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFFF9500)),
               ),
             ],
           ),

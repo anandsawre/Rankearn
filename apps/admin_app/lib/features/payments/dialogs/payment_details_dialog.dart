@@ -20,7 +20,7 @@ class PaymentDetailsDialog extends StatelessWidget {
       title: 'Transaction Details',
       subtitle: payment.transactionId,
       iconData: Icons.receipt_long_rounded,
-      gradientColors: const [Color(0xFF2563EB), Color(0xFF3B82F6)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 560,
       actions: [
         OutlinedButton.icon(
@@ -28,7 +28,7 @@ class PaymentDetailsDialog extends StatelessWidget {
           icon: const Icon(Icons.receipt_outlined, size: 16),
           label: const Text('View Receipt'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF5636F5),
+            foregroundColor: const Color(0xFFFF9500),
             side: const BorderSide(color: Color(0xFFCBD5E1)),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

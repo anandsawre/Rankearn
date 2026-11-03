@@ -179,7 +179,7 @@ class _ProcessRefundDialogState extends State<ProcessRefundDialog> {
                               }
                             });
                           },
-                          activeColor: const Color(0xFF5636F5),
+                          activeColor: const Color(0xFFFF9500),
                         ),
                         const Text('Full Refund', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                       ],
@@ -199,7 +199,7 @@ class _ProcessRefundDialogState extends State<ProcessRefundDialog> {
                           groupValue: _isFullRefund,
                           // ignore: deprecated_member_use
                           onChanged: (val) => setState(() => _isFullRefund = false),
-                          activeColor: const Color(0xFF5636F5),
+                          activeColor: const Color(0xFFFF9500),
                         ),
                         const Text('Partial Refund', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                       ],

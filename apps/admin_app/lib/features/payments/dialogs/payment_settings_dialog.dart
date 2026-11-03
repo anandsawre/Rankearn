@@ -63,7 +63,7 @@ class _PaymentSettingsDialogState extends State<PaymentSettingsDialog> {
             );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -152,7 +152,7 @@ class _PaymentSettingsDialogState extends State<PaymentSettingsDialog> {
             dense: true,
             contentPadding: EdgeInsets.zero,
             // ignore: deprecated_member_use
-            activeColor: const Color(0xFF5636F5),
+            activeColor: const Color(0xFFFF9500),
           ),
           SwitchListTile(
             value: _enableUpiDirect,
@@ -161,7 +161,7 @@ class _PaymentSettingsDialogState extends State<PaymentSettingsDialog> {
             dense: true,
             contentPadding: EdgeInsets.zero,
             // ignore: deprecated_member_use
-            activeColor: const Color(0xFF5636F5),
+            activeColor: const Color(0xFFFF9500),
           ),
           SwitchListTile(
             value: _autoRefundCancelled,
@@ -170,7 +170,7 @@ class _PaymentSettingsDialogState extends State<PaymentSettingsDialog> {
             dense: true,
             contentPadding: EdgeInsets.zero,
             // ignore: deprecated_member_use
-            activeColor: const Color(0xFF5636F5),
+            activeColor: const Color(0xFFFF9500),
           ),
         ],
       ),
