@@ -10,19 +10,19 @@ class PayoutReportsDialog extends StatelessWidget {
       title: 'Payout & Settlement Reports',
       subtitle: 'Financial reconciliation and automated gateway disbursements',
       iconData: Icons.bar_chart_rounded,
-      gradientColors: const [Color(0xFFFF9F0A), Color(0xFFFBBF24)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 640,
       actions: [
-        TextButton(
+        ElevatedButton(
           onPressed: () => Navigator.of(context).pop(),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-            ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFF9500),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
           ),
-          child: const Text('Close', style: TextStyle(color: AppColors.textSecondary)),
+          child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
         ),
       ],
       child: Column(

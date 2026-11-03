@@ -37,7 +37,7 @@ class _PaymentSettingsDialogState extends State<PaymentSettingsDialog> {
       title: 'Payment Settings',
       subtitle: 'Configure payment gateways, webhooks & transaction behavior',
       iconData: Icons.settings_rounded,
-      gradientColors: const [Color(0xFFF43F5E), Color(0xFFFB7185)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 580,
       actions: [
         TextButton(

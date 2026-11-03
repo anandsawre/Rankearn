@@ -413,7 +413,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
       builder: (ctx) => AppModalDialog(
         title: 'Approve Top-up & Credit Coins',
         iconData: Icons.check_circle_outline_rounded,
-        gradientColors: const [Color(0xFF00B96B), Color(0xFF10B981)],
+        gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
         maxWidth: 480,
         actions: [
           TextButton(
@@ -430,7 +430,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
           const SizedBox(width: 8),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00B96B),
+              backgroundColor: const Color(0xFFFF9500),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -572,7 +572,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
       builder: (ctx) => AppModalDialog(
         title: 'Confirm Payout Dispatch',
         iconData: Icons.send_rounded,
-        gradientColors: const [Color(0xFF00B96B), Color(0xFF10B981)],
+        gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
         maxWidth: 480,
         actions: [
           TextButton(
@@ -589,7 +589,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
           const SizedBox(width: 8),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00B96B),
+              backgroundColor: const Color(0xFFFF9500),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
