@@ -76,6 +76,49 @@ class AppModalDialog extends StatelessWidget {
     );
   }
 
+  /// Default header gradient colors (vibrant orange gradient)
+  static const List<Color> defaultGradientColors = [
+    Color(0xFFFF9500),
+    Color(0xFFF59E0B),
+  ];
+
+  /// Default primary action button color matching the orange header
+  static const Color defaultPrimaryColor = Color(0xFFFF9500);
+
+  /// Standard primary action button style matching the dialog's orange theme
+  static ButtonStyle primaryButtonStyle({Color? backgroundColor}) {
+    return ElevatedButton.styleFrom(
+      backgroundColor: backgroundColor ?? defaultPrimaryColor,
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: AppRadii.borderSm),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      elevation: 0,
+    );
+  }
+
+  /// Convenience factory for a dialog primary action button
+  static Widget primaryButton({
+    required VoidCallback? onPressed,
+    required Widget child,
+    Color? backgroundColor,
+    Widget? icon,
+  }) {
+    final style = primaryButtonStyle(backgroundColor: backgroundColor);
+    if (icon != null) {
+      return ElevatedButton.icon(
+        onPressed: onPressed,
+        style: style,
+        icon: icon,
+        label: child,
+      );
+    }
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: style,
+      child: child,
+    );
+  }
+
   /// Standard input decoration matching Rankearn design system
   static InputDecoration inputDecoration(
     String hint, {
@@ -94,7 +137,7 @@ class AppModalDialog extends StatelessWidget {
     EdgeInsetsGeometry? contentPadding,
     bool? isDense,
   }) {
-    final activeFocus = focusColor ?? AppColors.brandPurple;
+    final activeFocus = focusColor ?? defaultPrimaryColor;
     final effectiveRadius = borderRadius ?? AppRadii.borderSm;
     final effectiveBorderColor = borderColor ?? const Color(0xFFCBD5E1);
     return InputDecoration(
@@ -136,11 +179,7 @@ class AppModalDialog extends StatelessWidget {
 
     final resolvedGradient = headerGradient ??
         LinearGradient(
-          colors: gradientColors ??
-              const [
-                Color(0xFF5636F5),
-                Color(0xFF2587F8),
-              ],
+          colors: gradientColors ?? defaultGradientColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
@@ -290,54 +329,61 @@ class AppModalDialog extends StatelessWidget {
             // Footer Section
             if ((actions != null && actions!.isNotEmpty) || footerLeft != null) ...[
               const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 16 : 22,
-                  vertical: isMobile ? 12 : 14,
-                ),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
+              Theme(
+                data: Theme.of(context).copyWith(
+                  elevatedButtonTheme: ElevatedButtonThemeData(
+                    style: primaryButtonStyle(),
                   ),
                 ),
-                child: isMobile
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (footerLeft != null) ...[
-                            footerLeft!,
-                            const SizedBox(height: 10),
-                          ],
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            alignment: WrapAlignment.end,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: actions ?? [],
-                          ),
-                        ],
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          if (footerLeft != null)
-                            Expanded(child: footerLeft!)
-                          else
-                            const SizedBox.shrink(),
-                          const SizedBox(width: 12),
-                          Flexible(
-                            child: Wrap(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 22,
+                    vertical: isMobile ? 12 : 14,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: isMobile
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (footerLeft != null) ...[
+                              footerLeft!,
+                              const SizedBox(height: 10),
+                            ],
+                            Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              crossAxisAlignment: WrapCrossAlignment.center,
                               alignment: WrapAlignment.end,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: actions ?? [],
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (footerLeft != null)
+                              Expanded(child: footerLeft!)
+                            else
+                              const SizedBox.shrink(),
+                            const SizedBox(width: 12),
+                            Flexible(
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                alignment: WrapAlignment.end,
+                                children: actions ?? [],
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
               ),
             ],
           ],
