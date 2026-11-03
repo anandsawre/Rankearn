@@ -491,6 +491,110 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
       }
     }
 
+    final dropdownField = CompositedTransformTarget(
+      key: _fieldKey,
+      link: _layerLink,
+      child: MouseRegion(
+        cursor: widget.enabled
+            ? SystemMouseCursors.click
+            : SystemMouseCursors.basic,
+        onEnter: (_) {
+          if (widget.enabled && !_isHovered) {
+            setState(() => _isHovered = true);
+          }
+        },
+        onExit: (_) {
+          if (widget.enabled && _isHovered) {
+            setState(() => _isHovered = false);
+          }
+        },
+        child: GestureDetector(
+          onTap: widget.enabled ? _toggleDropdown : null,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            height: widget.height,
+            constraints: BoxConstraints.tightFor(height: widget.height),
+            alignment: Alignment.centerLeft,
+            padding: effectiveContentPadding,
+            decoration: BoxDecoration(
+              color: effectiveFillColor,
+              borderRadius: effectiveBorderRadius,
+              border: Border.all(
+                color: _isOpen
+                    ? (widget.focusedBorderColor ?? AppColors.brandPrimary)
+                    : (widget.errorText != null)
+                    ? (widget.errorBorderColor ?? AppColors.errorRose)
+                    : effectiveBorderColor,
+                width: _isOpen ? 1.5 : 1.0,
+              ),
+              boxShadow: _isOpen
+                  ? [
+                      BoxShadow(
+                        color:
+                            (widget.focusedBorderColor ??
+                                    AppColors.brandPrimary)
+                                .withValues(alpha: 0.15),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              children: [
+                if (widget.prefixIcon != null) ...[
+                  widget.prefixIcon!,
+                  const SizedBox(width: 8),
+                ],
+                if (selectedLeading != null) ...[
+                  selectedLeading,
+                  const SizedBox(width: 8),
+                ] else if (selectedIcon != null) ...[
+                  Icon(
+                    selectedIcon,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: selectedLabel != null
+                      ? Text(
+                          selectedLabel,
+                          style: effectiveTextStyle,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      : widget.hintWidget ??
+                            Text(
+                              widget.hint ?? '',
+                              style: effectiveHintStyle,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                ),
+                const SizedBox(width: 6),
+                RotationTransition(
+                  turns: _chevronAnimation,
+                  child:
+                      widget.suffixIcon ??
+                      const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.textSecondary,
+                        size: 18,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (widget.labelWidget == null &&
+        widget.label == null &&
+        widget.errorText == null) {
+      return dropdownField;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -511,102 +615,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
           ),
           const SizedBox(height: 4),
         ],
-        CompositedTransformTarget(
-          key: _fieldKey,
-          link: _layerLink,
-          child: MouseRegion(
-            cursor: widget.enabled
-                ? SystemMouseCursors.click
-                : SystemMouseCursors.basic,
-            onEnter: (_) {
-              if (widget.enabled && !_isHovered) {
-                setState(() => _isHovered = true);
-              }
-            },
-            onExit: (_) {
-              if (widget.enabled && _isHovered) {
-                setState(() => _isHovered = false);
-              }
-            },
-            child: GestureDetector(
-              onTap: widget.enabled ? _toggleDropdown : null,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                height: widget.height,
-                alignment: Alignment.centerLeft,
-                padding: effectiveContentPadding,
-                decoration: BoxDecoration(
-                  color: effectiveFillColor,
-                  borderRadius: effectiveBorderRadius,
-                  border: Border.all(
-                    color: _isOpen
-                        ? (widget.focusedBorderColor ?? AppColors.brandPrimary)
-                        : (widget.errorText != null)
-                        ? (widget.errorBorderColor ?? AppColors.errorRose)
-                        : effectiveBorderColor,
-                    width: _isOpen ? 1.5 : 1.0,
-                  ),
-                  boxShadow: _isOpen
-                      ? [
-                          BoxShadow(
-                            color:
-                                (widget.focusedBorderColor ??
-                                        AppColors.brandPrimary)
-                                    .withValues(alpha: 0.15),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  children: [
-                    if (widget.prefixIcon != null) ...[
-                      widget.prefixIcon!,
-                      const SizedBox(width: 8),
-                    ],
-                    if (selectedLeading != null) ...[
-                      selectedLeading,
-                      const SizedBox(width: 8),
-                    ] else if (selectedIcon != null) ...[
-                      Icon(
-                        selectedIcon,
-                        size: 18,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: selectedLabel != null
-                          ? Text(
-                              selectedLabel,
-                              style: effectiveTextStyle,
-                              overflow: TextOverflow.ellipsis,
-                            )
-                          : widget.hintWidget ??
-                                Text(
-                                  widget.hint ?? '',
-                                  style: effectiveHintStyle,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                    ),
-                    const SizedBox(width: 6),
-                    RotationTransition(
-                      turns: _chevronAnimation,
-                      child:
-                          widget.suffixIcon ??
-                          const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: AppColors.textSecondary,
-                            size: 20,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        dropdownField,
         if (widget.errorText != null) ...[
           const SizedBox(height: 4),
           Text(

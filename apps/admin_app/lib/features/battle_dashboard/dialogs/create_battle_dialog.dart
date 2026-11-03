@@ -131,6 +131,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
 
           // Title & Subject Row
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -157,18 +158,22 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                   children: [
                     const Text('Subject', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
-                    AppDropdown<String>(
-                      value: _subject,
-                      items: const [
-                        AppDropdownItem(value: 'General Science', label: 'General Science'),
-                        AppDropdownItem(value: 'Reasoning', label: 'Reasoning'),
-                        AppDropdownItem(value: 'Mathematics', label: 'Mathematics'),
-                        AppDropdownItem(value: 'General Awareness', label: 'General Awareness'),
-                        AppDropdownItem(value: 'Mixed (All)', label: 'Mixed (All)'),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) setState(() => _subject = v);
-                      },
+                    SizedBox(
+                      height: 40,
+                      child: AppDropdown<String>(
+                        height: 40,
+                        value: _subject,
+                        items: const [
+                          AppDropdownItem(value: 'General Science', label: 'General Science'),
+                          AppDropdownItem(value: 'Reasoning', label: 'Reasoning'),
+                          AppDropdownItem(value: 'Mathematics', label: 'Mathematics'),
+                          AppDropdownItem(value: 'General Awareness', label: 'General Awareness'),
+                          AppDropdownItem(value: 'Mixed (All)', label: 'Mixed (All)'),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) setState(() => _subject = v);
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -179,6 +184,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
 
           // Questions & Duration Row
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -186,17 +192,21 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                   children: [
                     const Text('Questions', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
-                    AppDropdown<int>(
-                      value: _questionsCount,
-                      items: const [
-                        AppDropdownItem(value: 5, label: '5 Questions'),
-                        AppDropdownItem(value: 10, label: '10 Questions'),
-                        AppDropdownItem(value: 15, label: '15 Questions'),
-                        AppDropdownItem(value: 20, label: '20 Questions'),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) setState(() => _questionsCount = v);
-                      },
+                    SizedBox(
+                      height: 40,
+                      child: AppDropdown<int>(
+                        height: 40,
+                        value: _questionsCount,
+                        items: const [
+                          AppDropdownItem(value: 5, label: '5 Questions'),
+                          AppDropdownItem(value: 10, label: '10 Questions'),
+                          AppDropdownItem(value: 15, label: '15 Questions'),
+                          AppDropdownItem(value: 20, label: '20 Questions'),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) setState(() => _questionsCount = v);
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -208,17 +218,21 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                   children: [
                     const Text('Time / Question', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
-                    AppDropdown<int>(
-                      value: _timePerQuestion,
-                      items: const [
-                        AppDropdownItem(value: 10, label: '10 Seconds'),
-                        AppDropdownItem(value: 15, label: '15 Seconds'),
-                        AppDropdownItem(value: 20, label: '20 Seconds'),
-                        AppDropdownItem(value: 30, label: '30 Seconds'),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) setState(() => _timePerQuestion = v);
-                      },
+                    SizedBox(
+                      height: 40,
+                      child: AppDropdown<int>(
+                        height: 40,
+                        value: _timePerQuestion,
+                        items: const [
+                          AppDropdownItem(value: 10, label: '10 Seconds'),
+                          AppDropdownItem(value: 15, label: '15 Seconds'),
+                          AppDropdownItem(value: 20, label: '20 Seconds'),
+                          AppDropdownItem(value: 30, label: '30 Seconds'),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) setState(() => _timePerQuestion = v);
+                        },
+                      ),
                     ),
                   ],
                 ),

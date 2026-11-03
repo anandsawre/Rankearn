@@ -171,18 +171,22 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                   children: [
                     const Text('Subject', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
-                    AppDropdown<String>(
-                      value: _subject,
-                      items: const [
-                        AppDropdownItem(value: 'Mathematics', label: 'Mathematics'),
-                        AppDropdownItem(value: 'General Science', label: 'General Science'),
-                        AppDropdownItem(value: 'Reasoning', label: 'Reasoning'),
-                        AppDropdownItem(value: 'General Awareness', label: 'General Awareness'),
-                        AppDropdownItem(value: 'Mixed (All)', label: 'Mixed (All)'),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) setState(() => _subject = v);
-                      },
+                    SizedBox(
+                      height: 40,
+                      child: AppDropdown<String>(
+                        height: 40,
+                        value: _subject,
+                        items: const [
+                          AppDropdownItem(value: 'Mathematics', label: 'Mathematics'),
+                          AppDropdownItem(value: 'General Science', label: 'General Science'),
+                          AppDropdownItem(value: 'Reasoning', label: 'Reasoning'),
+                          AppDropdownItem(value: 'General Awareness', label: 'General Awareness'),
+                          AppDropdownItem(value: 'Mixed (All)', label: 'Mixed (All)'),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) setState(() => _subject = v);
+                        },
+                      ),
                     ),
                   ],
                 ),
