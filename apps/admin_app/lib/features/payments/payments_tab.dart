@@ -825,7 +825,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: AppSpacing.pagePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

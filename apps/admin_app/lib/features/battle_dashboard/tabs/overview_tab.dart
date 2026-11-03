@@ -62,7 +62,7 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
         final isMid = constraints.maxWidth > 980;
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: AppSpacing.pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

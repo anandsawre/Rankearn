@@ -632,7 +632,7 @@ class _TournamentsTabState extends State<TournamentsTab> {
     final recentActivities = _generateRecentActivities();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: AppSpacing.pagePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

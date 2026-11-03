@@ -48,7 +48,7 @@ class _SettingsTabState extends State<SettingsTab> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: AppSpacing.pagePadding(context),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 880),
         child: Column(

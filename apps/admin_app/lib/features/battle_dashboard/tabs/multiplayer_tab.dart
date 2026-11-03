@@ -58,7 +58,7 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
     }).toList();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: AppSpacing.pagePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

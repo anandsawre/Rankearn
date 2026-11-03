@@ -36,7 +36,7 @@ class _BattleDashboardTabState extends State<BattleDashboardTab> {
       child: Column(
         children: [
           // 1. HORIZONTAL SUB-NAVIGATION BAR (Strictly following Centralized Design System)
-          _buildHorizontalNavigationBar(),
+          _buildHorizontalNavigationBar(context),
 
           // 2. MAIN BATTLE CONTENT AREA (FULL DESKTOP WIDTH)
           Expanded(
@@ -68,10 +68,11 @@ class _BattleDashboardTabState extends State<BattleDashboardTab> {
   // ==========================================
   // 1. HORIZONTAL NAVIGATION BAR (7 SUB-TABS)
   // ==========================================
-  Widget _buildHorizontalNavigationBar() {
+  Widget _buildHorizontalNavigationBar(BuildContext context) {
+    final hp = AppSpacing.horizontalPagePadding(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+      padding: EdgeInsets.fromLTRB(hp, 16, hp, 12),
       child: Row(
         children: [
           // Horizontal Sub-Tab Bar

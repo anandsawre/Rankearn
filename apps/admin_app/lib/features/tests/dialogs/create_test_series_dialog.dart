@@ -523,14 +523,16 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
             // ==========================================
             // SECTION 4: MONETIZATION & CONTEST CONFIG
             // ==========================================
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F3FF),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFDDD6FE)),
-              ),
-              child: Column(
+            Material(
+              color: const Color(0xFFF5F3FF),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFDDD6FE)),
+                ),
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   CheckboxListTile(
@@ -591,10 +593,12 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+        ],
       ),
-    );
+    ),
+  );
   }
 
   static const _labelStyle = TextStyle(

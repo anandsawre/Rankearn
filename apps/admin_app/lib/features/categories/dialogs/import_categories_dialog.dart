@@ -124,17 +124,16 @@ class _ImportCategoriesDialogState extends State<ImportCategoriesDialog> {
       gradientColors: const [Color(0xFF0284C7), Color(0xFF0EA5E9)],
       maxWidth: 620,
       maxHeight: 700,
-      actions: [
-        OutlinedButton(
-          onPressed: _validate,
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFF0284C7)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          ),
-          child: const Text('Validate & Parse Data', style: TextStyle(color: Color(0xFF0284C7), fontWeight: FontWeight.w600, fontSize: 13)),
+      footerLeft: OutlinedButton(
+        onPressed: _validate,
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFF0284C7)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         ),
-        const Spacer(),
+        child: const Text('Validate & Parse Data', style: TextStyle(color: Color(0xFF0284C7), fontWeight: FontWeight.w600, fontSize: 13)),
+      ),
+      actions: [
         OutlinedButton(
           onPressed: () => Navigator.of(context).pop(),
           style: OutlinedButton.styleFrom(

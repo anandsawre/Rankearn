@@ -346,47 +346,51 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
       maxWidth: 760,
       maxHeight: 740,
       contentPadding: EdgeInsets.zero,
-      actions: [
-        OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      footerLeft: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            icon: Icon(
+              _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
+              size: 15,
+              color: const Color(0xFFFF9500),
+            ),
+            label: Text(
+              _showPreview ? 'Edit Form' : 'Live Preview',
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFFF9500)),
+            ),
+            onPressed: () => setState(() => _showPreview = !_showPreview),
           ),
-          icon: Icon(
-            _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
-            size: 15,
-            color: const Color(0xFFFF9500),
-          ),
-          label: Text(
-            _showPreview ? 'Edit Form' : 'Live Preview',
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFFF9500)),
-          ),
-          onPressed: () => setState(() => _showPreview = !_showPreview),
-        ),
-        const SizedBox(width: 6),
-        OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          icon: const Icon(
-            Icons.cloud_upload_outlined,
-            size: 15,
-            color: Color(0xFF0284C7),
-          ),
-          label: const Text(
-            'Import',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 6),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            icon: const Icon(
+              Icons.cloud_upload_outlined,
+              size: 15,
               color: Color(0xFF0284C7),
             ),
+            label: const Text(
+              'Import',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0284C7),
+              ),
+            ),
+            onPressed: _openImportDialog,
           ),
-          onPressed: _openImportDialog,
-        ),
-        const Spacer(),
+        ],
+      ),
+      actions: [
         OutlinedButton(
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),

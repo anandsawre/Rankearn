@@ -238,7 +238,7 @@ class _LuckyWheelTabState extends State<LuckyWheelTab> {
         final isDesktop = screenWidth >= 1050;
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: AppSpacing.pagePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

@@ -150,6 +150,8 @@ class _LineChartPainter extends CustomPainter {
     final chartWidth = size.width - leftMargin - rightMargin;
     final chartHeight = size.height - topMargin - bottomMargin;
 
+    if (chartWidth <= 10 || chartHeight <= 10) return;
+
     final yLabels = [2000, 1500, 1000, 500, 0];
     const maxY = 2000.0;
 
@@ -289,7 +291,10 @@ class _LineChartPainter extends CustomPainter {
       // Tooltip Card
       final tooltipWidth = 92.0;
       final tooltipHeight = 36.0;
-      final ttLeft = (hlPoint.dx - tooltipWidth / 2).clamp(leftMargin, size.width - rightMargin - tooltipWidth);
+      final maxTtLeft = (size.width - rightMargin - tooltipWidth < leftMargin)
+          ? leftMargin
+          : size.width - rightMargin - tooltipWidth;
+      final ttLeft = (hlPoint.dx - tooltipWidth / 2).clamp(leftMargin, maxTtLeft);
       final ttTop = (hlPoint.dy - tooltipHeight - 8).clamp(2.0, size.height);
 
       // Card shadow
@@ -416,6 +421,8 @@ class _BarChartPainter extends CustomPainter {
 
     final chartWidth = size.width - leftMargin - rightMargin;
     final chartHeight = size.height - topMargin - bottomMargin;
+
+    if (chartWidth <= 10 || chartHeight <= 10) return;
 
     final yLabels = [2000, 1500, 1000, 500, 0];
     const maxY = 2000.0;

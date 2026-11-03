@@ -76,7 +76,7 @@ class _FeedbackTabState extends State<FeedbackTab> {
     final fiveStarPct = totalCount > 0 ? (fiveStarCount / totalCount * 100).toStringAsFixed(1) : '0';
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: AppSpacing.pagePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

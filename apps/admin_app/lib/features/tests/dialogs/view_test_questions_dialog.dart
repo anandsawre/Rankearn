@@ -331,12 +331,11 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
       gradientColors: const [Color(0xFF1E1B4B), Color(0xFF4338CA)],
       maxWidth: 820,
       maxHeight: 740,
+      footerLeft: Text(
+        'Showing ${_filteredQuestions.length} of ${_questions.length} questions',
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
+      ),
       actions: [
-        Text(
-          'Showing ${_filteredQuestions.length} of ${_questions.length} questions',
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
-        ),
-        const Spacer(),
         OutlinedButton(
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

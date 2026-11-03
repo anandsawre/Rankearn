@@ -215,9 +215,12 @@ class AppModalDialog extends StatelessWidget {
   }
 
   /// Automatically standardizes action buttons to the unified orange theme
+  /// Safely filters out any [Spacer] or [Expanded] widgets that could crash inside [Wrap].
   static List<Widget>? _processActions(List<Widget>? rawActions) {
     if (rawActions == null) return null;
-    return rawActions.map((widget) {
+    return rawActions
+        .where((w) => w is! Spacer && w is! Expanded)
+        .map((widget) {
       if (widget is ElevatedButton) {
         final bg = widget.style?.backgroundColor?.resolve({WidgetState.selected}) ??
             widget.style?.backgroundColor?.resolve({});
@@ -252,7 +255,21 @@ class AppModalDialog extends StatelessWidget {
     final effectiveMaxWidth = isMobile ? math.max(300.0, media.size.width - 24) : maxWidth;
     final effectiveMaxHeight = maxHeight ?? (media.size.height * 0.88);
 
-    final effectiveActions = _processActions(actions);
+    // If actions contains a Spacer/Expanded and footerLeft is not provided, split left items to footerLeft
+    Widget? effectiveFooterLeft = footerLeft;
+    List<Widget>? processedActionInput = actions;
+    if (actions != null && actions!.any((w) => w is Spacer || w is Expanded)) {
+      final spacerIdx = actions!.indexWhere((w) => w is Spacer || w is Expanded);
+      if (effectiveFooterLeft == null && spacerIdx > 0) {
+        final leftList = actions!.sublist(0, spacerIdx);
+        effectiveFooterLeft = leftList.length == 1
+            ? leftList.first
+            : Row(mainAxisSize: MainAxisSize.min, children: leftList);
+      }
+      processedActionInput = actions!.sublist(spacerIdx + 1);
+    }
+
+    final effectiveActions = _processActions(processedActionInput);
 
     // Standardize all non-destructive dialogs to the unified orange gradient
     final effectiveGradientColors = (gradientColors == null || !_isDestructiveGradient(gradientColors))
@@ -409,7 +426,7 @@ class AppModalDialog extends StatelessWidget {
               ),
 
             // Footer Section
-            if ((actions != null && actions!.isNotEmpty) || footerLeft != null) ...[
+            if ((effectiveActions != null && effectiveActions.isNotEmpty) || effectiveFooterLeft != null) ...[
               const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
               Theme(
                 data: Theme.of(context).copyWith(
@@ -433,8 +450,8 @@ class AppModalDialog extends StatelessWidget {
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            if (footerLeft != null) ...[
-                              footerLeft!,
+                            if (effectiveFooterLeft != null) ...[
+                              effectiveFooterLeft,
                               const SizedBox(height: 10),
                             ],
                             Wrap(
@@ -449,8 +466,8 @@ class AppModalDialog extends StatelessWidget {
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            if (footerLeft != null)
-                              Expanded(child: footerLeft!)
+                            if (effectiveFooterLeft != null)
+                              Expanded(child: effectiveFooterLeft)
                             else
                               const SizedBox.shrink(),
                             const SizedBox(width: 12),

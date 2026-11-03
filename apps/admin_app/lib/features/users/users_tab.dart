@@ -380,7 +380,7 @@ class _UsersTabState extends State<UsersTab> {
     return Container(
       color: const Color(0xFFF4F7FF),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: AppSpacing.pagePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

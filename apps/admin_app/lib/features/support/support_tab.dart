@@ -128,7 +128,7 @@ class _SupportTabState extends State<SupportTab> {
 
     if (_tickets.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(24),
+        padding: AppSpacing.pagePadding(context),
         height: MediaQuery.of(context).size.height - 110,
         alignment: Alignment.center,
         child: Container(
@@ -169,7 +169,7 @@ class _SupportTabState extends State<SupportTab> {
     final messages = (activeTicket['messages'] as List<dynamic>?) ?? [];
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: AppSpacing.pagePadding(context),
       height: MediaQuery.of(context).size.height - 110,
       child: Container(
         decoration: BoxDecoration(

@@ -82,7 +82,7 @@ class _WheelTabState extends State<WheelTab> {
     final is100 = _totalProbability == 100;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: AppSpacing.pagePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

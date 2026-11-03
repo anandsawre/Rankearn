@@ -18,21 +18,20 @@ class BattleDetailDialog extends StatelessWidget {
       gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
       maxWidth: 600,
       maxHeight: 700,
-      actions: [
-        OutlinedButton.icon(
-          onPressed: () {
-            BattleDashboardService().addTimeToBattle(battle.id, 60);
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.timer_rounded, size: 16, color: Color(0xFF5636F5)),
-          label: const Text('+60s Time', style: TextStyle(color: Color(0xFF5636F5), fontWeight: FontWeight.w700, fontSize: 12)),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          ),
+      footerLeft: OutlinedButton.icon(
+        onPressed: () {
+          BattleDashboardService().addTimeToBattle(battle.id, 60);
+          Navigator.pop(context);
+        },
+        icon: const Icon(Icons.timer_rounded, size: 16, color: Color(0xFF5636F5)),
+        label: const Text('+60s Time', style: TextStyle(color: Color(0xFF5636F5), fontWeight: FontWeight.w700, fontSize: 12)),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFCBD5E1)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         ),
-        const Spacer(),
+      ),
+      actions: [
         if (battle.status == BattleStatus.live) ...[
           ElevatedButton.icon(
             onPressed: () {

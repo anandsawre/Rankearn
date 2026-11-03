@@ -211,8 +211,10 @@ class _AdminAppShellState extends State<AdminAppShell> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // LEFT: (Hamburger menu if narrow) + Brand Trophy + Rankearn & Admin Panel
-          Row(
-            children: [
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               if (isNarrow) ...[
                 Builder(
                   builder: (ctx) => IconButton(
@@ -297,6 +299,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
               ),
             ],
           ),
+        ),
 
 
           // MIDDLE: Horizontal Navigation Pills
