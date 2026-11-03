@@ -93,9 +93,10 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
         OutlinedButton(
           onPressed: () => Navigator.pop(context),
           style: OutlinedButton.styleFrom(
+            minimumSize: const Size(0, 40),
             side: const BorderSide(color: Color(0xFFCBD5E1)),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 18),
           ),
           child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
@@ -103,9 +104,10 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
         ElevatedButton(
           onPressed: _handleCreate,
           style: ElevatedButton.styleFrom(
+            minimumSize: const Size(0, 40),
             backgroundColor: AppColors.battleAdminPurple,
             foregroundColor: AppColors.textOnPrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 22),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
           ),
@@ -338,7 +340,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                   onTap: () => setState(() => _isInstant = true),
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    height: 40,
                     decoration: BoxDecoration(
                       color: _isInstant ? AppColors.brandGreenLight : Colors.white,
                       borderRadius: BorderRadius.circular(8),
@@ -362,7 +364,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                   onTap: () => setState(() => _isInstant = false),
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    height: 40,
                     decoration: BoxDecoration(
                       color: !_isInstant ? AppColors.brandPurpleLight : Colors.white,
                       borderRadius: BorderRadius.circular(8),
@@ -394,7 +396,8 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
         onTap: () => _onTypeChanged(type),
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.brandPurpleLight : Colors.white,
             borderRadius: BorderRadius.circular(8),
