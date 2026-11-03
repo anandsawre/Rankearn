@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
@@ -26,6 +25,7 @@ class AppModalDialog extends StatelessWidget {
   final double? maxHeight;
   final EdgeInsetsGeometry? contentPadding;
   final bool scrollable;
+  final bool fullScreenOnMobile;
   final Widget child;
   final Widget? footerLeft;
   final List<Widget>? actions;
@@ -45,6 +45,7 @@ class AppModalDialog extends StatelessWidget {
     this.maxHeight,
     this.contentPadding,
     this.scrollable = false,
+    this.fullScreenOnMobile = true,
     required this.child,
     this.footerLeft,
     this.actions,
@@ -64,7 +65,20 @@ class AppModalDialog extends StatelessWidget {
       transitionDuration: const Duration(milliseconds: 220),
       pageBuilder: (ctx, anim1, anim2) => builder(ctx),
       transitionBuilder: (ctx, anim, secondaryAnim, child) {
+        final isMobile = MediaQuery.sizeOf(ctx).width < 640;
         final curve = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
+        if (isMobile) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.0, 0.08),
+              end: Offset.zero,
+            ).animate(curve),
+            child: FadeTransition(
+              opacity: curve,
+              child: child,
+            ),
+          );
+        }
         return ScaleTransition(
           scale: Tween<double>(begin: 0.94, end: 1.0).animate(curve),
           child: FadeTransition(
@@ -250,10 +264,13 @@ class AppModalDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final isMobile = media.size.width < 640;
+    final isMobile = fullScreenOnMobile && (media.size.width < 640);
 
-    final effectiveMaxWidth = isMobile ? math.max(300.0, media.size.width - 24) : maxWidth;
-    final effectiveMaxHeight = maxHeight ?? (media.size.height * 0.88);
+    final effectiveMaxWidth = isMobile ? media.size.width : maxWidth;
+    final effectiveMaxHeight = isMobile ? media.size.height : (maxHeight ?? (media.size.height * 0.88));
+
+    final topPadding = isMobile ? media.padding.top : 0.0;
+    final bottomPadding = (isMobile && media.viewInsets.bottom == 0) ? media.padding.bottom : 0.0;
 
     // If actions contains a Spacer/Expanded and footerLeft is not provided, split left items to footerLeft
     Widget? effectiveFooterLeft = footerLeft;
@@ -283,212 +300,256 @@ class AppModalDialog extends StatelessWidget {
           end: Alignment.bottomRight,
         );
 
+    final hasFooter = (effectiveActions != null && effectiveActions.isNotEmpty) || effectiveFooterLeft != null;
+    final bodyBottomPadding = (!hasFooter && isMobile && media.viewInsets.bottom == 0)
+        ? (16.0 + bottomPadding)
+        : (isMobile ? 16.0 : 22.0);
+
+    final effectiveContentPadding = contentPadding ??
+        EdgeInsets.fromLTRB(
+          isMobile ? 16 : 22,
+          isMobile ? 16 : 22,
+          isMobile ? 16 : 22,
+          bodyBottomPadding,
+        );
+
     return Dialog(
-      shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderLg),
+      shape: isMobile
+          ? const RoundedRectangleBorder()
+          : const RoundedRectangleBorder(borderRadius: AppRadii.borderLg),
       backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 12 : 24,
-        vertical: isMobile ? 16 : 24,
-      ),
+      insetPadding: isMobile
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       elevation: 0,
       clipBehavior: Clip.antiAlias,
       child: Container(
+        width: isMobile ? double.infinity : null,
+        height: isMobile ? double.infinity : null,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F172A).withAlpha(35),
-              blurRadius: 36,
-              offset: const Offset(0, 18),
-            ),
-          ],
+          color: Colors.white,
+          borderRadius: isMobile ? BorderRadius.zero : BorderRadius.circular(16),
+          boxShadow: isMobile
+              ? null
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withAlpha(35),
+                    blurRadius: 36,
+                    offset: const Offset(0, 18),
+                  ),
+                ],
         ),
-        constraints: BoxConstraints(
-          maxWidth: effectiveMaxWidth,
-          maxHeight: effectiveMaxHeight,
-        ),
+        constraints: isMobile
+            ? const BoxConstraints.expand()
+            : BoxConstraints(
+                maxWidth: effectiveMaxWidth,
+                maxHeight: effectiveMaxHeight,
+              ),
         child: Material(
           color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
-          ),
+          shape: isMobile
+              ? const RoundedRectangleBorder()
+              : RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+                ),
           clipBehavior: Clip.antiAlias,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            // Rich Gradient Hero Header
-            Container(
-              padding: EdgeInsets.fromLTRB(
-                isMobile ? 16 : 22,
-                isMobile ? 16 : 18,
-                isMobile ? 12 : 16,
-                isMobile ? 16 : 18,
-              ),
-              decoration: BoxDecoration(
-                gradient: resolvedGradient,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-              ),
-              child: Row(
-                children: [
-                  // Glassmorphic Icon Pod
-                  if (icon != null)
-                    icon!
-                  else if (iconData != null)
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(45),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white.withAlpha(60), width: 1.2),
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(iconData, color: Colors.white, size: 22),
-                    ),
-                  if (icon != null || iconData != null) const SizedBox(width: 14),
-
-                  // Title & Subtitle in crisp white
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+              // Rich Gradient Hero Header
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 16 : 22,
+                  (isMobile ? 12 : 18) + topPadding,
+                  isMobile ? 12 : 16,
+                  isMobile ? 14 : 18,
+                ),
+                decoration: BoxDecoration(
+                  gradient: resolvedGradient,
+                  borderRadius: isMobile
+                      ? BorderRadius.zero
+                      : const BorderRadius.vertical(top: Radius.circular(15)),
+                ),
+                child: Row(
+                  children: [
+                    // Glassmorphic Icon Pod
+                    if (icon != null)
+                      icon!
+                    else if (iconData != null)
+                      Container(
+                        width: isMobile ? 36 : 40,
+                        height: isMobile ? 36 : 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(45),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white.withAlpha(60), width: 1.2),
                         ),
-                        if (subtitle != null && subtitle!.isNotEmpty) ...[
-                          const SizedBox(height: 2),
+                        alignment: Alignment.center,
+                        child: Icon(iconData, color: Colors.white, size: isMobile ? 20 : 22),
+                      ),
+                    if (icon != null || iconData != null) SizedBox(width: isMobile ? 10 : 14),
+
+                    // Title & Subtitle in crisp white
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            subtitle!,
+                            title,
                             style: TextStyle(
-                              fontSize: 11.5,
-                              color: Colors.white.withAlpha(210),
-                              height: 1.25,
+                              fontSize: isMobile ? 16 : 16.5,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.2,
                             ),
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          if (subtitle != null && subtitle!.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle!,
+                              style: TextStyle(
+                                fontSize: isMobile ? 11 : 11.5,
+                                color: Colors.white.withAlpha(210),
+                                height: 1.25,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                  ),
-
-                  // Trailing widget or badge
-                  if (headerTrailing != null) ...[
-                    const SizedBox(width: 8),
-                    headerTrailing!,
-                  ],
-
-                  // Glass Close Button
-                  if (showCloseButton) ...[
-                    const SizedBox(width: 6),
-                    Material(
-                      color: Colors.white.withAlpha(30),
-                      borderRadius: BorderRadius.circular(8),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        hoverColor: Colors.white.withAlpha(60),
-                        onTap: onClose ?? () => Navigator.of(context).pop(),
-                        child: const Padding(
-                          padding: EdgeInsets.all(6),
-                          child: Icon(Icons.close_rounded, size: 18, color: Colors.white),
-                        ),
                       ),
                     ),
+
+                    // Trailing widget or badge
+                    if (headerTrailing != null) ...[
+                      const SizedBox(width: 8),
+                      headerTrailing!,
+                    ],
+
+                    // Glass Close Button
+                    if (showCloseButton) ...[
+                      const SizedBox(width: 6),
+                      Material(
+                        color: Colors.white.withAlpha(30),
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          hoverColor: Colors.white.withAlpha(60),
+                          onTap: onClose ?? () => Navigator.of(context).pop(),
+                          child: Padding(
+                            padding: EdgeInsets.all(isMobile ? 8 : 6),
+                            child: Icon(Icons.close_rounded, size: isMobile ? 20 : 18, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            ),
-
-            // Body Content
-            if (scrollable)
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: contentPadding ?? EdgeInsets.all(isMobile ? 16 : 22),
-                  child: child,
-                ),
-              )
-            else
-              Flexible(
-                child: Padding(
-                  padding: contentPadding ?? EdgeInsets.all(isMobile ? 16 : 22),
-                  child: child,
                 ),
               ),
 
-            // Footer Section
-            if ((effectiveActions != null && effectiveActions.isNotEmpty) || effectiveFooterLeft != null) ...[
-              const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
-              Theme(
-                data: Theme.of(context).copyWith(
-                  elevatedButtonTheme: ElevatedButtonThemeData(
-                    style: primaryButtonStyle(),
-                  ),
-                ),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 16 : 22,
-                    vertical: isMobile ? 12 : 14,
-                  ),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
+              // Body Content
+              if (scrollable)
+                isMobile
+                    ? Expanded(
+                        child: SingleChildScrollView(
+                          padding: effectiveContentPadding,
+                          child: child,
+                        ),
+                      )
+                    : Flexible(
+                        child: SingleChildScrollView(
+                          padding: effectiveContentPadding,
+                          child: child,
+                        ),
+                      )
+              else
+                isMobile
+                    ? Expanded(
+                        child: Padding(
+                          padding: effectiveContentPadding,
+                          child: child,
+                        ),
+                      )
+                    : Flexible(
+                        child: Padding(
+                          padding: effectiveContentPadding,
+                          child: child,
+                        ),
+                      ),
+
+              // Footer Section
+              if (hasFooter) ...[
+                const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    elevatedButtonTheme: ElevatedButtonThemeData(
+                      style: primaryButtonStyle(),
                     ),
                   ),
-                  child: isMobile
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (effectiveFooterLeft != null) ...[
-                              effectiveFooterLeft,
-                              const SizedBox(height: 10),
-                            ],
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              alignment: WrapAlignment.end,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: effectiveActions ?? [],
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(
+                      isMobile ? 16 : 22,
+                      isMobile ? 12 : 14,
+                      isMobile ? 16 : 22,
+                      (isMobile ? 12 : 14) + bottomPadding,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: isMobile
+                          ? BorderRadius.zero
+                          : const BorderRadius.only(
+                              bottomLeft: Radius.circular(16),
+                              bottomRight: Radius.circular(16),
                             ),
-                          ],
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            if (effectiveFooterLeft != null)
-                              Expanded(child: effectiveFooterLeft)
-                            else
-                              const SizedBox.shrink(),
-                            const SizedBox(width: 12),
-                            Flexible(
-                              child: Wrap(
+                    ),
+                    child: isMobile
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (effectiveFooterLeft != null) ...[
+                                effectiveFooterLeft,
+                                const SizedBox(height: 10),
+                              ],
+                              Wrap(
                                 spacing: 8,
                                 runSpacing: 8,
-                                crossAxisAlignment: WrapCrossAlignment.center,
                                 alignment: WrapAlignment.end,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: effectiveActions ?? [],
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              if (effectiveFooterLeft != null)
+                                Expanded(child: effectiveFooterLeft)
+                              else
+                                const SizedBox.shrink(),
+                              const SizedBox(width: 12),
+                              Flexible(
+                                child: Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  alignment: WrapAlignment.end,
+                                  children: effectiveActions ?? [],
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
