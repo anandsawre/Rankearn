@@ -230,7 +230,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
                 hintText: 'e.g. RRB Technician Mock Test 2026',
                 hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -348,7 +348,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
                 hintText: 'e.g. Kinematics, Newton Laws, Periodic Table, Modern Indian History',
                 hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

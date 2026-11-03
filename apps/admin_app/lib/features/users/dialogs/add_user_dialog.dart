@@ -71,7 +71,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
       hintText: hintText,
       hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
       filled: true,
-      fillColor: const Color(0xFFF8FAFC),
+      fillColor: Colors.white,
       prefixIcon: Icon(prefixIcon, size: 18, color: const Color(0xFF64748B)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       enabledBorder: OutlineInputBorder(

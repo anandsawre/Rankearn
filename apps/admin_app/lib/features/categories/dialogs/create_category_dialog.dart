@@ -368,7 +368,7 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
           value: _examList.any((e) => e.id == _selectedExamId) ? _selectedExamId : null,
           hint: 'All Exams / General',
           isDense: true,
-          fillColor: const Color(0xFFF8FAFC),
+          fillColor: Colors.white,
           borderColor: const Color(0xFFCBD5E1),
           focusedBorderColor: const Color(0xFF5636F5),
           selectedItemColor: const Color(0xFF5636F5),
@@ -408,7 +408,7 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
         AppDropdown<CategoryStatus>(
           value: _status,
           isDense: true,
-          fillColor: const Color(0xFFF8FAFC),
+          fillColor: Colors.white,
           borderColor: const Color(0xFFCBD5E1),
           focusedBorderColor: const Color(0xFF5636F5),
           selectedItemColor: const Color(0xFF5636F5),
@@ -444,7 +444,7 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
       hintText: hint,
       hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
       filled: true,
-      fillColor: const Color(0xFFF8FAFC),
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),

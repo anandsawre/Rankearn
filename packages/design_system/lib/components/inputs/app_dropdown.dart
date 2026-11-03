@@ -445,7 +445,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
     final effectiveBorderRadius = widget.borderRadius ?? AppRadii.borderSm;
     final effectiveFillColor =
         widget.fillColor ??
-        (widget.enabled ? const Color(0xFFF8FAFC) : AppColors.surfaceMuted);
+        (widget.enabled ? Colors.white : AppColors.surfaceMuted);
     final effectiveBorderColor = _isOpen
         ? (widget.focusedBorderColor ?? AppColors.brandPurple)
         : _isHovered

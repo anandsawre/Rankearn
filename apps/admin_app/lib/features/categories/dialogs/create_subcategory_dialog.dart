@@ -155,7 +155,7 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
           value: _selectedCategoryId,
           hint: 'Select Parent Category',
           isDense: true,
-          fillColor: const Color(0xFFF8FAFC),
+          fillColor: Colors.white,
           borderColor: const Color(0xFFCBD5E1),
           focusedBorderColor: const Color(0xFF5636F5),
           selectedItemColor: const Color(0xFF5636F5),
@@ -242,7 +242,7 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
         AppDropdown<String>(
           value: _status,
           isDense: true,
-          fillColor: const Color(0xFFF8FAFC),
+          fillColor: Colors.white,
           borderColor: const Color(0xFFCBD5E1),
           focusedBorderColor: const Color(0xFF5636F5),
           selectedItemColor: const Color(0xFF5636F5),
@@ -285,7 +285,7 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
       hintText: hint,
       hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
       filled: true,
-      fillColor: const Color(0xFFF8FAFC),
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),

@@ -120,7 +120,7 @@ class _DuplicateExamDialogState extends State<DuplicateExamDialog> {
             controller: _nameCtrl,
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE11D48), width: 1.5)),
@@ -136,7 +136,7 @@ class _DuplicateExamDialogState extends State<DuplicateExamDialog> {
             controller: _idCtrl,
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE11D48), width: 1.5)),

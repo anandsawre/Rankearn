@@ -88,7 +88,7 @@ class AppModalDialog extends StatelessWidget {
       hintText: hint,
       hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
       filled: true,
-      fillColor: const Color(0xFFF8FAFC),
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,

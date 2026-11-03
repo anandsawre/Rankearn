@@ -354,7 +354,7 @@ class _AdjustCoinsDialogState extends State<AdjustCoinsDialog> {
                 hintText: 'Enter coin amount',
                 hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: Colors.white,
                 prefixIcon: const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 20),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 enabledBorder: OutlineInputBorder(
@@ -420,7 +420,7 @@ class _AdjustCoinsDialogState extends State<AdjustCoinsDialog> {
                 hintText: 'e.g. Winner of Weekly Battle #42',
                 hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: Colors.white,
                 prefixIcon: const Icon(Icons.history_edu_rounded, color: Color(0xFF64748B), size: 18),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 enabledBorder: OutlineInputBorder(

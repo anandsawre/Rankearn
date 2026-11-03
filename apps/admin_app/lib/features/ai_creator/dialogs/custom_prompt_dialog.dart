@@ -110,7 +110,7 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             obscureText: true,
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
@@ -141,7 +141,7 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             maxLines: 4,
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
@@ -204,7 +204,7 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             maxLines: 3,
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),

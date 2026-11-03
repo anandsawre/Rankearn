@@ -142,7 +142,7 @@ class _ManageSubcategoriesDialogState extends State<ManageSubcategoriesDialog> {
                     hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
+                    fillColor: Colors.white,
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Color(0xFFCBD5E1)),

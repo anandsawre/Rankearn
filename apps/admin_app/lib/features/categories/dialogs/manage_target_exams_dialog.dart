@@ -742,7 +742,7 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
             AppDropdown<bool>(
               value: _isPublished,
               isDense: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: Colors.white,
               borderColor: const Color(0xFFE2E8F0),
               focusedBorderColor: const Color(0xFF5636F5),
               selectedItemColor: const Color(0xFF5636F5),

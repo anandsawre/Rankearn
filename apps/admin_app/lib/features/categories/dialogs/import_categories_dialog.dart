@@ -176,7 +176,7 @@ class _ImportCategoriesDialogState extends State<ImportCategoriesDialog> {
               style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Color(0xFF1E293B)),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.all(12),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

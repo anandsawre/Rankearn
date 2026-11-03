@@ -114,7 +114,7 @@ class _ConfirmActionDialogState extends State<ConfirmActionDialog> {
                 hintText: 'e.g., Match disconnection abuse, server flush, cheating investigation...',
                 hintStyle: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.all(12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

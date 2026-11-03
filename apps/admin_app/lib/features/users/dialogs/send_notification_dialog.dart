@@ -168,7 +168,7 @@ class _SendNotificationDialogState extends State<SendNotificationDialog> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       isDense: true,
       filled: true,
-      fillColor: const Color(0xFFF8FAFC),
+      fillColor: Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),

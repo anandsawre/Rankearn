@@ -620,7 +620,7 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       isDense: true,
                       filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),

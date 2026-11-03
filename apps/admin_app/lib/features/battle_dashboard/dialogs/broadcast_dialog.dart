@@ -116,7 +116,7 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
       hintText: hint,
       hintStyle: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
       filled: true,
-      fillColor: const Color(0xFFF8FAFC),
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),

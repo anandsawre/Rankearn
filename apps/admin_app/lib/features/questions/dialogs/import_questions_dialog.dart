@@ -361,7 +361,7 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                       : 'Paste JSON array of questions here...'),
               hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: Colors.white,
               contentPadding: const EdgeInsets.all(12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
