@@ -139,7 +139,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                     const Text('Battle Title', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 46,
+                      height: 40,
                       child: TextField(
                         controller: _titleController,
                         textAlignVertical: TextAlignVertical.center,
@@ -231,7 +231,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                     const Text('Max Players', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 46,
+                      height: 40,
                       child: TextFormField(
                         enabled: _type != BattleType.oneVOne,
                         initialValue: _maxPlayers.toString(),
@@ -272,7 +272,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                       const Text('Entry Fee (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                       const SizedBox(height: 6),
                       SizedBox(
-                        height: 46,
+                        height: 40,
                         child: TextFormField(
                           initialValue: _entryFee.toString(),
                           keyboardType: TextInputType.number,
@@ -295,7 +295,7 @@ class _CreateBattleDialogState extends State<CreateBattleDialog> {
                       const Text('Prize Pool (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                       const SizedBox(height: 6),
                       SizedBox(
-                        height: 46,
+                        height: 40,
                         child: TextFormField(
                           key: ValueKey(_reward),
                           initialValue: _reward.toString(),
