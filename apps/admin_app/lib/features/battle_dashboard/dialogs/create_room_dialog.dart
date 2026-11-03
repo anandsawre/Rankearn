@@ -99,10 +99,14 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                   children: [
                     const Text('Room Name', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
-                    TextField(
-                      controller: _nameController,
-                      style: const TextStyle(fontSize: 12.5),
-                      decoration: _inputDecoration('e.g., RRB-Tech Practice'),
+                    SizedBox(
+                      height: 46,
+                      child: TextField(
+                        controller: _nameController,
+                        textAlignVertical: TextAlignVertical.center,
+                        style: const TextStyle(fontSize: 12.5),
+                        decoration: _inputDecoration('e.g., RRB-Tech Practice'),
+                      ),
                     ),
                   ],
                 ),
@@ -125,12 +129,16 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    TextFormField(
-                      initialValue: _roomCode,
-                      readOnly: true,
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.battleAdminPurple),
-                      decoration: _inputDecoration('').copyWith(
-                        fillColor: AppColors.brandPurpleLight,
+                    SizedBox(
+                      height: 46,
+                      child: TextFormField(
+                        initialValue: _roomCode,
+                        readOnly: true,
+                        textAlignVertical: TextAlignVertical.center,
+                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.battleAdminPurple),
+                        decoration: _inputDecoration('').copyWith(
+                          fillColor: AppColors.brandPurpleLight,
+                        ),
                       ),
                     ),
                   ],
@@ -143,10 +151,14 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
           // Description
           const Text('Room Description', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
           const SizedBox(height: 6),
-          TextField(
-            controller: _descController,
-            style: const TextStyle(fontSize: 12.5),
-            decoration: _inputDecoration('Describe tournament guidelines or audience...'),
+          SizedBox(
+            height: 46,
+            child: TextField(
+              controller: _descController,
+              textAlignVertical: TextAlignVertical.center,
+              style: const TextStyle(fontSize: 12.5),
+              decoration: _inputDecoration('Describe tournament guidelines or audience...'),
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -182,18 +194,22 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                   children: [
                     const Text('Max Participants', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
-                    TextFormField(
-                      initialValue: _maxPlayers.toString(),
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(fontSize: 12.5),
-                      decoration: _inputDecoration(''),
-                      onChanged: (v) {
-                        final num = int.tryParse(v) ?? 20;
-                        setState(() {
-                          _maxPlayers = num;
-                          _reward = (_entryFee * num * 0.85).toInt();
-                        });
-                      },
+                    SizedBox(
+                      height: 46,
+                      child: TextFormField(
+                        initialValue: _maxPlayers.toString(),
+                        keyboardType: TextInputType.number,
+                        textAlignVertical: TextAlignVertical.center,
+                        style: const TextStyle(fontSize: 12.5),
+                        decoration: _inputDecoration(''),
+                        onChanged: (v) {
+                          final num = int.tryParse(v) ?? 20;
+                          setState(() {
+                            _maxPlayers = num;
+                            _reward = (_entryFee * num * 0.85).toInt();
+                          });
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -218,20 +234,24 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                     children: [
                       const Text('Entry Fee (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                       const SizedBox(height: 6),
-                      TextFormField(
-                        initialValue: _entryFee.toString(),
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                        decoration: _inputDecoration('').copyWith(
-                          prefixIcon: const Icon(Icons.monetization_on_rounded, color: AppColors.warning, size: 18),
+                      SizedBox(
+                        height: 46,
+                        child: TextFormField(
+                          initialValue: _entryFee.toString(),
+                          keyboardType: TextInputType.number,
+                          textAlignVertical: TextAlignVertical.center,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                          decoration: _inputDecoration('').copyWith(
+                            prefixIcon: const Icon(Icons.monetization_on_rounded, color: AppColors.warning, size: 18),
+                          ),
+                          onChanged: (v) {
+                            final f = int.tryParse(v) ?? 10;
+                            setState(() {
+                              _entryFee = f;
+                              _reward = (f * _maxPlayers * 0.85).toInt();
+                            });
+                          },
                         ),
-                        onChanged: (v) {
-                          final f = int.tryParse(v) ?? 10;
-                          setState(() {
-                            _entryFee = f;
-                            _reward = (f * _maxPlayers * 0.85).toInt();
-                          });
-                        },
                       ),
                     ],
                   ),
@@ -243,15 +263,19 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                     children: [
                       const Text('Prize Pool (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                       const SizedBox(height: 6),
-                      TextFormField(
-                        key: ValueKey(_reward),
-                        initialValue: _reward.toString(),
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.brandGreen),
-                        decoration: _inputDecoration('').copyWith(
-                          prefixIcon: const Icon(Icons.emoji_events_rounded, color: AppColors.brandGreen, size: 18),
+                      SizedBox(
+                        height: 46,
+                        child: TextFormField(
+                          key: ValueKey(_reward),
+                          initialValue: _reward.toString(),
+                          keyboardType: TextInputType.number,
+                          textAlignVertical: TextAlignVertical.center,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.brandGreen),
+                          decoration: _inputDecoration('').copyWith(
+                            prefixIcon: const Icon(Icons.emoji_events_rounded, color: AppColors.brandGreen, size: 18),
+                          ),
+                          onChanged: (v) => setState(() => _reward = int.tryParse(v) ?? 50),
                         ),
-                        onChanged: (v) => setState(() => _reward = int.tryParse(v) ?? 50),
                       ),
                     ],
                   ),
@@ -282,11 +306,15 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                 ),
                 if (_isPrivate) ...[
                   const SizedBox(height: 10),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    style: const TextStyle(fontSize: 12.5),
-                    decoration: _inputDecoration('Enter 4-6 digit passcode'),
+                  SizedBox(
+                    height: 46,
+                    child: TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      textAlignVertical: TextAlignVertical.center,
+                      style: const TextStyle(fontSize: 12.5),
+                      decoration: _inputDecoration('Enter 4-6 digit passcode'),
+                    ),
                   ),
                 ],
               ],

@@ -166,6 +166,10 @@ class AppModalDialog extends StatelessWidget {
         borderRadius: effectiveRadius,
         borderSide: BorderSide(color: effectiveBorderColor, width: 1.0),
       ),
+      disabledBorder: OutlineInputBorder(
+        borderRadius: effectiveRadius,
+        borderSide: BorderSide(color: effectiveBorderColor, width: 1.0),
+      ),
       focusedBorder: OutlineInputBorder(
         borderRadius: effectiveRadius,
         borderSide: BorderSide(color: activeFocus, width: 1.5),
