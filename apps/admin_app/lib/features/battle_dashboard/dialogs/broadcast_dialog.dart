@@ -76,7 +76,7 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
           const Text('Alert Header', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
           const SizedBox(height: 6),
           SizedBox(
-            height: 40,
+            height: 48,
             child: TextField(
               controller: _titleController,
               textAlignVertical: TextAlignVertical.center,

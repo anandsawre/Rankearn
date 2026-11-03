@@ -100,7 +100,7 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                     const Text('Room Name', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 40,
+                      height: 48,
                       child: TextField(
                         controller: _nameController,
                         textAlignVertical: TextAlignVertical.center,
@@ -130,7 +130,7 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                     ),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 40,
+                      height: 48,
                       child: TextFormField(
                         initialValue: _roomCode,
                         readOnly: true,
@@ -152,7 +152,7 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
           const Text('Room Description', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
           const SizedBox(height: 6),
           SizedBox(
-            height: 40,
+            height: 48,
             child: TextField(
               controller: _descController,
               textAlignVertical: TextAlignVertical.center,
@@ -172,9 +172,9 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                     const Text('Subject', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 40,
+                      height: 48,
                       child: AppDropdown<String>(
-                        height: 40,
+                        height: 48,
                         value: _subject,
                         items: const [
                           AppDropdownItem(value: 'Mathematics', label: 'Mathematics'),
@@ -199,7 +199,7 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                     const Text('Max Participants', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 40,
+                      height: 48,
                       child: TextFormField(
                         initialValue: _maxPlayers.toString(),
                         keyboardType: TextInputType.number,
@@ -239,7 +239,7 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                       const Text('Entry Fee (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                       const SizedBox(height: 6),
                       SizedBox(
-                        height: 40,
+                        height: 48,
                         child: TextFormField(
                           initialValue: _entryFee.toString(),
                           keyboardType: TextInputType.number,
@@ -268,7 +268,7 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
                       const Text('Prize Pool (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                       const SizedBox(height: 6),
                       SizedBox(
-                        height: 40,
+                        height: 48,
                         child: TextFormField(
                           key: ValueKey(_reward),
                           initialValue: _reward.toString(),
