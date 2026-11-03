@@ -267,7 +267,7 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
           child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
         const SizedBox(width: 8),
-        ElevatedButton.icon(
+        ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFEA580C),
             foregroundColor: Colors.white,
@@ -275,16 +275,19 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
           ),
-          icon: _isImporting
-              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : const Icon(Icons.check_rounded, size: 16),
-          label: Text(
-            _validQuestions.isNotEmpty
-                ? 'Confirm Import (${_validQuestions.length} Items)'
-                : 'Confirm Import',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
-          ),
           onPressed: _validQuestions.isNotEmpty && !_isImporting ? _confirmImport : null,
+          child: _isImporting
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                )
+              : Text(
+                  _validQuestions.isNotEmpty
+                      ? 'Confirm Import (${_validQuestions.length} Items)'
+                      : 'Confirm Import',
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                ),
         ),
       ],
       child: _buildBody(false),
@@ -308,10 +311,14 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
               ),
               SegmentedButton<String>(
+                showSelectedIcon: false,
                 style: SegmentedButton.styleFrom(
-                  selectedBackgroundColor: const Color(0xFFFFFBEB),
-                  selectedForegroundColor: const Color(0xFFEA580C),
+                  selectedBackgroundColor: const Color(0xFFEA580C),
+                  selectedForegroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF475569),
+                  backgroundColor: Colors.white,
                   side: const BorderSide(color: Color(0xFFE2E8F0)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 segments: const [
                   ButtonSegment(value: 'Excel', label: Text('Excel', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
@@ -351,8 +358,9 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
           const SizedBox(height: 6),
           TextField(
             controller: _rawInputController,
-            maxLines: 8,
-            style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+            minLines: 8,
+            maxLines: 14,
+            style: const TextStyle(fontSize: 11.5, fontFamily: 'monospace', height: 1.4),
             decoration: AppModalDialog.inputDecoration(
               _selectedFormat == 'Excel'
                   ? 'Paste Excel spreadsheet rows here (columns: question_text, subject, difficulty, option_a, option_b, option_c, option_d, correct_answer, explanation)'
@@ -361,6 +369,7 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                       : 'Paste JSON array of questions here...'),
               hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
               focusColor: const Color(0xFFEA580C),
+              isMultiline: true,
               contentPadding: const EdgeInsets.all(12),
             ),
           ),

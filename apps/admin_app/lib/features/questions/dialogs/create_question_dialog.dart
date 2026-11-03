@@ -345,6 +345,7 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
       gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 760,
       maxHeight: 740,
+      contentPadding: EdgeInsets.zero,
       actions: [
         OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
@@ -396,7 +397,7 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
           child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12)),
         ),
         const SizedBox(width: 8),
-        ElevatedButton.icon(
+        ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
@@ -404,12 +405,11 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
           ),
-          icon: const Icon(Icons.check_rounded, size: 16),
-          label: Text(
+          onPressed: _submit,
+          child: Text(
             isEdit ? 'Save Changes' : 'Create Question',
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
           ),
-          onPressed: _submit,
         ),
       ],
       child: _showPreview ? _buildPreviewBody() : _buildFormBody(false),
@@ -418,7 +418,7 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
 
   Widget _buildFormBody(bool isMobile) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      padding: EdgeInsets.fromLTRB(isMobile ? 16 : 22, 14, isMobile ? 16 : 22, 20),
       child: Form(
         key: _formKey,
         child: Column(
@@ -658,7 +658,7 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
         : 'Sample Question Title Preview';
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(22, 14, 22, 20),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

@@ -126,7 +126,7 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
           child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
         ),
         const SizedBox(width: 8),
-        ElevatedButton.icon(
+        ElevatedButton(
           onPressed: _submit,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF5636F5),
@@ -134,8 +134,7 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           ),
-          icon: const Icon(Icons.check_rounded, size: 16),
-          label: Text(isEdit ? 'Update Campaign' : 'Create Campaign'),
+          child: Text(isEdit ? 'Update Campaign' : 'Create Campaign'),
         ),
       ],
       child: Form(

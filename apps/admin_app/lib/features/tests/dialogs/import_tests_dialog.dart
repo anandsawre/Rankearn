@@ -300,11 +300,13 @@ class _ImportTestsDialogState extends State<ImportTestsDialog> {
           const SizedBox(height: 4),
           TextField(
             controller: _rawInputController,
-            maxLines: 7,
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 11.5, color: Color(0xFF1E293B)),
+            minLines: 7,
+            maxLines: 14,
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 11.5, height: 1.4, color: Color(0xFF1E293B)),
             decoration: AppModalDialog.inputDecoration(
               'Paste formatted CSV or JSON data here...',
               focusColor: const Color(0xFFFF9500),
+              isMultiline: true,
               contentPadding: const EdgeInsets.all(12),
             ),
           ),

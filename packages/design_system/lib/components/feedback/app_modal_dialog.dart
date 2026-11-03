@@ -137,10 +137,32 @@ class AppModalDialog extends StatelessWidget {
     EdgeInsetsGeometry? contentPadding,
     bool? isDense,
     BoxConstraints? constraints,
+    bool isMultiline = false,
   }) {
     final activeFocus = focusColor ?? defaultPrimaryColor;
     final effectiveRadius = borderRadius ?? AppRadii.borderSm;
     final effectiveBorderColor = borderColor ?? const Color(0xFFCBD5E1);
+
+    final isActuallyMultiline = isMultiline ||
+        (constraints != null && (constraints.maxHeight > 40.0 || constraints.minHeight > 40.0));
+
+    final effectiveConstraints = constraints ??
+        (isActuallyMultiline ? null : const BoxConstraints(minHeight: 40.0, maxHeight: 40.0));
+
+    final effectiveSuffixConstraints = isActuallyMultiline
+        ? (suffixIcon != null ? const BoxConstraints(minWidth: 36, minHeight: 36) : null)
+        : (suffixIcon != null
+            ? const BoxConstraints(minWidth: 36, minHeight: 40, maxHeight: 40)
+            : const BoxConstraints(minWidth: 0, maxWidth: 0, minHeight: 40, maxHeight: 40));
+
+    final effectiveSuffix = suffixIcon ??
+        (isActuallyMultiline ? null : const SizedBox(width: 0, height: 40));
+
+    final effectiveContentPadding = contentPadding ??
+        (isActuallyMultiline
+            ? const EdgeInsets.symmetric(horizontal: 14, vertical: 12)
+            : const EdgeInsets.symmetric(horizontal: 14, vertical: 0));
+
     return InputDecoration(
       labelText: labelText,
       hintText: hint.isEmpty ? null : hint,
@@ -152,14 +174,14 @@ class AppModalDialog extends StatelessWidget {
       filled: true,
       fillColor: fillColor ?? Colors.white,
       isDense: isDense ?? true,
-      contentPadding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-      constraints: constraints ?? const BoxConstraints(minHeight: 40.0, maxHeight: 40.0),
-      prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 40, maxHeight: 40),
-      suffixIconConstraints: suffixIcon != null
-          ? const BoxConstraints(minWidth: 36, minHeight: 40, maxHeight: 40)
-          : const BoxConstraints(minWidth: 0, maxWidth: 0, minHeight: 40, maxHeight: 40),
+      contentPadding: effectiveContentPadding,
+      constraints: effectiveConstraints,
+      prefixIconConstraints: isActuallyMultiline
+          ? (prefixIcon != null ? const BoxConstraints(minWidth: 36, minHeight: 36) : null)
+          : const BoxConstraints(minWidth: 36, minHeight: 40, maxHeight: 40),
+      suffixIconConstraints: effectiveSuffixConstraints,
       prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon ?? const SizedBox(width: 0, height: 40),
+      suffixIcon: effectiveSuffix,
       border: OutlineInputBorder(
         borderRadius: effectiveRadius,
         borderSide: BorderSide(color: effectiveBorderColor, width: 1.0),

@@ -114,12 +114,8 @@ class _ProcessRefundDialogState extends State<ProcessRefundDialog> {
           child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
         ),
         const SizedBox(width: 8),
-        ElevatedButton.icon(
+        ElevatedButton(
           onPressed: _isSubmitting ? null : _submit,
-          icon: _isSubmitting
-              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Icon(Icons.check_rounded, size: 16),
-          label: Text(_isSubmitting ? 'Processing...' : 'Confirm Refund'),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFDC2626),
             foregroundColor: Colors.white,
@@ -127,6 +123,13 @@ class _ProcessRefundDialogState extends State<ProcessRefundDialog> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('Confirm Refund'),
         ),
       ],
       child: Form(

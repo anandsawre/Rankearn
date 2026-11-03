@@ -155,7 +155,7 @@ class _AiGenerateQuestionsDialogState extends State<AiGenerateQuestionsDialog> {
           child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
         const SizedBox(width: 8),
-        ElevatedButton.icon(
+        ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF10B981),
             foregroundColor: Colors.white,
@@ -163,14 +163,13 @@ class _AiGenerateQuestionsDialogState extends State<AiGenerateQuestionsDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             elevation: 0,
           ),
-          icon: const Icon(Icons.check_rounded, size: 16),
-          label: Text(
+          onPressed: _generatedQuestions.isNotEmpty ? _confirmSave : null,
+          child: Text(
             _generatedQuestions.isNotEmpty
                 ? 'Save ${_generatedQuestions.length} Questions to Bank'
                 : 'Save to Bank',
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
           ),
-          onPressed: _generatedQuestions.isNotEmpty ? _confirmSave : null,
         ),
       ],
       child: Column(

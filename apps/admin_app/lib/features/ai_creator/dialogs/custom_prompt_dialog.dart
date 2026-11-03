@@ -124,10 +124,12 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
           const SizedBox(height: 4),
           TextField(
             controller: _systemPromptController,
-            maxLines: 4,
+            minLines: 3,
+            maxLines: 6,
             decoration: AppModalDialog.inputDecoration(
               '',
               focusColor: const Color(0xFF2587F8),
+              isMultiline: true,
               contentPadding: const EdgeInsets.all(12),
             ),
             style: const TextStyle(fontSize: 12),

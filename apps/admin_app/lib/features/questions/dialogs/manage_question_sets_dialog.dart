@@ -80,6 +80,7 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
       gradientColors: const [Color(0xFFD97706), Color(0xFFF59E0B)],
       maxWidth: 640,
       maxHeight: 700,
+      scrollable: true,
       actions: [
         ElevatedButton(
           style: ElevatedButton.styleFrom(
