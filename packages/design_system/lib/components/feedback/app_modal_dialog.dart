@@ -152,8 +152,10 @@ class AppModalDialog extends StatelessWidget {
       filled: true,
       fillColor: fillColor ?? Colors.white,
       isDense: isDense ?? true,
-      contentPadding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      constraints: constraints ?? const BoxConstraints(minHeight: 40.0),
+      contentPadding: contentPadding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 13.5),
+      constraints: constraints ?? const BoxConstraints(minHeight: 46.0),
+      prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 46, maxHeight: 46),
+      suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 46, maxHeight: 46),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
