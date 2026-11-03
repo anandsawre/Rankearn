@@ -20,7 +20,7 @@ class ViewUserDialog extends StatelessWidget {
       title: user.name,
       subtitle: '${user.email} • ID: ${user.id}',
       iconData: Icons.person_outline_rounded,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 520,
       scrollable: true,
       actions: [
@@ -41,7 +41,7 @@ class ViewUserDialog extends StatelessWidget {
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),

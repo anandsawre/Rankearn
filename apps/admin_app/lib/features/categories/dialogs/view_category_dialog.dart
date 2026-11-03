@@ -18,7 +18,7 @@ class ViewCategoryDialog extends StatelessWidget {
       title: item.name,
       subtitle: 'ID: ${item.id} • Slug: /${item.slug}',
       iconData: item.iconData,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 520,
       actions: [
         OutlinedButton(
@@ -39,7 +39,7 @@ class ViewCategoryDialog extends StatelessWidget {
           icon: const Icon(Icons.edit_rounded, size: 15),
           label: const Text('Edit Category', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),

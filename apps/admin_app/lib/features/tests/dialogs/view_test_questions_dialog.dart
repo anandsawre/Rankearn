@@ -367,7 +367,7 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
         const SizedBox(width: 8),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

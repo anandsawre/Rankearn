@@ -70,7 +70,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
       AppModalDialog.inputDecoration(
         hintText,
         prefixIcon: Icon(prefixIcon, size: 18, color: const Color(0xFF64748B)),
-        focusColor: const Color(0xFF5636F5),
+        focusColor: const Color(0xFFFF9500),
       );
 
   @override
@@ -81,7 +81,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
           ? 'Update profile information, role & account status'
           : 'Create a new user account with credentials and role assignment',
       iconData: Icons.person_add_alt_1_rounded,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 500,
       actions: [
         OutlinedButton(
@@ -96,7 +96,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
         const SizedBox(width: 8),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

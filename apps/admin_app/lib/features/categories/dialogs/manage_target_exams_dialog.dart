@@ -36,7 +36,7 @@ class ManageTargetExamsDialog extends StatefulWidget {
 }
 
 class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
-  static const Color _primaryPurple = Color(0xFF5636F5);
+  static const Color _primaryPurple = Color(0xFFFF9500);
   static const Color _textNavy = Color(0xFF101A3A);
   static const Color _textMuted = Color(0xFF64748B);
   static const Color _borderSubtle = Color(0xFFCBD5E1);
@@ -399,7 +399,7 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
       iconData: _isCreatingOrEditing
           ? (isEditing ? Icons.edit_rounded : Icons.add_rounded)
           : Icons.explore_rounded,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 620,
       maxHeight: 740,
       scrollable: !_isCreatingOrEditing,
@@ -744,9 +744,9 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
               isDense: true,
               fillColor: Colors.white,
               borderColor: const Color(0xFFE2E8F0),
-              focusedBorderColor: const Color(0xFF5636F5),
-              selectedItemColor: const Color(0xFF5636F5),
-              selectedItemBackgroundColor: const Color(0xFFEEF2FF),
+              focusedBorderColor: _primaryPurple,
+              selectedItemColor: _primaryPurple,
+              selectedItemBackgroundColor: const Color(0xFFFFFBEB),
               borderRadius: BorderRadius.circular(8),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
@@ -794,16 +794,16 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFF5636F5).withAlpha(15),
+            color: _primaryPurple.withAlpha(15),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFF5636F5).withAlpha(40)),
+            border: Border.all(color: _primaryPurple.withAlpha(40)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5636F5),
+                  color: _primaryPurple,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: const Text(
@@ -869,7 +869,7 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
                           width: 22,
                           height: 22,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF5636F5).withAlpha(25),
+                            color: _primaryPurple.withAlpha(25),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           alignment: Alignment.center,
@@ -878,7 +878,7 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF5636F5),
+                              color: _primaryPurple,
                             ),
                           ),
                         ),

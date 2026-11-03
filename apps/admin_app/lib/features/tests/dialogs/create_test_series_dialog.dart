@@ -235,7 +235,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
       title: isEditing ? 'Edit Test Series' : 'Create New Test Series',
       subtitle: 'Configure exam parameters, syllabus and access rules',
       iconData: isEditing ? Icons.edit_note_rounded : Icons.library_books_rounded,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 640,
       scrollable: true,
       actions: [
@@ -251,7 +251,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
         const SizedBox(width: 10),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
@@ -537,7 +537,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                     value: _isPremium,
-                    activeColor: const Color(0xFF5636F5),
+                    activeColor: const Color(0xFFFF9500),
                     onChanged: (val) => setState(() => _isPremium = val ?? false),
                     title: const Text('Exclusive / Premium Test (Coin Unlock)', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                     subtitle: const Text('Students spend coins to unlock this test', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
@@ -553,19 +553,19 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                           child: TextFormField(
                             controller: _priceCoinsController,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF5636F5)),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFFF9500)),
                             decoration: _inputDecoration('50'),
                           ),
                         ),
                       ],
                     ),
                   ],
-                  const Divider(height: 18, color: Color(0xFFDDD6FE)),
+                  const Divider(height: 18, color: Color(0xFFFED7AA)),
                   CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                     value: _isTournament,
-                    activeColor: const Color(0xFF5636F5),
+                    activeColor: const Color(0xFFFF9500),
                     onChanged: (val) => setState(() => _isTournament = val ?? false),
                     title: const Text('Run as Live Paid Contest / Tournament', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                     subtitle: const Text('Leaderboard-based live battle with prize distribution', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
@@ -604,5 +604,5 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
   );
 
   InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFF5636F5));
+      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFFFF9500));
 }

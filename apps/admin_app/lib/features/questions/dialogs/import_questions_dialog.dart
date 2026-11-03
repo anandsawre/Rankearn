@@ -309,8 +309,8 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
               ),
               SegmentedButton<String>(
                 style: SegmentedButton.styleFrom(
-                  selectedBackgroundColor: const Color(0xFFEEF2FF),
-                  selectedForegroundColor: const Color(0xFF5636F5),
+                  selectedBackgroundColor: const Color(0xFFFFFBEB),
+                  selectedForegroundColor: const Color(0xFFEA580C),
                   side: const BorderSide(color: Color(0xFFE2E8F0)),
                 ),
                 segments: const [
@@ -332,10 +332,10 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                   side: const BorderSide(color: Color(0xFFE2E8F0)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                icon: const Icon(Icons.description_outlined, size: 14, color: Color(0xFF5636F5)),
+                icon: const Icon(Icons.description_outlined, size: 14, color: Color(0xFFEA580C)),
                 label: const Text(
                   'Load Sample Template',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF5636F5)),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFEA580C)),
                 ),
                 onPressed: _loadSampleTemplate,
               ),
@@ -369,7 +369,7 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
           // Parse Button
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5636F5),
+              backgroundColor: const Color(0xFFEA580C),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

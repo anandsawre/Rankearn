@@ -20,13 +20,13 @@ class ViewTestSeriesDialog extends StatelessWidget {
       title: item.title,
       subtitle: item.subject,
       iconData: item.icon,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 540,
       actions: [
         if (onViewQuestions != null)
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5636F5),
+              backgroundColor: const Color(0xFFFF9500),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),

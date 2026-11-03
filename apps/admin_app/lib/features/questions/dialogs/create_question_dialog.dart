@@ -342,7 +342,7 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
       title: isEdit ? 'Edit Question' : 'Add New Question',
       subtitle: _selectedTestSeries.isNotEmpty ? _selectedTestSeries : 'Configure question text, options and grading',
       iconData: isEdit ? Icons.edit_rounded : Icons.post_add_rounded,
-      gradientColors: const [Color(0xFF0084FF), Color(0xFF2563EB)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 760,
       maxHeight: 740,
       actions: [
@@ -355,11 +355,11 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
           icon: Icon(
             _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
             size: 15,
-            color: const Color(0xFF0084FF),
+            color: const Color(0xFFFF9500),
           ),
           label: Text(
             _showPreview ? 'Edit Form' : 'Live Preview',
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF0084FF)),
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFFF9500)),
           ),
           onPressed: () => setState(() => _showPreview = !_showPreview),
         ),
@@ -398,7 +398,7 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
         const SizedBox(width: 8),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0084FF),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -794,5 +794,5 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
   }
 
   InputDecoration _inputDecoration({String? hint}) =>
-      AppModalDialog.inputDecoration(hint ?? '', focusColor: const Color(0xFF0084FF));
+      AppModalDialog.inputDecoration(hint ?? '', focusColor: const Color(0xFFFF9500));
 }

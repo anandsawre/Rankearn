@@ -104,7 +104,7 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
           ? 'Update chapter or subcategory details'
           : 'Define a new chapter or unit under a parent subject',
       iconData: isEditing ? Icons.edit_rounded : Icons.add_rounded,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 540,
       maxHeight: 700,
       scrollable: true,
@@ -121,7 +121,7 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
         const SizedBox(width: 8),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -157,9 +157,9 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
           isDense: true,
           fillColor: Colors.white,
           borderColor: const Color(0xFFCBD5E1),
-          focusedBorderColor: const Color(0xFF5636F5),
-          selectedItemColor: const Color(0xFF5636F5),
-          selectedItemBackgroundColor: const Color(0xFFEEF2FF),
+          focusedBorderColor: const Color(0xFFFF9500),
+          selectedItemColor: const Color(0xFFFF9500),
+          selectedItemBackgroundColor: const Color(0xFFFFFBEB),
           borderRadius: BorderRadius.circular(8),
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
           items: widget.categories.map((c) {
@@ -244,9 +244,9 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
           isDense: true,
           fillColor: Colors.white,
           borderColor: const Color(0xFFCBD5E1),
-          focusedBorderColor: const Color(0xFF5636F5),
-          selectedItemColor: const Color(0xFF5636F5),
-          selectedItemBackgroundColor: const Color(0xFFEEF2FF),
+          focusedBorderColor: const Color(0xFFFF9500),
+          selectedItemColor: const Color(0xFFFF9500),
+          selectedItemBackgroundColor: const Color(0xFFFFFBEB),
           borderRadius: BorderRadius.circular(8),
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
           items: const [
@@ -281,5 +281,5 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
   );
 
   InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFF5636F5));
+      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFFFF9500));
 }

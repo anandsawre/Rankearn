@@ -142,7 +142,7 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
       title: 'Add Test Paper',
       subtitle: 'Create a standalone mock test paper or practice test',
       iconData: Icons.description_outlined,
-      gradientColors: const [Color(0xFF0084FF), Color(0xFF00B4D8)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 620,
       scrollable: true,
       actions: [
@@ -158,7 +158,7 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
         const SizedBox(width: 8),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0084FF),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -390,7 +390,7 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
                   ),
                   Switch.adaptive(
                     value: _isPremium,
-                    activeThumbColor: const Color(0xFF0084FF),
+                    activeThumbColor: const Color(0xFFFF9500),
                     onChanged: (val) => setState(() => _isPremium = val),
                   ),
                 ],
@@ -409,5 +409,5 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
   );
 
   static InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFF0084FF));
+      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFFFF9500));
 }

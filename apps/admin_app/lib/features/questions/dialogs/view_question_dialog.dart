@@ -13,13 +13,13 @@ class ViewQuestionDialog extends StatelessWidget {
       title: 'Question #${item.questionNumber}',
       subtitle: '${item.subject} • ${item.testSeriesTitle.replaceAll('\n', ' ')}',
       iconData: item.subjectIcon,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
+      gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 600,
       maxHeight: 700,
       actions: [
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),

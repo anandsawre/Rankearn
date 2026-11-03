@@ -37,8 +37,8 @@ class TestSeriesQuickActions extends StatelessWidget {
         QuickActionItemData(
           label: 'Add\nTest Paper',
           icon: Icons.description_outlined,
-          iconColor: const Color(0xFF0084FF),
-          cardColor: const Color(0xFFDBEAFE),
+          iconColor: const Color(0xFFFF9500),
+          cardColor: const Color(0xFFFFFBEB),
           onTap: onAddTestPaper,
         ),
         QuickActionItemData(
