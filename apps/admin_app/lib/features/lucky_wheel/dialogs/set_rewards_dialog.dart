@@ -101,7 +101,7 @@ class _SetRewardsDialogState extends State<SetRewardsDialog> {
       iconData: Icons.card_giftcard_rounded,
       gradientColors: const [Color(0xFF2587F8), Color(0xFF3B82F6)],
       maxWidth: 780,
-      maxHeight: 700,
+      scrollable: true,
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -128,6 +128,7 @@ class _SetRewardsDialogState extends State<SetRewardsDialog> {
         ),
       ],
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Daily Spin Limit Configuration Bar
@@ -186,10 +187,9 @@ class _SetRewardsDialogState extends State<SetRewardsDialog> {
           ),
 
           // Content: Wheel Preview (Left) + Slices List (Right)
-          SizedBox(
-            height: 380,
+          IntrinsicHeight(
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Left: Wheel Graphic Preview
                 SizedBox(
@@ -276,76 +276,81 @@ class _SetRewardsDialogState extends State<SetRewardsDialog> {
 
                 // Right: Slices Configuration Table / List
                 Expanded(
-                  child: ListView.separated(
-                    itemCount: _slices.length,
-                    separatorBuilder: (ctx, i) => const SizedBox(height: 8),
-                    itemBuilder: (ctx, i) {
-                      final slice = _slices[i];
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFCBD5E1)),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 14,
-                              height: 14,
-                              decoration: BoxDecoration(
-                                color: slice['color'] as Color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextFormField(
-                                initialValue: slice['label'] as String,
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                decoration: AppModalDialog.inputDecoration(
-                                  '',
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                  focusColor: AppColors.primary,
-                                ),
-                                onChanged: (v) => slice['label'] = v,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            SizedBox(
-                              width: 60,
-                              child: TextFormField(
-                                initialValue: (slice['probability'] as int).toString(),
-                                keyboardType: TextInputType.number,
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                decoration: AppModalDialog.inputDecoration(
-                                  '',
-                                  suffixText: '%',
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                                  focusColor: AppColors.primary,
-                                ),
-                                onChanged: (v) {
-                                  final val = int.tryParse(v) ?? 0;
-                                  setState(() => slice['probability'] = val);
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Transform.scale(
-                              scale: 0.72,
-                              child: Switch(
-                                value: slice['isActive'] as bool,
-                                activeThumbColor: const Color(0xFF5636F5),
-                                onChanged: (val) => setState(() => slice['isActive'] = val),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (int i = 0; i < _slices.length; i++) ...[
+                        _buildSliceRow(_slices[i]),
+                        if (i < _slices.length - 1) const SizedBox(height: 6),
+                      ],
+                    ],
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSliceRow(Map<String, dynamic> slice) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFCBD5E1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              color: slice['color'] as Color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextFormField(
+              initialValue: slice['label'] as String,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+              decoration: AppModalDialog.inputDecoration(
+                '',
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                focusColor: AppColors.primary,
+              ),
+              onChanged: (v) => slice['label'] = v,
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 60,
+            child: TextFormField(
+              initialValue: (slice['probability'] as int).toString(),
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+              decoration: AppModalDialog.inputDecoration(
+                '',
+                suffixText: '%',
+                contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                focusColor: AppColors.primary,
+              ),
+              onChanged: (v) {
+                final val = int.tryParse(v) ?? 0;
+                setState(() => slice['probability'] = val);
+              },
+            ),
+          ),
+          const SizedBox(width: 4),
+          Transform.scale(
+            scale: 0.72,
+            child: Switch(
+              value: slice['isActive'] as bool,
+              activeThumbColor: const Color(0xFF5636F5),
+              onChanged: (val) => setState(() => slice['isActive'] = val),
             ),
           ),
         ],
