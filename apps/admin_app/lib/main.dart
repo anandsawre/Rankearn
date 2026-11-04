@@ -279,11 +279,10 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   ),
                   const SizedBox(height: 2),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEEF0FF),
+                      color: const Color(0xFFEF4444),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: const Color(0xFFE0E7FF), width: 0.8),
                     ),
                     child: const Text(
                       'Admin Panel',
@@ -291,7 +290,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF5636F5),
+                        color: Colors.white,
                         letterSpacing: 0.2,
                         height: 1.1,
                       ),
@@ -372,7 +371,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                       customIcon: LuckyWheelIcon(
                         size: 16,
                         color: _activeTab == AdminNavTab.wheel
-                            ? Colors.white
+                            ? const Color(0xFF5636F5)
                             : const Color(0xFF475569),
                       ),
                       isActive: _activeTab == AdminNavTab.wheel,
@@ -622,12 +621,17 @@ class _AdminAppShellState extends State<AdminAppShell> {
       padding: const EdgeInsets.symmetric(horizontal: 3),
       child: InkWell(
         onTap: () => _navigateToTab(tab),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF5636F5) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            color: Colors.transparent,
+            border: Border(
+              bottom: BorderSide(
+                color: isActive ? const Color(0xFF5636F5) : Colors.transparent,
+                width: 2.5,
+              ),
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -636,7 +640,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   Icon(
                     icon,
                     size: 16,
-                    color: isActive ? Colors.white : const Color(0xFF475569),
+                    color: isActive ? const Color(0xFF5636F5) : const Color(0xFF64748B),
                   ),
               const SizedBox(width: 7),
               Flexible(
@@ -645,8 +649,8 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   style: TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
                     fontSize: 13,
-                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                    color: isActive ? Colors.white : const Color(0xFF334155),
+                    fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                    color: isActive ? const Color(0xFF5636F5) : const Color(0xFF334155),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
