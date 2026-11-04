@@ -896,8 +896,12 @@ class _LuckyWheelTableCardState extends State<LuckyWheelTableCard> {
 
   Widget _buildFooter() {
     if (widget.totalCount <= 0) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      return Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        runAlignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12,
+        runSpacing: 10,
         children: [
           const Text(
             'Showing 0 campaigns',
@@ -932,8 +936,12 @@ class _LuckyWheelTableCardState extends State<LuckyWheelTableCard> {
     final startItem = math.min((widget.currentPage - 1) * widget.rowsPerPage + 1, widget.totalCount);
     final endItem = math.min(widget.currentPage * widget.rowsPerPage, widget.totalCount);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      runAlignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 10,
       children: [
         // Left: Showing count
         Text(

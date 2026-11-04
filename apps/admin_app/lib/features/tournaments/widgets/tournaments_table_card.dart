@@ -860,8 +860,12 @@ class _TournamentsTableCardState extends State<TournamentsTableCard> {
     final startItem = widget.items.isEmpty ? 0 : (widget.currentPage - 1) * widget.rowsPerPage + 1;
     final endItem = math.min(widget.currentPage * widget.rowsPerPage, widget.totalCount);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      runAlignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 10,
       children: [
         // Left: Showing X to Y of Z tournaments
         Text(

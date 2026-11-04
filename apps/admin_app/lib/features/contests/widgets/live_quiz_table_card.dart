@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../models/live_quiz_item.dart';
@@ -702,49 +703,43 @@ class _LiveQuizTableCardState extends State<LiveQuizTableCard> {
           // 3. Table Pagination Footer
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // "Showing 1 to 7 of 128 live quizzes"
-                Text(
-                  'Showing 1 to ${widget.items.length} of ${widget.totalCount} live quizzes',
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 650;
+                final startIdx = widget.totalCount == 0
+                    ? 0
+                    : (widget.currentPage - 1) * widget.rowsPerPage + 1;
+                final endIdx = math.min(
+                    widget.currentPage * widget.rowsPerPage, widget.totalCount);
+
+                final infoText = Text(
+                  'Showing $startIdx to $endIdx of ${widget.totalCount} live quizzes',
                   style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-                ),
+                );
 
-                // Page numbers row
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildPageNavBtn(
-                      icon: Icons.chevron_left_rounded,
-                      isEnabled: widget.currentPage > 1,
-                      onTap: () => widget.onPageChanged(widget.currentPage - 1),
-                    ),
-                    const SizedBox(width: 4),
-                    _buildPageNumberBtn(1, isSelected: widget.currentPage == 1),
-                    const SizedBox(width: 3),
-                    _buildPageNumberBtn(2, isSelected: widget.currentPage == 2),
-                    const SizedBox(width: 3),
-                    _buildPageNumberBtn(3, isSelected: widget.currentPage == 3),
-                    const SizedBox(width: 3),
-                    _buildPageNumberBtn(4, isSelected: widget.currentPage == 4),
-                    const SizedBox(width: 3),
-                    _buildPageNumberBtn(5, isSelected: widget.currentPage == 5),
-                    const SizedBox(width: 3),
-                    const Text('...', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                    const SizedBox(width: 3),
-                    _buildPageNumberBtn(widget.totalPages, isSelected: widget.currentPage == widget.totalPages),
-                    const SizedBox(width: 4),
-                    _buildPageNavBtn(
-                      icon: Icons.chevron_right_rounded,
-                      isEnabled: widget.currentPage < widget.totalPages,
-                      onTap: () => widget.onPageChanged(widget.currentPage + 1),
-                    ),
-                  ],
-                ),
+                final pageControls = SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildPageNavBtn(
+                        icon: Icons.chevron_left_rounded,
+                        isEnabled: widget.currentPage > 1,
+                        onTap: () => widget.onPageChanged(widget.currentPage - 1),
+                      ),
+                      const SizedBox(width: 4),
+                      ..._buildPageNumbers(),
+                      const SizedBox(width: 4),
+                      _buildPageNavBtn(
+                        icon: Icons.chevron_right_rounded,
+                        isEnabled: widget.currentPage < widget.totalPages,
+                        onTap: () => widget.onPageChanged(widget.currentPage + 1),
+                      ),
+                    ],
+                  ),
+                );
 
-                // "Show 10 ▾ per page"
-                Row(
+                final pageSizeSelector = Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text('Show', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
@@ -779,8 +774,37 @@ class _LiveQuizTableCardState extends State<LiveQuizTableCard> {
                     const SizedBox(width: 6),
                     const Text('per page', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
                   ],
-                ),
-              ],
+                );
+
+                if (isNarrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      infoText,
+                      const SizedBox(height: 10),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 12,
+                        runSpacing: 8,
+                        children: [
+                          pageControls,
+                          pageSizeSelector,
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    infoText,
+                    pageControls,
+                    pageSizeSelector,
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -983,6 +1007,56 @@ class _LiveQuizTableCardState extends State<LiveQuizTableCard> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildPageNumbers() {
+    final total = widget.totalPages <= 0 ? 1 : widget.totalPages;
+    final widgets = <Widget>[];
+
+    if (total <= 5) {
+      for (int p = 1; p <= total; p++) {
+        widgets.add(_buildPageNumberBtn(p, isSelected: widget.currentPage == p));
+        if (p < total) widgets.add(const SizedBox(width: 3));
+      }
+    } else {
+      final int start;
+      final int end;
+      if (widget.currentPage <= 3) {
+        start = 1;
+        end = 4;
+      } else if (widget.currentPage >= total - 2) {
+        start = total - 3;
+        end = total;
+      } else {
+        start = widget.currentPage - 1;
+        end = widget.currentPage + 1;
+      }
+
+      if (start > 1) {
+        widgets.add(_buildPageNumberBtn(1, isSelected: widget.currentPage == 1));
+        widgets.add(const SizedBox(width: 3));
+        if (start > 2) {
+          widgets.add(const Text('...', style: TextStyle(fontSize: 11, color: AppColors.textMuted)));
+          widgets.add(const SizedBox(width: 3));
+        }
+      }
+
+      for (int p = start; p <= end; p++) {
+        widgets.add(_buildPageNumberBtn(p, isSelected: widget.currentPage == p));
+        if (p < end) widgets.add(const SizedBox(width: 3));
+      }
+
+      if (end < total) {
+        widgets.add(const SizedBox(width: 3));
+        if (end < total - 1) {
+          widgets.add(const Text('...', style: TextStyle(fontSize: 11, color: AppColors.textMuted)));
+          widgets.add(const SizedBox(width: 3));
+        }
+        widgets.add(_buildPageNumberBtn(total, isSelected: widget.currentPage == total));
+      }
+    }
+
+    return widgets;
   }
 
   Widget _buildPageNumberBtn(int page, {required bool isSelected}) {

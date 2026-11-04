@@ -71,7 +71,8 @@ class RankearnAdminApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-        fontFamily: 'Inter',
+        fontFamily: 'Plus Jakarta Sans',
+        fontFamilyFallback: const ['Inter', 'Noto Sans Devanagari', 'Roboto', 'sans-serif'],
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF5636F5),
           primary: const Color(0xFF5636F5),
@@ -208,13 +209,11 @@ class _AdminAppShellState extends State<AdminAppShell> {
       ),
       padding: EdgeInsets.symmetric(horizontal: isNarrow ? 12 : 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // LEFT: (Hamburger menu if narrow) + Brand Trophy + Rankearn & Admin Panel
-          Flexible(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               if (isNarrow) ...[
                 Builder(
                   builder: (ctx) => IconButton(
@@ -256,6 +255,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                         TextSpan(
                           text: 'Rank',
                           style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
                             fontSize: isNarrow ? 16 : 18,
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFF101A3A),
@@ -266,6 +266,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                         TextSpan(
                           text: 'earn',
                           style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
                             fontSize: isNarrow ? 16 : 18,
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFF5636F5),
@@ -287,6 +288,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                     child: const Text(
                       'Admin Panel',
                       style: TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF5636F5),
@@ -299,17 +301,15 @@ class _AdminAppShellState extends State<AdminAppShell> {
               ),
             ],
           ),
-        ),
 
-
-          // MIDDLE: Horizontal Navigation Pills
-          if (!isNarrow)
+          // MIDDLE: Horizontal Navigation Pills (Left-aligned right after logo)
+          if (!isNarrow) ...[
+            const SizedBox(width: 24),
             Expanded(
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     _buildNavPill(
                       tab: AdminNavTab.overview,
@@ -348,6 +348,12 @@ class _AdminAppShellState extends State<AdminAppShell> {
                       isActive: _activeTab == AdminNavTab.users,
                     ),
                     _buildNavPill(
+                      tab: AdminNavTab.aiCreator,
+                      label: 'AI Test Creator',
+                      icon: Icons.auto_awesome_rounded,
+                      isActive: _activeTab == AdminNavTab.aiCreator,
+                    ),
+                    _buildNavPill(
                       tab: AdminNavTab.contests,
                       label: 'Live Quiz',
                       icon: Icons.podcasts_rounded,
@@ -358,12 +364,6 @@ class _AdminAppShellState extends State<AdminAppShell> {
                       label: 'Tournaments',
                       icon: Icons.emoji_events_outlined,
                       isActive: _activeTab == AdminNavTab.leaderboard,
-                    ),
-                    _buildNavPill(
-                      tab: AdminNavTab.finance,
-                      label: 'Payments',
-                      icon: Icons.credit_card_outlined,
-                      isActive: _activeTab == AdminNavTab.finance,
                     ),
                     _buildNavPill(
                       tab: AdminNavTab.wheel,
@@ -378,17 +378,66 @@ class _AdminAppShellState extends State<AdminAppShell> {
                       isActive: _activeTab == AdminNavTab.wheel,
                     ),
                     _buildNavPill(
-                      tab: AdminNavTab.aiCreator,
-                      label: 'AI Test Creator',
-                      icon: Icons.auto_awesome_rounded,
-                      isActive: _activeTab == AdminNavTab.aiCreator,
+                      tab: AdminNavTab.polls,
+                      label: 'Live Polls',
+                      icon: Icons.poll_outlined,
+                      isActive: _activeTab == AdminNavTab.polls,
                     ),
-                    const SizedBox(width: 4),
-                    _buildMoreNavButton(),
+                    _buildNavPill(
+                      tab: AdminNavTab.posts,
+                      label: 'Community Posts',
+                      icon: Icons.article_outlined,
+                      isActive: _activeTab == AdminNavTab.posts,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.finance,
+                      label: 'Payments',
+                      icon: Icons.credit_card_outlined,
+                      isActive: _activeTab == AdminNavTab.finance,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.banners,
+                      label: 'Promo Banners',
+                      icon: Icons.view_carousel_outlined,
+                      isActive: _activeTab == AdminNavTab.banners,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.referrals,
+                      label: 'Referrals',
+                      icon: Icons.share_outlined,
+                      isActive: _activeTab == AdminNavTab.referrals,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.notifications,
+                      label: 'Notifications',
+                      icon: Icons.notifications_none_rounded,
+                      isActive: _activeTab == AdminNavTab.notifications,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.support,
+                      label: 'Support Tickets',
+                      icon: Icons.headset_mic_outlined,
+                      isActive: _activeTab == AdminNavTab.support,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.feedback,
+                      label: 'User Feedback',
+                      icon: Icons.feedback_outlined,
+                      isActive: _activeTab == AdminNavTab.feedback,
+                    ),
+                    _buildNavPill(
+                      tab: AdminNavTab.settings,
+                      label: 'Settings',
+                      icon: Icons.settings_outlined,
+                      isActive: _activeTab == AdminNavTab.settings,
+                    ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(width: 20),
+          ] else
+            const Spacer(),
 
           // RIGHT: Notifications Bell + User Profile Avatar
           Row(
@@ -528,6 +577,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                             Text(
                               'Admin User',
                               style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF1E293B),
@@ -538,6 +588,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                             Text(
                               'Super Admin',
                               style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
                                 fontSize: 11,
                                 color: Color(0xFF94A3B8),
                                 fontWeight: FontWeight.w500,
@@ -592,6 +643,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                 child: Text(
                   label,
                   style: TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
                     fontSize: 13,
                     fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                     color: isActive ? Colors.white : const Color(0xFF334155),
@@ -602,195 +654,6 @@ class _AdminAppShellState extends State<AdminAppShell> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  // ==========================================
-  // MORE BUTTON WITH ALL 18 SIDEBAR TABS
-  // ==========================================
-  Widget _buildMoreNavButton() {
-    final directTabs = [
-      AdminNavTab.overview,
-      AdminNavTab.tests,
-      AdminNavTab.battleQs,
-      AdminNavTab.patterns,
-      AdminNavTab.users,
-      AdminNavTab.contests,
-      AdminNavTab.leaderboard,
-      AdminNavTab.finance,
-      AdminNavTab.wheel,
-      AdminNavTab.aiCreator,
-    ];
-    final isMoreActive = !directTabs.contains(_activeTab);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      child: PopupMenuButton<AdminNavTab>(
-        tooltip: 'All Navigation Modules',
-        offset: const Offset(0, 44),
-        elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-        color: Colors.white,
-        constraints: const BoxConstraints(maxHeight: 520, minWidth: 260, maxWidth: 300),
-        onSelected: _navigateToTab,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-          decoration: BoxDecoration(
-            color: isMoreActive ? const Color(0xFF5636F5) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.more_horiz_rounded,
-                size: 16,
-                color: isMoreActive ? Colors.white : const Color(0xFF475569),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'More',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isMoreActive ? FontWeight.w700 : FontWeight.w500,
-                  color: isMoreActive ? Colors.white : const Color(0xFF334155),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 16,
-                color: isMoreActive ? Colors.white : const Color(0xFF64748B),
-              ),
-            ],
-          ),
-        ),
-        itemBuilder: (context) => [
-          _buildPopupSectionTitle('CORE MODULES'),
-          _buildPopupItem(AdminNavTab.overview, 'Dashboard', Icons.dashboard_rounded),
-          _buildPopupItem(AdminNavTab.tests, 'Test Series', Icons.menu_book_outlined),
-          _buildPopupItem(AdminNavTab.users, 'Users Management', Icons.people_outline_rounded),
-          _buildPopupItem(AdminNavTab.patterns, 'Exam Patterns', Icons.layers_outlined),
-          _buildPopupItem(
-            AdminNavTab.aiCreator,
-            'AI Test Creator',
-            Icons.psychology_outlined,
-            badgeText: 'AI',
-            badgeColor: const Color(0xFF6366F1),
-          ),
-
-          const PopupMenuDivider(height: 12),
-          _buildPopupSectionTitle('LIVE & COMMUNITY'),
-          _buildPopupItem(
-            AdminNavTab.contests,
-            'Contests & Battles',
-            Icons.sports_esports_outlined,
-            badgeText: 'LIVE',
-            badgeColor: const Color(0xFFEF4444),
-          ),
-          _buildPopupItem(AdminNavTab.leaderboard, 'Leaderboard', Icons.leaderboard_outlined),
-          _buildPopupItem(AdminNavTab.posts, 'Community Posts', Icons.chat_bubble_outline_rounded),
-          _buildPopupItem(
-            AdminNavTab.wheel,
-            'Lucky Wheel',
-            Icons.donut_large_rounded,
-            badgeText: 'NEW',
-            badgeColor: const Color(0xFF10B981),
-          ),
-          _buildPopupItem(AdminNavTab.battleQs, 'Questions Management', Icons.help_outline_rounded),
-          _buildPopupItem(AdminNavTab.polls, 'Live Polls', Icons.poll_outlined),
-
-          const PopupMenuDivider(height: 12),
-          _buildPopupSectionTitle('FINANCE & GROWTH'),
-          _buildPopupItem(AdminNavTab.finance, 'Finance & Wallet', Icons.account_balance_wallet_outlined),
-          _buildPopupItem(AdminNavTab.referrals, 'Referrals & Earnings', Icons.share_outlined),
-          _buildPopupItem(AdminNavTab.banners, 'Promo Banners', Icons.image_outlined),
-          _buildPopupItem(AdminNavTab.notifications, 'Notifications', Icons.notifications_active_outlined),
-
-          const PopupMenuDivider(height: 12),
-          _buildPopupSectionTitle('SYSTEM & SUPPORT'),
-          _buildPopupItem(AdminNavTab.support, 'Support Tickets', Icons.confirmation_number_outlined),
-          _buildPopupItem(AdminNavTab.feedback, 'User Feedback', Icons.rate_review_outlined),
-          _buildPopupItem(AdminNavTab.settings, 'Platform Settings', Icons.settings_outlined),
-        ],
-      ),
-    );
-  }
-
-  PopupMenuEntry<AdminNavTab> _buildPopupSectionTitle(String title) {
-    return PopupMenuItem<AdminNavTab>(
-      enabled: false,
-      height: 26,
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          color: Color(0xFF94A3B8),
-          letterSpacing: 1.0,
-        ),
-      ),
-    );
-  }
-
-  PopupMenuEntry<AdminNavTab> _buildPopupItem(
-    AdminNavTab tab,
-    String title,
-    IconData icon, {
-    String? badgeText,
-    Color? badgeColor,
-  }) {
-    final isSelected = _activeTab == tab;
-
-    return PopupMenuItem<AdminNavTab>(
-      value: tab,
-      height: 38,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEEF2FF) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 17,
-              color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF1E293B),
-                ),
-              ),
-            ),
-            if (badgeText != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                decoration: BoxDecoration(
-                  color: (badgeColor ?? const Color(0xFF4F46E5)).withAlpha(25),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  badgeText,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    color: badgeColor ?? const Color(0xFF4F46E5),
-                  ),
-                ),
-              ),
-          ],
         ),
       ),
     );
