@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
@@ -68,6 +69,14 @@ class RankearnAdminApp extends StatelessWidget {
     return MaterialApp(
       title: 'Rankearn Admin Panel',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.trackpad,
+        },
+      ),
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
@@ -101,6 +110,13 @@ class AdminAppShell extends StatefulWidget {
 class _AdminAppShellState extends State<AdminAppShell> {
   late AdminNavTab _activeTab = widget.initialTab;
   late bool _isLoggedIn = widget.startLoggedIn;
+  final ScrollController _navScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _navScrollController.dispose();
+    super.dispose();
+  }
 
   void _navigateToTab(AdminNavTab tab) {
     setState(() {
@@ -115,7 +131,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final isNarrow = screenWidth < 1000;
+    final isNarrow = screenWidth < 800;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -136,7 +152,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
               color: Colors.white,
               child: SafeArea(
                 bottom: false,
-                child: _buildPixelPerfectHeaderBar(context, isNarrow),
+                child: _buildPixelPerfectHeaderBar(context, isNarrow, screenWidth),
               ),
             ),
 
@@ -190,7 +206,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
   // ==========================================
   // TOP NAVBAR MATCHING SCREENSHOT EXACTLY
   // ==========================================
-  Widget _buildPixelPerfectHeaderBar(BuildContext context, bool isNarrow) {
+  Widget _buildPixelPerfectHeaderBar(BuildContext context, bool isNarrow, double screenWidth) {
     return Container(
       height: isNarrow ? 60 : 70,
       width: double.infinity,
@@ -211,102 +227,19 @@ class _AdminAppShellState extends State<AdminAppShell> {
       child: Row(
         children: [
           // LEFT: (Hamburger menu if narrow) + Brand Trophy + Rankearn & Admin Panel
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (isNarrow) ...[
-                Builder(
-                  builder: (ctx) => IconButton(
-                    icon: const Icon(
-                      Icons.menu_rounded,
-                      color: Color(0xFF101A3A),
-                      size: 24,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                    onPressed: () => Scaffold.of(ctx).openDrawer(),
-                    tooltip: 'Open Menu',
-                  ),
-                ),
-                const SizedBox(width: 6),
-              ],
-              Container(
-                width: isNarrow ? 28 : 34,
-                height: isNarrow ? 28 : 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF9E6),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.emoji_events_rounded,
-                  color: const Color(0xFFF59E0B),
-                  size: isNarrow ? 18 : 22,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Rank',
-                          style: TextStyle(
-                            fontFamily: 'Plus Jakarta Sans',
-                            fontSize: isNarrow ? 16 : 18,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF101A3A),
-                            letterSpacing: -0.4,
-                            height: 1.15,
-                          ),
-                        ),
-                        TextSpan(
-                          text: 'earn',
-                          style: TextStyle(
-                            fontFamily: 'Plus Jakarta Sans',
-                            fontSize: isNarrow ? 16 : 18,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF5636F5),
-                            letterSpacing: -0.4,
-                            height: 1.15,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'Admin Panel',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: 0.2,
-                        height: 1.1,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          if (isNarrow)
+            Flexible(child: _buildBrandHeaderLeft(isNarrow))
+          else
+            _buildBrandHeaderLeft(isNarrow),
 
           // MIDDLE: Horizontal Navigation Pills (Left-aligned right after logo)
           if (!isNarrow) ...[
-            const SizedBox(width: 24),
+            const SizedBox(width: 18),
             Expanded(
               child: SingleChildScrollView(
+                controller: _navScrollController,
                 scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -434,12 +367,13 @@ class _AdminAppShellState extends State<AdminAppShell> {
                 ),
               ),
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 14),
           ] else
             const Spacer(),
 
           // RIGHT: Notifications Bell + User Profile Avatar
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Notification Bell with Red Badge "3"
               Stack(
@@ -449,16 +383,18 @@ class _AdminAppShellState extends State<AdminAppShell> {
                     icon: const Icon(
                       Icons.notifications_none_rounded,
                       color: Color(0xFF64748B),
-                      size: 23,
+                      size: 22,
                     ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     onPressed: () => setState(() => _activeTab = AdminNavTab.notifications),
                   ),
                   Positioned(
-                    top: 8,
-                    right: 8,
+                    top: 2,
+                    right: 2,
                     child: Container(
-                      width: 16,
-                      height: 16,
+                      width: 15,
+                      height: 15,
                       decoration: const BoxDecoration(
                         color: Color(0xFFEF4444),
                         shape: BoxShape.circle,
@@ -468,7 +404,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                         '3',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 9.5,
+                          fontSize: 9,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -567,8 +503,8 @@ class _AdminAppShellState extends State<AdminAppShell> {
                           fit: BoxFit.cover,
                         ),
                       ),
-                      if (!isNarrow) ...[
-                        const SizedBox(width: 10),
+                      if (!isNarrow && screenWidth >= 1200) ...[
+                        const SizedBox(width: 8),
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -608,6 +544,106 @@ class _AdminAppShellState extends State<AdminAppShell> {
   }
 
   // ==========================================
+  // BRAND HEADER LEFT (LOGO & BADGE)
+  // ==========================================
+  Widget _buildBrandHeaderLeft(bool isNarrow) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isNarrow) ...[
+          Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(
+                Icons.menu_rounded,
+                color: Color(0xFF101A3A),
+                size: 24,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+              tooltip: 'Open Menu',
+            ),
+          ),
+          const SizedBox(width: 6),
+        ],
+        Container(
+          width: isNarrow ? 28 : 34,
+          height: isNarrow ? 28 : 34,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF9E6),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.emoji_events_rounded,
+            color: const Color(0xFFF59E0B),
+            size: isNarrow ? 18 : 22,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Rank',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: isNarrow ? 16 : 18,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF101A3A),
+                      letterSpacing: -0.4,
+                      height: 1.15,
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'earn',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: isNarrow ? 16 : 18,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF5636F5),
+                      letterSpacing: -0.4,
+                      height: 1.15,
+                    ),
+                  ),
+                ],
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'Admin Panel',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.2,
+                  height: 1.1,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
   // NAVIGATION PILL WIDGET
   // ==========================================
   Widget _buildNavPill({
@@ -618,12 +654,12 @@ class _AdminAppShellState extends State<AdminAppShell> {
     required bool isActive,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 1.5),
       child: InkWell(
         onTap: () => _navigateToTab(tab),
         borderRadius: BorderRadius.circular(6),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 7.5, vertical: 7),
           decoration: BoxDecoration(
             color: Colors.transparent,
             border: Border(
@@ -642,19 +678,17 @@ class _AdminAppShellState extends State<AdminAppShell> {
                     size: 16,
                     color: isActive ? const Color(0xFF5636F5) : const Color(0xFF64748B),
                   ),
-              const SizedBox(width: 7),
-              Flexible(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 13,
-                    fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                    color: isActive ? const Color(0xFF5636F5) : const Color(0xFF334155),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 13,
+                  fontWeight: isActive ? FontWeight.w800 : FontWeight.w700,
+                  color: isActive ? const Color(0xFF5636F5) : const Color(0xFF334155),
+                  letterSpacing: -0.2,
                 ),
+                maxLines: 1,
               ),
             ],
           ),
