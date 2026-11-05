@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart' hide BattleType;
 import '../../overview/banner_image_data.dart';
-import '../../overview/overview_charts.dart';
 import '../models/battle_dashboard_models.dart';
 import '../services/battle_dashboard_service.dart';
 import '../widgets/live_players_chart.dart';
@@ -431,115 +430,16 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
           spacing: 16,
           runSpacing: 16,
           children: metrics.map((m) {
-            return Container(
+            return AdminMetricCard(
               width: cardWidth,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadii.card,
-                border: Border.all(color: AppColors.borderSubtle),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x06000000),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // Icon Circular Badge
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: m.color,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(m.icon, color: Colors.white, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Middle Value and Subtitle
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                m.value,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF0F172A),
-                                  letterSpacing: -0.5,
-                                  height: 1.1,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (m.growth.isNotEmpty) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFDCFCE7),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  m.growth,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF16A34A),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            if (m.isLive) ...[
-                              const SizedBox(width: 6),
-                              _buildRedLivePill(),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          m.title,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF64748B),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          m.subtitle,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Right Sparkline Chart
-                  SparklineChart(
-                    data: m.sparklineData,
-                    color: m.color,
-                    width: 58,
-                    height: 28,
-                  ),
-                ],
-              ),
+              title: m.title,
+              value: m.value,
+              growth: m.growth,
+              subtitle: m.subtitle,
+              badge: m.isLive ? _buildRedLivePill() : null,
+              icon: m.icon,
+              color: m.color,
+              sparklineData: m.sparklineData,
             );
           }).toList(),
         );

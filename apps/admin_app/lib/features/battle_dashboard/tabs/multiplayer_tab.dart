@@ -75,40 +75,44 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
                 spacing: 16,
                 runSpacing: 16,
                 children: [
-                  _buildKpiCard(
+                  AdminMetricCard(
                     title: 'Active Arenas',
                     value: '$liveArenas',
                     subtitle: 'Multiplayer competitions live',
                     icon: Icons.groups_rounded,
                     color: AppColors.battleAdminPurple,
-                    bg: AppColors.brandPurpleLight,
+                    iconBgColor: AppColors.brandPurpleLight,
+                    iconColor: AppColors.battleAdminPurple,
                     width: cardWidth,
                   ),
-                  _buildKpiCard(
+                  AdminMetricCard(
                     title: 'Total Contestants',
                     value: '$totalPlayersInMulti',
                     subtitle: 'Players in arenas right now',
                     icon: Icons.person_pin_circle_rounded,
                     color: AppColors.brandBlue,
-                    bg: AppColors.brandBlueLight,
+                    iconBgColor: AppColors.brandBlueLight,
+                    iconColor: AppColors.brandBlue,
                     width: cardWidth,
                   ),
-                  _buildKpiCard(
+                  AdminMetricCard(
                     title: 'Total Prize Pool',
                     value: '$totalPrizePool',
                     subtitle: 'Coins distributed to winners',
                     icon: Icons.monetization_on_rounded,
                     color: AppColors.coinGold,
-                    bg: AppColors.coinGoldLight,
+                    iconBgColor: AppColors.coinGoldLight,
+                    iconColor: AppColors.coinGold,
                     width: cardWidth,
                   ),
-                  _buildKpiCard(
+                  AdminMetricCard(
                     title: 'Waiting for Launch',
                     value: '$waitingArenas',
                     subtitle: 'Filling player capacity',
                     icon: Icons.schedule_rounded,
                     color: AppColors.brandGreen,
-                    bg: AppColors.brandGreenLight,
+                    iconBgColor: AppColors.brandGreenLight,
+                    iconColor: AppColors.brandGreen,
                     width: cardWidth,
                   ),
                 ],
@@ -240,78 +244,6 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
                 return _buildMultiplayerCard(b);
               },
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKpiCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required Color bg,
-    required double width,
-  }) {
-    return Container(
-      width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.borderSubtle),
-        boxShadow: AppShadows.subtle,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                    letterSpacing: -0.5,
-                    height: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF94A3B8),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

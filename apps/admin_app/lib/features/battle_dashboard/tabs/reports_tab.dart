@@ -114,52 +114,61 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
           const SizedBox(height: 20),
 
           // 2. OVERVIEW METRICS ROW
-          Row(
-            children: [
-              Expanded(
-                child: _buildMetricTile(
-                  'Total Matches Hosted',
-                  _timeRange == 'Today' ? '3,802' : '28,490',
-                  '↑ +24%',
-                  AppColors.battleAdminPurple,
-                  AppColors.brandPurpleLight,
-                  Icons.sports_kabaddi_rounded,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildMetricTile(
-                  'Total Coin Volume',
-                  _timeRange == 'Today' ? '184,200' : '1,420,500',
-                  '↑ +19%',
-                  AppColors.coinGold,
-                  AppColors.coinGoldLight,
-                  Icons.monetization_on_rounded,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildMetricTile(
-                  'Platform Rake (15%)',
-                  _timeRange == 'Today' ? '27,630 Coins' : '213,075 Coins',
-                  '↑ +18%',
-                  AppColors.brandGreen,
-                  AppColors.brandGreenLight,
-                  Icons.trending_up_rounded,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildMetricTile(
-                  'Completion Rate',
-                  '98.4%',
-                  '↑ +1.2%',
-                  AppColors.brandBlue,
-                  AppColors.brandBlueLight,
-                  Icons.check_circle_outline_rounded,
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cardWidth = constraints.maxWidth > 1000
+                  ? (constraints.maxWidth - (16 * 3)) / 4
+                  : constraints.maxWidth > 600
+                      ? (constraints.maxWidth - 16) / 2
+                      : constraints.maxWidth;
+
+              return Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  AdminMetricCard(
+                    width: cardWidth,
+                    title: 'Total Matches Hosted',
+                    value: _timeRange == 'Today' ? '3,802' : '28,490',
+                    growth: '+24%',
+                    subtitle: 'Across all modes',
+                    icon: Icons.sports_kabaddi_rounded,
+                    color: AppColors.battleAdminPurple,
+                    sparklineData: const [10, 14, 18, 22, 28, 32, 40],
+                  ),
+                  AdminMetricCard(
+                    width: cardWidth,
+                    title: 'Total Coin Volume',
+                    value: _timeRange == 'Today' ? '184,200' : '1,420,500',
+                    growth: '+19%',
+                    subtitle: 'Wagered coins',
+                    icon: Icons.monetization_on_rounded,
+                    color: AppColors.coinGold,
+                    sparklineData: const [20, 24, 22, 28, 35, 42, 48],
+                  ),
+                  AdminMetricCard(
+                    width: cardWidth,
+                    title: 'Platform Rake (15%)',
+                    value: _timeRange == 'Today' ? '27,630 Coins' : '213,075 Coins',
+                    growth: '+18%',
+                    subtitle: 'Platform revenue',
+                    icon: Icons.trending_up_rounded,
+                    color: AppColors.brandGreen,
+                    sparklineData: const [18, 22, 26, 30, 36, 40, 42],
+                  ),
+                  AdminMetricCard(
+                    width: cardWidth,
+                    title: 'Completion Rate',
+                    value: '98.4%',
+                    growth: '+1.2%',
+                    subtitle: 'Completed games',
+                    icon: Icons.check_circle_outline_rounded,
+                    color: AppColors.brandBlue,
+                    sparklineData: const [95, 96, 96.5, 97, 97.8, 98.1, 98.4],
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
 
@@ -321,73 +330,6 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                       );
                     },
                   ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricTile(String label, String value, String growth, Color color, Color bg, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-        boxShadow: AppShadows.subtle,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        value,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                          letterSpacing: -0.5,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      growth,
-                      style: AppTypography.labelSmall.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.brandGreen,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
               ],
             ),
           ),

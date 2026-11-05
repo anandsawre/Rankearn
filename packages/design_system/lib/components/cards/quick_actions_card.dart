@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../tokens/colors.dart';
+import '../../tokens/radii.dart';
+import '../../tokens/shadows.dart';
+import '../../tokens/typography.dart';
 
 /// Data model for a single quick action item.
 class QuickActionItemData {
@@ -26,7 +30,7 @@ class QuickActionItemData {
   });
 }
 
-/// A reusable Quick Actions card component.
+/// A reusable Quick Actions card component powered strictly by Rankearn design tokens.
 ///
 /// Displays a header with a ⚡ icon, "Quick Actions" title, and an optional
 /// "Customize" button, followed by a row of action tiles. Each tile has a
@@ -39,8 +43,8 @@ class QuickActionItemData {
 ///     QuickActionItemData(
 ///       label: 'Add\nQuestion',
 ///       icon: Icons.add_circle_outline_rounded,
-///       iconColor: Color(0xFF5636F5),
-///       cardColor: Color(0xFFF5F3FF),
+///       iconColor: AppColors.brandPurple,
+///       cardColor: AppColors.brandPurpleLight,
 ///       onTap: () => {},
 ///     ),
 ///     // ...
@@ -86,15 +90,9 @@ class QuickActionsCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
-          ),
-        ],
+        borderRadius: AppRadii.borderLg,
+        border: Border.all(color: AppColors.borderSubtle, width: 1.1),
+        boxShadow: AppShadows.subtle,
       ),
       padding: isCompact
           ? const EdgeInsets.symmetric(horizontal: 14, vertical: 8)
@@ -116,7 +114,7 @@ class QuickActionsCard extends StatelessWidget {
                     width: isCompact ? 20 : 24,
                     height: isCompact ? 20 : 24,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B),
+                      color: AppColors.coinGold,
                       borderRadius: BorderRadius.circular(isCompact ? 5 : 7),
                     ),
                     alignment: Alignment.center,
@@ -130,9 +128,10 @@ class QuickActionsCard extends StatelessWidget {
                   Text(
                     'Quick Actions',
                     style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
                       fontSize: isCompact ? 13 : 14,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF101A3A),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -147,7 +146,7 @@ class QuickActionsCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(isCompact ? 6 : 8),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: AppColors.borderSubtle),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -155,15 +154,16 @@ class QuickActionsCard extends StatelessWidget {
                       Icon(
                         Icons.settings_outlined,
                         size: isCompact ? 12 : 13,
-                        color: const Color(0xFF64748B),
+                        color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'Customize',
                         style: TextStyle(
+                          fontFamily: AppTypography.fontHeading,
                           fontSize: isCompact ? 11 : 11.5,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -252,6 +252,17 @@ class _QuickActionTileState extends State<_QuickActionTile> {
     final d = widget.data;
     final compact = widget.compact;
 
+    String displayLabel = d.label;
+    if (!displayLabel.contains('\n')) {
+      final words = displayLabel.trim().split(' ');
+      if (words.length == 2) {
+        displayLabel = '${words[0]}\n${words[1]}';
+      } else if (words.length > 2) {
+        final mid = (words.length / 2).ceil();
+        displayLabel = '${words.sublist(0, mid).join(' ')}\n${words.sublist(mid).join(' ')}';
+      }
+    }
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
@@ -314,20 +325,26 @@ class _QuickActionTileState extends State<_QuickActionTile> {
                   size: compact ? 17 : 22,
                 ),
               ),
-              SizedBox(height: compact ? 3 : 8),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  d.label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: compact ? 9.5 : 11,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF334155),
-                    height: compact ? 1.12 : 1.2,
+              SizedBox(height: compact ? 3 : 6),
+              SizedBox(
+                height: compact ? 24 : 28,
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      displayLabel,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontHeading,
+                        fontSize: compact ? 9.5 : 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        height: compact ? 1.15 : 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

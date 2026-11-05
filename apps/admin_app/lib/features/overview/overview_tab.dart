@@ -32,9 +32,21 @@ class OverviewTab extends StatefulWidget {
 
 class _OverviewTabState extends State<OverviewTab> {
   String _totalUsers = '12,458';
+  String _usersGrowth = '+12%';
+  String _usersSubtitle = '+1,324 this week';
+
   String _totalQuizzes = '386';
+  String _quizzesGrowth = '+8%';
+  String _quizzesSubtitle = '+28 this week';
+
   String _totalQuestions = '9,842';
+  String _questionsGrowth = '+15%';
+  String _questionsSubtitle = '+1,280 this week';
+
   String _totalAttempts = '28,731';
+  String _attemptsGrowth = '+22%';
+  String _attemptsSubtitle = '+5,182 this week';
+
   final String _activeLiveQuiz = '3';
 
   @override
@@ -48,24 +60,86 @@ class _OverviewTabState extends State<OverviewTab> {
     if (client == null) return;
 
     try {
-      final userRes = await client.from('profiles').select('id');
-      final usersCount = (userRes as List).length;
+      final now = DateTime.now();
+      final oneWeekAgo = now.subtract(const Duration(days: 7));
 
-      final testsRes = await client.from('tests').select('id');
-      final testsCount = (testsRes as List).length;
+      final userRes = await client.from('profiles').select('id, created_at');
+      final usersList = userRes as List;
+      final usersCount = usersList.length;
+      final usersWeek = usersList.where((u) {
+        final ca = u['created_at'];
+        return ca != null && DateTime.tryParse(ca.toString())?.isAfter(oneWeekAgo) == true;
+      }).length;
 
-      final questionsRes = await client.from('questions').select('id');
-      final questionsCount = (questionsRes as List).length;
+      final testsRes = await client.from('tests').select('id, created_at');
+      final testsList = testsRes as List;
+      final testsCount = testsList.length;
+      final testsWeek = testsList.where((t) {
+        final ca = t['created_at'];
+        return ca != null && DateTime.tryParse(ca.toString())?.isAfter(oneWeekAgo) == true;
+      }).length;
 
-      final attemptsRes = await client.from('attempts').select('id');
-      final attemptsCount = (attemptsRes as List).length;
+      final questionsRes = await client.from('questions').select('id, created_at');
+      final questionsList = questionsRes as List;
+      final questionsCount = questionsList.length;
+      final questionsWeek = questionsList.where((q) {
+        final ca = q['created_at'];
+        return ca != null && DateTime.tryParse(ca.toString())?.isAfter(oneWeekAgo) == true;
+      }).length;
+
+      final attemptsRes = await client.from('attempts').select('id, created_at');
+      final attemptsList = attemptsRes as List;
+      final attemptsCount = attemptsList.length;
+      final attemptsWeek = attemptsList.where((a) {
+        final ca = a['created_at'];
+        return ca != null && DateTime.tryParse(ca.toString())?.isAfter(oneWeekAgo) == true;
+      }).length;
 
       if (mounted) {
         setState(() {
-          if (usersCount > 0) _totalUsers = _formatCount(usersCount);
-          if (testsCount > 0) _totalQuizzes = _formatCount(testsCount);
-          if (questionsCount > 0) _totalQuestions = _formatCount(questionsCount);
-          if (attemptsCount > 0) _totalAttempts = _formatCount(attemptsCount);
+          if (usersCount > 0) {
+            _totalUsers = _formatCount(usersCount);
+            if (usersWeek > 0) {
+              _usersSubtitle = '+$usersWeek this week';
+              _usersGrowth = '+${((usersWeek / usersCount) * 100).round()}%';
+            } else {
+              _usersSubtitle = 'Registered platform users';
+              _usersGrowth = '';
+            }
+          }
+
+          if (testsCount > 0) {
+            _totalQuizzes = _formatCount(testsCount);
+            if (testsWeek > 0) {
+              _quizzesSubtitle = '+$testsWeek this week';
+              _quizzesGrowth = '+${((testsWeek / testsCount) * 100).round()}%';
+            } else {
+              _quizzesSubtitle = 'Published test series';
+              _quizzesGrowth = '';
+            }
+          }
+
+          if (questionsCount > 0) {
+            _totalQuestions = _formatCount(questionsCount);
+            if (questionsWeek > 0) {
+              _questionsSubtitle = '+$questionsWeek this week';
+              _questionsGrowth = '+${((questionsWeek / questionsCount) * 100).round()}%';
+            } else {
+              _questionsSubtitle = 'Active question bank';
+              _questionsGrowth = '';
+            }
+          }
+
+          if (attemptsCount > 0) {
+            _totalAttempts = _formatCount(attemptsCount);
+            if (attemptsWeek > 0) {
+              _attemptsSubtitle = '+$attemptsWeek this week';
+              _attemptsGrowth = '+${((attemptsWeek / attemptsCount) * 100).round()}%';
+            } else {
+              _attemptsSubtitle = 'Completed user attempts';
+              _attemptsGrowth = '';
+            }
+          }
         });
       }
     } catch (_) {
@@ -344,50 +418,50 @@ class _OverviewTabState extends State<OverviewTab> {
   late final List<Map<String, dynamic>> _quickActions = [
     {
       'id': 'create_quiz',
-      'label': 'Create Quiz',
+      'label': 'Create\nQuiz',
       'icon': Icons.add_circle_outline_rounded,
-      'color': const Color(0xFF6366F1),
-      'cardColor': const Color(0xFFEEF2FF),
+      'color': AppColors.brandPurple,
+      'cardColor': AppColors.brandPurpleLight,
       'enabled': true,
     },
     {
       'id': 'add_question',
-      'label': 'Add Question',
+      'label': 'Add\nQuestion',
       'icon': Icons.description_outlined,
-      'color': const Color(0xFF0EA5E9),
-      'cardColor': const Color(0xFFE0F2FE),
+      'color': AppColors.brandBlue,
+      'cardColor': AppColors.brandBlueLight,
       'enabled': true,
     },
     {
       'id': 'manage_categories',
-      'label': 'Target Exams',
+      'label': 'Target\nExams',
       'icon': Icons.explore_outlined,
-      'color': const Color(0xFF5636F5),
-      'cardColor': const Color(0xFFF5F3FF),
+      'color': AppColors.battleAdminPurple,
+      'cardColor': AppColors.battleAdminPurpleLight,
       'enabled': true,
     },
     {
       'id': 'start_live_quiz',
-      'label': 'Start Live Quiz',
+      'label': 'Start Live\nQuiz',
       'icon': Icons.cell_tower_rounded,
-      'color': const Color(0xFFEF4444),
-      'cardColor': const Color(0xFFFEE2E2),
+      'color': AppColors.liveRed,
+      'cardColor': AppColors.liveRedLight,
       'enabled': true,
     },
     {
       'id': 'create_tournament',
-      'label': 'Create Tournament',
+      'label': 'Create\nTournament',
       'icon': Icons.emoji_events_outlined,
-      'color': const Color(0xFFF59E0B),
-      'cardColor': const Color(0xFFFEF3C7),
+      'color': AppColors.coinGold,
+      'cardColor': AppColors.coinGoldLight,
       'enabled': true,
     },
     {
       'id': 'invite_users',
-      'label': 'Invite Users',
+      'label': 'Invite\nUsers',
       'icon': Icons.person_add_alt_1_outlined,
-      'color': const Color(0xFFEC4899),
-      'cardColor': const Color(0xFFFCE7F3),
+      'color': AppColors.brandPink,
+      'cardColor': AppColors.brandPinkLight,
       'enabled': true,
     },
   ];
@@ -432,9 +506,13 @@ class _OverviewTabState extends State<OverviewTab> {
                   });
                   setState(() {});
                 },
-                child: const Text(
+                child: Text(
                   'Reset to Default',
-                  style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontHeading,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               actions: [
@@ -442,20 +520,29 @@ class _OverviewTabState extends State<OverviewTab> {
                   onPressed: () {
                     Navigator.of(dialogCtx).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Quick Actions updated successfully'),
-                        duration: Duration(seconds: 2),
-                        backgroundColor: Color(0xFF0F172A),
+                      SnackBar(
+                        content: Text(
+                          'Quick Actions updated successfully',
+                          style: TextStyle(fontFamily: AppTypography.fontHeading),
+                        ),
+                        duration: const Duration(seconds: 2),
+                        backgroundColor: AppColors.textPrimary,
                       ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F172A),
+                    backgroundColor: AppColors.textPrimary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
                   ),
-                  child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w600)),
+                  child: Text(
+                    'Save Changes',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
               child: ConstrainedBox(
@@ -463,7 +550,7 @@ class _OverviewTabState extends State<OverviewTab> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: _quickActions.length,
-                  separatorBuilder: (ctx, idx) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  separatorBuilder: (ctx, idx) => Divider(height: 1, color: AppColors.borderSubtle),
                   itemBuilder: (context, index) {
                     final action = _quickActions[index];
                     final isEnabled = action['enabled'] as bool;
@@ -487,17 +574,18 @@ class _OverviewTabState extends State<OverviewTab> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              action['label'] as String,
-                              style: const TextStyle(
+                              (action['label'] as String).replaceAll('\n', ' '),
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontHeading,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF1E293B),
+                                color: AppColors.textPrimary,
                               ),
                             ),
                           ),
                           Switch(
                             value: isEnabled,
-                            activeTrackColor: const Color(0xFFEC4899),
+                            activeTrackColor: AppColors.brandPink,
                             onChanged: (val) {
                               setDialogState(() {
                                 action['enabled'] = val;
@@ -554,8 +642,8 @@ class _OverviewTabState extends State<OverviewTab> {
       (
         title: 'Total Users',
         value: _totalUsers,
-        growth: '+12%',
-        subtitle: '+1,324 this week',
+        growth: _usersGrowth,
+        subtitle: _usersSubtitle,
         icon: Icons.people_alt_rounded,
         color: const Color(0xFF3B82F6),
         sparklineData: const [10.0, 12.0, 11.5, 14.0, 16.0, 18.0, 22.0],
@@ -563,8 +651,8 @@ class _OverviewTabState extends State<OverviewTab> {
       (
         title: 'Total Quizzes',
         value: _totalQuizzes,
-        growth: '+8%',
-        subtitle: '+28 this week',
+        growth: _quizzesGrowth,
+        subtitle: _quizzesSubtitle,
         icon: Icons.description_rounded,
         color: const Color(0xFF10B981),
         sparklineData: const [8.0, 9.0, 8.5, 11.0, 12.0, 13.5, 16.0],
@@ -572,8 +660,8 @@ class _OverviewTabState extends State<OverviewTab> {
       (
         title: 'Total Questions',
         value: _totalQuestions,
-        growth: '+15%',
-        subtitle: '+1,280 this week',
+        growth: _questionsGrowth,
+        subtitle: _questionsSubtitle,
         icon: Icons.help_outline_rounded,
         color: const Color(0xFFF59E0B),
         sparklineData: const [12.0, 13.0, 15.0, 14.5, 17.0, 19.0, 24.0],
@@ -581,8 +669,8 @@ class _OverviewTabState extends State<OverviewTab> {
       (
         title: 'Total Attempts',
         value: _totalAttempts,
-        growth: '+22%',
-        subtitle: '+5,182 this week',
+        growth: _attemptsGrowth,
+        subtitle: _attemptsSubtitle,
         icon: Icons.emoji_events_rounded,
         color: const Color(0xFF8B5CF6),
         sparklineData: const [14.0, 15.5, 18.0, 17.5, 21.0, 25.0, 30.0],
@@ -591,7 +679,7 @@ class _OverviewTabState extends State<OverviewTab> {
         title: 'Active Live Quiz',
         value: _activeLiveQuiz,
         growth: '',
-        subtitle: '+1 started today',
+        subtitle: 'Active live contests',
         icon: Icons.podcasts_rounded,
         color: const Color(0xFFEF4444),
         sparklineData: const [2.0, 3.0, 2.5, 4.0, 3.2, 4.5, 3.8],
@@ -610,110 +698,15 @@ class _OverviewTabState extends State<OverviewTab> {
           spacing: 16,
           runSpacing: 16,
           children: metrics.map((m) {
-            return Container(
+            return AdminMetricCard(
               width: cardWidth,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFF1F5F9)),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x06000000),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // Icon Squircle / Circle
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: m.color,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(m.icon, color: Colors.white, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Middle Value and Subtitle
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          m.title,
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 4,
-                          runSpacing: 2,
-                          children: [
-                            Text(
-                              m.value,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            if (m.growth.isNotEmpty) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFECFDF5),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.arrow_upward_rounded, size: 9, color: Color(0xFF10B981)),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      m.growth,
-                                      style: const TextStyle(
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF10B981),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          m.subtitle,
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            color: Color(0xFF94A3B8),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Sparkline Curve
-                  SparklineChart(
-                    data: m.sparklineData,
-                    color: m.color,
-                    width: 58,
-                    height: 30,
-                  ),
-                ],
-              ),
+              title: m.title,
+              value: m.value,
+              growth: m.growth,
+              subtitle: m.subtitle,
+              icon: m.icon,
+              color: m.color,
+              sparklineData: m.sparklineData,
             );
           }).toList(),
         );

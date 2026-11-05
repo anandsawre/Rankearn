@@ -19,6 +19,7 @@ export 'components/cards/app_card.dart';
 export 'components/cards/quick_actions_card.dart';
 export 'components/cards/app_metric_card.dart';
 export 'components/cards/metric_card.dart';
+export 'components/cards/admin_metric_card.dart';
 export 'components/navigation/app_section_header.dart';
 export 'components/navigation/app_segmented_filter_nav.dart';
 export 'components/cards/feature_shortcut_card.dart';
