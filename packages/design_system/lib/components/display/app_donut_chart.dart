@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 import '../../tokens/shadows.dart';
+import '../../tokens/typography.dart';
 
 /// Data model representing a single slice in the Donut Chart.
 class DonutSlice {
@@ -127,7 +128,7 @@ class AppDonutChart extends StatelessWidget {
     final legendItems = slices.map((s) {
       return Padding(
         padding: EdgeInsets.symmetric(
-          vertical: fillHeight ? 1.5 : (isLarge ? 3.5 : 2.2),
+          vertical: isLarge ? 3.5 : 2.5,
         ),
         child: Row(
           children: [
@@ -226,7 +227,7 @@ class AppDonutChartCard extends StatelessWidget {
     required this.slices,
     this.totalCount = 0,
     this.totalLabel = 'Total',
-    this.height,
+    this.height = 260,
     this.fillHeight = false,
     this.chartSize,
     this.strokeWidth,
@@ -240,10 +241,14 @@ class AppDonutChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isExpandedMode = fillHeight || height != null;
+    final effectivePadding = padding ??
+        (height != null && height! >= 240
+            ? const EdgeInsets.all(20)
+            : const EdgeInsets.all(12));
 
     return Container(
       height: height,
-      padding: padding ?? const EdgeInsets.all(12),
+      padding: effectivePadding,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.borderLg,
@@ -272,8 +277,9 @@ class AppDonutChartCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 12.5,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontHeading,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                     letterSpacing: -0.2,
@@ -286,7 +292,7 @@ class AppDonutChartCard extends StatelessWidget {
               if (trailingHeader != null) trailingHeader!,
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
           // Donut Chart + Legend
           if (isExpandedMode)

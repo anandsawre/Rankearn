@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
-import 'overview_charts.dart';
 import 'banner_image_data.dart';
 
 class OverviewTab extends StatefulWidget {
@@ -31,6 +30,7 @@ class OverviewTab extends StatefulWidget {
 }
 
 class _OverviewTabState extends State<OverviewTab> {
+  String _userGrowthPeriod = 'Last 7 Days';
   String _totalUsers = '12,458';
   String _usersGrowth = '+12%';
   String _usersSubtitle = '+1,324 this week';
@@ -718,75 +718,13 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 3: QUIZ ATTEMPTS OVERVIEW (CHART 1)
   // ==========================================
   Widget _buildQuizAttemptsOverviewCard() {
-    return Container(
-      height: 260,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: const [
-                    Icon(Icons.bar_chart_rounded, color: Color(0xFF6366F1), size: 20),
-                    SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Quiz Attempts Overview',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.calendar_today_outlined, size: 12, color: Color(0xFF64748B)),
-                    SizedBox(width: 6),
-                    Text(
-                      'Oct 12, 2026 - Oct 18, 2026',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(Icons.arrow_drop_down, size: 16, color: Color(0xFF64748B)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Chart
-          const QuizAttemptsLineChart(height: 165),
-        ],
+    return AppLineChartCard(
+      title: 'Quiz Attempts Overview',
+      icon: Icons.bar_chart_rounded,
+      iconColor: const Color(0xFF6366F1),
+      trailingHeader: AdminTableDateRangeButton(
+        text: 'Oct 12, 2026 - Oct 18, 2026',
+        onTap: () {},
       ),
     );
   }
@@ -795,70 +733,16 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 3: USER GROWTH (CHART 2)
   // ==========================================
   Widget _buildUserGrowthCard() {
-    return Container(
-      height: 260,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: const [
-                    Icon(Icons.people_alt_rounded, color: Color(0xFF3B82F6), size: 19),
-                    SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'User Growth',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text(
-                      'Last 7 Days',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(Icons.keyboard_arrow_down, size: 14, color: Color(0xFF64748B)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const UserGrowthBarChart(height: 165),
-        ],
+    return AppBarChartCard(
+      title: 'User Growth',
+      icon: Icons.people_alt_rounded,
+      iconColor: const Color(0xFF3B82F6),
+      trailingHeader: AdminTableDropdown<String>(
+        value: _userGrowthPeriod,
+        items: const ['Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'This Year'],
+        onChanged: (val) {
+          setState(() => _userGrowthPeriod = val);
+        },
       ),
     );
   }
@@ -867,53 +751,25 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 3: CATEGORY WISE QUIZZES (CHART 3)
   // ==========================================
   Widget _buildCategoryWiseCard() {
-    return Container(
+    return const AppDonutChartCard(
       height: 260,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEF4444),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.pie_chart_rounded, color: Colors.white, size: 14),
-              ),
-              const SizedBox(width: 8),
-              const Flexible(
-                child: Text(
-                  'Category Wise Quizzes',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          const CategoryWiseDonutChart(),
-        ],
-      ),
+      padding: EdgeInsets.all(20),
+      title: 'Category Wise Quizzes',
+      icon: Icons.pie_chart_rounded,
+      iconBg: Color(0xFFEF4444),
+      totalCount: 386,
+      totalLabel: 'Total',
+      chartSize: 145,
+      strokeWidth: 20.0,
+      strokeCap: StrokeCap.round,
+      slices: [
+        DonutSlice(label: 'General Science', percentage: 28, color: Color(0xFF3B82F6)),
+        DonutSlice(label: 'Mathematics', percentage: 22, color: Color(0xFF8B5CF6)),
+        DonutSlice(label: 'Reasoning', percentage: 18, color: Color(0xFFF59E0B)),
+        DonutSlice(label: 'Current Affairs', percentage: 14, color: Color(0xFF06B6D4)),
+        DonutSlice(label: 'Technical', percentage: 10, color: Color(0xFFEC4899)),
+        DonutSlice(label: 'Others', percentage: 8, color: Color(0xFF94A3B8)),
+      ],
     );
   }
 
@@ -921,191 +777,8 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 4: RECENT QUIZZES
   // ==========================================
   Widget _buildRecentQuizzesCard() {
-    final quizzes = [
-      (
-        title: 'General Science Mock Test',
-        subtitle: 'General Science • 50 Questions',
-        status: 'Published',
-        isPublished: true,
-        date: 'Oct 18, 2026',
-        icon: Icons.science_outlined,
-        color: const Color(0xFF6366F1),
-      ),
-      (
-        title: 'Current Affairs - October 2026',
-        subtitle: 'Current Affairs • 30 Questions',
-        status: 'Published',
-        isPublished: true,
-        date: 'Oct 17, 2026',
-        icon: Icons.public_outlined,
-        color: const Color(0xFFF59E0B),
-      ),
-      (
-        title: 'Basic Mathematics',
-        subtitle: 'Mathematics • 40 Questions',
-        status: 'Draft',
-        isPublished: false,
-        date: 'Oct 16, 2026',
-        icon: Icons.calculate_outlined,
-        color: const Color(0xFFEC4899),
-      ),
-      (
-        title: 'Reasoning Practice Set',
-        subtitle: 'Reasoning • 35 Questions',
-        status: 'Published',
-        isPublished: true,
-        date: 'Oct 15, 2026',
-        icon: Icons.psychology_outlined,
-        color: const Color(0xFF0EA5E9),
-      ),
-      (
-        title: 'Physics - Important Questions',
-        subtitle: 'Physics • 50 Questions',
-        status: 'Published',
-        isPublished: true,
-        date: 'Oct 14, 2026',
-        icon: Icons.biotech_outlined,
-        color: const Color(0xFF8B5CF6),
-      ),
-    ];
-
-    return Container(
-      height: 355,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: const [
-                    Icon(Icons.description_outlined, color: Color(0xFFEF4444), size: 18),
-                    SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Recent Quizzes',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
-              InkWell(
-                onTap: widget.onGoToTests,
-                child: const Text(
-                  'View All',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF4F46E5),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ...quizzes.map((quiz) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 7.5),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: quiz.color,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(quiz.icon, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          quiz.title,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1E293B),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          quiz.subtitle,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: quiz.isPublished
-                              ? const Color(0xFFECFDF5)
-                              : const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          quiz.status,
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: quiz.isPublished
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFF3B82F6),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        quiz.date,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Color(0xFF94A3B8),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.more_vert, size: 16, color: Color(0xFF94A3B8)),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
+    return AppRecentQuizzesCard(
+      onViewAll: widget.onGoToTests,
     );
   }
 
@@ -1113,131 +786,8 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 4: RECENT USERS
   // ==========================================
   Widget _buildRecentUsersCard() {
-    final users = [
-      (initials: 'RK', name: 'Rahul Kumar', email: 'rahulkumar@gmail.com', date: 'Oct 18, 2026', color: const Color(0xFF6366F1)),
-      (initials: 'SP', name: 'Sneha Patel', email: 'sneha.patel@gmail.com', date: 'Oct 18, 2026', color: const Color(0xFF3B82F6)),
-      (initials: 'AM', name: 'Amit Mishra', email: 'amitmishra123@gmail.com', date: 'Oct 17, 2026', color: const Color(0xFF8B5CF6)),
-      (initials: 'PK', name: 'Pooja Kumari', email: 'pooja.kumari@email.com', date: 'Oct 17, 2026', color: const Color(0xFFEC4899)),
-      (initials: 'VS', name: 'Vikash Singh', email: 'vikashsingh@email.com', date: 'Oct 16, 2026', color: const Color(0xFF7C3AED)),
-    ];
-
-    return Container(
-      height: 355,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: const [
-                    Icon(Icons.people_alt_rounded, color: Color(0xFF3B82F6), size: 19),
-                    SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Recent Users',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
-              InkWell(
-                onTap: widget.onGoToUsers,
-                child: const Text(
-                  'View All',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF4F46E5),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ...users.map((user) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 7),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 17,
-                    backgroundColor: user.color,
-                    child: Text(
-                      user.initials,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.name,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1E293B),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          user.email,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w400,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    user.date,
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.more_vert, size: 16, color: Color(0xFF94A3B8)),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
+    return AppRecentUsersCard(
+      onViewAll: widget.onGoToUsers,
     );
   }
 
@@ -1245,133 +795,8 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 4: RECENT ACTIVITY
   // ==========================================
   Widget _buildRecentActivityCard() {
-    final activities = [
-      (
-        icon: Icons.emoji_events_rounded,
-        color: const Color(0xFFF59E0B),
-        title: 'New quiz created: General Science Mock Test',
-        time: '2 minutes ago',
-      ),
-      (
-        icon: Icons.person_rounded,
-        color: const Color(0xFF3B82F6),
-        title: 'New user registered: Rahul Kumar',
-        time: '15 minutes ago',
-      ),
-      (
-        icon: Icons.play_circle_fill_rounded,
-        color: const Color(0xFF10B981),
-        title: 'Live quiz started: Daily Quiz - 18 Oct',
-        time: '1 hour ago',
-      ),
-      (
-        icon: Icons.help_rounded,
-        color: const Color(0xFF0EA5E9),
-        title: '50 new questions added in Mathematics',
-        time: '2 hours ago',
-      ),
-      (
-        icon: Icons.flag_rounded,
-        color: const Color(0xFF8B5CF6),
-        title: 'Quiz attempts reached 10,000',
-        time: '3 hours ago',
-      ),
-      (
-        icon: Icons.military_tech_rounded,
-        color: const Color(0xFFF59E0B),
-        title: 'Tournament ended: Weekly Challenge',
-        time: '3 hours ago',
-      ),
-    ];
-
-    return Container(
-      height: 355,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  children: const [
-                    Icon(Icons.shield_outlined, color: Color(0xFFEF4444), size: 18),
-                    SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        'Recent Activity',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 6),
-              InkWell(
-                onTap: widget.onGoToNotifications,
-                child: const Text(
-                  'View All',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF4F46E5),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          ...activities.map((act) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 5.5),
-              child: Row(
-                children: [
-                  Icon(act.icon, color: act.color, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      act.title,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1E293B),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    act.time,
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
+    return AppRecentActivityCard(
+      onViewAll: widget.onGoToNotifications,
     );
   }
 
@@ -1379,173 +804,6 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 4: PLATFORM STATUS
   // ==========================================
   Widget _buildPlatformStatusCard() {
-    final services = [
-      'Database',
-      'API Services',
-      'Live Quiz Server',
-      'Payment Gateway',
-      'Notifications',
-      'File Storage',
-    ];
-
-    return Container(
-      height: 355,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Flexible(
-                child: Text(
-                  'Platform Status',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'All Systems Operational',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF10B981),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          ...services.map((svc) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.5),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 16),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            svc,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF334155),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'Operational',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF10B981),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Divider(color: Color(0xFFF1F5F9), height: 1),
-          ),
-
-          // Platform Metrics
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.speed_rounded, size: 14, color: Color(0xFF64748B)),
-                    SizedBox(width: 6),
-                    Text('Uptime', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                  ],
-                ),
-              ),
-              Text(
-                '99.9%',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.schedule_rounded, size: 14, color: Color(0xFF64748B)),
-                    SizedBox(width: 6),
-                    Text('Response Time', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                  ],
-                ),
-              ),
-              Text(
-                '120ms',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
-            runSpacing: 4,
-            children: const [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.history_rounded, size: 14, color: Color(0xFF64748B)),
-                  SizedBox(width: 6),
-                  Text('Last Updated', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                ],
-              ),
-              Text(
-                'Oct 18, 2026 10:24 AM',
-                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+    return const AppPlatformStatusCard();
   }
 }

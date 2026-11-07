@@ -36,6 +36,8 @@ export 'components/inputs/app_dropdown.dart';
 export 'components/display/badge_pill.dart';
 export 'components/display/app_icon_box.dart';
 export 'components/display/app_donut_chart.dart';
+export 'components/display/app_line_chart.dart';
+export 'components/display/app_bar_chart.dart';
 export 'components/display/app_hero_banner.dart';
 export 'components/display/hero_promo_banner.dart';
 export 'components/display/tests_hero_banner.dart';
@@ -99,8 +101,12 @@ export 'components/battle/battle_reward_card.dart';
 export 'components/battle/battle_wave_card.dart';
 export 'components/battle/battle_leave_dialog.dart';
 
-// Admin Portal Tables
+// Admin Portal Components
 export 'components/tables/admin_data_table_card.dart';
+export 'components/cards/app_platform_status_card.dart';
+export 'components/cards/app_recent_quizzes_card.dart';
+export 'components/cards/app_recent_users_card.dart';
+export 'components/cards/app_recent_activity_card.dart';
 
 // Showcase
 export 'showcase/design_system_showcase.dart';
