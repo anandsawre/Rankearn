@@ -1,9 +1,9 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 import '../models/category_item.dart';
 
+/// Target Exams Table Card powered by unified [AdminDataTableCard].
 class TargetExamsTableCard extends StatefulWidget {
   final List<ExamCategoryModel> exams;
   final List<CategoryItem> categories;
@@ -34,22 +34,9 @@ class TargetExamsTableCard extends StatefulWidget {
 
 class _TargetExamsTableCardState extends State<TargetExamsTableCard> {
   String _searchQuery = '';
-  late final TextEditingController _searchCtrl;
   Set<String> _localSelectedIds = {};
 
   Set<String> get _currentSelectedIds => widget.selectedIds ?? _localSelectedIds;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchCtrl = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
-  }
 
   void _toggleSelectAll(bool? val) {
     setState(() {
@@ -249,479 +236,451 @@ class _TargetExamsTableCardState extends State<TargetExamsTableCard> {
   Widget build(BuildContext context) {
     final filtered = _filteredExams;
     final isMobile = MediaQuery.of(context).size.width < 700;
+    final allSelected = filtered.isNotEmpty && filtered.every((e) => _currentSelectedIds.contains(e.id));
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header Row with Title and Add Button
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 12,
-            runSpacing: 10,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF5636F5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.explore_rounded, color: Colors.white, size: 18),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Target Exams & Syllabus',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF101A3A),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEEF2FF),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${widget.exams.length}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF5636F5),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Add Target Exam'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5636F5),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  elevation: 0,
-                ),
-                onPressed: widget.onAddExam,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cardWidth = (screenWidth - 340).clamp(860.0, 1800.0);
+    final double detailsWidth = (cardWidth * 0.22).clamp(180.0, 320.0);
+    final double subjectsWidth = (cardWidth * 0.20).clamp(160.0, 280.0);
+    const double fixedColumnsWidth = 24.0 + 24.0 + 95.0 + 85.0 + 85.0 + 110.0 + 32.0;
+    final double totalNeededWidth = fixedColumnsWidth + detailsWidth + subjectsWidth;
+    final double remainingSpace = cardWidth - totalNeededWidth;
+    final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 7).clamp(8.0, 56.0) : 8.0;
 
-          // Search Bar
-          TextField(
-            controller: _searchCtrl,
-            onChanged: (val) => setState(() => _searchQuery = val),
-            style: const TextStyle(fontSize: 13, color: Color(0xFF101A3A)),
-            decoration: InputDecoration(
-              hintText: 'Search target exams (e.g. BPSC, Railway, SSC) or subjects...',
-              hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-              prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(8)),
-                borderSide: BorderSide(color: Color(0xFF5636F5), width: 1.5),
-              ),
+    return AdminDataTableCard(
+      title: 'Target Exams & Syllabus',
+      totalCount: widget.exams.length,
+      icon: Icons.explore_rounded,
+      iconBgColor: AppColors.brandPurple,
+      searchQuery: _searchQuery,
+      searchHint: 'Search target exams (e.g. BPSC, Railway, SSC) or subjects...',
+      onSearchChanged: (val) => setState(() => _searchQuery = val),
+      itemLabel: 'target exams',
+      columnSpacing: dynamicColumnSpacing,
+      minWidth: 860.0,
+      headerActions: [
+        ElevatedButton.icon(
+          icon: const Icon(Icons.add_rounded, size: 16),
+          label: const Text('Add Target Exam'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.brandPurple,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            elevation: 0,
+            textStyle: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Exam List / Table
-          if (widget.isLoading)
-            const Padding(
+          onPressed: widget.onAddExam,
+        ),
+      ],
+      customBody: widget.isLoading
+          ? const Padding(
               padding: EdgeInsets.symmetric(vertical: 48),
               child: Center(
-                child: CircularProgressIndicator(color: Color(0xFF5636F5)),
+                child: CircularProgressIndicator(color: AppColors.brandPurple),
               ),
             )
-          else if (filtered.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              alignment: Alignment.center,
-              child: Column(
-                children: [
-                  const Icon(Icons.explore_off_outlined, size: 40, color: Color(0xFFCBD5E1)),
-                  const SizedBox(height: 8),
-                  Text(
-                    _searchQuery.isNotEmpty ? 'No target exams match your search' : 'No target exams in database yet',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF1E293B), fontSize: 13),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _searchQuery.isNotEmpty
-                        ? 'Try a different search keyword'
-                        : 'Click "+ Add Target Exam" above to add your first exam and syllabus.',
-                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 11.5),
-                  ),
-                ],
-              ),
-            )
-          else if (isMobile)
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filtered.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final exam = filtered[index];
-                final subjects = _getSubjectsForExam(exam.id);
-                final isSelected = _currentSelectedIds.contains(exam.id);
+          : (isMobile && filtered.isNotEmpty
+              ? ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final exam = filtered[index];
+                    final subjects = _getSubjectsForExam(exam.id);
+                    final isSelected = _currentSelectedIds.contains(exam.id);
 
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFF4F7FF) : const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: isSelected ? const Color(0xFF5636F5) : const Color(0xFFE2E8F0)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: isSelected,
-                            activeColor: const Color(0xFF5636F5),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                            onChanged: (val) => _toggleSelectRow(exam.id, val),
-                          ),
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                            ),
-                            alignment: Alignment.center,
-                            child: _buildExamIcon(exam.iconUrl),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  exam.name,
-                                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  '${subjects.length} Subjects • ${exam.totalTests} Tests',
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.remove_red_eye_outlined, size: 18, color: Color(0xFF64748B)),
-                            tooltip: 'View Syllabus',
-                            onPressed: () => _showCurriculumDialog(exam),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF2563EB)),
-                            tooltip: 'Edit',
-                            onPressed: () => widget.onEditExam(exam),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFFF43F5E)),
-                            tooltip: 'Delete',
-                            onPressed: () => widget.onDeleteExam(exam),
-                          ),
-                        ],
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFFF4F7FF) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: isSelected ? AppColors.brandPurple : const Color(0xFFE2E8F0)),
                       ),
-                      if (subjects.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: subjects.take(3).map((s) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                            ),
-                            child: Text(s.name, style: const TextStyle(fontSize: 10.5, color: Color(0xFF334155))),
-                          )).toList(),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              },
-            )
-          else
-            Builder(
-              builder: (context) {
-                final allSelected = filtered.isNotEmpty && filtered.every((e) => _currentSelectedIds.contains(e.id));
-
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minWidth: math.max(MediaQuery.of(context).size.width - 380, 780.0),
-                    ),
-                    child: DataTable(
-                      headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
-                      headingRowHeight: 40,
-                      dataRowMinHeight: 56,
-                      dataRowMaxHeight: 56,
-                      horizontalMargin: 12,
-                      columnSpacing: 16,
-                      showCheckboxColumn: false,
-                      columns: [
-                        DataColumn(
-                          label: Checkbox(
-                            value: allSelected,
-                            activeColor: const Color(0xFF5636F5),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                            onChanged: _toggleSelectAll,
-                          ),
-                        ),
-                        const DataColumn(label: Text('#', style: _headerStyle)),
-                        const DataColumn(label: Text('TARGET EXAM', style: _headerStyle)),
-                        const DataColumn(label: Text('SUBJECTS INCLUDED', style: _headerStyle)),
-                        const DataColumn(label: Text('CHAPTERS', style: _headerStyle)),
-                        const DataColumn(label: Text('TOTAL TESTS', style: _headerStyle)),
-                        const DataColumn(label: Text('STATUS', style: _headerStyle)),
-                        const DataColumn(label: Text('ACTIONS', style: _headerStyle)),
-                      ],
-                      rows: filtered.asMap().entries.map((entry) {
-                        final idx = entry.key;
-                        final exam = entry.value;
-                        final subjects = _getSubjectsForExam(exam.id);
-                        final totalChapters = subjects.fold<int>(0, (sum, s) => sum + s.subcategoriesCount);
-                        final isSelected = _currentSelectedIds.contains(exam.id);
-
-                        return DataRow(
-                          selected: isSelected,
-                          color: WidgetStateProperty.resolveWith<Color>((states) {
-                            if (states.contains(WidgetState.hovered)) {
-                              return const Color(0xFFF4F7FF);
-                            }
-                            if (isSelected) {
-                              return const Color(0xFFF4F7FF);
-                            }
-                            if (idx.isEven) {
-                              return Colors.white;
-                            }
-                            return const Color(0xFFFDFDFE);
-                          }),
-                          cells: [
-                            // 0. Checkbox
-                            DataCell(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
                               Checkbox(
                                 value: isSelected,
-                                activeColor: const Color(0xFF5636F5),
+                                activeColor: AppColors.brandPurple,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                                 onChanged: (val) => _toggleSelectRow(exam.id, val),
                               ),
-                            ),
-                            // 1. Row #
-                            DataCell(
-                              Text(
-                                '${idx + 1}',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
-                              ),
-                            ),
-                        // 2. Exam Details (Icon + Name + ID)
-                        DataCell(
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
                               Container(
-                                width: 34,
-                                height: 34,
+                                width: 38,
+                                height: 38,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF8FAFC),
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(color: const Color(0xFFE2E8F0)),
                                 ),
                                 alignment: Alignment.center,
                                 child: _buildExamIcon(exam.iconUrl),
                               ),
-                              const SizedBox(width: 10),
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 190),
+                              const SizedBox(width: 12),
+                              Expanded(
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       exam.name,
-                                      style: const TextStyle(
-                                        fontSize: 13,
+                                      style: TextStyle(
+                                        fontFamily: AppTypography.fontHeading,
+                                        fontSize: 13.5,
                                         fontWeight: FontWeight.w700,
-                                        color: Color(0xFF101A3A),
+                                        color: AppColors.textPrimary,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
+                                    const SizedBox(height: 3),
                                     Text(
-                                      'ID: ${exam.id}',
-                                      style: const TextStyle(
-                                        fontSize: 10.5,
-                                        color: Color(0xFF94A3B8),
-                                        fontWeight: FontWeight.w500,
+                                      '${subjects.length} Subjects • ${exam.totalTests} Tests',
+                                      style: TextStyle(
+                                        fontFamily: AppTypography.fontHeading,
+                                        fontSize: 11,
+                                        color: AppColors.textSecondary,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        // 3. Subjects Included (Badges)
-                        DataCell(
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 220),
-                            child: subjects.isEmpty
-                                ? const Text('None added yet', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontStyle: FontStyle.italic))
-                                : Wrap(
-                                    spacing: 4,
-                                    runSpacing: 4,
-                                    children: [
-                                      ...subjects.take(2).map((s) => Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFEEF2FF),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          s.name,
-                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF5636F5)),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      )),
-                                      if (subjects.length > 2)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF1F5F9),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            '+${subjects.length - 2} more',
-                                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                        // 4. Chapters Count
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEFF6FF),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '$totalChapters Chapters',
-                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF0284C7)),
-                            ),
-                          ),
-                        ),
-                        // 5. Total Tests
-                        DataCell(
-                          Text(
-                            '${exam.totalTests} Tests',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                          ),
-                        ),
-                        // 6. Status Badge
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: exam.isPublished ? const Color(0xFFECFDF5) : const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              exam.isPublished ? 'Published' : 'Hidden',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
-                                color: exam.isPublished ? const Color(0xFF10B981) : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // 7. Actions (View Syllabus, Edit, Delete)
-                        DataCell(
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.remove_red_eye_outlined, size: 17, color: Color(0xFF64748B)),
+                              AdminTableActionButton(
+                                icon: Icons.remove_red_eye_outlined,
                                 tooltip: 'View Syllabus',
                                 onPressed: () => _showCurriculumDialog(exam),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined, size: 17, color: Color(0xFF2563EB)),
-                                tooltip: 'Edit Exam & Syllabus',
+                              const SizedBox(width: 4),
+                              AdminTableActionButton(
+                                icon: Icons.edit_outlined,
+                                tooltip: 'Edit',
                                 onPressed: () => widget.onEditExam(exam),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded, size: 17, color: Color(0xFFF43F5E)),
-                                tooltip: 'Delete Exam',
+                              const SizedBox(width: 4),
+                              AdminTableActionButton(
+                                icon: Icons.delete_outline_rounded,
+                                tooltip: 'Delete',
+                                color: AppColors.errorRose,
                                 onPressed: () => widget.onDeleteExam(exam),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                          if (subjects.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: subjects.take(3).map((s) => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: Text(
+                                  s.name,
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontHeading,
+                                    fontSize: 10.5,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              )).toList(),
+                            ),
+                          ],
+                        ],
+                      ),
                     );
-                  }).toList(),
+                  },
+                )
+              : null),
+      columns: [
+        DataColumn(
+          label: SizedBox(
+            width: 22,
+            child: Checkbox(
+              value: allSelected,
+              activeColor: AppColors.brandPurple,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              onChanged: _toggleSelectAll,
+            ),
+          ),
+        ),
+        DataColumn(label: Text('#', style: _headerStyle)),
+        DataColumn(
+          label: SizedBox(
+            width: detailsWidth,
+            child: Text('Target Exam', style: _headerStyle),
+          ),
+        ),
+        DataColumn(
+          label: SizedBox(
+            width: subjectsWidth,
+            child: Text('Subjects Included', style: _headerStyle),
+          ),
+        ),
+        DataColumn(label: Text('Chapters', style: _headerStyle)),
+        DataColumn(label: Text('Total Tests', style: _headerStyle)),
+        DataColumn(label: Text('Status', style: _headerStyle)),
+        DataColumn(label: Text('Actions', style: _headerStyle)),
+      ],
+      rows: filtered.asMap().entries.map((entry) {
+        final idx = entry.key;
+        final exam = entry.value;
+        final subjects = _getSubjectsForExam(exam.id);
+        final totalChapters = subjects.fold<int>(0, (sum, s) => sum + s.subcategoriesCount);
+        final isSelected = _currentSelectedIds.contains(exam.id);
+
+        return DataRow(
+          selected: isSelected,
+          cells: [
+            // 0. Checkbox
+            DataCell(
+              SizedBox(
+                width: 22,
+                child: Checkbox(
+                  value: isSelected,
+                  activeColor: AppColors.brandPurple,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  onChanged: (val) => _toggleSelectRow(exam.id, val),
                 ),
               ),
-            );
-          },
+            ),
+            // 1. Row #
+            DataCell(
+              Text(
+                '${idx + 1}',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            // 2. Exam Details
+            DataCell(
+              SizedBox(
+                width: detailsWidth,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.borderSubtle),
+                      ),
+                      alignment: Alignment.center,
+                      child: _buildExamIcon(exam.iconUrl),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            exam.name,
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontHeading,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'ID: ${exam.id}',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontHeading,
+                              fontSize: 10.5,
+                              color: AppColors.textMuted,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // 3. Subjects Included
+            DataCell(
+              SizedBox(
+                width: subjectsWidth,
+                child: subjects.isEmpty
+                    ? Text(
+                        'None added yet',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      )
+                    : Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          ...subjects.take(2).map((s) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEEF2FF),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              s.name,
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontHeading,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.brandPurple,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )),
+                          if (subjects.length > 2)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2.5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '+${subjects.length - 2} more',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontHeading,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+              ),
+            ),
+            // 4. Chapters Count
+            DataCell(
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '$totalChapters Chapters',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontHeading,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0284C7),
+                  ),
+                ),
+              ),
+            ),
+            // 5. Total Tests
+            DataCell(
+              Text(
+                '${exam.totalTests} Tests',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            // 6. Status Badge
+            DataCell(
+              AdminTableStatusBadge(
+                label: exam.isPublished ? 'Published' : 'Hidden',
+                backgroundColor: exam.isPublished ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                borderColor: exam.isPublished ? const Color(0xFFBBF7D0) : const Color(0xFFE2E8F0),
+                textColor: exam.isPublished ? const Color(0xFF16A34A) : AppColors.textSecondary,
+              ),
+            ),
+            // 7. Actions
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AdminTableActionButton(
+                    icon: Icons.remove_red_eye_outlined,
+                    tooltip: 'View Syllabus',
+                    onPressed: () => _showCurriculumDialog(exam),
+                  ),
+                  const SizedBox(width: 4),
+                  AdminTableActionButton(
+                    icon: Icons.edit_outlined,
+                    tooltip: 'Edit Exam & Syllabus',
+                    onPressed: () => widget.onEditExam(exam),
+                  ),
+                  const SizedBox(width: 4),
+                  AdminTableActionButton(
+                    icon: Icons.delete_outline_rounded,
+                    tooltip: 'Delete Exam',
+                    color: AppColors.errorRose,
+                    onPressed: () => widget.onDeleteExam(exam),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+      emptyState: Container(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            const Icon(Icons.explore_off_outlined, size: 40, color: Color(0xFFCBD5E1)),
+            const SizedBox(height: 8),
+            Text(
+              _searchQuery.isNotEmpty ? 'No target exams match your search' : 'No target exams in database yet',
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _searchQuery.isNotEmpty
+                  ? 'Try a different search keyword'
+                  : 'Click "+ Add Target Exam" above to add your first exam and syllabus.',
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                color: AppColors.textSecondary,
+                fontSize: 11.5,
+              ),
+            ),
+          ],
         ),
-        ],
       ),
     );
   }
 
-  static const _headerStyle = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-    color: Color(0xFF64748B),
-    letterSpacing: 0.5,
-  );
+  static TextStyle get _headerStyle => TextStyle(
+        fontFamily: AppTypography.fontHeading,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textSecondary,
+        letterSpacing: 0.1,
+      );
 }

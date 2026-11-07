@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../models/user_management_item.dart';
 
+/// Users Table Card powered by the unified [AdminDataTableCard] from the design system.
 class UsersTableCard extends StatefulWidget {
   final List<UserManagementItem> items;
   final int totalCount;
@@ -59,27 +60,6 @@ class UsersTableCard extends StatefulWidget {
 
 class _UsersTableCardState extends State<UsersTableCard> {
   bool _isGridView = false;
-  late final TextEditingController _searchCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchCtrl = TextEditingController(text: widget.searchQuery);
-  }
-
-  @override
-  void didUpdateWidget(covariant UsersTableCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.searchQuery != widget.searchQuery && _searchCtrl.text != widget.searchQuery) {
-      _searchCtrl.text = widget.searchQuery;
-    }
-  }
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
-  }
 
   void _toggleSelectAll(bool? selectAll) {
     if (selectAll == true) {
@@ -130,7 +110,7 @@ class _UsersTableCardState extends State<UsersTableCard> {
                     Navigator.of(ctx).pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5636F5),
+                    backgroundColor: AppColors.brandPurple,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -187,167 +167,280 @@ class _UsersTableCardState extends State<UsersTableCard> {
     final allSelected = widget.items.isNotEmpty &&
         widget.items.every((item) => widget.selectedIds.contains(item.id));
     final hasActiveFilter = widget.roleFilter != 'all' || widget.statusFilter != 'all' || widget.registrationFilter != 'all';
+    final totalPages = math.max(1, (widget.totalCount / widget.pageSize).ceil());
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadii.borderLg,
-        border: Border.all(color: AppColors.borderSubtle, width: 1.1),
-        boxShadow: AppShadows.subtle,
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header Row
-          LayoutBuilder(
-            builder: (context, cardConstraints) {
-              final isNarrow = cardConstraints.maxWidth < 1180;
-
-              if (isNarrow) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0084FF),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.description_rounded, color: Colors.white, size: 14),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Users List (${_formatNumber(widget.totalCount)})',
-                          style: const TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF101A3A),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        SizedBox(
-                          width: 240,
-                          height: 36,
-                          child: TextField(
-                            controller: _searchCtrl,
-                            decoration: _searchDecoration(),
-                            onChanged: widget.onSearchChanged,
-                          ),
-                        ),
-                        _buildRoleDropdown(),
-                        _buildStatusDropdown(),
-                        _buildRegistrationDropdown(),
-                        _buildViewToggles(),
-                        _buildFilterButton(hasActiveFilter),
-                      ],
-                    ),
-                  ],
-                );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    return AdminDataTableCard(
+      title: 'Users List',
+      totalCount: widget.totalCount,
+      icon: Icons.people_rounded,
+      iconBgColor: AppColors.brandBlue,
+      searchQuery: widget.searchQuery,
+      searchHint: 'Search users by name, email, or phone...',
+      onSearchChanged: widget.onSearchChanged,
+      currentPage: widget.currentPage,
+      totalPages: totalPages,
+      rowsPerPage: widget.pageSize,
+      onPageChanged: widget.onPageChanged,
+      onRowsPerPageChanged: widget.onPageSizeChanged,
+      itemLabel: 'users',
+      customBody: _isGridView ? _buildGridView() : null,
+      filterControls: [
+        _buildRoleDropdown(),
+        _buildStatusDropdown(),
+        _buildRegistrationDropdown(),
+        _buildViewToggles(),
+        _buildFilterButton(hasActiveFilter),
+      ],
+      columns: [
+        DataColumn(
+          label: SizedBox(
+            width: 20,
+            child: Checkbox(
+              value: allSelected,
+              onChanged: _toggleSelectAll,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              activeColor: AppColors.brandPurple,
+            ),
+          ),
+        ),
+        const DataColumn(label: Text('#', style: _colHeaderStyle)),
+        const DataColumn(label: Text('User Details', style: _colHeaderStyle)),
+        const DataColumn(
+          label: Row(
+            children: [
+              Text('Role', style: _colHeaderStyle),
+              SizedBox(width: 4),
+              Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+        const DataColumn(label: Text('Enrollments', style: _colHeaderStyle)),
+        const DataColumn(label: Text('Tests Attempted', style: _colHeaderStyle)),
+        const DataColumn(label: Text('Last Active', style: _colHeaderStyle)),
+        const DataColumn(
+          label: Row(
+            children: [
+              Text('Status', style: _colHeaderStyle),
+              SizedBox(width: 4),
+              Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+        const DataColumn(label: Text('Joined On', style: _colHeaderStyle)),
+        const DataColumn(label: Text('Actions', style: _colHeaderStyle)),
+      ],
+      rows: widget.items.map((user) {
+        final isSelected = widget.selectedIds.contains(user.id);
+        return DataRow(
+          selected: isSelected,
+          onSelectChanged: (v) {
+            final newSet = Set<String>.from(widget.selectedIds);
+            if (v == true) {
+              newSet.add(user.id);
+            } else {
+              newSet.remove(user.id);
+            }
+            widget.onSelectionChanged(newSet);
+          },
+          cells: [
+            DataCell(
+              SizedBox(
+                width: 20,
+                child: Checkbox(
+                  value: isSelected,
+                  onChanged: (v) {
+                    final newSet = Set<String>.from(widget.selectedIds);
+                    if (v == true) {
+                      newSet.add(user.id);
+                    } else {
+                      newSet.remove(user.id);
+                    }
+                    widget.onSelectionChanged(newSet);
+                  },
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  activeColor: AppColors.brandPurple,
+                ),
+              ),
+            ),
+            DataCell(Text(user.rowNumber.toString(), style: _cellStyle)),
+            DataCell(
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0084FF),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.description_rounded, color: Colors.white, size: 14),
+                  CircleAvatar(
+                    radius: 15,
+                    backgroundColor: user.role.color.withValues(alpha: 0.12),
+                    child: Text(
+                      user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontHeading,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: user.role.color,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Users List (${_formatNumber(widget.totalCount)})',
-                        style: const TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF101A3A),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
+                  const SizedBox(width: 10),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        width: 280,
-                        height: 36,
-                        child: TextField(
-                          controller: _searchCtrl,
-                          decoration: _searchDecoration(),
-                          onChanged: widget.onSearchChanged,
+                      Text(
+                        user.name,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      _buildRoleDropdown(),
-                      const SizedBox(width: 8),
-                      _buildStatusDropdown(),
-                      const SizedBox(width: 8),
-                      _buildRegistrationDropdown(),
-                      const SizedBox(width: 8),
-                      _buildViewToggles(),
-                      const SizedBox(width: 8),
-                      _buildFilterButton(hasActiveFilter),
+                      Text(
+                        user.email,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ],
                   ),
                 ],
-              );
-            },
-          ),
-          const SizedBox(height: 14),
-
-          // Main Table or Grid View
-          if (_isGridView)
-            _buildGridView()
-          else
-            _buildTableView(allSelected),
-
-          const SizedBox(height: 14),
-
-          // Pagination Footer
-          _buildPaginationFooter(),
-        ],
-      ),
-    );
-  }
-
-  InputDecoration _searchDecoration() {
-    return InputDecoration(
-      hintText: 'Search users by name, email, or phone...',
-      hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-      prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
-      filled: true,
-      fillColor: const Color(0xFFF8FAFC),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF5636F5)),
-      ),
-      isDense: true,
+              ),
+            ),
+            DataCell(
+              AdminTableStatusBadge(
+                label: user.role.label,
+                backgroundColor: user.role.bgColor,
+                textColor: user.role.color,
+              ),
+            ),
+            DataCell(Center(child: Text(user.enrollmentsCount.toString(), style: _cellStyle))),
+            DataCell(Center(child: Text(user.testsAttemptedCount.toString(), style: _cellStyle))),
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: user.lastActive.toLowerCase().contains('online')
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFF94A3B8),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    user.lastActive,
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 11.5,
+                      color: user.lastActive.toLowerCase().contains('online')
+                          ? const Color(0xFF10B981)
+                          : AppColors.textSecondary,
+                      fontWeight: user.lastActive.toLowerCase().contains('online')
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DataCell(
+              AdminTableStatusBadge(
+                label: user.status.label,
+                backgroundColor: user.status.bgColor,
+                textColor: user.status.color,
+              ),
+            ),
+            DataCell(Text(user.joinedDateFormatted, style: _cellStyle)),
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AdminTableActionButton(
+                    icon: Icons.visibility_outlined,
+                    tooltip: 'View User',
+                    onTap: () => widget.onView(user),
+                  ),
+                  const SizedBox(width: 4),
+                  AdminTableActionButton(
+                    icon: Icons.edit_outlined,
+                    tooltip: 'Edit User',
+                    onTap: () => widget.onEdit(user),
+                  ),
+                  if (widget.onManageCoins != null) ...[
+                    const SizedBox(width: 4),
+                    AdminTableActionButton(
+                      icon: Icons.monetization_on_outlined,
+                      tooltip: 'Manage Coins',
+                      onTap: () => widget.onManageCoins!(user),
+                      color: AppColors.coinGold,
+                    ),
+                  ],
+                  const SizedBox(width: 4),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert_rounded, size: 16, color: AppColors.textSecondary),
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    onSelected: (val) {
+                      if (val == 'coins') widget.onManageCoins?.call(user);
+                      if (val == 'status') widget.onToggleStatus(user);
+                      if (val == 'notify') widget.onSendNotification(user);
+                      if (val == 'delete') widget.onDelete(user);
+                    },
+                    itemBuilder: (context) => [
+                      if (widget.onManageCoins != null)
+                        PopupMenuItem(
+                          value: 'coins',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.toll_rounded, size: 16, color: AppColors.coinGold),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Manage Coins',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontHeading,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      PopupMenuItem(
+                        value: 'status',
+                        child: Text(
+                          user.status == UserStatus.active ? 'Deactivate User' : 'Activate User',
+                          style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 12),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'notify',
+                        child: Text(
+                          'Send Notification',
+                          style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 12),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(
+                          'Delete Account',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontHeading,
+                            fontSize: 12,
+                            color: Color(0xFFF43F5E),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -359,13 +452,12 @@ class _UsersTableCardState extends State<UsersTableCard> {
       'teacher': 'Teacher',
       'moderator': 'Moderator',
     };
-    return AppDropdownFilter<String>(
-      height: 36,
-      value: widget.roleFilter,
-      items: roles.keys.toList(),
-      itemLabel: (v) => roles[v] ?? v,
+    return AdminTableDropdown(
+      value: roles[widget.roleFilter] ?? 'All Roles',
+      items: roles.values.toList(),
       onChanged: (v) {
-        if (v != null) widget.onRoleFilterChanged(v);
+        final key = roles.entries.firstWhere((e) => e.value == v, orElse: () => roles.entries.first).key;
+        widget.onRoleFilterChanged(key);
       },
     );
   }
@@ -377,13 +469,12 @@ class _UsersTableCardState extends State<UsersTableCard> {
       'inactive': 'Inactive',
       'blocked': 'Blocked',
     };
-    return AppDropdownFilter<String>(
-      height: 36,
-      value: widget.statusFilter,
-      items: statuses.keys.toList(),
-      itemLabel: (v) => statuses[v] ?? v,
+    return AdminTableDropdown(
+      value: statuses[widget.statusFilter] ?? 'All Status',
+      items: statuses.values.toList(),
       onChanged: (v) {
-        if (v != null) widget.onStatusFilterChanged(v);
+        final key = statuses.entries.firstWhere((e) => e.value == v, orElse: () => statuses.entries.first).key;
+        widget.onStatusFilterChanged(key);
       },
     );
   }
@@ -396,20 +487,19 @@ class _UsersTableCardState extends State<UsersTableCard> {
       'month': 'This Month',
       'year': 'This Year',
     };
-    return AppDropdownFilter<String>(
-      height: 36,
-      value: widget.registrationFilter,
-      items: registrations.keys.toList(),
-      itemLabel: (v) => registrations[v] ?? v,
+    return AdminTableDropdown(
+      value: registrations[widget.registrationFilter] ?? 'All Registration',
+      items: registrations.values.toList(),
       onChanged: (v) {
-        if (v != null) widget.onRegistrationFilterChanged(v);
+        final key = registrations.entries.firstWhere((e) => e.value == v, orElse: () => registrations.entries.first).key;
+        widget.onRegistrationFilterChanged(key);
       },
     );
   }
 
   Widget _buildViewToggles() {
     return Container(
-      height: 36,
+      height: 32,
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(8),
@@ -438,331 +528,21 @@ class _UsersTableCardState extends State<UsersTableCard> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
       child: Container(
-        width: 32,
-        height: 32,
+        width: 28,
+        height: 28,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF8B5CF6) : Colors.transparent,
+          color: isSelected ? AppColors.brandPurple : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 16, color: isSelected ? Colors.white : const Color(0xFF64748B)),
+        child: Icon(icon, size: 15, color: isSelected ? Colors.white : AppColors.textSecondary),
       ),
     );
   }
 
   Widget _buildFilterButton(bool hasActiveFilter) {
-    return InkWell(
+    return AdminTableFiltersButton(
       onTap: _openFilterDialog,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        decoration: BoxDecoration(
-          color: hasActiveFilter ? const Color(0xFFEDE9FE) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: hasActiveFilter ? const Color(0xFF8B5CF6) : const Color(0xFFE2E8F0),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.filter_list_rounded,
-              size: 16,
-              color: hasActiveFilter ? const Color(0xFF6B4EFF) : const Color(0xFF64748B),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Filters',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: hasActiveFilter ? const Color(0xFF6B4EFF) : const Color(0xFF475569),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTableView(bool allSelected) {
-    if (widget.items.isEmpty) {
-      return Container(
-        height: 280,
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.people_outline_rounded, size: 48, color: Color(0xFFCBD5E1)),
-            const SizedBox(height: 12),
-            const Text(
-              'No users found',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Try adjusting your search query or filters',
-              style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: math.max(constraints.maxWidth, 960)),
-            child: DataTable(
-              onSelectAll: _toggleSelectAll,
-              headingRowHeight: 40,
-              dataRowMinHeight: 52,
-              dataRowMaxHeight: 58,
-              horizontalMargin: 12,
-              columnSpacing: 16,
-              headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
-              columns: [
-                const DataColumn(label: Text('#', style: _colHeaderStyle)),
-                const DataColumn(label: Text('User Details', style: _colHeaderStyle)),
-                const DataColumn(
-                  label: Row(
-                    children: [
-                      Text('Role', style: _colHeaderStyle),
-                      SizedBox(width: 4),
-                      Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Color(0xFF94A3B8)),
-                    ],
-                  ),
-                ),
-                const DataColumn(label: Text('Enrollments', style: _colHeaderStyle)),
-                const DataColumn(label: Text('Tests Attempted', style: _colHeaderStyle)),
-                const DataColumn(label: Text('Last Active', style: _colHeaderStyle)),
-                const DataColumn(
-                  label: Row(
-                    children: [
-                      Text('Status', style: _colHeaderStyle),
-                      SizedBox(width: 4),
-                      Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Color(0xFF94A3B8)),
-                    ],
-                  ),
-                ),
-                const DataColumn(label: Text('Joined On', style: _colHeaderStyle)),
-                const DataColumn(label: Text('Actions', style: _colHeaderStyle)),
-              ],
-              rows: widget.items.map((user) {
-                final isSelected = widget.selectedIds.contains(user.id);
-                return DataRow(
-                  selected: isSelected,
-                  onSelectChanged: (v) {
-                    final newSet = Set<String>.from(widget.selectedIds);
-                    if (v == true) {
-                      newSet.add(user.id);
-                    } else {
-                      newSet.remove(user.id);
-                    }
-                    widget.onSelectionChanged(newSet);
-                  },
-                  cells: [
-                    DataCell(Text(user.rowNumber.toString(), style: _cellStyle)),
-                    DataCell(
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 15,
-                            backgroundColor: user.role.color.withValues(alpha: 0.12),
-                            child: Text(
-                              user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: user.role.color,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user.name,
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF101A3A),
-                                ),
-                              ),
-                              Text(
-                                user.email,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: user.role.bgColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          user.role.label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: user.role.color,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataCell(Center(child: Text(user.enrollmentsCount.toString(), style: _cellStyle))),
-                    DataCell(Center(child: Text(user.testsAttemptedCount.toString(), style: _cellStyle))),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: user.lastActive.toLowerCase().contains('online')
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFF94A3B8),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            user.lastActive,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: user.lastActive.toLowerCase().contains('online')
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFF64748B),
-                              fontWeight: user.lastActive.toLowerCase().contains('online')
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: user.status.bgColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          user.status.label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: user.status.color,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataCell(Text(user.joinedDateFormatted, style: _cellStyle)),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildActionIconBtn(
-                            icon: Icons.visibility_outlined,
-                            onTap: () => widget.onView(user),
-                          ),
-                          const SizedBox(width: 4),
-                          _buildActionIconBtn(
-                            icon: Icons.edit_outlined,
-                            onTap: () => widget.onEdit(user),
-                          ),
-                          if (widget.onManageCoins != null) ...[
-                            const SizedBox(width: 4),
-                            _buildActionIconBtn(
-                              icon: Icons.monetization_on_outlined,
-                              onTap: () => widget.onManageCoins!(user),
-                              color: const Color(0xFFF59E0B),
-                            ),
-                          ],
-                          const SizedBox(width: 4),
-                          PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert_rounded, size: 16, color: Color(0xFF64748B)),
-                            padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            onSelected: (val) {
-                              if (val == 'coins') widget.onManageCoins?.call(user);
-                              if (val == 'status') widget.onToggleStatus(user);
-                              if (val == 'notify') widget.onSendNotification(user);
-                              if (val == 'delete') widget.onDelete(user);
-                            },
-                            itemBuilder: (context) => [
-                              if (widget.onManageCoins != null)
-                                const PopupMenuItem(
-                                  value: 'coins',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.toll_rounded, size: 16, color: Color(0xFFF59E0B)),
-                                      SizedBox(width: 8),
-                                      Text('Manage Coins', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                                    ],
-                                  ),
-                                ),
-                              PopupMenuItem(
-                                value: 'status',
-                                child: Text(
-                                  user.status == UserStatus.active ? 'Deactivate User' : 'Activate User',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              const PopupMenuItem(
-                                value: 'notify',
-                                child: Text('Send Notification', style: TextStyle(fontSize: 12)),
-                              ),
-                              const PopupMenuItem(
-                                value: 'delete',
-                                child: Text('Delete Account', style: TextStyle(fontSize: 12, color: Color(0xFFF43F5E))),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildActionIconBtn({required IconData icon, required VoidCallback onTap, Color? color}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        width: 26,
-        height: 26,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        alignment: Alignment.center,
-        child: Icon(icon, size: 14, color: color ?? const Color(0xFF64748B)),
-      ),
     );
   }
 
@@ -787,7 +567,7 @@ class _UsersTableCardState extends State<UsersTableCard> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSelected ? const Color(0xFF5636F5) : const Color(0xFFE2E8F0),
+              color: isSelected ? AppColors.brandPurple : AppColors.borderSubtle,
               width: isSelected ? 1.5 : 1.0,
             ),
           ),
@@ -801,7 +581,12 @@ class _UsersTableCardState extends State<UsersTableCard> {
                     backgroundColor: user.role.color.withValues(alpha: 0.12),
                     child: Text(
                       user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: user.role.color),
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontHeading,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: user.role.color,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -809,14 +594,30 @@ class _UsersTableCardState extends State<UsersTableCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                        Text(user.email, style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)), overflow: TextOverflow.ellipsis),
+                        Text(
+                          user.name,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontHeading,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          user.email,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontHeading,
+                            fontSize: 10.5,
+                            color: AppColors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
                   ),
                   Checkbox(
                     value: isSelected,
-                    activeColor: const Color(0xFF5636F5),
+                    activeColor: AppColors.brandPurple,
                     onChanged: (v) {
                       final newSet = Set<String>.from(widget.selectedIds);
                       if (v == true) {
@@ -832,16 +633,16 @@ class _UsersTableCardState extends State<UsersTableCard> {
               const Spacer(),
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: user.role.bgColor, borderRadius: BorderRadius.circular(4)),
-                    child: Text(user.role.label, style: TextStyle(fontSize: 10, color: user.role.color, fontWeight: FontWeight.w600)),
+                  AdminTableStatusBadge(
+                    label: user.role.label,
+                    backgroundColor: user.role.bgColor,
+                    textColor: user.role.color,
                   ),
                   const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: user.status.bgColor, borderRadius: BorderRadius.circular(4)),
-                    child: Text(user.status.label, style: TextStyle(fontSize: 10, color: user.status.color, fontWeight: FontWeight.w600)),
+                  AdminTableStatusBadge(
+                    label: user.status.label,
+                    backgroundColor: user.status.bgColor,
+                    textColor: user.status.color,
                   ),
                 ],
               ),
@@ -849,17 +650,39 @@ class _UsersTableCardState extends State<UsersTableCard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Enrollments: ${user.enrollmentsCount}', style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B))),
-                  Text('Tests: ${user.testsAttemptedCount}', style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B))),
+                  Text(
+                    'Enrollments: ${user.enrollmentsCount}',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 10.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    'Tests: ${user.testsAttemptedCount}',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 10.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  _buildActionIconBtn(icon: Icons.visibility_outlined, onTap: () => widget.onView(user)),
+                  AdminTableActionButton(
+                    icon: Icons.visibility_outlined,
+                    tooltip: 'View User',
+                    onTap: () => widget.onView(user),
+                  ),
                   const SizedBox(width: 6),
-                  _buildActionIconBtn(icon: Icons.edit_outlined, onTap: () => widget.onEdit(user)),
+                  AdminTableActionButton(
+                    icon: Icons.edit_outlined,
+                    tooltip: 'Edit User',
+                    onTap: () => widget.onEdit(user),
+                  ),
                 ],
               ),
             ],
@@ -869,176 +692,17 @@ class _UsersTableCardState extends State<UsersTableCard> {
     );
   }
 
-  Widget _buildPaginationFooter() {
-    final start = widget.totalCount == 0 ? 0 : (widget.currentPage - 1) * widget.pageSize + 1;
-    final end = math.min(widget.currentPage * widget.pageSize, widget.totalCount);
-    final totalPages = math.max(1, (widget.totalCount / widget.pageSize).ceil());
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 650;
-
-        final infoText = Text(
-          'Showing $start to $end of ${_formatNumber(widget.totalCount)} users',
-          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
-        );
-
-        final pageControls = Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildPageNavBtn(
-              icon: Icons.chevron_left_rounded,
-              onTap: widget.currentPage > 1 ? () => widget.onPageChanged(widget.currentPage - 1) : null,
-            ),
-            const SizedBox(width: 4),
-            ..._generatePageButtons(totalPages),
-            const SizedBox(width: 4),
-            _buildPageNavBtn(
-              icon: Icons.chevron_right_rounded,
-              onTap: widget.currentPage < totalPages ? () => widget.onPageChanged(widget.currentPage + 1) : null,
-            ),
-          ],
-        );
-
-        final pageSizeDropdown = Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Show ', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-            AppDropdownFilter<int>(
-              value: widget.pageSize,
-              items: const [7, 10, 20, 50],
-              height: 28,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              borderRadius: BorderRadius.circular(6),
-              onChanged: (v) {
-                if (v != null) widget.onPageSizeChanged(v);
-              },
-            ),
-            const Text(' per page', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-          ],
-        );
-
-        if (isNarrow) {
-          return Column(
-            children: [
-              infoText,
-              const SizedBox(height: 10),
-              pageControls,
-              const SizedBox(height: 10),
-              pageSizeDropdown,
-            ],
-          );
-        }
-
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            infoText,
-            pageControls,
-            pageSizeDropdown,
-          ],
-        );
-      },
-    );
-  }
-
-  List<Widget> _generatePageButtons(int totalPages) {
-    final list = <Widget>[];
-
-    // Reference displays pages 1, 2, 3, 4, 5, ..., 1780
-    final maxToShow = math.min(5, totalPages);
-    for (int i = 1; i <= maxToShow; i++) {
-      list.add(_buildPageNumberBtn(i, i == widget.currentPage));
-      list.add(const SizedBox(width: 4));
-    }
-
-    if (totalPages > 6) {
-      list.add(
-        const SizedBox(
-          width: 24,
-          child: Center(
-            child: Text('...', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-          ),
-        ),
-      );
-      list.add(const SizedBox(width: 4));
-      list.add(_buildPageNumberBtn(totalPages, widget.currentPage == totalPages));
-    }
-
-    return list;
-  }
-
-  Widget _buildPageNumberBtn(int pageNum, bool isSelected) {
-    return InkWell(
-      onTap: () => widget.onPageChanged(pageNum),
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF5636F5) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-          border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          pageNum.toString(),
-          style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF475569),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPageNavBtn({required IconData icon, required VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          icon,
-          size: 16,
-          color: onTap != null ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
-        ),
-      ),
-    );
-  }
-
   static const _colHeaderStyle = TextStyle(
-    fontSize: 12,
+    fontFamily: AppTypography.fontHeading,
+    fontSize: 11.5,
     fontWeight: FontWeight.w700,
-    color: Color(0xFF64748B),
+    color: AppColors.textSecondary,
   );
 
   static const _cellStyle = TextStyle(
-    fontSize: 12,
+    fontFamily: AppTypography.fontHeading,
+    fontSize: 11.5,
     fontWeight: FontWeight.w500,
-    color: Color(0xFF101A3A),
+    color: AppColors.textPrimary,
   );
-
-  static String _formatNumber(int n) {
-    final s = n.toString();
-    final buffer = StringBuffer();
-    int count = 0;
-    for (int i = s.length - 1; i >= 0; i--) {
-      buffer.write(s[i]);
-      count++;
-      if (count == 3 && i != 0) {
-        buffer.write(',');
-        count = 0;
-      }
-    }
-    return buffer.toString().split('').reversed.join('');
-  }
 }

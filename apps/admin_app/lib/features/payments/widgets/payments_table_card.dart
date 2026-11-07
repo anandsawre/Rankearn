@@ -1,10 +1,9 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
 import '../models/payment_item.dart';
 
-/// Pixel-accurate Payments Data Table Card matching the reference image.
+/// Pixel-accurate Payments Data Table Card powered by unified [AdminDataTableCard].
 class PaymentsTableCard extends StatefulWidget {
   final List<PaymentItem> items;
   final int totalCount;
@@ -75,14 +74,29 @@ class PaymentsTableCard extends StatefulWidget {
 
 class _PaymentsTableCardState extends State<PaymentsTableCard> {
   final Set<String> _selectedIds = {};
-  late TextEditingController _searchController;
-  final ScrollController _scrollController = ScrollController();
 
   // Search & Filter state for embedded Top-up & Withdrawal views
   String _topupSearchQuery = '';
   String _topupStatusFilter = 'all'; // 'all', 'pending', 'approved'
   String _withdrawalSearchQuery = '';
   String _withdrawalStatusFilter = 'all'; // 'all', 'pending', 'paid'
+
+  static const List<String> _methodFilterOptions = [
+    'All Payment Methods',
+    'Razorpay',
+    'UPI',
+    'Credit Card',
+    'Debit Card',
+    'Net Banking',
+    'Wallet',
+  ];
+
+  static const List<String> _statusFilterOptions = [
+    'All Status',
+    'Success',
+    'Failed',
+    'Pending',
+  ];
 
   List<Map<String, dynamic>> get _filteredTopups {
     return widget.topups.where((t) {
@@ -120,6 +134,29 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
     }).toList();
   }
 
+  bool get _isAllSelected =>
+      widget.items.isNotEmpty && _selectedIds.length == widget.items.length;
+
+  void _toggleSelectAll() {
+    setState(() {
+      if (_isAllSelected) {
+        _selectedIds.clear();
+      } else {
+        _selectedIds.addAll(widget.items.map((e) => e.id));
+      }
+    });
+  }
+
+  void _toggleRow(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
   Widget _buildStatusFilterPill(
     String label,
     String value,
@@ -153,186 +190,285 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
     );
   }
 
-  static const List<String> _methodFilterOptions = [
-    'All Payment Methods',
-    'Razorpay',
-    'UPI',
-    'Credit Card',
-    'Debit Card',
-    'Net Banking',
-    'Wallet',
-  ];
-
-  static const List<String> _statusFilterOptions = [
-    'All Status',
-    'Success',
-    'Failed',
-    'Pending',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController = TextEditingController(text: widget.searchQuery);
-  }
-
-  @override
-  void didUpdateWidget(covariant PaymentsTableCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.searchQuery != widget.searchQuery &&
-        _searchController.text != widget.searchQuery) {
-      _searchController.text = widget.searchQuery;
-    }
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  bool get _isAllSelected =>
-      widget.items.isNotEmpty && _selectedIds.length == widget.items.length;
-
-  void _toggleSelectAll() {
-    setState(() {
-      if (_isAllSelected) {
-        _selectedIds.clear();
-      } else {
-        _selectedIds.addAll(widget.items.map((e) => e.id));
-      }
-    });
-  }
-
-  void _toggleRow(String id) {
-    setState(() {
-      if (_selectedIds.contains(id)) {
-        _selectedIds.remove(id);
-      } else {
-        _selectedIds.add(id);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadii.borderLg,
-        border: Border.all(color: AppColors.borderSubtle, width: 1.1),
-        boxShadow: AppShadows.subtle,
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 1. Header Toolbar
-          _buildToolbar(context),
-          const SizedBox(height: 12),
+    if (widget.activeView == 'topups') {
+      return _buildTopupsCard(context);
+    } else if (widget.activeView == 'withdrawals') {
+      return _buildWithdrawalsCard(context);
+    }
 
-          // Bulk action notification bar if items selected
-          if (_selectedIds.isNotEmpty) ...[
-            _buildBulkActionBar(),
-            const SizedBox(height: 12),
-          ],
-
-          // 2. Data Table
-          _buildTable(),
-          const SizedBox(height: 14),
-
-          // 3. Footer Pagination
-          _buildFooter(),
-        ],
-      ),
-    );
+    return _buildPaymentsCard(context);
   }
 
-  Widget _buildTopupsToolbar(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isCompact = screenWidth < 900;
-    final pendingCount = widget.topups.where((t) => t['status'] == 'pending').length;
-
-    final headerLeft = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8FAF2),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFA7F3D0)),
-          ),
-          alignment: Alignment.center,
-          child: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF00B96B), size: 18),
+  Widget _buildPaymentsCard(BuildContext context) {
+    return AdminDataTableCard(
+      title: 'Payments List',
+      totalCount: widget.totalCount,
+      icon: Icons.receipt_long_rounded,
+      iconBgColor: const Color(0xFF2587F8),
+      searchQuery: widget.searchQuery,
+      searchHint: 'Search by user, transaction ID, or purpose...',
+      onSearchChanged: widget.onSearchChanged,
+      currentPage: widget.currentPage,
+      totalPages: widget.totalPages,
+      rowsPerPage: widget.rowsPerPage,
+      onPageChanged: widget.onPageChanged,
+      onRowsPerPageChanged: widget.onRowsPerPageChanged,
+      itemLabel: 'transactions',
+      showDateRange: true,
+      dateRangeText: widget.dateRange != null
+          ? '${_formatShortDate(widget.dateRange!.start)} - ${_formatShortDate(widget.dateRange!.end)}'
+          : 'Oct 1, 2026 - Oct 31, 2026',
+      onDateRangeTap: () async {
+        final now = DateTime.now();
+        final res = await showDateRangePicker(
+          context: context,
+          firstDate: DateTime(now.year - 1),
+          lastDate: DateTime(now.year + 1),
+          initialDateRange: widget.dateRange ??
+              DateTimeRange(
+                start: DateTime(2026, 10, 1),
+                end: DateTime(2026, 10, 31),
+              ),
+        );
+        if (res != null) {
+          widget.onDateRangeChanged(res);
+        }
+      },
+      showFiltersButton: true,
+      onFiltersTap: widget.onFiltersTap,
+      filterControls: [
+        AdminTableDropdown<String>(
+          value: _methodFilterOptions.contains(widget.selectedMethod)
+              ? widget.selectedMethod
+              : _methodFilterOptions.first,
+          items: _methodFilterOptions,
+          onChanged: (val) {
+            widget.onMethodChanged(val);
+          },
         ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
+        AdminTableDropdown<String>(
+          value: _statusFilterOptions.contains(widget.selectedStatus)
+              ? widget.selectedStatus
+              : _statusFilterOptions.first,
+          items: _statusFilterOptions,
+          onChanged: (val) {
+            widget.onStatusChanged(val);
+          },
+        ),
+      ],
+      headerActions: [
+        if (_selectedIds.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEF2FF),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFC7D2FE)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Candidate Top-up Requests',
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                    letterSpacing: -0.2,
-                  ),
+                Text(
+                  '${_selectedIds.length} selected',
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF4338CA)),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD1FAE5),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFA7F3D0)),
-                  ),
-                  child: Text(
-                    '$pendingCount Pending',
-                    style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF00B96B)),
+                InkWell(
+                  onTap: () => widget.onBulkExport?.call(_selectedIds.toList()),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.file_download_outlined, size: 13, color: Color(0xFF4338CA)),
+                      SizedBox(width: 3),
+                      Text('Export', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF4338CA))),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 2),
-            const Text(
-              'Verify candidate manual UPI recharge payments and credit coins to user balance',
-              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-            ),
-          ],
-        ),
+          ),
+        ],
       ],
-    );
-
-    final controls = Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        SizedBox(
-          width: isCompact ? 140 : 200,
-          height: 34,
-          child: TextField(
-            onChanged: (val) => setState(() => _topupSearchQuery = val),
-            style: const TextStyle(fontSize: 11.5, color: Color(0xFF0F172A)),
-            decoration: InputDecoration(
-              hintText: 'Search candidate or UTR...',
-              hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-              prefixIcon: const Icon(Icons.search_rounded, size: 14, color: Color(0xFF94A3B8)),
-              contentPadding: EdgeInsets.zero,
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.2)),
+      columns: [
+        DataColumn(
+          label: SizedBox(
+            width: 20,
+            child: Checkbox(
+              value: _isAllSelected,
+              onChanged: (val) => _toggleSelectAll(),
+              activeColor: AppColors.brandPurple,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             ),
           ),
         ),
+        const DataColumn(label: Text('#', style: _headerStyle)),
+        const DataColumn(label: Text('User Details', style: _headerStyle)),
+        const DataColumn(label: Text('Purpose', style: _headerStyle)),
+        const DataColumn(label: Text('Amount', style: _headerStyle)),
+        const DataColumn(label: Text('Payment Method', style: _headerStyle)),
+        const DataColumn(label: Text('Transaction ID', style: _headerStyle)),
+        const DataColumn(label: Text('Status', style: _headerStyle)),
+        const DataColumn(label: Text('Date & Time', style: _headerStyle)),
+        const DataColumn(label: Text('Actions', style: _headerStyle)),
+      ],
+      rows: widget.items.asMap().entries.map((entry) {
+        final index = entry.key;
+        final item = entry.value;
+        final isChecked = _selectedIds.contains(item.id);
+        final rowNumber = (widget.currentPage - 1) * widget.rowsPerPage + index + 1;
+
+        return DataRow(
+          selected: isChecked,
+          cells: [
+            DataCell(
+              SizedBox(
+                width: 20,
+                child: Checkbox(
+                  value: isChecked,
+                  onChanged: (val) => _toggleRow(item.id),
+                  activeColor: AppColors.brandPurple,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                ),
+              ),
+            ),
+            DataCell(
+              Text(
+                rowNumber.toString(),
+                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, color: AppColors.textMuted),
+              ),
+            ),
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 14,
+                    backgroundColor: item.userAvatarBg,
+                    child: Text(
+                      item.userName.isNotEmpty ? item.userName[0].toUpperCase() : 'U',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.userName,
+                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.userEmail,
+                        style: const TextStyle(fontSize: 9.5, color: AppColors.textMuted),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            DataCell(_buildPurposeBadge(item.purpose)),
+            DataCell(
+              Text(
+                '₹${item.amount.toInt()}',
+                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF101A3A)),
+              ),
+            ),
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(item.paymentMethod.icon, size: 14, color: item.paymentMethod.brandColor),
+                  const SizedBox(width: 5),
+                  Text(
+                    item.paymentMethod.label,
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+                  ),
+                ],
+              ),
+            ),
+            DataCell(
+              Text(
+                item.transactionId,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            DataCell(_buildStatusBadge(item.status)),
+            DataCell(_buildDateTimeCell(item.dateTime)),
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AdminTableActionButton(
+                    icon: Icons.visibility_outlined,
+                    tooltip: 'View Transaction',
+                    onPressed: () => widget.onViewDetails(item),
+                  ),
+                  const SizedBox(width: 2),
+                  AdminTableActionButton(
+                    icon: Icons.receipt_outlined,
+                    tooltip: 'View Receipt',
+                    onPressed: () => widget.onViewReceipt(item),
+                  ),
+                  const SizedBox(width: 2),
+                  GestureDetector(
+                    onTapDown: (details) => widget.onMore?.call(item, details),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Icon(Icons.more_vert_rounded, size: 15, color: AppColors.textSecondary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+      emptyState: Container(
+        padding: const EdgeInsets.symmetric(vertical: 48),
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
+              child: const Icon(Icons.receipt_long_outlined, size: 28, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: 12),
+            const Text('No Payments Found', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            const SizedBox(height: 4),
+            const Text('Try adjusting your search terms or filter criteria.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopupsCard(BuildContext context) {
+    final pendingCount = widget.topups.where((t) => t['status'] == 'pending').length;
+
+    return AdminDataTableCard(
+      title: 'Candidate Top-up Requests',
+      totalCount: widget.topups.length,
+      icon: Icons.add_circle_outline_rounded,
+      iconBgColor: const Color(0xFF00B96B),
+      searchQuery: _topupSearchQuery,
+      searchHint: 'Search candidate or UTR...',
+      onSearchChanged: (val) => setState(() => _topupSearchQuery = val),
+      itemLabel: 'candidate requests',
+      filterControls: [
         Container(
           height: 34,
           padding: const EdgeInsets.all(3),
@@ -350,12 +486,14 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
             ],
           ),
         ),
+      ],
+      headerActions: [
         ElevatedButton.icon(
           onPressed: () => widget.onViewChanged?.call('payments'),
           icon: const Icon(Icons.arrow_back_rounded, size: 14),
           label: const Text('Back to Payments'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: AppColors.brandPurple,
             foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -364,113 +502,23 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
           ),
         ),
       ],
-    );
-
-    if (isCompact) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          headerLeft,
-          const SizedBox(height: 10),
-          controls,
-        ],
-      );
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        headerLeft,
-        const SizedBox(width: 16),
-        Flexible(child: controls),
-      ],
+      customBody: _buildTopupsTableView(),
     );
   }
 
-  Widget _buildWithdrawalsToolbar(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isCompact = screenWidth < 900;
+  Widget _buildWithdrawalsCard(BuildContext context) {
     final pendingCount = widget.withdrawals.where((w) => w['status'] == 'pending').length;
 
-    final headerLeft = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFFBEB),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFFDE68A)),
-          ),
-          alignment: Alignment.center,
-          child: const Icon(Icons.arrow_outward_rounded, color: Color(0xFFD97706), size: 18),
-        ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                const Text(
-                  'Coin Payout & Redemptions',
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFDE68A)),
-                  ),
-                  child: Text(
-                    '$pendingCount Pending',
-                    style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFFD97706)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            const Text(
-              'Review candidate coin payout requests and verify bank/UPI transfers',
-              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-            ),
-          ],
-        ),
-      ],
-    );
-
-    final controls = Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        SizedBox(
-          width: isCompact ? 140 : 200,
-          height: 34,
-          child: TextField(
-            onChanged: (val) => setState(() => _withdrawalSearchQuery = val),
-            style: const TextStyle(fontSize: 11.5, color: Color(0xFF0F172A)),
-            decoration: InputDecoration(
-              hintText: 'Search candidate or UPI...',
-              hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-              prefixIcon: const Icon(Icons.search_rounded, size: 14, color: Color(0xFF94A3B8)),
-              contentPadding: EdgeInsets.zero,
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.2)),
-            ),
-          ),
-        ),
+    return AdminDataTableCard(
+      title: 'Coin Payout & Redemptions',
+      totalCount: widget.withdrawals.length,
+      icon: Icons.arrow_outward_rounded,
+      iconBgColor: const Color(0xFFD97706),
+      searchQuery: _withdrawalSearchQuery,
+      searchHint: 'Search candidate or UPI...',
+      onSearchChanged: (val) => setState(() => _withdrawalSearchQuery = val),
+      itemLabel: 'withdrawal requests',
+      filterControls: [
         Container(
           height: 34,
           padding: const EdgeInsets.all(3),
@@ -488,12 +536,14 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
             ],
           ),
         ),
+      ],
+      headerActions: [
         ElevatedButton.icon(
           onPressed: () => widget.onViewChanged?.call('payments'),
           icon: const Icon(Icons.arrow_back_rounded, size: 14),
           label: const Text('Back to Payments'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
+            backgroundColor: AppColors.brandPurple,
             foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -502,848 +552,10 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
           ),
         ),
       ],
-    );
-
-    if (isCompact) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          headerLeft,
-          const SizedBox(height: 10),
-          controls,
-        ],
-      );
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        headerLeft,
-        const SizedBox(width: 16),
-        Flexible(child: controls),
-      ],
+      customBody: _buildWithdrawalsTableView(),
     );
   }
 
-  Widget _buildToolbar(BuildContext context) {
-    if (widget.activeView == 'topups') {
-      return _buildTopupsToolbar(context);
-    } else if (widget.activeView == 'withdrawals') {
-      return _buildWithdrawalsToolbar(context);
-    }
-
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isCompact = screenWidth < 900;
-
-    final headerTitle = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 26,
-          height: 26,
-          decoration: BoxDecoration(
-            color: const Color(0xFF2587F8),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.receipt_long_rounded,
-            color: Colors.white,
-            size: 15,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          'Payments List (${_formatNumber(widget.totalCount)})',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF101A3A),
-            letterSpacing: -0.2,
-          ),
-        ),
-      ],
-    );
-
-    final controls = Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        // Search Input
-        SizedBox(
-          width: isCompact ? 160 : 250,
-          height: 34,
-          child: TextField(
-            controller: _searchController,
-            onChanged: widget.onSearchChanged,
-            style: const TextStyle(fontSize: 11.5, color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              hintText: 'Search by user, transaction ID, or purpose...',
-              hintStyle: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-              prefixIcon: const Icon(Icons.search_rounded, size: 15, color: AppColors.textSecondary),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF5636F5), width: 1.2),
-              ),
-            ),
-          ),
-        ),
-
-        // Method Filter Dropdown
-        AppDropdownFilter<String>(
-          value: _methodFilterOptions.contains(widget.selectedMethod)
-              ? widget.selectedMethod
-              : _methodFilterOptions.first,
-          items: _methodFilterOptions,
-          onChanged: (val) {
-            if (val != null) widget.onMethodChanged(val);
-          },
-        ),
-
-        // Status Filter Dropdown
-        AppDropdownFilter<String>(
-          value: _statusFilterOptions.contains(widget.selectedStatus)
-              ? widget.selectedStatus
-              : _statusFilterOptions.first,
-          items: _statusFilterOptions,
-          onChanged: (val) {
-            if (val != null) widget.onStatusChanged(val);
-          },
-        ),
-
-        // Date Range Picker
-        InkWell(
-          onTap: () async {
-            final now = DateTime.now();
-            final res = await showDateRangePicker(
-              context: context,
-              firstDate: DateTime(now.year - 1),
-              lastDate: DateTime(now.year + 1),
-              initialDateRange: widget.dateRange ??
-                  DateTimeRange(
-                    start: DateTime(2026, 10, 1),
-                    end: DateTime(2026, 10, 31),
-                  ),
-            );
-            if (res != null) {
-              widget.onDateRangeChanged(res);
-            }
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.textSecondary),
-                const SizedBox(width: 6),
-                Text(
-                  widget.dateRange != null
-                      ? '${_formatShortDate(widget.dateRange!.start)} - ${_formatShortDate(widget.dateRange!.end)}'
-                      : 'Oct 1, 2026 - Oct 31, 2026',
-                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.textMuted),
-              ],
-            ),
-          ),
-        ),
-
-        // Filters Button
-        InkWell(
-          onTap: widget.onFiltersTap ?? () {},
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.tune_rounded, size: 13, color: AppColors.textSecondary),
-                SizedBox(width: 5),
-                Text(
-                  'Filters',
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-
-    if (isCompact) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          headerTitle,
-          const SizedBox(height: 10),
-          controls,
-        ],
-      );
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        headerTitle,
-        const SizedBox(width: 16),
-        Flexible(child: controls),
-      ],
-    );
-  }
-
-  Widget _buildBulkActionBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEEF2FF),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFC7D2FE), width: 1),
-      ),
-      child: Row(
-        children: [
-          Text(
-            '${_selectedIds.length} transaction(s) selected',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF4338CA),
-            ),
-          ),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: () {
-              widget.onBulkExport?.call(_selectedIds.toList());
-            },
-            icon: const Icon(Icons.file_download_outlined, size: 14, color: Color(0xFF4338CA)),
-            label: const Text('Export Selected', style: TextStyle(fontSize: 11.5, color: Color(0xFF4338CA))),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTable() {
-    if (widget.activeView == 'topups') {
-      return _buildTopupsTableView();
-    } else if (widget.activeView == 'withdrawals') {
-      return _buildWithdrawalsTableView();
-    }
-
-    if (widget.items.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 48),
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.receipt_long_outlined, size: 28, color: AppColors.textMuted),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'No Payments Found',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Try adjusting your search terms or filter criteria.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth;
-        // Proportional user details column
-        final double userDetailsWidth = (cardWidth * 0.22).clamp(180.0, 340.0);
-        // Fixed widths for other columns + margins:
-        // Checkbox(24) + #(20) + Purpose(90) + Amount(70) + Method(100) + TxId(110) + Status(75) + DateTime(90) + Actions(95) + margins(16) = 690
-        const double fixedColumnsWidth = 24.0 + 20.0 + 90.0 + 70.0 + 100.0 + 110.0 + 75.0 + 90.0 + 95.0 + 16.0;
-        final double totalNeededWidth = fixedColumnsWidth + userDetailsWidth;
-        final double remainingSpace = cardWidth - totalNeededWidth;
-        // Distribute remaining width across the 9 column gaps
-        final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 9).clamp(6.0, 48.0) : 6.0;
-        final double tableMinWidth = cardWidth >= 860.0 ? cardWidth : 860.0;
-
-        return SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: tableMinWidth),
-            child: DataTable(
-              showCheckboxColumn: false,
-              headingRowHeight: 38,
-              dataRowMinHeight: 48,
-              dataRowMaxHeight: 52,
-              horizontalMargin: 8,
-              columnSpacing: dynamicColumnSpacing,
-              headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
-              border: const TableBorder(
-                horizontalInside: BorderSide(color: Color(0xFFF1F5F9), width: 1),
-              ),
-              columns: [
-                // 1. Checkbox
-                DataColumn(
-                  label: SizedBox(
-                    width: 24,
-                    child: Checkbox(
-                      value: _isAllSelected,
-                      onChanged: (val) => _toggleSelectAll(),
-                      activeColor: const Color(0xFF5636F5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                ),
-
-                // 2. #
-                const DataColumn(
-                  label: Text(
-                    '#',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                  ),
-                ),
-
-                // 3. User Details
-                DataColumn(
-                  label: SizedBox(
-                    width: userDetailsWidth,
-                    child: const Text(
-                      'User Details',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                    ),
-                  ),
-                ),
-
-                // 4. Purpose
-                const DataColumn(
-                  label: Text(
-                    'Purpose',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                  ),
-                ),
-
-                // 5. Amount
-                const DataColumn(
-                  label: Text(
-                    'Amount',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                  ),
-                ),
-
-                // 6. Payment Method
-                const DataColumn(
-                  label: Text(
-                    'Payment Method',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                  ),
-                ),
-
-                // 7. Transaction ID
-                const DataColumn(
-                  label: Text(
-                    'Transaction ID',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                  ),
-                ),
-
-                // 8. Status
-                const DataColumn(
-                  label: Text(
-                    'Status',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                  ),
-                ),
-
-                // 9. Date & Time
-                const DataColumn(
-                  label: Text(
-                    'Date & Time',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                  ),
-                ),
-
-                // 10. Actions
-                const DataColumn(
-                  label: Text(
-                    'Actions',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-                  ),
-                ),
-              ],
-              rows: widget.items.asMap().entries.map((entry) {
-                final index = entry.key;
-                final item = entry.value;
-                final isChecked = _selectedIds.contains(item.id);
-                final rowNumber = (widget.currentPage - 1) * widget.rowsPerPage + index + 1;
-
-                return DataRow(
-                  selected: isChecked,
-                  onSelectChanged: (selected) {
-                    _toggleRow(item.id);
-                  },
-                  cells: [
-                    // 1. Checkbox
-                    DataCell(
-                      SizedBox(
-                        width: 24,
-                        child: Checkbox(
-                          value: isChecked,
-                          onChanged: (val) => _toggleRow(item.id),
-                          activeColor: const Color(0xFF5636F5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                    ),
-
-                    // 2. Row Number
-                    DataCell(
-                      Text(
-                        rowNumber.toString(),
-                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, color: AppColors.textMuted),
-                      ),
-                    ),
-
-                    // 3. User Details
-                    DataCell(
-                      SizedBox(
-                        width: userDetailsWidth,
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 14,
-                              backgroundColor: item.userAvatarBg,
-                              child: Text(
-                                item.userName.isNotEmpty ? item.userName[0].toUpperCase() : 'U',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.userName,
-                                    style: const TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
-                                      letterSpacing: -0.2,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    item.userEmail,
-                                    style: const TextStyle(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w400,
-                                      color: AppColors.textMuted,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // 4. Purpose
-                    DataCell(_buildPurposeBadge(item.purpose)),
-
-                    // 5. Amount
-                    DataCell(
-                      Text(
-                        '₹${item.amount.toInt()}',
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF101A3A),
-                        ),
-                      ),
-                    ),
-
-                    // 6. Payment Method
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            item.paymentMethod.icon,
-                            size: 14,
-                            color: item.paymentMethod.brandColor,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            item.paymentMethod.label,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // 7. Transaction ID
-                    DataCell(
-                      Text(
-                        item.transactionId,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontFamily: 'monospace',
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-
-                    // 8. Status
-                    DataCell(_buildStatusBadge(item.status)),
-
-                    // 9. Date & Time
-                    DataCell(_buildDateTimeCell(item.dateTime)),
-
-                    // 10. Actions
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // View Details
-                          IconButton(
-                            icon: const Icon(Icons.visibility_outlined, size: 15, color: AppColors.textSecondary),
-                            onPressed: () => widget.onViewDetails(item),
-                            tooltip: 'View Transaction',
-                            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
-                            padding: EdgeInsets.zero,
-                          ),
-                          const SizedBox(width: 2),
-
-                          // View Receipt / Invoice
-                          IconButton(
-                            icon: const Icon(Icons.receipt_outlined, size: 15, color: AppColors.textSecondary),
-                            onPressed: () => widget.onViewReceipt(item),
-                            tooltip: 'View Receipt',
-                            constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
-                            padding: EdgeInsets.zero,
-                          ),
-                          const SizedBox(width: 2),
-
-                          // More
-                          GestureDetector(
-                            onTapDown: (details) => widget.onMore?.call(item, details),
-                            child: const Padding(
-                              padding: EdgeInsets.all(4.0),
-                              child: Icon(Icons.more_vert_rounded, size: 15, color: AppColors.textSecondary),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPurposeBadge(PaymentPurpose purpose) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-      decoration: BoxDecoration(
-        color: purpose.backgroundColor,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: purpose.borderColor, width: 0.8),
-      ),
-      child: Text(
-        purpose.label,
-        style: TextStyle(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w600,
-          color: purpose.textColor,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(PaymentStatus status) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
-      decoration: BoxDecoration(
-        color: status.backgroundColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        status.label,
-        style: TextStyle(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w600,
-          color: status.color,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateTimeCell(DateTime dt) {
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    final dateStr = '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
-    final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
-    final period = dt.hour >= 12 ? 'PM' : 'AM';
-    final minuteStr = dt.minute.toString().padLeft(2, '0');
-    final timeStr = '${hour.toString().padLeft(2, '0')}:$minuteStr $period';
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          dateStr,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-        ),
-        Text(
-          timeStr,
-          style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFooter() {
-    if (widget.activeView == 'topups') {
-      final pendingCount = widget.topups.where((t) => t['status'] == 'pending').length;
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Showing ${_filteredTopups.length} of ${widget.topups.length} candidate requests ($pendingCount pending approval)',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
-            ),
-            const Text(
-              'All wallet adjustments are automatically audited to ledger',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-            ),
-          ],
-        ),
-      );
-    }
-    if (widget.activeView == 'withdrawals') {
-      final pendingCount = widget.withdrawals.where((w) => w['status'] == 'pending').length;
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Showing ${_filteredWithdrawals.length} of ${widget.withdrawals.length} coin withdrawal requests ($pendingCount pending payout)',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
-            ),
-            const Text(
-              'Payout dispatches update candidate ledger balance in real-time',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final startItem = widget.items.isEmpty ? 0 : (widget.currentPage - 1) * widget.rowsPerPage + 1;
-    final endItem = math.min(widget.currentPage * widget.rowsPerPage, widget.totalCount);
-
-    return Wrap(
-      alignment: WrapAlignment.spaceBetween,
-      runAlignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 12,
-      runSpacing: 10,
-      children: [
-        // Left: Showing X to Y of Z transactions
-        Text(
-          'Showing $startItem to $endItem of ${_formatNumber(widget.totalCount)} transactions',
-          style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
-        ),
-
-        // Center: Pagination Buttons (< 1 2 3 ... >)
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Previous
-            IconButton(
-              icon: const Icon(Icons.chevron_left_rounded, size: 16),
-              onPressed: widget.currentPage > 1
-                  ? () => widget.onPageChanged(widget.currentPage - 1)
-                  : null,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-            ),
-            const SizedBox(width: 2),
-
-            // Pages (1, 2, 3, 4, 5 ... 835)
-            ..._buildPaginationNumbers(),
-
-            const SizedBox(width: 2),
-            // Next
-            IconButton(
-              icon: const Icon(Icons.chevron_right_rounded, size: 16),
-              onPressed: widget.currentPage < widget.totalPages
-                  ? () => widget.onPageChanged(widget.currentPage + 1)
-                  : null,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-            ),
-          ],
-        ),
-
-        // Right: Show 10 per page
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Show ', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-            AppDropdownFilter<int>(
-              value: widget.rowsPerPage,
-              items: const [5, 10, 20, 50],
-              height: 28,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              borderRadius: BorderRadius.circular(6),
-              onChanged: (val) {
-                if (val != null) widget.onRowsPerPageChanged(val);
-              },
-            ),
-            const Text(' per page', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-          ],
-        ),
-      ],
-    );
-  }
-
-  List<Widget> _buildPaginationNumbers() {
-    final widgets = <Widget>[];
-    final pages = <int>[];
-
-    if (widget.totalPages <= 5) {
-      for (int i = 1; i <= widget.totalPages; i++) {
-        pages.add(i);
-      }
-    } else {
-      pages.addAll([1, 2, 3, 4, 5]);
-    }
-
-    for (final p in pages) {
-      final isCurrent = p == widget.currentPage;
-      widgets.add(
-        InkWell(
-          onTap: () => widget.onPageChanged(p),
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isCurrent ? const Color(0xFF5636F5) : Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              p.toString(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-                color: isCurrent ? Colors.white : AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      );
-      widgets.add(const SizedBox(width: 2));
-    }
-
-    if (widget.totalPages > 5) {
-      widgets.add(
-        const Text('...', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-      );
-      widgets.add(const SizedBox(width: 2));
-      final lastPage = widget.totalPages;
-      final isLastCurrent = lastPage == widget.currentPage;
-      widgets.add(
-        InkWell(
-          onTap: () => widget.onPageChanged(lastPage),
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isLastCurrent ? const Color(0xFF5636F5) : Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              lastPage.toString(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isLastCurrent ? FontWeight.w700 : FontWeight.w500,
-                color: isLastCurrent ? Colors.white : AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return widgets;
-  }
-
-  // --- Top-ups Embedded Table View ---
   Widget _buildTopupsTableView() {
     final list = _filteredTopups;
     if (list.isEmpty) {
@@ -1355,38 +567,28 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
             Container(
               width: 52,
               height: 52,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
-              ),
+              decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
               child: const Icon(Icons.account_balance_wallet_outlined, size: 28, color: Color(0xFF00B96B)),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'No Top-up Requests Found',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-            ),
+            const Text('No Top-up Requests Found', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             const SizedBox(height: 4),
-            const Text(
-              'No matching coin recharge requests match your filter criteria.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            ),
+            const Text('No matching coin recharge requests match your filter criteria.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           ],
         ),
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth;
-        final double candidateWidth = (cardWidth * 0.22).clamp(180.0, 320.0);
-        final double fixedColumnsWidth = 24.0 + 90.0 + 100.0 + 170.0 + 80.0 + 90.0 + 150.0 + 16.0;
-        final double totalNeededWidth = fixedColumnsWidth + candidateWidth;
-        final double remainingSpace = cardWidth - totalNeededWidth;
-        final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 7).clamp(8.0, 48.0) : 8.0;
-        final double tableMinWidth = cardWidth >= 860.0 ? cardWidth : 860.0;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cardWidth = (screenWidth - 340).clamp(860.0, 1800.0);
+    final double candidateWidth = (cardWidth * 0.22).clamp(180.0, 320.0);
+    final double fixedColumnsWidth = 24.0 + 90.0 + 100.0 + 170.0 + 80.0 + 90.0 + 150.0 + 16.0;
+    final double totalNeededWidth = fixedColumnsWidth + candidateWidth;
+    final double remainingSpace = cardWidth - totalNeededWidth;
+    final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 7).clamp(8.0, 48.0) : 8.0;
+    final double tableMinWidth = cardWidth >= 860.0 ? cardWidth : 860.0;
 
-        return SingleChildScrollView(
+    return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: tableMinWidth),
@@ -1402,19 +604,19 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
                 horizontalInside: BorderSide(color: Color(0xFFF1F5F9), width: 1),
               ),
               columns: [
-                const DataColumn(label: Text('#', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
+                const DataColumn(label: Text('#', style: _headerStyle)),
                 DataColumn(
                   label: SizedBox(
                     width: candidateWidth,
-                    child: const Text('Candidate Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                    child: const Text('Candidate Details', style: _headerStyle),
                   ),
                 ),
-                const DataColumn(label: Text('Amount Paid', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('Coins to Credit', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('UPI / UTR Number', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('Date', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
+                const DataColumn(label: Text('Amount Paid', style: _headerStyle)),
+                const DataColumn(label: Text('Coins to Credit', style: _headerStyle)),
+                const DataColumn(label: Text('UPI / UTR Number', style: _headerStyle)),
+                const DataColumn(label: Text('Status', style: _headerStyle)),
+                const DataColumn(label: Text('Date', style: _headerStyle)),
+                const DataColumn(label: Text('Actions', style: _headerStyle)),
               ],
               rows: list.asMap().entries.map((entry) {
                 final idx = entry.key + 1;
@@ -1524,9 +726,9 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(color: const Color(0xFFFDE68A)),
                               ),
-                              child: Row(
+                              child: const Row(
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   Icon(Icons.schedule_rounded, size: 11, color: Color(0xFFD97706)),
                                   SizedBox(width: 4),
                                   Text('Pending', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFFD97706))),
@@ -1541,9 +743,9 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(color: const Color(0xFFA7F3D0)),
                                   ),
-                                  child: Row(
+                                  child: const Row(
                                     mainAxisSize: MainAxisSize.min,
-                                    children: const [
+                                    children: [
                                       Icon(Icons.check_circle_outline_rounded, size: 11, color: Color(0xFF00B96B)),
                                       SizedBox(width: 4),
                                       Text('Approved', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF00B96B))),
@@ -1620,11 +822,8 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
             ),
           ),
         );
-      },
-    );
   }
 
-  // --- Withdrawals Embedded Table View ---
   Widget _buildWithdrawalsTableView() {
     final list = _filteredWithdrawals;
     if (list.isEmpty) {
@@ -1636,40 +835,28 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
             Container(
               width: 52,
               height: 52,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
-              ),
+              decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
               child: const Icon(Icons.account_balance_wallet_outlined, size: 28, color: Color(0xFFFF9F0A)),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'No Withdrawal Requests Found',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-            ),
+            const Text('No Withdrawal Requests Found', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             const SizedBox(height: 4),
-            const Text(
-              'No matching withdrawal redemption records match your search filter.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            ),
+            const Text('No matching withdrawal redemption records match your search filter.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           ],
         ),
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth;
-        final double candidateWidth = (cardWidth * 0.22).clamp(180.0, 320.0);
-        // Fixed widths for columns:
-        // # (24) + candidateWidth + Coins(100) + Payout(90) + UPI(170) + Status(80) + Date(90) + Actions(130) + margins(16) = 700 + candidateWidth
-        final double fixedColumnsWidth = 24.0 + 100.0 + 90.0 + 170.0 + 80.0 + 90.0 + 130.0 + 16.0;
-        final double totalNeededWidth = fixedColumnsWidth + candidateWidth;
-        final double remainingSpace = cardWidth - totalNeededWidth;
-        final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 7).clamp(8.0, 48.0) : 8.0;
-        final double tableMinWidth = cardWidth >= 860.0 ? cardWidth : 860.0;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cardWidth = (screenWidth - 340).clamp(860.0, 1800.0);
+    final double candidateWidth = (cardWidth * 0.22).clamp(180.0, 320.0);
+    final double fixedColumnsWidth = 24.0 + 100.0 + 90.0 + 170.0 + 80.0 + 90.0 + 130.0 + 16.0;
+    final double totalNeededWidth = fixedColumnsWidth + candidateWidth;
+    final double remainingSpace = cardWidth - totalNeededWidth;
+    final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 7).clamp(8.0, 48.0) : 8.0;
+    final double tableMinWidth = cardWidth >= 860.0 ? cardWidth : 860.0;
 
-        return SingleChildScrollView(
+    return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: tableMinWidth),
@@ -1685,19 +872,19 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
                 horizontalInside: BorderSide(color: Color(0xFFF1F5F9), width: 1),
               ),
               columns: [
-                const DataColumn(label: Text('#', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
+                const DataColumn(label: Text('#', style: _headerStyle)),
                 DataColumn(
                   label: SizedBox(
                     width: candidateWidth,
-                    child: const Text('Candidate Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                    child: const Text('Candidate Details', style: _headerStyle),
                   ),
                 ),
-                const DataColumn(label: Text('Coins Redeemed', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('Payout Amount', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('Candidate UPI / Bank', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('Date', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
-                const DataColumn(label: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)))),
+                const DataColumn(label: Text('Coins Redeemed', style: _headerStyle)),
+                const DataColumn(label: Text('Payout Amount', style: _headerStyle)),
+                const DataColumn(label: Text('Candidate UPI / Bank', style: _headerStyle)),
+                const DataColumn(label: Text('Status', style: _headerStyle)),
+                const DataColumn(label: Text('Date', style: _headerStyle)),
+                const DataColumn(label: Text('Actions', style: _headerStyle)),
               ],
               rows: list.asMap().entries.map((entry) {
                 final idx = entry.key + 1;
@@ -1806,9 +993,9 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(color: const Color(0xFFFDE68A)),
                               ),
-                              child: Row(
+                              child: const Row(
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   Icon(Icons.schedule_rounded, size: 11, color: Color(0xFFD97706)),
                                   SizedBox(width: 4),
                                   Text('Pending', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFFD97706))),
@@ -1823,9 +1010,9 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(color: const Color(0xFFA7F3D0)),
                                   ),
-                                  child: Row(
+                                  child: const Row(
                                     mainAxisSize: MainAxisSize.min,
-                                    children: const [
+                                    children: [
                                       Icon(Icons.check_circle_outline_rounded, size: 11, color: Color(0xFF00B96B)),
                                       SizedBox(width: 4),
                                       Text('Paid', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF00B96B))),
@@ -1902,20 +1089,77 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
             ),
           ),
         );
-      },
+  }
+
+  Widget _buildPurposeBadge(PaymentPurpose purpose) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: purpose.backgroundColor,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: purpose.borderColor, width: 0.8),
+      ),
+      child: Text(
+        purpose.label,
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w600,
+          color: purpose.textColor,
+        ),
+      ),
     );
   }
 
-  static String _formatNumber(int n) {
-    if (n >= 1000) {
-      final s = n.toString();
-      final len = s.length;
-      final part1 = s.substring(0, len - 3);
-      final part2 = s.substring(len - 3);
-      return '$part1,$part2';
-    }
-    return n.toString();
+  Widget _buildStatusBadge(PaymentStatus status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: status.backgroundColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        status.label,
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w600,
+          color: status.color,
+        ),
+      ),
+    );
   }
+
+  Widget _buildDateTimeCell(DateTime dt) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final dateStr = '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+    final period = dt.hour >= 12 ? 'PM' : 'AM';
+    final minuteStr = dt.minute.toString().padLeft(2, '0');
+    final timeStr = '${hour.toString().padLeft(2, '0')}:$minuteStr $period';
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          dateStr,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+        ),
+        Text(
+          timeStr,
+          style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
+        ),
+      ],
+    );
+  }
+
+  static const _headerStyle = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textSecondary,
+  );
 
   static String _formatShortDate(DateTime dt) {
     final months = [

@@ -580,78 +580,68 @@ class _TestsTabState extends State<TestsTab> {
             // ROW 3: TABLE CARD + RIGHT ANALYTICS COLUMN
             // ==========================================
             if (isDesktop)
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Test Series List Table (Flexible width)
-                    Expanded(
-                      child: TestSeriesTableCard(
-                        items: _paginatedItems,
-                        totalCount: _filteredItems.length,
-                        selectedSubject: _selectedSubject,
-                        selectedStatus: _selectedStatus,
-                        searchQuery: _searchQuery,
-                        currentPage: _currentPage,
-                        totalPages: _totalPages,
-                        onSubjectChanged: (val) {
-                          setState(() {
-                            _selectedSubject = val;
-                            _currentPage = 1;
-                          });
-                        },
-                        onStatusChanged: (val) {
-                          setState(() {
-                            _selectedStatus = val;
-                            _currentPage = 1;
-                          });
-                        },
-                        onSearchChanged: (val) {
-                          setState(() {
-                            _searchQuery = val;
-                            _currentPage = 1;
-                          });
-                        },
-                        onPageChanged: (page) {
-                          setState(() => _currentPage = page);
-                        },
-                        onView: _openViewDialog,
-                        onAnalytics: _openAnalyticsDialog,
-                        onEdit: (item) => _openCreateDialog(item),
-                        onDelete: _deleteItem,
-                        onToggleStatus: _toggleStatus,
-                        onAddQuestion: (item) => _openAddQuestionDialog(item),
-                        onViewQuestions: _openViewQuestionsDialog,
-                      ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Test Series List Table (Flexible width)
+                  Expanded(
+                    child: TestSeriesTableCard(
+                      items: _paginatedItems,
+                      totalCount: _filteredItems.length,
+                      selectedSubject: _selectedSubject,
+                      selectedStatus: _selectedStatus,
+                      searchQuery: _searchQuery,
+                      currentPage: _currentPage,
+                      totalPages: _totalPages,
+                      onSubjectChanged: (val) {
+                        setState(() {
+                          _selectedSubject = val;
+                          _currentPage = 1;
+                        });
+                      },
+                      onStatusChanged: (val) {
+                        setState(() {
+                          _selectedStatus = val;
+                          _currentPage = 1;
+                        });
+                      },
+                      onSearchChanged: (val) {
+                        setState(() {
+                          _searchQuery = val;
+                          _currentPage = 1;
+                        });
+                      },
+                      onPageChanged: (page) {
+                        setState(() => _currentPage = page);
+                      },
+                      onView: _openViewDialog,
+                      onAnalytics: _openAnalyticsDialog,
+                      onEdit: (item) => _openCreateDialog(item),
+                      onDelete: _deleteItem,
+                      onToggleStatus: _toggleStatus,
+                      onAddQuestion: (item) => _openAddQuestionDialog(item),
+                      onViewQuestions: _openViewQuestionsDialog,
                     ),
-                    const SizedBox(width: 16),
+                  ),
+                  const SizedBox(width: 16),
 
-                    // Right Analytics Column (Dynamically matches TestSeriesTableCard height)
-                    SizedBox(
-                      width: 295,
-                      child: Column(
-                        children: [
-                          Expanded(
-                            flex: 46,
-                            child: SubjectWiseChartCard(
-                              fillHeight: true,
-                              totalCount: _totalTestSeries,
-                              slices: _subjectSlices,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            flex: 54,
-                            child: RecentActivityCard(
-                              fillHeight: true,
-                              activities: _recentActivities,
-                            ),
-                          ),
-                        ],
-                      ),
+                  // Right Analytics Column
+                  SizedBox(
+                    width: 295,
+                    child: Column(
+                      children: [
+                        SubjectWiseChartCard(
+                          totalCount: _totalTestSeries,
+                          slices: _subjectSlices,
+                        ),
+                        const SizedBox(height: 16),
+                        RecentActivityCard(
+                          activities: _recentActivities,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               )
             else
               Column(

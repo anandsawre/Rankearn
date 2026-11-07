@@ -99,6 +99,9 @@ export 'components/battle/battle_reward_card.dart';
 export 'components/battle/battle_wave_card.dart';
 export 'components/battle/battle_leave_dialog.dart';
 
+// Admin Portal Tables
+export 'components/tables/admin_data_table_card.dart';
+
 // Showcase
 export 'showcase/design_system_showcase.dart';
 
