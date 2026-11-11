@@ -4,7 +4,9 @@ import '../models/battle_dashboard_models.dart';
 import '../services/battle_dashboard_service.dart';
 
 class BattleSettingsTab extends StatefulWidget {
-  const BattleSettingsTab({super.key});
+  final bool inDialog;
+
+  const BattleSettingsTab({super.key, this.inDialog = false});
 
   @override
   State<BattleSettingsTab> createState() => _BattleSettingsTabState();
@@ -58,6 +60,9 @@ class _BattleSettingsTabState extends State<BattleSettingsTab> {
           duration: Duration(seconds: 2),
         ),
       );
+      if (widget.inDialog) {
+        Navigator.pop(context);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,14 +78,13 @@ class _BattleSettingsTabState extends State<BattleSettingsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: AppSpacing.pagePadding(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. HEADER BAR
-          Row(
-            children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. HEADER / SYNC STATUS BAR
+        Row(
+          children: [
+            if (!widget.inDialog) ...[
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,26 +102,7 @@ class _BattleSettingsTabState extends State<BattleSettingsTab> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: _service.hasPersistedSettings
-                                ? AppColors.brandGreenLight
-                                : AppColors.coinGoldLight,
-                            borderRadius: AppRadii.badge,
-                          ),
-                          child: Text(
-                            _service.hasPersistedSettings
-                                ? 'Synced with app_configs'
-                                : 'Not saved in DB yet',
-                            style: AppTypography.captionBold.copyWith(
-                              fontSize: 10.5,
-                              color: _service.hasPersistedSettings
-                                  ? AppColors.brandGreenDark
-                                  : AppColors.warning,
-                            ),
-                          ),
-                        ),
+                        _buildSyncBadge(),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -130,201 +115,266 @@ class _BattleSettingsTabState extends State<BattleSettingsTab> {
                 ),
               ),
               const SizedBox(width: 16),
-              ElevatedButton.icon(
-                onPressed: _isSaving ? null : _saveSettings,
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 15,
-                        height: 15,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.save_rounded, size: 16),
-                label: Text(
-                  _isSaving ? 'Saving…' : 'Save Settings',
-                  style: AppTypography.labelSmall.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textOnPrimary,
-                  ),
+            ] else ...[
+              _buildSyncBadge(),
+              const Spacer(),
+            ],
+            ElevatedButton.icon(
+              onPressed: _isSaving ? null : _saveSettings,
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 15,
+                      height: 15,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.save_rounded, size: 16),
+              label: Text(
+                _isSaving ? 'Saving…' : 'Save Settings',
+                style: AppTypography.labelSmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textOnPrimary,
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.battleAdminPurple,
-                  foregroundColor: AppColors.textOnPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderSm),
-                  elevation: 0,
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.battleAdminPurple,
+                foregroundColor: AppColors.textOnPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: const RoundedRectangleBorder(borderRadius: AppRadii.borderSm),
+                elevation: 0,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // 2. SETTINGS CARDS (Responsive 2-col or stacked inside dialogs)
+        BattleSettingsCards(
+          settings: _settings,
+          onChanged: _updateDraft,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSyncBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: _service.hasPersistedSettings
+            ? AppColors.brandGreenLight
+            : AppColors.coinGoldLight,
+        borderRadius: AppRadii.badge,
+      ),
+      child: Text(
+        _service.hasPersistedSettings
+            ? 'Synced with app_configs'
+            : 'Not saved in DB yet',
+        style: AppTypography.captionBold.copyWith(
+          fontSize: 10.5,
+          color: _service.hasPersistedSettings
+              ? AppColors.brandGreenDark
+              : AppColors.warning,
+        ),
+      ),
+    );
+  }
+}
+
+/// Reusable settings configuration cards used in both [BattleSettingsTab] and [BattleSettingsDialog].
+class BattleSettingsCards extends StatelessWidget {
+  final BattleSettingsData settings;
+  final ValueChanged<BattleSettingsData> onChanged;
+
+  const BattleSettingsCards({
+    super.key,
+    required this.settings,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isTwoCol = constraints.maxWidth >= 680;
+        final col1 = _buildMatchmakingCard();
+        final col2 = _buildEconomyCard();
+
+        if (isTwoCol) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: col1),
+              const SizedBox(width: 20),
+              Expanded(child: col2),
+            ],
+          );
+        }
+
+        return Column(
+          children: [
+            col1,
+            const SizedBox(height: 16),
+            col2,
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMatchmakingCard() {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadii.card,
+        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
+        boxShadow: AppShadows.subtle,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.smart_toy_outlined, color: AppColors.battleAdminPurple, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Matchmaking & Bot Engine',
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.headingSmall.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-
-          // 2. SETTINGS CARDS
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Column 1: Matchmaking & Bot Engine
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(22),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadii.card,
-                    border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-                    boxShadow: AppShadows.subtle,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.smart_toy_outlined, color: AppColors.battleAdminPurple, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Matchmaking & Bot Engine',
-                            style: AppTypography.headingSmall.copyWith(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-
-                      Text(
-                        'Matchmaking Search Timeout: ${_settings.matchmakingTimeout}s',
-                        style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                      ),
-                      const SizedBox(height: 4),
-                      Slider(
-                        value: _settings.matchmakingTimeout.toDouble(),
-                        min: 5,
-                        max: 30,
-                        divisions: 25,
-                        activeColor: AppColors.battleAdminPurple,
-                        onChanged: (v) => _updateDraft(_settings.copyWith(matchmakingTimeout: v.toInt())),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Text(
-                        'Bot Accuracy Target: ${(_settings.botAccuracy * 100).toInt()}%',
-                        style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                      ),
-                      const SizedBox(height: 4),
-                      Slider(
-                        value: _settings.botAccuracy,
-                        min: 0.3,
-                        max: 0.95,
-                        divisions: 13,
-                        activeColor: AppColors.battleAdminPurple,
-                        onChanged: (v) => _updateDraft(_settings.copyWith(botAccuracy: v)),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Material(
-                        type: MaterialType.transparency,
-                        child: SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            'Bot Fallback Mode',
-                            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                          ),
-                          subtitle: Text(
-                            'Pair against simulated AI bot if no real user matches within timeout',
-                            style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                          value: _settings.botFallback,
-                          activeThumbColor: AppColors.battleAdminPurple,
-                          onChanged: (v) => _updateDraft(_settings.copyWith(botFallback: v)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+          const SizedBox(height: 18),
+          Text(
+            'Matchmaking Search Timeout: ${settings.matchmakingTimeout}s',
+            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Slider(
+            value: settings.matchmakingTimeout.toDouble(),
+            min: 5,
+            max: 30,
+            divisions: 25,
+            activeColor: AppColors.battleAdminPurple,
+            onChanged: (v) => onChanged(settings.copyWith(matchmakingTimeout: v.toInt())),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Bot Accuracy Target: ${(settings.botAccuracy * 100).toInt()}%',
+            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Slider(
+            value: settings.botAccuracy,
+            min: 0.3,
+            max: 0.95,
+            divisions: 13,
+            activeColor: AppColors.battleAdminPurple,
+            onChanged: (v) => onChanged(settings.copyWith(botAccuracy: v)),
+          ),
+          const SizedBox(height: 12),
+          Material(
+            type: MaterialType.transparency,
+            child: SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                'Bot Fallback Mode',
+                style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
               ),
-              const SizedBox(width: 20),
+              subtitle: Text(
+                'Pair against simulated AI bot if no real user matches within timeout',
+                style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textSecondary),
+              ),
+              value: settings.botFallback,
+              activeThumbColor: AppColors.battleAdminPurple,
+              onChanged: (v) => onChanged(settings.copyWith(botFallback: v)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-              // Column 2: Stakes & Anti-cheat
+  Widget _buildEconomyCard() {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadii.card,
+        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
+        boxShadow: AppShadows.subtle,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.security_rounded, color: AppColors.brandGreen, size: 20),
+              const SizedBox(width: 8),
               Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(22),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadii.card,
-                    border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-                    boxShadow: AppShadows.subtle,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.security_rounded, color: AppColors.brandGreen, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Economy & Integrity',
-                            style: AppTypography.headingSmall.copyWith(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-
-                      Text(
-                        '1v1 Prize Multiplier: ${_settings.prizeMultiplier.toStringAsFixed(1)}x (${(_settings.prizeMultiplier * 100).toInt()}% Return)',
-                        style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                      ),
-                      const SizedBox(height: 4),
-                      Slider(
-                        value: _settings.prizeMultiplier,
-                        min: 1.2,
-                        max: 2.0,
-                        divisions: 8,
-                        activeColor: AppColors.brandGreen,
-                        onChanged: (v) => _updateDraft(_settings.copyWith(prizeMultiplier: v)),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Text(
-                        'Anti-Cheat Minimum Answer Time: ${_settings.speedCheckThreshold}s',
-                        style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                      ),
-                      const SizedBox(height: 4),
-                      Slider(
-                        value: _settings.speedCheckThreshold,
-                        min: 0.5,
-                        max: 3.0,
-                        divisions: 25,
-                        activeColor: AppColors.liveRed,
-                        onChanged: (v) => _updateDraft(_settings.copyWith(speedCheckThreshold: v)),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Material(
-                        type: MaterialType.transparency,
-                        child: SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            'Battle Arena Maintenance Mode',
-                            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.liveRed),
-                          ),
-                          subtitle: Text(
-                            'Temporarily flag new battle creation as paused in config',
-                            style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                          value: _settings.maintenanceMode,
-                          activeThumbColor: AppColors.liveRed,
-                          onChanged: (v) => _updateDraft(_settings.copyWith(maintenanceMode: v)),
-                        ),
-                      ),
-                    ],
+                child: Text(
+                  'Economy & Integrity',
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.headingSmall.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 18),
+          Text(
+            '1v1 Prize Multiplier: ${settings.prizeMultiplier.toStringAsFixed(1)}x (${(settings.prizeMultiplier * 100).toInt()}% Return)',
+            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Slider(
+            value: settings.prizeMultiplier,
+            min: 1.2,
+            max: 2.0,
+            divisions: 8,
+            activeColor: AppColors.brandGreen,
+            onChanged: (v) => onChanged(settings.copyWith(prizeMultiplier: v)),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Anti-Cheat Minimum Answer Time: ${settings.speedCheckThreshold}s',
+            style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Slider(
+            value: settings.speedCheckThreshold,
+            min: 0.5,
+            max: 3.0,
+            divisions: 25,
+            activeColor: AppColors.liveRed,
+            onChanged: (v) => onChanged(settings.copyWith(speedCheckThreshold: v)),
+          ),
+          const SizedBox(height: 12),
+          Material(
+            type: MaterialType.transparency,
+            child: SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                'Battle Arena Maintenance Mode',
+                style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.liveRed),
+              ),
+              subtitle: Text(
+                'Temporarily flag new battle creation as paused in config',
+                style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textSecondary),
+              ),
+              value: settings.maintenanceMode,
+              activeThumbColor: AppColors.liveRed,
+              onChanged: (v) => onChanged(settings.copyWith(maintenanceMode: v)),
+            ),
           ),
         ],
       ),

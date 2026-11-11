@@ -59,11 +59,9 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
       return true;
     }).toList();
 
-    return SingleChildScrollView(
-      padding: AppSpacing.pagePadding(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           // 1. TOP KPI METRICS ROW
           LayoutBuilder(
             builder: (context, constraints) {
@@ -251,8 +249,7 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
                 return _build1v1Card(b);
               },
             ),
-        ],
-      ),
+      ],
     );
   }
 

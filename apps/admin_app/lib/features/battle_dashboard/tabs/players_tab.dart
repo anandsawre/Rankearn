@@ -6,7 +6,9 @@ import '../widgets/battle_player_avatar.dart';
 import '../dialogs/confirm_action_dialog.dart';
 
 class BattlePlayersTab extends StatefulWidget {
-  const BattlePlayersTab({super.key});
+  final bool inDialog;
+
+  const BattlePlayersTab({super.key, this.inDialog = false});
 
   @override
   State<BattlePlayersTab> createState() => _BattlePlayersTabState();
@@ -55,11 +57,9 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
       return true;
     }).toList();
 
-    return SingleChildScrollView(
-      padding: AppSpacing.pagePadding(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           // 1. TOP KPI METRICS ROW
           LayoutBuilder(
             builder: (context, constraints) {
@@ -122,54 +122,33 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
           // 2. HEADER BAR (Title, Search)
           Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Player Management & Moderation',
-                      style: AppTypography.headingSmall.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+              if (!widget.inDialog) ...[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Player Management & Moderation',
+                        style: AppTypography.headingSmall.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Audit player win rates, duel rankings, and Supabase account moderation status',
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              SizedBox(
-                width: 250,
-                child: TextField(
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: 'Search Player / Rank / ID...',
-                    hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
-                    prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.textMuted),
-                    filled: true,
-                    fillColor: AppColors.surface,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: AppRadii.borderSm,
-                      borderSide: const BorderSide(color: AppColors.borderSubtle),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: AppRadii.borderSm,
-                      borderSide: const BorderSide(color: AppColors.borderSubtle),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: AppRadii.borderSm,
-                      borderSide: const BorderSide(color: AppColors.battleAdminPurple, width: 1.5),
-                    ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Audit player win rates, duel rankings, and Supabase account moderation status',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  onChanged: (v) => setState(() => _search = v),
                 ),
-              ),
+                const SizedBox(width: 16),
+              ],
+              if (widget.inDialog)
+                Expanded(child: _buildSearchField())
+              else
+                SizedBox(width: 250, child: _buildSearchField()),
             ],
           ),
           const SizedBox(height: 16),
@@ -223,8 +202,34 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
                 return _buildPlayerCard(p);
               },
             ),
-        ],
+      ],
+    );
+  }
+
+  Widget _buildSearchField() {
+    return TextField(
+      style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
+      decoration: InputDecoration(
+        hintText: 'Search Player / Rank / ID...',
+        hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+        prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.textMuted),
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: AppRadii.borderSm,
+          borderSide: const BorderSide(color: AppColors.borderSubtle),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AppRadii.borderSm,
+          borderSide: const BorderSide(color: AppColors.borderSubtle),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppRadii.borderSm,
+          borderSide: const BorderSide(color: AppColors.battleAdminPurple, width: 1.5),
+        ),
       ),
+      onChanged: (v) => setState(() => _search = v),
     );
   }
 

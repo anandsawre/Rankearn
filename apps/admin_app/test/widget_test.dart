@@ -1513,29 +1513,38 @@ void main() {
     expect(find.text('42'), findsOneWidget); // Question Bank count
     expect(find.text('100%'), findsOneWidget); // Completion rate (1 completed / 0 cancelled)
 
-    // Switch to 1 vs 1 Battles tab
-    await tester.tap(find.text('1 vs 1 Battles').first);
-    await tester.pumpAndSettle();
-    expect(find.text('1 vs 1 Battle Management'), findsOneWidget);
-    expect(find.text('Riya Verma'), findsWidgets);
+    // Verify redundant sub-navigation bar was removed (table dropdown already filters types)
+    expect(find.text('Overview'), findsNothing);
+    expect(find.text('Multiplayer'), findsNothing);
 
-    // Switch to Players tab
-    await tester.tap(find.text('Players').first);
+    // Open Players dialog from Battle Control card and close
+    await tester.tap(find.text('Players').last);
     await tester.pumpAndSettle();
-    expect(find.text('Arjun Nair'), findsOneWidget);
+    expect(find.text('Player Management & Moderation'), findsOneWidget);
+    expect(find.text('Arjun Nair'), findsWidgets);
     expect(find.text('520 Coins'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Player Management & Moderation'), findsNothing);
 
-    // Switch to Reports tab
+    // Open Reports dialog from Battle Control card and close
     await tester.tap(find.text('Reports').first);
     await tester.pumpAndSettle();
     expect(find.text('Battle Analytics & Performance Reports'), findsOneWidget);
     expect(find.text('140'), findsOneWidget); // 50*2 + 20*2 coin volume
     expect(find.text('Battle Created'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('Battle Analytics & Performance Reports'), findsNothing);
 
-    // Switch to Settings tab
+    // Open Settings dialog from Battle Control card and close
     await tester.tap(find.text('Settings').first);
     await tester.pumpAndSettle();
+    expect(find.text('Global Battle System Settings'), findsOneWidget);
     expect(find.text('Synced with app_configs'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Global Battle System Settings'), findsNothing);
   });
 }
 

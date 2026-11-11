@@ -4,7 +4,9 @@ import 'package:design_system/design_system.dart';
 import '../services/battle_dashboard_service.dart';
 
 class BattleReportsTab extends StatefulWidget {
-  const BattleReportsTab({super.key});
+  final bool inDialog;
+
+  const BattleReportsTab({super.key, this.inDialog = false});
 
   @override
   State<BattleReportsTab> createState() => _BattleReportsTabState();
@@ -62,60 +64,52 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
     final multiRatio = total == 0 ? 0.0 : summary.multiplayerMatches / total;
     final roomsRatio = total == 0 ? 0.0 : summary.customRoomsCount / total;
 
-    return SingleChildScrollView(
-      padding: AppSpacing.pagePadding(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           // 1. HEADER BAR
           Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Battle Analytics & Performance Reports',
-                      style: AppTypography.headingSmall.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+              if (!widget.inDialog) ...[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Battle Analytics & Performance Reports',
+                        style: AppTypography.headingSmall.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Computed directly from live Supabase battles, wallet payouts and audit logs',
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: AppRadii.borderSm,
-                  border: Border.all(color: AppColors.borderSubtle),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _timeRange,
-                    style: AppTypography.labelSmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'Today', child: Text('Today')),
-                      DropdownMenuItem(value: 'Last 7 Days', child: Text('Last 7 Days')),
-                      DropdownMenuItem(value: 'Last 30 Days', child: Text('Last 30 Days')),
-                      DropdownMenuItem(value: 'All Time', child: Text('All Time')),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Computed directly from live Supabase battles, wallet payouts and audit logs',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
-                    onChanged: (v) {
-                      if (v != null) setState(() => _timeRange = v);
-                    },
                   ),
                 ),
+                const SizedBox(width: 16),
+              ] else
+                const Spacer(),
+              AdminTableDropdown<String>(
+                value: _timeRange,
+                height: 40,
+                backgroundColor: AppColors.surface,
+                prefixIcon: const Icon(
+                  Icons.calendar_today_rounded,
+                  size: 14,
+                  color: AppColors.battleAdminPurple,
+                ),
+                items: const [
+                  'Today',
+                  'Last 7 Days',
+                  'Last 30 Days',
+                  'All Time',
+                ],
+                onChanged: (v) => setState(() => _timeRange = v),
               ),
               const SizedBox(width: 12),
               ElevatedButton.icon(
@@ -386,8 +380,7 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
               ],
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -398,13 +391,17 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: AppTypography.labelSmall.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+            Expanded(
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.labelSmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               label,
               style: AppTypography.bodySmall.copyWith(

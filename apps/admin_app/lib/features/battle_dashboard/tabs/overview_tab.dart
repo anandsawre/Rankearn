@@ -1,34 +1,36 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart' hide BattleType;
-import '../../overview/banner_image_data.dart';
 import '../models/battle_dashboard_models.dart';
 import '../services/battle_dashboard_service.dart';
 import '../widgets/battle_player_avatar.dart';
 import '../widgets/live_players_chart.dart';
+import '../dialogs/battle_players_dialog.dart';
+import '../dialogs/battle_reports_dialog.dart';
+import '../dialogs/battle_settings_dialog.dart';
 import '../dialogs/create_battle_dialog.dart';
-import '../dialogs/create_room_dialog.dart';
-import '../dialogs/manage_games_dialog.dart';
 import '../dialogs/broadcast_dialog.dart';
 import '../dialogs/battle_detail_dialog.dart';
 import '../dialogs/confirm_action_dialog.dart';
 
 class BattleOverviewTab extends StatefulWidget {
-  final VoidCallback onGoToRooms;
+  final VoidCallback? onGoToRooms;
   final VoidCallback? onGoToOneVsOne;
   final VoidCallback? onGoToMultiplayer;
   final VoidCallback? onGoToPlayers;
   final VoidCallback? onGoToSettings;
   final VoidCallback? onGoToReports;
+  final ValueNotifier<String>? battleTypeFilterNotifier;
 
   const BattleOverviewTab({
     super.key,
-    required this.onGoToRooms,
+    this.onGoToRooms,
     this.onGoToOneVsOne,
     this.onGoToMultiplayer,
     this.onGoToPlayers,
     this.onGoToSettings,
     this.onGoToReports,
+    this.battleTypeFilterNotifier,
   });
 
   @override
@@ -38,7 +40,7 @@ class BattleOverviewTab extends StatefulWidget {
 class _BattleOverviewTabState extends State<BattleOverviewTab> {
   final _service = BattleDashboardService();
   String _battleSearchQuery = '';
-  String _selectedBattleType = 'All Types';
+  late String _selectedBattleType = widget.battleTypeFilterNotifier?.value ?? 'All Types';
   String _selectedBattleStatus = 'All Status';
   final Set<String> _selectedBattleIds = {};
   int _battleCurrentPage = 1;
@@ -73,12 +75,24 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
   void initState() {
     super.initState();
     _service.addListener(_onServiceUpdate);
+    widget.battleTypeFilterNotifier?.addListener(_onExternalTypeFilter);
   }
 
   @override
   void dispose() {
     _service.removeListener(_onServiceUpdate);
+    widget.battleTypeFilterNotifier?.removeListener(_onExternalTypeFilter);
     super.dispose();
+  }
+
+  void _onExternalTypeFilter() {
+    final next = widget.battleTypeFilterNotifier?.value;
+    if (next != null && next != _selectedBattleType && mounted) {
+      setState(() {
+        _selectedBattleType = next;
+        _battleCurrentPage = 1;
+      });
+    }
   }
 
   void _onServiceUpdate() {
@@ -90,444 +104,56 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 1100;
-        final isMid = constraints.maxWidth > 980;
 
-        return SingleChildScrollView(
-          padding: AppSpacing.pagePadding(context),
-          child: Column(
+        if (isWide) {
+          return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_service.errorMessage != null) ...[
-                _buildStatusBanner(
-                  message: _service.errorMessage!,
-                  isError: true,
-                ),
-                const SizedBox(height: 16),
-              ] else if (_service.isLoading && !_service.hasLoadedOnce) ...[
-                _buildStatusBanner(
-                  message: 'Syncing live battle data from Supabase…',
-                  isError: false,
-                ),
-                const SizedBox(height: 16),
-              ],
+              // Left Column: Live Battles Monitoring Table (approx 65% width)
+              Expanded(
+                flex: 65,
+                child: _buildLiveBattlesCard(),
+              ),
+              const SizedBox(width: 20),
 
-              // ==========================================
-              // ROW 1: HERO BANNER (Left) + QUICK ACTIONS (Right)
-              // (Identical Pattern to Admin Side Dashboard)
-              // ==========================================
-              if (isMid)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // Right Column: Battle Control, Live Chart, Today's Summary, Ongoing Rooms (approx 35% width)
+              Expanded(
+                flex: 35,
+                child: Column(
                   children: [
-                    Expanded(
-                      flex: 57,
-                      child: _buildBattleHeroBanner(constraints.maxWidth < 1200),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 43,
-                      child: _buildQuickActionsCard(),
-                    ),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    _buildBattleHeroBanner(true),
-                    const SizedBox(height: 16),
-                    _buildQuickActionsCard(),
-                  ],
-                ),
-              const SizedBox(height: 20),
-
-              // ==========================================
-              // ROW 2: 5 METRIC KPI CARDS WITH SPARKLINES
-              // ==========================================
-              _buildMetricCardsRow(),
-              const SizedBox(height: 20),
-
-              // ==========================================
-              // ROW 3: LIVE BATTLES TABLE + RIGHT SIDEBAR CARDS
-              // ==========================================
-              if (isWide)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Left Column: Live Battles Monitoring Table (approx 65% width)
-                    Expanded(
-                      flex: 65,
-                      child: _buildLiveBattlesCard(),
-                    ),
-                    const SizedBox(width: 20),
-
-                    // Right Column: Battle Control, Live Chart, Today's Summary, Ongoing Rooms (approx 35% width)
-                    Expanded(
-                      flex: 35,
-                      child: Column(
-                        children: [
-                          _buildBattleControlCard(),
-                          const SizedBox(height: 16),
-                          _buildLiveChartCard(),
-                          const SizedBox(height: 16),
-                          _buildTodaySummaryCard(),
-                          const SizedBox(height: 16),
-                          _buildOngoingRoomsCard(),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    _buildLiveBattlesCard(),
-                    const SizedBox(height: 20),
                     _buildBattleControlCard(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     _buildLiveChartCard(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     _buildTodaySummaryCard(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     _buildOngoingRoomsCard(),
                   ],
                 ),
-              const SizedBox(height: 24),
+              ),
             ],
-          ),
-        );
-      },
-    );
-  }
+          );
+        }
 
-  // ==========================================
-  // ROW 1: HERO BANNER (Left)
-  // ==========================================
-  Widget _buildBattleHeroBanner(bool isSmall) {
-    return Container(
-      height: 124,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFEEF2FF),
-            Color(0xFFE0E7FF),
-            Color(0xFFF0FDF4),
+        return Column(
+          children: [
+            _buildLiveBattlesCard(),
+            const SizedBox(height: 20),
+            _buildBattleControlCard(),
+            const SizedBox(height: 20),
+            _buildLiveChartCard(),
+            const SizedBox(height: 20),
+            _buildTodaySummaryCard(),
+            const SizedBox(height: 20),
+            _buildOngoingRoomsCard(),
           ],
-        ),
-        borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.borderSubtle),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.battleAdminPurple.withValues(alpha: 0.12),
-                        borderRadius: AppRadii.badge,
-                        border: Border.all(
-                          color: AppColors.battleAdminPurple.withValues(alpha: 0.25),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: AppColors.battleAdminPurple,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            'LIVE ARENA CONTROL',
-                            style: AppTypography.labelSmall.copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.battleAdminPurple,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Battle & Live Games, ',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                          height: 1.15,
-                        ),
-                      ),
-                      TextSpan(
-                        text: 'Real-time ⚔️',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF7C3AED),
-                          height: 1.15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 5),
-                SizedBox(
-                  width: isSmall ? 220 : 360,
-                  child: const Text(
-                    'Monitor 1 vs 1, multiplayer matches, rooms, player activity and control live game states.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF64748B),
-                      height: 1.3,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (!isSmall)
-            Positioned(
-              right: 8,
-              bottom: 0,
-              top: 0,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                child: Image.memory(
-                  kBannerCharacterBytes,
-                  height: 124,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ==========================================
-  // ROW 1: QUICK ACTIONS (Right)
-  // ==========================================
-  Widget _buildQuickActionsCard() {
-    final battleActions = [
-      QuickActionItemData(
-        label: '+ Create\nBattle',
-        icon: Icons.add_circle_outline_rounded,
-        iconColor: const Color(0xFF7C3AED),
-        cardColor: const Color(0xFFF3E8FF),
-        onTap: () => AppModalDialog.show(context: context, builder: (_) => const CreateBattleDialog()),
-      ),
-      QuickActionItemData(
-        label: 'Create\nRoom',
-        icon: Icons.meeting_room_outlined,
-        iconColor: const Color(0xFF0EA5E9),
-        cardColor: const Color(0xFFE0F2FE),
-        onTap: () => AppModalDialog.show(context: context, builder: (_) => const CreateRoomDialog()),
-      ),
-      QuickActionItemData(
-        label: 'Manage\nGames',
-        icon: Icons.tune_rounded,
-        iconColor: const Color(0xFFF59E0B),
-        cardColor: const Color(0xFFFEF3C7),
-        onTap: () => AppModalDialog.show(context: context, builder: (_) => const ManageGamesDialog()),
-      ),
-      QuickActionItemData(
-        label: 'Broadcast\nNotice',
-        icon: Icons.campaign_outlined,
-        iconColor: const Color(0xFF10B981),
-        cardColor: const Color(0xFFD1FAE5),
-        onTap: () => AppModalDialog.show(context: context, builder: (_) => const BroadcastDialog()),
-      ),
-      QuickActionItemData(
-        label: '1 vs 1\nBattles',
-        icon: Icons.sports_kabaddi_rounded,
-        iconColor: const Color(0xFFEC4899),
-        cardColor: const Color(0xFFFCE7F3),
-        onTap: widget.onGoToOneVsOne ?? () {},
-      ),
-      QuickActionItemData(
-        label: 'Audit\nReports',
-        icon: Icons.bar_chart_rounded,
-        iconColor: const Color(0xFF6366F1),
-        cardColor: const Color(0xFFEEF2FF),
-        onTap: widget.onGoToReports ?? () {},
-      ),
-    ];
-
-    return QuickActionsCard(
-      height: 124,
-      compact: true,
-      actions: battleActions,
-    );
-  }
-
-  // ==========================================
-  // ROW 2: 5 METRIC KPI CARDS WITH SPARKLINES
-  // ==========================================
-  Widget _buildStatusBanner({required String message, required bool isError}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isError ? AppColors.liveRedLight : AppColors.brandBlueLight,
-        borderRadius: AppRadii.borderMd,
-        border: Border.all(
-          color: isError
-              ? AppColors.liveRed.withValues(alpha: 0.35)
-              : AppColors.brandBlue.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isError ? Icons.error_outline_rounded : Icons.sync_rounded,
-            size: 18,
-            color: isError ? AppColors.liveRedDark : AppColors.brandBlueDark,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isError ? AppColors.liveRedDark : AppColors.brandBlueDark,
-              ),
-            ),
-          ),
-          if (isError)
-            TextButton.icon(
-              onPressed: _service.isLoading ? null : () => _service.refresh(),
-              icon: const Icon(Icons.refresh_rounded, size: 15),
-              label: const Text('Retry'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.liveRedDark,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricCardsRow() {
-    final metrics = [
-      (
-        title: 'Active Players',
-        value: '${_service.activePlayersCount}',
-        growth: _service.playersGrowthLabel,
-        subtitle: '+${_service.todayJoinedPlayersCount} joined today',
-        icon: Icons.people_alt_rounded,
-        color: const Color(0xFF7C3AED),
-        sparklineData: _service.sevenDayPlayersSparkline,
-        isLive: false,
-      ),
-      (
-        title: '1 vs 1 Battles',
-        value: '${_service.oneVsOneCount}',
-        growth: _service.battlesGrowthLabel,
-        subtitle: '+${_service.todayBattlesCount} created today',
-        icon: Icons.sports_kabaddi_rounded,
-        color: const Color(0xFFEC4899),
-        sparklineData: _service.sevenDayBattlesSparkline,
-        isLive: false,
-      ),
-      (
-        title: 'Live Arenas',
-        value: '${_service.liveBattlesCount}',
-        growth: '',
-        subtitle: '${_service.waitingBattlesCount} waiting in queue',
-        icon: Icons.flash_on_rounded,
-        color: const Color(0xFFF59E0B),
-        sparklineData: _service.sevenDayBattlesSparkline,
-        isLive: _service.liveBattlesCount > 0,
-      ),
-      (
-        title: 'Question Bank',
-        value: '${_service.battleQuestionsCount}',
-        growth: '',
-        subtitle: '${_service.questionTopicCounts.length} active topics',
-        icon: Icons.quiz_outlined,
-        color: const Color(0xFF0EA5E9),
-        sparklineData: const <double>[],
-        isLive: false,
-      ),
-      (
-        title: 'Completion Rate',
-        value: '${_service.completionRatePct.round()}%',
-        growth: '',
-        subtitle: '${_service.completedBattlesCount} completed • ${_service.cancelledBattlesCount} cancelled',
-        icon: Icons.sports_esports_rounded,
-        color: const Color(0xFF10B981),
-        sparklineData: const <double>[],
-        isLive: false,
-      ),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth > 1100
-            ? (constraints.maxWidth - (16 * 4)) / 5
-            : constraints.maxWidth > 700
-                ? (constraints.maxWidth - 16) / 2
-                : constraints.maxWidth;
-
-        return Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: metrics.map((m) {
-            return AdminMetricCard(
-              width: cardWidth,
-              title: m.title,
-              value: m.value,
-              growth: m.growth,
-              subtitle: m.subtitle,
-              badge: m.isLive ? _buildRedLivePill() : null,
-              icon: m.icon,
-              color: m.color,
-              sparklineData: m.sparklineData,
-            );
-          }).toList(),
         );
       },
     );
   }
 
-  Widget _buildRedLivePill() {
-    return const AppLivePill();
-  }
-
   // ==========================================
-  // ROW 3: LIVE BATTLES MONITORING TABLE CARD
+  // LIVE BATTLES MONITORING TABLE CARD
   // Powered by unified AdminDataTableCard from design_system
   // ==========================================
   Widget _buildLiveBattlesCard() {
@@ -1198,6 +824,54 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
                     context: context,
                     builder: (_) => const BroadcastDialog(),
                   ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Row 3: Players | Settings | Reports (Modal Dialogs)
+          Row(
+            children: [
+              Expanded(
+                child: _buildControlBtn(
+                  label: 'Players',
+                  icon: Icons.people_outline_rounded,
+                  bg: AppColors.brandPurpleLight,
+                  fg: AppColors.battleAdminPurple,
+                  onTap: widget.onGoToPlayers ??
+                      () => AppModalDialog.show(
+                            context: context,
+                            builder: (_) => const BattlePlayersDialog(),
+                          ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildControlBtn(
+                  label: 'Settings',
+                  icon: Icons.settings_outlined,
+                  bg: AppColors.brandBlueLight,
+                  fg: AppColors.brandBlueDark,
+                  onTap: widget.onGoToSettings ??
+                      () => AppModalDialog.show(
+                            context: context,
+                            builder: (_) => const BattleSettingsDialog(),
+                          ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildControlBtn(
+                  label: 'Reports',
+                  icon: Icons.bar_chart_rounded,
+                  bg: AppColors.surfaceSubtle,
+                  fg: AppColors.textPrimary,
+                  onTap: widget.onGoToReports ??
+                      () => AppModalDialog.show(
+                            context: context,
+                            builder: (_) => const BattleReportsDialog(),
+                          ),
                 ),
               ),
             ],
