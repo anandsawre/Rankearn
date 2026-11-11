@@ -1,677 +1,1010 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:data_layer/data_layer.dart';
 import '../models/battle_dashboard_models.dart';
+
+class BattleTimeSeriesData {
+  final List<String> labels;
+  final List<double> values;
+  final int? highlightedIndex;
+  final String? tooltipValue;
+
+  const BattleTimeSeriesData({
+    this.labels = const [],
+    this.values = const [],
+    this.highlightedIndex,
+    this.tooltipValue,
+  });
+}
+
+class BattleReportSummary {
+  final int totalMatches;
+  final int totalCoinVolume;
+  final int platformRakeCoins;
+  final double completionRatePct;
+  final int oneVsOneMatches;
+  final int multiplayerMatches;
+  final int customRoomsCount;
+  final List<({String windowLabel, int matchCount})> topPeakWindows;
+  final List<BattleItem> filteredBattles;
+
+  const BattleReportSummary({
+    required this.totalMatches,
+    required this.totalCoinVolume,
+    required this.platformRakeCoins,
+    required this.completionRatePct,
+    required this.oneVsOneMatches,
+    required this.multiplayerMatches,
+    required this.customRoomsCount,
+    required this.topPeakWindows,
+    required this.filteredBattles,
+  });
+}
 
 class BattleDashboardService extends ChangeNotifier {
   static final BattleDashboardService _instance = BattleDashboardService._internal();
   factory BattleDashboardService() => _instance;
+  BattleDashboardService._internal();
 
-  BattleDashboardService._internal() {
-    _initSampleData();
-    _startLiveTimer();
-  }
+  bool _isLoading = false;
+  bool _hasLoadedOnce = false;
+  bool _hasDbConnection = SupabaseConfig.isInitialized;
+  bool _hasPersistedSettings = false;
+  String? _errorMessage;
+  DateTime? _lastSyncedAt;
 
-  Timer? _timer;
-
-  // KPI Metrics
-  int activePlayers = 12840;
-  double activePlayersGrowth = 12.0;
-
-  int total1v1Battles = 4326;
-  double total1v1Growth = 18.0;
-
-  int multiplayerBattles = 682;
-  double multiplayerGrowth = 9.0;
-
-  int activeRooms = 316;
-
-  int overallWinRate = 91;
-  double overallWinRateGrowth = 3.0;
-
-  // Today Summary
-  int today1v1Count = 3120;
-  double today1v1Growth = 20.0;
-
-  int todayMultiplayerCount = 682;
-  double todayMultiplayerGrowth = 9.0;
-
-  int todayRoomsCreated = 316;
-  double todayRoomsGrowth = 14.0;
-
-  int todayTotalPlayers = 8742;
-  double todayTotalPlayersGrowth = 16.0;
-
-  // Active filter
-  String currentFilter = 'All'; // 'All', '1 vs 1', 'Multiplayer', 'Rooms'
-  String searchQuery = '';
-  String? selectedStatus;
-
-  // Real-time Battles
   List<BattleItem> _battles = [];
-  List<BattleItem> get battles => _battles;
-
-  // Ongoing Rooms
-  List<OngoingRoomItem> _ongoingRooms = [];
-  List<OngoingRoomItem> get ongoingRooms => _ongoingRooms;
-
-  // Players
+  final List<OngoingRoomItem> _ongoingRooms = [];
   List<PlayerBattleRecord> _players = [];
-  List<PlayerBattleRecord> get players => _players;
+  List<Map<String, dynamic>> _auditLogs = [];
+  BattleSettingsData _settings = const BattleSettingsData();
 
-  // Settings
-  BattleSettingsData settings = const BattleSettingsData();
+  int _battleQuestionsCount = 0;
+  Map<String, int> _questionTopicCounts = {};
+  int _totalBattleWinPayouts = 0;
 
-  // Audit Logs
-  final List<Map<String, dynamic>> auditLogs = [];
+  bool get isLoading => _isLoading;
+  bool get hasLoadedOnce => _hasLoadedOnce;
+  bool get hasDbConnection => _hasDbConnection;
+  bool get hasPersistedSettings => _hasPersistedSettings;
+  String? get errorMessage => _errorMessage;
+  DateTime? get lastSyncedAt => _lastSyncedAt;
 
-  void _initSampleData() {
-    _battles = [
-      BattleItem(
-        id: 'B1V92841',
-        title: 'Science Super Clash',
-        type: BattleType.oneVOne,
-        status: BattleStatus.live,
-        subject: 'General Science',
-        category: 'RRB / SSC',
-        participants: const [
-          BattleParticipant(
-            id: 'u1',
-            name: 'Rohit Kumar',
-            avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-            score: 140,
-            rank: 1,
-            correctAnswers: 3,
-          ),
-          BattleParticipant(
-            id: 'u2',
-            name: 'Amit Verma',
-            avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80',
-            score: 110,
-            rank: 2,
-            correctAnswers: 2,
-          ),
-        ],
-        totalPlayers: 2,
-        maxPlayers: 2,
-        timeRemainingSeconds: 156, // 02:36
-        totalDurationSeconds: 300,
-        entryFee: 50,
-        prizePool: 90,
-        currentQuestion: 3,
-        totalQuestions: 5,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
-      ),
-      BattleItem(
-        id: 'BM77320',
-        title: 'Reasoning Grand Blitz',
-        type: BattleType.multiplayer,
-        status: BattleStatus.live,
-        subject: 'Reasoning',
-        category: 'General Aptitude',
-        participants: const [
-          BattleParticipant(
-            id: 'u3',
-            name: 'Aakash Roy',
-            avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80',
-            score: 260,
-            rank: 1,
-            correctAnswers: 4,
-          ),
-          BattleParticipant(
-            id: 'u4',
-            name: 'Sneha Patel',
-            avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-            score: 240,
-            rank: 2,
-            correctAnswers: 4,
-          ),
-        ],
-        totalPlayers: 10,
-        maxPlayers: 10,
-        timeRemainingSeconds: 310, // 05:10
-        totalDurationSeconds: 600,
-        entryFee: 20,
-        prizePool: 180,
-        currentQuestion: 5,
-        totalQuestions: 10,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
-      ),
-      BattleItem(
-        id: 'RM20916',
-        title: 'RRB-Tech Room',
-        type: BattleType.room,
-        status: BattleStatus.live,
-        subject: 'Mathematics',
-        category: 'Railway Recruitment',
-        roomName: 'RRB-Tech Room',
-        roomCode: 'RM20916',
-        participants: const [
-          BattleParticipant(
-            id: 'u5',
-            name: 'Devendra K',
-            avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-            score: 320,
-            rank: 1,
-            correctAnswers: 5,
-          ),
-          BattleParticipant(
-            id: 'u6',
-            name: 'Kavita Joshi',
-            avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=80',
-            score: 300,
-            rank: 2,
-            correctAnswers: 5,
-          ),
-        ],
-        totalPlayers: 24,
-        maxPlayers: 50,
-        timeRemainingSeconds: 504, // 08:24
-        totalDurationSeconds: 900,
-        entryFee: 10,
-        prizePool: 240,
-        currentQuestion: 7,
-        totalQuestions: 15,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 6)),
-      ),
-      BattleItem(
-        id: 'B1V92842',
-        title: 'Current Affairs Duel',
-        type: BattleType.oneVOne,
-        status: BattleStatus.live,
-        subject: 'General Awareness',
-        category: 'Current Affairs 2026',
-        participants: const [
-          BattleParticipant(
-            id: 'u7',
-            name: 'Priya Sharma',
-            avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
-            score: 180,
-            rank: 1,
-            correctAnswers: 3,
-          ),
-          BattleParticipant(
-            id: 'u8',
-            name: 'Neha Singh',
-            avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80',
-            score: 160,
-            rank: 2,
-            correctAnswers: 2,
-          ),
-        ],
-        totalPlayers: 2,
-        maxPlayers: 2,
-        timeRemainingSeconds: 108, // 01:48
-        totalDurationSeconds: 240,
-        entryFee: 30,
-        prizePool: 54,
-        currentQuestion: 4,
-        totalQuestions: 5,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
-      ),
-      BattleItem(
-        id: 'BM77321',
-        title: 'Ultimate 50 Battle Royale',
-        type: BattleType.multiplayer,
-        status: BattleStatus.live,
-        subject: 'Mixed (All)',
-        category: 'Mega Battle',
-        participants: const [
-          BattleParticipant(
-            id: 'u9',
-            name: 'Vikram Sethi',
-            avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-            score: 480,
-            rank: 1,
-            correctAnswers: 8,
-          ),
-          BattleParticipant(
-            id: 'u10',
-            name: 'Manish Tyagi',
-            avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80',
-            score: 450,
-            rank: 2,
-            correctAnswers: 7,
-          ),
-        ],
-        totalPlayers: 50,
-        maxPlayers: 50,
-        timeRemainingSeconds: 200, // 03:20
-        totalDurationSeconds: 600,
-        entryFee: 100,
-        prizePool: 4500,
-        currentQuestion: 9,
-        totalQuestions: 15,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 7)),
-      ),
-    ];
+  List<BattleItem> get battles => List.unmodifiable(_battles);
+  List<OngoingRoomItem> get ongoingRooms => List.unmodifiable(_ongoingRooms);
+  List<PlayerBattleRecord> get players => List.unmodifiable(_players);
+  List<Map<String, dynamic>> get auditLogs => List.unmodifiable(_auditLogs);
+  BattleSettingsData get settings => _settings;
 
-    _ongoingRooms = [
-      const OngoingRoomItem(
-        id: 'r1',
-        name: 'RRB-TECH Practice',
-        code: 'RRB50',
-        currentPlayers: 24,
-        maxPlayers: 50,
-        subject: 'Science',
-        status: BattleStatus.live,
-        entryFee: 10,
-        prizePool: 240,
-      ),
-      const OngoingRoomItem(
-        id: 'r2',
-        name: 'Math Warriors',
-        code: 'MTH30',
-        currentPlayers: 18,
-        maxPlayers: 30,
-        subject: 'Mathematics',
-        status: BattleStatus.live,
-        entryFee: 25,
-        prizePool: 450,
-      ),
-      const OngoingRoomItem(
-        id: 'r3',
-        name: 'Daily Quiz Room',
-        code: 'DLY20',
-        currentPlayers: 12,
-        maxPlayers: 20,
-        subject: 'Mixed',
-        status: BattleStatus.live,
-        entryFee: 5,
-        prizePool: 60,
-      ),
-    ];
+  int get battleQuestionsCount => _battleQuestionsCount;
+  Map<String, int> get questionTopicCounts => Map.unmodifiable(_questionTopicCounts);
+  int get totalBattleWinPayouts => _totalBattleWinPayouts;
 
-    _players = [
-      PlayerBattleRecord(
-        id: 'u1',
-        username: 'Rohit Kumar',
-        avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-        rank: 'Diamond III',
-        totalBattles: 142,
-        wins: 108,
-        losses: 34,
-        winRate: 76,
-        coins: 4850,
-        status: 'active',
-        joinedAt: DateTime.now().subtract(const Duration(days: 45)),
-      ),
-      PlayerBattleRecord(
-        id: 'u2',
-        username: 'Amit Verma',
-        avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80',
-        rank: 'Platinum I',
-        totalBattles: 98,
-        wins: 62,
-        losses: 36,
-        winRate: 63,
-        coins: 2150,
-        status: 'active',
-        joinedAt: DateTime.now().subtract(const Duration(days: 30)),
-      ),
-      PlayerBattleRecord(
-        id: 'u3',
-        username: 'Priya Sharma',
-        avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
-        rank: 'Master II',
-        totalBattles: 260,
-        wins: 215,
-        losses: 45,
-        winRate: 83,
-        coins: 14200,
-        status: 'active',
-        joinedAt: DateTime.now().subtract(const Duration(days: 90)),
-      ),
-      PlayerBattleRecord(
-        id: 'u4',
-        username: 'Vikram Sethi',
-        avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-        rank: 'Grandmaster',
-        totalBattles: 410,
-        wins: 365,
-        losses: 45,
-        winRate: 89,
-        coins: 28900,
-        status: 'active',
-        joinedAt: DateTime.now().subtract(const Duration(days: 120)),
-      ),
-      PlayerBattleRecord(
-        id: 'u5',
-        username: 'Karan Mehra',
-        avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-        rank: 'Gold II',
-        totalBattles: 45,
-        wins: 20,
-        losses: 25,
-        winRate: 44,
-        coins: 350,
-        status: 'restricted',
-        joinedAt: DateTime.now().subtract(const Duration(days: 15)),
-      ),
-    ];
+  // ==========================================
+  // DERIVED REAL METRICS (NO HARDCODED COUNTS)
+  // ==========================================
+  int get liveBattlesCount => _battles.where((b) => b.status == BattleStatus.live).length;
+  int get waitingBattlesCount => _battles.where((b) => b.status == BattleStatus.waiting).length;
+  int get completedBattlesCount => _battles.where((b) => b.status == BattleStatus.completed).length;
+  int get cancelledBattlesCount => _battles.where((b) => b.status == BattleStatus.cancelled).length;
+
+  int get oneVsOneCount => _battles.where((b) => b.type == BattleType.oneVOne).length;
+  int get multiplayerCount => _battles.where((b) => b.type == BattleType.multiplayer).length;
+  int get activeRoomsCount => _ongoingRooms.length;
+
+  int get activePlayersCount =>
+      _players.where((p) => p.status.toLowerCase() == 'active').length;
+
+  int get todayJoinedPlayersCount {
+    final now = DateTime.now();
+    return _players.where((p) => _isSameLocalDay(p.joinedAt, now)).length;
   }
 
-  void _startLiveTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      bool changed = false;
-      _battles = _battles.map((b) {
-        if (b.status == BattleStatus.live) {
-          changed = true;
-          if (b.timeRemainingSeconds > 0) {
-            return b.copyWith(timeRemainingSeconds: b.timeRemainingSeconds - 1);
-          } else {
-            // Live arena simulation: cycle question and refresh countdown
-            final nextQ = (b.currentQuestion >= b.totalQuestions) ? 1 : b.currentQuestion + 1;
-            final resetSec = b.type == BattleType.oneVOne
-                ? 156
-                : b.type == BattleType.multiplayer
-                    ? 310
-                    : 504;
-            return b.copyWith(
-              timeRemainingSeconds: resetSec,
-              currentQuestion: nextQ,
-            );
+  int get todayBattlesCount {
+    final now = DateTime.now();
+    return _battles.where((b) => _isSameLocalDay(b.createdAt, now)).length;
+  }
+
+  int get todayParticipantsCount {
+    final now = DateTime.now();
+    final ids = <String>{};
+    for (final b in _battles) {
+      if (_isSameLocalDay(b.createdAt, now)) {
+        for (final p in b.participants) {
+          ids.add(p.id);
+        }
+      }
+    }
+    return ids.length;
+  }
+
+  double get completionRatePct {
+    final closed = completedBattlesCount + cancelledBattlesCount;
+    if (closed == 0) return 0;
+    return (completedBattlesCount / closed) * 100;
+  }
+
+  List<double> get sevenDayPlayersSparkline =>
+      _buildDailySparkline(_players.map((p) => p.joinedAt));
+
+  List<double> get sevenDayBattlesSparkline =>
+      _buildDailySparkline(_battles.map((b) => b.createdAt));
+
+  String get playersGrowthLabel => _computeTodayVsYesterdayGrowth(
+        _players.map((p) => p.joinedAt),
+      );
+
+  String get battlesGrowthLabel => _computeTodayVsYesterdayGrowth(
+        _battles.map((b) => b.createdAt),
+      );
+
+  String get participantsGrowthLabel {
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
+    final todayIds = <String>{};
+    final yesterdayIds = <String>{};
+    for (final b in _battles) {
+      if (_isSameLocalDay(b.createdAt, now)) {
+        todayIds.addAll(b.participants.map((p) => p.id));
+      } else if (_isSameLocalDay(b.createdAt, yesterday)) {
+        yesterdayIds.addAll(b.participants.map((p) => p.id));
+      }
+    }
+    return _formatDayDelta(todayIds.length, yesterdayIds.length);
+  }
+
+  BattleTimeSeriesData buildActivityChartSeries() {
+    if (_battles.isEmpty) {
+      return const BattleTimeSeriesData();
+    }
+
+    // Group battles by local calendar day over the last 7 days so the chart
+    // always reflects genuine historical & today's activity from Supabase.
+    final now = DateTime.now();
+    final labels = <String>[];
+    final values = <double>[];
+    int peakIndex = 0;
+    double peakValue = -1;
+
+    for (int offset = 6; offset >= 0; offset--) {
+      final day = DateTime(now.year, now.month, now.day).subtract(Duration(days: offset));
+      final participants = <String>{};
+      for (final b in _battles) {
+        if (_isSameLocalDay(b.createdAt, day)) {
+          participants.addAll(b.participants.map((p) => p.id));
+        }
+      }
+      final count = participants.length.toDouble();
+      labels.add(offset == 0 ? 'Today' : '${_monthShort(day.month)} ${day.day}');
+      values.add(count);
+      if (count >= peakValue) {
+        peakValue = count;
+        peakIndex = values.length - 1;
+      }
+    }
+
+    final activeNow = _battles
+        .where((b) => b.status == BattleStatus.live || b.status == BattleStatus.waiting)
+        .expand((b) => b.participants.map((p) => p.id))
+        .toSet()
+        .length;
+
+    return BattleTimeSeriesData(
+      labels: labels,
+      values: values,
+      highlightedIndex: peakValue > 0 ? peakIndex : null,
+      tooltipValue: activeNow > 0
+          ? '$activeNow Active Now'
+          : (peakValue > 0 ? '${peakValue.toInt()} Players' : null),
+    );
+  }
+
+  BattleReportSummary buildReportSummary(String timeRange) {
+    final now = DateTime.now();
+    DateTime? cutoff;
+    if (timeRange == 'Today') {
+      cutoff = DateTime(now.year, now.month, now.day);
+    } else if (timeRange == 'Last 7 Days') {
+      cutoff = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+    } else if (timeRange == 'Last 30 Days') {
+      cutoff = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 29));
+    }
+
+    final filtered = _battles.where((b) {
+      if (cutoff == null) return true;
+      return !b.createdAt.toLocal().isBefore(cutoff);
+    }).toList();
+
+    int totalCoinVolume = 0;
+    int estimatedPaidOut = 0;
+    int completed = 0;
+    int cancelled = 0;
+    int oneVsOne = 0;
+    int multiplayer = 0;
+    int rooms = 0;
+
+    final hourlyCounts = <int, int>{};
+
+    for (final b in filtered) {
+      final playerSeats = b.participants.length > 1 ? b.participants.length : 1;
+      final pot = b.entryFee * playerSeats;
+      totalCoinVolume += pot;
+
+      if (b.status == BattleStatus.completed) {
+        completed++;
+        estimatedPaidOut += b.winnerId != null ? b.prizePool : pot;
+      } else if (b.status == BattleStatus.cancelled) {
+        cancelled++;
+        estimatedPaidOut += pot; // cancelled matches refund entry fees
+      }
+
+      switch (b.type) {
+        case BattleType.oneVOne:
+          oneVsOne++;
+          break;
+        case BattleType.multiplayer:
+          multiplayer++;
+          break;
+        case BattleType.room:
+          rooms++;
+          break;
+      }
+
+      final hour = b.createdAt.toLocal().hour;
+      hourlyCounts[hour] = (hourlyCounts[hour] ?? 0) + 1;
+    }
+
+    final closed = completed + cancelled;
+    final completionRate = closed == 0 ? 0.0 : (completed / closed) * 100.0;
+    final rake = (totalCoinVolume - estimatedPaidOut).clamp(0, totalCoinVolume);
+
+    final sortedHours = hourlyCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final peakWindows = sortedHours.take(3).map((e) {
+      return (
+        windowLabel: '${_formatHour(e.key)} - ${_formatHour((e.key + 1) % 24)}',
+        matchCount: e.value,
+      );
+    }).toList();
+
+    return BattleReportSummary(
+      totalMatches: filtered.length,
+      totalCoinVolume: totalCoinVolume,
+      platformRakeCoins: rake,
+      completionRatePct: completionRate,
+      oneVsOneMatches: oneVsOne,
+      multiplayerMatches: multiplayer,
+      customRoomsCount: rooms,
+      topPeakWindows: peakWindows,
+      filteredBattles: filtered,
+    );
+  }
+
+  String buildCsvReport(String timeRange) {
+    final summary = buildReportSummary(timeRange);
+    final buffer = StringBuffer();
+    buffer.writeln(
+      'battle_id,type,status,entry_fee,prize_pool,creator_id,opponent_id,winner_id,created_at,completed_at',
+    );
+    for (final b in summary.filteredBattles) {
+      buffer.writeln(
+        [
+          _csvEscape(b.id),
+          _csvEscape(b.type.label),
+          _csvEscape(b.status.label),
+          b.entryFee,
+          b.prizePool,
+          _csvEscape(b.creatorId ?? ''),
+          _csvEscape(b.opponentId ?? ''),
+          _csvEscape(b.winnerId ?? ''),
+          _csvEscape(b.createdAt.toUtc().toIso8601String()),
+          _csvEscape(b.completedAt?.toUtc().toIso8601String() ?? ''),
+        ].join(','),
+      );
+    }
+    return buffer.toString();
+  }
+
+  // ==========================================
+  // LIVE SUPABASE FETCH
+  // ==========================================
+  Future<void> ensureLoaded() async {
+    if (_hasLoadedOnce || _isLoading) return;
+    await refresh();
+  }
+
+  Future<void> refresh() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      _hasDbConnection = false;
+      _isLoading = false;
+      _hasLoadedOnce = true;
+      _errorMessage = 'Database connection is not initialized.';
+      notifyListeners();
+      return;
+    }
+
+    _hasDbConnection = true;
+
+    try {
+      final results = await Future.wait<dynamic>([
+        client
+            .from('battles')
+            .select(
+              'id, creator_id, opponent_id, entry_fee, status, winner_id, creator_score, opponent_score, created_at, completed_at',
+            )
+            .order('created_at', ascending: false)
+            .limit(500),
+        client
+            .from('profiles')
+            .select(
+              'id, name, email, profile_photo_url, coins, status, ban_reason, ban_until, created_at',
+            )
+            .order('created_at', ascending: false)
+            .limit(500),
+        client
+            .from('battle_questions')
+            .select('id, topic')
+            .limit(1000),
+        client
+            .from('wallet_transactions')
+            .select('id, user_id, amount, type, category, reference_id, title, created_at')
+            .inFilter('category', ['battle_win', 'battle_refund'])
+            .order('created_at', ascending: false)
+            .limit(200),
+        client
+            .from('app_configs')
+            .select('key, value, updated_at')
+            .inFilter('key', ['battle_settings', 'battle_admin_audit_logs']),
+      ]);
+
+      final battleRows = List<Map<String, dynamic>>.from(results[0] as List);
+      final profileRows = List<Map<String, dynamic>>.from(results[1] as List);
+      final questionRows = List<Map<String, dynamic>>.from(results[2] as List);
+      final walletRows = List<Map<String, dynamic>>.from(results[3] as List);
+      final configRows = List<Map<String, dynamic>>.from(results[4] as List);
+
+      // Parse persisted configs first so prizeMultiplier & auditLogs are accurate.
+      BattleSettingsData loadedSettings = const BattleSettingsData();
+      bool hasSavedSettings = false;
+      List<Map<String, dynamic>> loadedAuditLogs = [];
+
+      for (final row in configRows) {
+        final key = row['key']?.toString();
+        final value = row['value'];
+        if (key == 'battle_settings' && value is Map) {
+          loadedSettings = BattleSettingsData.fromJson(
+            Map<String, dynamic>.from(value),
+          );
+          hasSavedSettings = true;
+        } else if (key == 'battle_admin_audit_logs' && value is Map) {
+          final entries = value['logs'];
+          if (entries is List) {
+            loadedAuditLogs = entries
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
+                .toList();
           }
         }
-        return b;
+      }
+
+      // Parse question bank summary.
+      final topicCounts = <String, int>{};
+      for (final q in questionRows) {
+        final topic = (q['topic']?.toString().trim().isNotEmpty ?? false)
+            ? q['topic'].toString().trim()
+            : 'General';
+        topicCounts[topic] = (topicCounts[topic] ?? 0) + 1;
+      }
+
+      final defaultSubject = topicCounts.length == 1
+          ? topicCounts.keys.first
+          : (topicCounts.isEmpty ? 'General' : 'Mixed Topics');
+
+      // Index profiles by id.
+      final profileMap = <String, Map<String, dynamic>>{};
+      for (final p in profileRows) {
+        final id = p['id']?.toString();
+        if (id != null && id.isNotEmpty) {
+          profileMap[id] = p;
+        }
+      }
+
+      // Index actual battle_win payouts by reference_id.
+      final payoutByBattleId = <String, int>{};
+      int totalWinPayouts = 0;
+      for (final tx in walletRows) {
+        if (tx['category']?.toString() == 'battle_win') {
+          final amount = (tx['amount'] as num?)?.toInt() ?? 0;
+          totalWinPayouts += amount;
+          final refId = tx['reference_id']?.toString();
+          if (refId != null && refId.isNotEmpty) {
+            payoutByBattleId[refId] = (payoutByBattleId[refId] ?? 0) + amount;
+          }
+        }
+      }
+
+      // Build battles + per-player battle stats.
+      final playerTotalBattles = <String, int>{};
+      final playerWins = <String, int>{};
+      final playerLosses = <String, int>{};
+
+      final parsedBattles = battleRows.map((row) {
+        final id = row['id']?.toString() ?? '';
+        final creatorId = row['creator_id']?.toString() ?? '';
+        final opponentId = row['opponent_id']?.toString();
+        final winnerId = row['winner_id']?.toString();
+        final entryFee = (row['entry_fee'] as num?)?.toInt() ?? 0;
+        final creatorScore = (row['creator_score'] as num?)?.toInt() ?? 0;
+        final opponentScore = (row['opponent_score'] as num?)?.toInt() ?? 0;
+        final status = _parseDbStatus(row['status']?.toString());
+        final createdAt = DateTime.tryParse(row['created_at']?.toString() ?? '') ??
+            DateTime.now();
+        final completedAt = row['completed_at'] != null
+            ? DateTime.tryParse(row['completed_at'].toString())
+            : null;
+
+        final participants = <BattleParticipant>[];
+        if (creatorId.isNotEmpty) {
+          final cp = profileMap[creatorId];
+          final cName = (cp?['name']?.toString().trim().isNotEmpty ?? false)
+              ? cp!['name'].toString()
+              : _shortId(creatorId);
+          final cAvatar = cp?['profile_photo_url']?.toString() ?? '';
+          participants.add(
+            BattleParticipant(
+              id: creatorId,
+              name: cName,
+              avatarUrl: cAvatar,
+              score: creatorScore,
+              rank: (opponentId != null && opponentScore > creatorScore) ? 2 : 1,
+              correctAnswers: creatorScore,
+            ),
+          );
+
+          playerTotalBattles[creatorId] = (playerTotalBattles[creatorId] ?? 0) + 1;
+          if (status == BattleStatus.completed && winnerId != null && winnerId.isNotEmpty) {
+            if (winnerId == creatorId) {
+              playerWins[creatorId] = (playerWins[creatorId] ?? 0) + 1;
+            } else {
+              playerLosses[creatorId] = (playerLosses[creatorId] ?? 0) + 1;
+            }
+          }
+        }
+
+        if (opponentId != null && opponentId.isNotEmpty) {
+          final op = profileMap[opponentId];
+          final oName = (op?['name']?.toString().trim().isNotEmpty ?? false)
+              ? op!['name'].toString()
+              : _shortId(opponentId);
+          final oAvatar = op?['profile_photo_url']?.toString() ?? '';
+          participants.add(
+            BattleParticipant(
+              id: opponentId,
+              name: oName,
+              avatarUrl: oAvatar,
+              score: opponentScore,
+              rank: opponentScore > creatorScore ? 1 : 2,
+              correctAnswers: opponentScore,
+            ),
+          );
+
+          playerTotalBattles[opponentId] = (playerTotalBattles[opponentId] ?? 0) + 1;
+          if (status == BattleStatus.completed && winnerId != null && winnerId.isNotEmpty) {
+            if (winnerId == opponentId) {
+              playerWins[opponentId] = (playerWins[opponentId] ?? 0) + 1;
+            } else {
+              playerLosses[opponentId] = (playerLosses[opponentId] ?? 0) + 1;
+            }
+          }
+        }
+
+        final prizePool = payoutByBattleId[id] ??
+            (entryFee * loadedSettings.prizeMultiplier).round();
+
+        final creatorName = participants.isNotEmpty ? participants.first.name : 'Player';
+        final title = participants.length >= 2
+            ? '$creatorName vs ${participants[1].name}'
+            : '$creatorName (Queue)';
+
+        return BattleItem(
+          id: id,
+          title: title,
+          type: BattleType.oneVOne,
+          status: status,
+          subject: defaultSubject,
+          category: '1 vs 1 Arena',
+          participants: participants,
+          totalPlayers: participants.length,
+          maxPlayers: 2,
+          entryFee: entryFee,
+          prizePool: prizePool,
+          currentQuestion: 0,
+          totalQuestions: questionRows.length,
+          createdAt: createdAt,
+          completedAt: completedAt,
+          creatorId: creatorId,
+          opponentId: opponentId,
+          winnerId: winnerId,
+        );
       }).toList();
 
-      if (changed) {
-        notifyListeners();
+      // Build player battle records sorted by activity/wins/coins.
+      final parsedPlayers = profileRows.map((p) {
+        final id = p['id']?.toString() ?? '';
+        final total = playerTotalBattles[id] ?? 0;
+        final wins = playerWins[id] ?? 0;
+        final losses = playerLosses[id] ?? 0;
+        final winRate = total == 0 ? 0 : ((wins / total) * 100).round();
+        final coins = (p['coins'] as num?)?.toInt() ?? 0;
+        final status = p['status']?.toString() ?? 'active';
+        final joinedAt = DateTime.tryParse(p['created_at']?.toString() ?? '') ??
+            DateTime.now();
+        final banUntil = p['ban_until'] != null
+            ? DateTime.tryParse(p['ban_until'].toString())
+            : null;
+
+        return PlayerBattleRecord(
+          id: id,
+          username: (p['name']?.toString().trim().isNotEmpty ?? false)
+              ? p['name'].toString()
+              : 'User ${_shortId(id)}',
+          email: p['email']?.toString() ?? '',
+          avatarUrl: p['profile_photo_url']?.toString() ?? '',
+          rank: total > 0 ? 'Pending Rank' : 'Unranked',
+          totalBattles: total,
+          wins: wins,
+          losses: losses,
+          winRate: winRate,
+          coins: coins,
+          status: status,
+          banReason: p['ban_reason']?.toString(),
+          banUntil: banUntil,
+          joinedAt: joinedAt,
+        );
+      }).toList();
+
+      // Assign deterministic leaderboard ranks based on wins & total battles.
+      parsedPlayers.sort((a, b) {
+        final cmpWins = b.wins.compareTo(a.wins);
+        if (cmpWins != 0) return cmpWins;
+        final cmpBattles = b.totalBattles.compareTo(a.totalBattles);
+        if (cmpBattles != 0) return cmpBattles;
+        return b.coins.compareTo(a.coins);
+      });
+
+      final rankedPlayers = <PlayerBattleRecord>[];
+      for (int i = 0; i < parsedPlayers.length; i++) {
+        final p = parsedPlayers[i];
+        rankedPlayers.add(
+          p.copyWith(rank: p.totalBattles > 0 ? '#${i + 1}' : 'No Matches'),
+        );
       }
-    });
+
+      _battles = parsedBattles;
+      _players = rankedPlayers;
+      _settings = loadedSettings;
+      _hasPersistedSettings = hasSavedSettings;
+      _auditLogs = loadedAuditLogs;
+      _battleQuestionsCount = questionRows.length;
+      _questionTopicCounts = topicCounts;
+      _totalBattleWinPayouts = totalWinPayouts;
+      _lastSyncedAt = DateTime.now();
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to sync battle data from Supabase: $e';
+    } finally {
+      _isLoading = false;
+      _hasLoadedOnce = true;
+      notifyListeners();
+    }
   }
 
-  List<BattleItem> get filteredBattles {
-    return _battles.where((b) {
-      if (currentFilter == '1 vs 1' && b.type != BattleType.oneVOne) return false;
-      if (currentFilter == 'Multiplayer' && b.type != BattleType.multiplayer) return false;
-      if (currentFilter == 'Rooms' && b.type != BattleType.room) return false;
-
-      if (searchQuery.isNotEmpty) {
-        final q = searchQuery.toLowerCase();
-        final matchesId = b.id.toLowerCase().contains(q);
-        final matchesSubject = b.subject.toLowerCase().contains(q);
-        final matchesPlayer = b.participants.any((p) => p.name.toLowerCase().contains(q));
-        final matchesRoom = b.roomName?.toLowerCase().contains(q) ?? false;
-        if (!matchesId && !matchesSubject && !matchesPlayer && !matchesRoom) {
-          return false;
-        }
-      }
-
-      if (selectedStatus != null && selectedStatus!.isNotEmpty) {
-        if (b.status.label.toLowerCase() != selectedStatus!.toLowerCase()) {
-          return false;
-        }
-      }
-
-      return true;
-    }).toList();
-  }
-
-  void setFilter(String filter) {
-    currentFilter = filter;
-    notifyListeners();
-  }
-
-  void setSearchQuery(String query) {
-    searchQuery = query;
-    notifyListeners();
-  }
-
-  void setStatusFilter(String? status) {
-    selectedStatus = status;
-    notifyListeners();
-  }
-
-  // Battle Actions
-  void startAllWaiting() {
-    _battles = _battles.map((b) {
-      if (b.status == BattleStatus.waiting || b.status == BattleStatus.paused) {
-        return b.copyWith(status: BattleStatus.live);
-      }
-      return b;
-    }).toList();
-    _logAction('Start All Battles', 'Started all waiting and paused arenas');
-    notifyListeners();
-  }
-
-  void pauseAllLive() {
-    _battles = _battles.map((b) {
-      if (b.status == BattleStatus.live) {
-        return b.copyWith(status: BattleStatus.paused);
-      }
-      return b;
-    }).toList();
-    _logAction('Pause All Battles', 'Paused all active live arenas');
-    notifyListeners();
-  }
-
-  void endAllLive() {
-    _battles = _battles.map((b) {
-      if (b.status == BattleStatus.live || b.status == BattleStatus.paused) {
-        return b.copyWith(status: BattleStatus.completed);
-      }
-      return b;
-    }).toList();
-    _logAction('End All Battles', 'Ended all active live battles with score settlement');
-    notifyListeners();
-  }
-
-  void forceEndLive(String reason) {
-    _battles = _battles.map((b) {
-      if (b.status == BattleStatus.live || b.status == BattleStatus.paused) {
-        return b.copyWith(status: BattleStatus.cancelled);
-      }
-      return b;
-    }).toList();
-    _logAction('Force End Battles', 'Forced termination: $reason');
-    notifyListeners();
-  }
-
-  void addTimeToAll(int seconds) {
-    _battles = _battles.map((b) {
-      if (b.status == BattleStatus.live) {
-        return b.copyWith(timeRemainingSeconds: b.timeRemainingSeconds + seconds);
-      }
-      return b;
-    }).toList();
-    _logAction('Add Extra Time', 'Added +${seconds}s to all active live arenas');
-    notifyListeners();
-  }
-
-  void clearAllRooms(String reason) {
-    _ongoingRooms.clear();
-    _battles = _battles.where((b) => b.type != BattleType.room).toList();
-    activeRooms = 0;
-    _logAction('Clear Rooms', 'Cleared all participant rooms: $reason');
-    notifyListeners();
-  }
-
-  void startSingleBattle(String id) {
-    _battles = _battles.map((b) {
-      if (b.id == id) {
-        return b.copyWith(status: BattleStatus.live);
-      }
-      return b;
-    }).toList();
-    _logAction('Start Battle', 'Battle $id started');
-    notifyListeners();
-  }
-
-  void pauseSingleBattle(String id) {
-    _battles = _battles.map((b) {
-      if (b.id == id) {
-        return b.copyWith(status: BattleStatus.paused);
-      }
-      return b;
-    }).toList();
-    _logAction('Pause Battle', 'Battle $id paused');
-    notifyListeners();
-  }
-
-  void endSingleBattle(String id, bool forced, String reason) {
-    _battles = _battles.map((b) {
-      if (b.id == id) {
-        return b.copyWith(status: forced ? BattleStatus.cancelled : BattleStatus.completed);
-      }
-      return b;
-    }).toList();
-    _logAction(forced ? 'Force End Battle' : 'End Battle', 'Battle $id: $reason');
-    notifyListeners();
-  }
-
-  void addTimeToBattle(String id, int seconds) {
-    _battles = _battles.map((b) {
-      if (b.id == id) {
-        return b.copyWith(timeRemainingSeconds: b.timeRemainingSeconds + seconds);
-      }
-      return b;
-    }).toList();
-    _logAction('Add Time', 'Added +${seconds}s to battle $id');
-    notifyListeners();
-  }
-
-  void createNewBattle({
-    required String title,
-    required BattleType type,
-    required String subject,
-    required String category,
-    required int questionsCount,
-    required int timePerQuestion,
+  // ==========================================
+  // LIVE SUPABASE MUTATIONS (DB-FIRST)
+  // ==========================================
+  Future<void> createOneVOneBattle({
+    required String creatorId,
+    String? opponentId,
     required int entryFee,
-    required int reward,
-    required int maxPlayers,
-  }) {
-    final prefix = type == BattleType.oneVOne ? 'B1V' : type == BattleType.multiplayer ? 'BM' : 'RM';
-    final id = '$prefix${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+  }) async {
+    final client = _requireClient();
+    final hasOpponent = opponentId != null && opponentId.isNotEmpty;
+    final id = 'btl_${DateTime.now().millisecondsSinceEpoch}';
 
-    final newItem = BattleItem(
-      id: id,
-      title: title,
-      type: type,
-      status: BattleStatus.live,
-      subject: subject,
-      category: category,
-      participants: const [],
-      totalPlayers: type == BattleType.oneVOne ? 2 : 1,
-      maxPlayers: maxPlayers,
-      timeRemainingSeconds: questionsCount * timePerQuestion,
-      totalDurationSeconds: questionsCount * timePerQuestion,
-      entryFee: entryFee,
-      prizePool: reward,
-      currentQuestion: 1,
-      totalQuestions: questionsCount,
-      createdAt: DateTime.now(),
-    );
-
-    _battles.insert(0, newItem);
-    if (type == BattleType.oneVOne) total1v1Battles++;
-    if (type == BattleType.multiplayer) multiplayerBattles++;
-    if (type == BattleType.room) activeRooms++;
-
-    _logAction('Create Battle', 'Launched $type battle "$title" ($id)');
-    notifyListeners();
-  }
-
-  void createNewRoom({
-    required String name,
-    required String code,
-    required String subject,
-    required int maxPlayers,
-    required int entryFee,
-    required int reward,
-    required bool isPrivate,
-    String? password,
-  }) {
-    final newRoom = OngoingRoomItem(
-      id: 'r_${DateTime.now().millisecondsSinceEpoch}',
-      name: name,
-      code: code,
-      currentPlayers: 1,
-      maxPlayers: maxPlayers,
-      subject: subject,
-      status: BattleStatus.live,
-      entryFee: entryFee,
-      prizePool: reward,
-    );
-
-    _ongoingRooms.insert(0, newRoom);
-    activeRooms++;
-
-    // Also add to battles list
-    _battles.insert(
-      0,
-      BattleItem(
-        id: code,
-        title: name,
-        type: BattleType.room,
-        status: BattleStatus.live,
-        subject: subject,
-        category: 'Custom Room',
-        roomName: name,
-        roomCode: code,
-        participants: const [],
-        totalPlayers: 1,
-        maxPlayers: maxPlayers,
-        timeRemainingSeconds: 600,
-        totalDurationSeconds: 600,
-        entryFee: entryFee,
-        prizePool: reward,
-        createdAt: DateTime.now(),
-      ),
-    );
-
-    _logAction('Create Room', 'Created room "$name" (Code: $code)');
-    notifyListeners();
-  }
-
-  void restrictPlayer(String id, int hours, String reason) {
-    _players = _players.map((p) {
-      if (p.id == id) {
-        return p.copyWith(status: 'restricted');
-      }
-      return p;
-    }).toList();
-    _logAction('Restrict Player', 'Player $id restricted for $hours hours: $reason');
-    notifyListeners();
-  }
-
-  void suspendPlayer(String id, bool suspend, String reason) {
-    _players = _players.map((p) {
-      if (p.id == id) {
-        return p.copyWith(status: suspend ? 'suspended' : 'active');
-      }
-      return p;
-    }).toList();
-    _logAction(suspend ? 'Suspend Player' : 'Unsuspend Player', 'Player $id: $reason');
-    notifyListeners();
-  }
-
-  void updateSettings(BattleSettingsData newSettings) {
-    settings = newSettings;
-    _logAction('Update Settings', 'Global battle settings updated');
-    notifyListeners();
-  }
-
-  void broadcastMessage(String title, String message, String target) {
-    _logAction('Broadcast Alert', 'Transmitted "$title" to $target: $message');
-    notifyListeners();
-  }
-
-  void _logAction(String action, String details) {
-    auditLogs.insert(0, {
-      'timestamp': DateTime.now(),
-      'action': action,
-      'details': details,
-      'admin': 'Admin (SuperAdmin)',
+    await client.from('battles').insert({
+      'id': id,
+      'creator_id': creatorId,
+      if (hasOpponent) 'opponent_id': opponentId,
+      'entry_fee': entryFee,
+      'status': hasOpponent ? 'active' : 'waiting',
+      'creator_score': 0,
+      'opponent_score': 0,
     });
+
+    await _appendAuditLog(
+      action: 'Battle Created',
+      details: 'Created 1v1 battle $id (fee: $entryFee coins)',
+    );
+    await refresh();
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<void> startSingleBattle(String battleId) async {
+    final client = _requireClient();
+    await client
+        .from('battles')
+        .update({'status': 'active'})
+        .eq('id', battleId);
+
+    await _appendAuditLog(
+      action: 'Started Battle',
+      details: 'Moved battle $battleId to active status',
+    );
+    await refresh();
+  }
+
+  Future<void> completeSingleBattle(
+    String battleId, {
+    String? winnerId,
+    required String reason,
+  }) async {
+    final client = _requireClient();
+    await client.from('battles').update({
+      'status': 'completed',
+      if (winnerId != null && winnerId.isNotEmpty) 'winner_id': winnerId,
+      'completed_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', battleId);
+
+    await _appendAuditLog(
+      action: 'Completed Battle',
+      details: 'Completed battle $battleId — Reason: $reason',
+    );
+    await refresh();
+  }
+
+  Future<void> cancelSingleBattle(String battleId, String reason) async {
+    final client = _requireClient();
+    await client.from('battles').update({
+      'status': 'cancelled',
+      'completed_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', battleId);
+
+    await _appendAuditLog(
+      action: 'Cancelled Battle',
+      details: 'Cancelled battle $battleId — Reason: $reason',
+    );
+    await refresh();
+  }
+
+  Future<int> startAllWaiting() async {
+    final client = _requireClient();
+    final waitingIds = _battles
+        .where((b) => b.status == BattleStatus.waiting && (b.opponentId?.isNotEmpty ?? false))
+        .map((b) => b.id)
+        .toList();
+    if (waitingIds.isEmpty) return 0;
+
+    await client
+        .from('battles')
+        .update({'status': 'active'})
+        .inFilter('id', waitingIds);
+
+    await _appendAuditLog(
+      action: 'Bulk Start',
+      details: 'Started ${waitingIds.length} matched waiting battles',
+    );
+    await refresh();
+    return waitingIds.length;
+  }
+
+  Future<int> completeAllActive(String reason) async {
+    final client = _requireClient();
+    final activeIds = _battles
+        .where((b) => b.status == BattleStatus.live)
+        .map((b) => b.id)
+        .toList();
+    if (activeIds.isEmpty) return 0;
+
+    await client.from('battles').update({
+      'status': 'completed',
+      'completed_at': DateTime.now().toUtc().toIso8601String(),
+    }).inFilter('id', activeIds);
+
+    await _appendAuditLog(
+      action: 'Bulk Complete',
+      details: 'Completed ${activeIds.length} active battles — Reason: $reason',
+    );
+    await refresh();
+    return activeIds.length;
+  }
+
+  Future<int> cancelAllOpen(String reason) async {
+    final client = _requireClient();
+    final openIds = _battles
+        .where((b) => b.status == BattleStatus.live || b.status == BattleStatus.waiting)
+        .map((b) => b.id)
+        .toList();
+    if (openIds.isEmpty) return 0;
+
+    await client.from('battles').update({
+      'status': 'cancelled',
+      'completed_at': DateTime.now().toUtc().toIso8601String(),
+    }).inFilter('id', openIds);
+
+    await _appendAuditLog(
+      action: 'Force Cancel Open',
+      details: 'Cancelled ${openIds.length} open battles — Reason: $reason',
+    );
+    await refresh();
+    return openIds.length;
+  }
+
+  Future<void> updatePlayerModeration({
+    required String playerId,
+    required String status, // 'active', 'suspended', 'banned'
+    DateTime? banUntil,
+    required String reason,
+  }) async {
+    final client = _requireClient();
+    if (status != 'active' && status != 'suspended' && status != 'banned') {
+      throw ArgumentError('Invalid profile status: $status');
+    }
+
+    await client.from('profiles').update({
+      'status': status,
+      'ban_reason': status == 'active' ? null : reason,
+      'ban_until': status == 'active' ? null : banUntil?.toUtc().toIso8601String(),
+    }).eq('id', playerId);
+
+    await _appendAuditLog(
+      action: 'Player Moderation',
+      details: 'Set player $playerId status to "$status" — Reason: $reason',
+    );
+    await refresh();
+  }
+
+  Future<void> updateSettings(BattleSettingsData newSettings) async {
+    final client = _requireClient();
+    await client.from('app_configs').upsert({
+      'key': 'battle_settings',
+      'value': newSettings.toJson(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
+
+    _settings = newSettings;
+    _hasPersistedSettings = true;
+    await _appendAuditLog(
+      action: 'Updated Battle Settings',
+      details:
+          'Timeout: ${newSettings.matchmakingTimeout}s, Prize Multiplier: ${newSettings.prizeMultiplier}x, Maintenance: ${newSettings.maintenanceMode}',
+    );
+    notifyListeners();
+  }
+
+  Future<void> broadcastMessage(
+    String title,
+    String message,
+    String targetSegment,
+  ) async {
+    final client = _requireClient();
+    final safeSegment = _normalizeNotificationSegment(targetSegment);
+    final id = 'notif_battle_${DateTime.now().millisecondsSinceEpoch}';
+
+    await client.from('notifications').insert({
+      'id': id,
+      'user_id': 'global',
+      'title': title,
+      'message': message,
+      'type': 'info',
+      'target_segment': safeSegment,
+    });
+
+    await _appendAuditLog(
+      action: 'Broadcast Alert',
+      details: 'Sent "$title" to $safeSegment ($id)',
+    );
+    notifyListeners();
+  }
+
+  Future<void> _appendAuditLog({
+    required String action,
+    required String details,
+  }) async {
+    final now = DateTime.now();
+    final timestamp =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} '
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    _auditLogs = [
+      {
+        'time': timestamp,
+        'action': action,
+        'details': details,
+      },
+      ..._auditLogs,
+    ].take(50).toList();
+
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      try {
+        await client.from('app_configs').upsert({
+          'key': 'battle_admin_audit_logs',
+          'value': {'logs': _auditLogs},
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        });
+      } catch (_) {
+        // Primary DB mutation succeeded; audit config table may be restricted by RLS.
+      }
+    }
+  }
+
+  dynamic _requireClient() {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      throw StateError('Database connection is not initialized.');
+    }
+    return client;
+  }
+
+  // ==========================================
+  // TEST INJECTION HELPERS (NO FAKE FALLBACK)
+  // ==========================================
+  @visibleForTesting
+  void configureForTest({
+    List<BattleItem>? battles,
+    List<PlayerBattleRecord>? players,
+    BattleSettingsData? settings,
+    List<Map<String, dynamic>>? auditLogs,
+    int battleQuestionsCount = 0,
+    Map<String, int>? questionTopicCounts,
+    bool hasDbConnection = true,
+    bool hasPersistedSettings = false,
+    String? errorMessage,
+    bool isLoading = false,
+  }) {
+    _battles = List.from(battles ?? const []);
+    _players = List.from(players ?? const []);
+    _settings = settings ?? const BattleSettingsData();
+    _auditLogs = List.from(auditLogs ?? const []);
+    _battleQuestionsCount = battleQuestionsCount;
+    _questionTopicCounts = Map.from(questionTopicCounts ?? const {});
+    _hasDbConnection = hasDbConnection;
+    _hasPersistedSettings = hasPersistedSettings;
+    _errorMessage = errorMessage;
+    _isLoading = isLoading;
+    _hasLoadedOnce = true;
+    _lastSyncedAt = hasDbConnection ? DateTime.now() : null;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void resetForTest() {
+    _isLoading = false;
+    _hasLoadedOnce = false;
+    _hasDbConnection = SupabaseConfig.isInitialized;
+    _hasPersistedSettings = false;
+    _errorMessage = null;
+    _lastSyncedAt = null;
+    _battles = [];
+    _players = [];
+    _auditLogs = [];
+    _settings = const BattleSettingsData();
+    _battleQuestionsCount = 0;
+    _questionTopicCounts = {};
+    _totalBattleWinPayouts = 0;
+    notifyListeners();
+  }
+
+  // ==========================================
+  // PRIVATE UTILS
+  // ==========================================
+  BattleStatus _parseDbStatus(String? raw) {
+    switch ((raw ?? '').toLowerCase()) {
+      case 'active':
+        return BattleStatus.live;
+      case 'completed':
+        return BattleStatus.completed;
+      case 'cancelled':
+        return BattleStatus.cancelled;
+      case 'waiting':
+      default:
+        return BattleStatus.waiting;
+    }
+  }
+
+  String _normalizeNotificationSegment(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('1 vs 1') || lower.contains('one_v_one')) {
+      return 'one_v_one';
+    }
+    if (lower.contains('tournament')) {
+      return 'tournament';
+    }
+    if (lower.contains('vip')) {
+      return 'vip';
+    }
+    return 'all';
+  }
+
+  bool _isSameLocalDay(DateTime a, DateTime b) {
+    final al = a.toLocal();
+    final bl = b.toLocal();
+    return al.year == bl.year && al.month == bl.month && al.day == bl.day;
+  }
+
+  List<double> _buildDailySparkline(Iterable<DateTime> timestamps) {
+    final now = DateTime.now();
+    final counts = List<double>.filled(7, 0);
+    for (final ts in timestamps) {
+      final local = ts.toLocal();
+      final dayDiff = DateTime(now.year, now.month, now.day)
+          .difference(DateTime(local.year, local.month, local.day))
+          .inDays;
+      if (dayDiff >= 0 && dayDiff < 7) {
+        counts[6 - dayDiff] += 1;
+      }
+    }
+    return counts;
+  }
+
+  String _computeTodayVsYesterdayGrowth(Iterable<DateTime> timestamps) {
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
+    int today = 0;
+    int prev = 0;
+    for (final ts in timestamps) {
+      if (_isSameLocalDay(ts, now)) {
+        today++;
+      } else if (_isSameLocalDay(ts, yesterday)) {
+        prev++;
+      }
+    }
+    return _formatDayDelta(today, prev);
+  }
+
+  String _formatDayDelta(int today, int yesterday) {
+    if (today == 0 && yesterday == 0) return '';
+    if (yesterday == 0) return '+$today';
+    final pct = (((today - yesterday) / yesterday) * 100).round();
+    return pct >= 0 ? '+$pct%' : '$pct%';
+  }
+
+  String _shortId(String id) {
+    if (id.length <= 8) return id;
+    return '${id.substring(0, 8)}…';
+  }
+
+  String _monthShort(int m) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[(m - 1).clamp(0, 11)];
+  }
+
+  String _formatHour(int h24) {
+    final hour12 = h24 % 12 == 0 ? 12 : h24 % 12;
+    final period = h24 >= 12 ? 'PM' : 'AM';
+    return '$hour12:00 $period';
+  }
+
+  String _csvEscape(String value) {
+    if (value.contains(',') || value.contains('"') || value.contains('\n')) {
+      return '"${value.replaceAll('"', '""')}"';
+    }
+    return value;
   }
 }
-

@@ -375,6 +375,29 @@ class AuthRepository {
     }
   }
 
+  /// Resend Email Signup Verification Link
+  Future<Result<bool>> resendVerificationEmail(String email) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database not connected');
+    }
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty || !trimmedEmail.contains('@')) {
+      return const Failure('Please enter a valid email address first.');
+    }
+    try {
+      await client.auth.resend(
+        type: supa.OtpType.signup,
+        email: trimmedEmail,
+      );
+      return const Success(true);
+    } on supa.AuthException catch (e) {
+      return Failure(e.message, e.statusCode);
+    } catch (e) {
+      return Failure(e.toString(), e);
+    }
+  }
+
   /// Sign Out
   Future<Result<bool>> signOut() async {
     await clearLocalProfile();

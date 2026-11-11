@@ -121,27 +121,57 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
           ),
           const SizedBox(height: 20),
 
-          // 2. HEADER BAR (Title, Search, Create Arena Button)
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Multiplayer Competition Management (3–100 Players)',
-                    style: AppTypography.headingSmall.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+          // 2. SCHEMA STATUS NOTICE
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.brandBlueLight,
+              borderRadius: AppRadii.borderMd,
+              border: Border.all(color: AppColors.brandBlue.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.brandBlueDark),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Supabase table public.battles currently stores 1 vs 1 matches only. Multiplayer arena counts reflect live database rows (0 active).',
+                    style: AppTypography.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.brandBlueDark,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Monitor large participant arenas, capacity scaling, question pace and live leaderboards',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 3. HEADER BAR (Title, Search, Create Arena Button)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Multiplayer Competition Management (3–100 Players)',
+                      style: AppTypography.headingSmall.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Monitor large participant arenas, capacity scaling, question pace and live leaderboards',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 16),
               // Search Input
               SizedBox(
                 width: 240,
@@ -500,44 +530,29 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
                 ),
               ),
               const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: () {
-                  _service.addTimeToBattle(b.id, 60);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Added +60s to arena ${b.id}'),
-                      duration: const Duration(seconds: 1),
-                      backgroundColor: AppColors.brandGreen,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.timer_rounded, size: 16, color: AppColors.brandGreen),
-                label: Text(
-                  '+60s Extra Time',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.brandGreen,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.brandGreen),
-                  shape: const RoundedRectangleBorder(borderRadius: AppRadii.button),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (b.status == BattleStatus.live) ...[
+              if (b.status == BattleStatus.waiting) ...[
                 ElevatedButton.icon(
-                  onPressed: () {
-                    _service.pauseSingleBattle(b.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Arena ${b.id} paused')),
-                    );
+                  onPressed: () async {
+                    try {
+                      await _service.startSingleBattle(b.id);
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Arena ${b.id} started'),
+                          backgroundColor: AppColors.brandGreen,
+                        ),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.liveRed),
+                      );
+                    }
                   },
-                  icon: const Icon(Icons.pause_rounded, size: 16),
-                  label: Text('Pause', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textOnPrimary)),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 16),
+                  label: Text('Start Arena', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textOnPrimary)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.warning,
+                    backgroundColor: AppColors.brandGreen,
                     foregroundColor: AppColors.textOnPrimary,
                     elevation: 0,
                     shape: const RoundedRectangleBorder(borderRadius: AppRadii.button),
@@ -545,16 +560,24 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
                   ),
                 ),
                 const SizedBox(width: 8),
-              ] else if (b.status == BattleStatus.paused || b.status == BattleStatus.waiting) ...[
+              ] else if (b.status == BattleStatus.live) ...[
                 ElevatedButton.icon(
                   onPressed: () {
-                    _service.startSingleBattle(b.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Arena ${b.id} started/resumed'), backgroundColor: AppColors.brandGreen),
+                    AppModalDialog.show(
+                      context: context,
+                      builder: (_) => ConfirmActionDialog(
+                        title: 'Complete Arena ${b.id}?',
+                        description: 'Mark this competition as completed in Supabase.',
+                        confirmLabel: 'Complete',
+                        isDestructive: false,
+                        onConfirm: (reason) async {
+                          await _service.completeSingleBattle(b.id, reason: reason);
+                        },
+                      ),
                     );
                   },
-                  icon: const Icon(Icons.play_arrow_rounded, size: 16),
-                  label: Text('Start Arena', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textOnPrimary)),
+                  icon: const Icon(Icons.task_alt_rounded, size: 16),
+                  label: Text('Complete', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textOnPrimary)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.brandGreen,
                     foregroundColor: AppColors.textOnPrimary,
@@ -570,19 +593,19 @@ class _BattleMultiplayerTabState extends State<BattleMultiplayerTab> {
                   AppModalDialog.show(
                     context: context,
                     builder: (_) => ConfirmActionDialog(
-                      title: 'End Competition ${b.id}?',
-                      description: 'This will stop question delivery, rank remaining players according to live scores, and distribute the prize pool.',
-                      confirmLabel: 'End & Settle',
+                      title: 'Cancel Competition ${b.id}?',
+                      description: 'This will cancel the competition in Supabase and log the audit reason.',
+                      confirmLabel: 'Cancel Match',
                       isDestructive: true,
                       onConfirm: (reason) async {
-                        _service.endSingleBattle(b.id, false, reason);
+                        await _service.cancelSingleBattle(b.id, reason);
                       },
                     ),
                   );
                 },
                 icon: const Icon(Icons.stop_rounded, size: 16),
                 label: Text(
-                  'End Competition',
+                  'Cancel Competition',
                   style: AppTypography.labelSmall.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textOnPrimary,

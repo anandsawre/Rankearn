@@ -4,6 +4,7 @@ import 'package:design_system/design_system.dart' hide BattleType;
 import '../../overview/banner_image_data.dart';
 import '../models/battle_dashboard_models.dart';
 import '../services/battle_dashboard_service.dart';
+import '../widgets/battle_player_avatar.dart';
 import '../widgets/live_players_chart.dart';
 import '../dialogs/create_battle_dialog.dart';
 import '../dialogs/create_room_dialog.dart';
@@ -96,6 +97,20 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_service.errorMessage != null) ...[
+                _buildStatusBanner(
+                  message: _service.errorMessage!,
+                  isError: true,
+                ),
+                const SizedBox(height: 16),
+              ] else if (_service.isLoading && !_service.hasLoadedOnce) ...[
+                _buildStatusBanner(
+                  message: 'Syncing live battle data from Supabase…',
+                  isError: false,
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // ==========================================
               // ROW 1: HERO BANNER (Left) + QUICK ACTIONS (Right)
               // (Identical Pattern to Admin Side Dashboard)
@@ -381,56 +396,99 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
   // ==========================================
   // ROW 2: 5 METRIC KPI CARDS WITH SPARKLINES
   // ==========================================
+  Widget _buildStatusBanner({required String message, required bool isError}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isError ? AppColors.liveRedLight : AppColors.brandBlueLight,
+        borderRadius: AppRadii.borderMd,
+        border: Border.all(
+          color: isError
+              ? AppColors.liveRed.withValues(alpha: 0.35)
+              : AppColors.brandBlue.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isError ? Icons.error_outline_rounded : Icons.sync_rounded,
+            size: 18,
+            color: isError ? AppColors.liveRedDark : AppColors.brandBlueDark,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTypography.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isError ? AppColors.liveRedDark : AppColors.brandBlueDark,
+              ),
+            ),
+          ),
+          if (isError)
+            TextButton.icon(
+              onPressed: _service.isLoading ? null : () => _service.refresh(),
+              icon: const Icon(Icons.refresh_rounded, size: 15),
+              label: const Text('Retry'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.liveRedDark,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMetricCardsRow() {
     final metrics = [
       (
         title: 'Active Players',
-        value: '12,840',
-        growth: '+12%',
-        subtitle: '+1,420 joined today',
+        value: '${_service.activePlayersCount}',
+        growth: _service.playersGrowthLabel,
+        subtitle: '+${_service.todayJoinedPlayersCount} joined today',
         icon: Icons.people_alt_rounded,
         color: const Color(0xFF7C3AED),
-        sparklineData: const [10.0, 12.0, 14.5, 13.0, 16.5, 19.0, 24.0],
+        sparklineData: _service.sevenDayPlayersSparkline,
         isLive: false,
       ),
       (
         title: '1 vs 1 Battles',
-        value: '4,326',
-        growth: '+18%',
-        subtitle: '+180 active today',
+        value: '${_service.oneVsOneCount}',
+        growth: _service.battlesGrowthLabel,
+        subtitle: '+${_service.todayBattlesCount} created today',
         icon: Icons.sports_kabaddi_rounded,
         color: const Color(0xFFEC4899),
-        sparklineData: const [8.0, 11.0, 10.0, 13.5, 15.0, 17.5, 22.0],
+        sparklineData: _service.sevenDayBattlesSparkline,
         isLive: false,
       ),
       (
-        title: 'Multiplayer Battles',
-        value: '682',
-        growth: '+9%',
-        subtitle: '+45 running today',
-        icon: Icons.groups_rounded,
-        color: const Color(0xFFF59E0B),
-        sparklineData: const [5.0, 6.0, 7.5, 8.0, 9.5, 11.0, 14.0],
-        isLive: false,
-      ),
-      (
-        title: 'Active Rooms',
-        value: '316',
+        title: 'Live Arenas',
+        value: '${_service.liveBattlesCount}',
         growth: '',
-        subtitle: '28 rooms active now',
-        icon: Icons.storefront_rounded,
-        color: const Color(0xFF0EA5E9),
-        sparklineData: const [4.0, 6.0, 5.5, 7.0, 6.8, 8.5, 9.0],
-        isLive: true,
+        subtitle: '${_service.waitingBattlesCount} waiting in queue',
+        icon: Icons.flash_on_rounded,
+        color: const Color(0xFFF59E0B),
+        sparklineData: _service.sevenDayBattlesSparkline,
+        isLive: _service.liveBattlesCount > 0,
       ),
       (
-        title: 'Overall Win Rate',
-        value: '91%',
-        growth: '+3%',
-        subtitle: 'Fair play verified',
+        title: 'Question Bank',
+        value: '${_service.battleQuestionsCount}',
+        growth: '',
+        subtitle: '${_service.questionTopicCounts.length} active topics',
+        icon: Icons.quiz_outlined,
+        color: const Color(0xFF0EA5E9),
+        sparklineData: const <double>[],
+        isLive: false,
+      ),
+      (
+        title: 'Completion Rate',
+        value: '${_service.completionRatePct.round()}%',
+        growth: '',
+        subtitle: '${_service.completedBattlesCount} completed • ${_service.cancelledBattlesCount} cancelled',
         icon: Icons.sports_esports_rounded,
         color: const Color(0xFF10B981),
-        sparklineData: const [85.0, 87.0, 88.0, 89.5, 90.0, 90.5, 91.0],
+        sparklineData: const <double>[],
         isLive: false,
       ),
     ];
@@ -525,8 +583,8 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
             'All Status',
             'Live',
             'Waiting',
-            'Paused',
             'Completed',
+            'Cancelled',
           ],
           onChanged: (val) {
             setState(() {
@@ -537,12 +595,13 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
         ),
         AdminTableFiltersButton(
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Filter drawer opened with advanced battle criteria.'),
-                duration: Duration(seconds: 2),
-              ),
-            );
+            setState(() {
+              _selectedBattleType = 'All Types';
+              _selectedBattleStatus = 'All Status';
+              _battleSearchQuery = '';
+              _battleCurrentPage = 1;
+            });
+            _service.refresh();
           },
         ),
       ],
@@ -575,7 +634,7 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
         DataColumn(label: Text('• Subject', style: _headerStyle)),
         DataColumn(label: Text('Players', style: _headerStyle)),
         DataColumn(label: Text('• Status', style: _headerStyle)),
-        DataColumn(label: Text('Time Left', style: _headerStyle)),
+        DataColumn(label: Text('Duration', style: _headerStyle)),
         DataColumn(label: Text('Actions', style: _headerStyle)),
       ],
       rows: List.generate(pagedBattles.length, (index) {
@@ -700,42 +759,61 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
                   ),
                   const SizedBox(width: 4),
                   AdminTableActionButton(
-                    icon: Icons.bar_chart_rounded,
-                    tooltip: 'Analytics',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Analytics opened for Battle ${b.id}'),
-                          duration: const Duration(seconds: 1),
-                        ),
-                      );
-                    },
+                    icon: Icons.play_circle_outline_rounded,
+                    tooltip: 'Start Battle',
+                    onTap: b.status == BattleStatus.waiting
+                        ? () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            try {
+                              await _service.startSingleBattle(b.id);
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text('Battle ${b.id} moved to Live'),
+                                  backgroundColor: AppColors.brandGreen,
+                                ),
+                              );
+                            } catch (e) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to start battle: $e'),
+                                  backgroundColor: AppColors.liveRed,
+                                ),
+                              );
+                            }
+                          }
+                        : () {
+                            AppModalDialog.show(
+                              context: context,
+                              builder: (_) => BattleDetailDialog(battle: b),
+                            );
+                          },
                   ),
                   const SizedBox(width: 4),
                   AdminTableActionButton(
                     icon: Icons.stop_circle_outlined,
-                    tooltip: 'End Battle',
+                    tooltip: 'Cancel Battle',
                     color: AppColors.error,
                     onTap: () {
+                      final messenger = ScaffoldMessenger.of(context);
                       AppModalDialog.show(
                         context: context,
                         builder: (_) => ConfirmActionDialog(
-                          title: 'End Battle',
+                          title: 'Cancel Battle',
                           description:
-                              'Are you sure you want to forcibly terminate Battle ${b.id}?',
-                          confirmLabel: 'End Battle',
+                              'Are you sure you want to cancel Battle ${b.id} in Supabase?',
+                          confirmLabel: 'Cancel Battle',
                           isDestructive: true,
                           onConfirm: (reason) async {
-                            _service.endSingleBattle(
-                                b.id, true, reason.isEmpty ? 'Force ended by admin' : reason);
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Battle ${b.id} ended'),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            }
+                            await _service.cancelSingleBattle(
+                              b.id,
+                              reason.isEmpty ? 'Cancelled by admin' : reason,
+                            );
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('Battle ${b.id} cancelled'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
                           },
                         ),
                       );
@@ -799,16 +877,16 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
   }
 
   Widget _buildPlayersCell(BattleItem b) {
-    if (b.type == BattleType.oneVOne && b.participants.length >= 2) {
+    if (b.type == BattleType.oneVOne && b.participants.isNotEmpty) {
       final p1 = b.participants[0];
-      final p2 = b.participants[1];
+      final p2 = b.participants.length >= 2 ? b.participants[1] : null;
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircleAvatar(
+          BattlePlayerAvatar(
+            name: p1.name,
+            avatarUrl: p1.avatarUrl,
             radius: 11,
-            backgroundColor: AppColors.borderSubtle,
-            backgroundImage: NetworkImage(p1.avatarUrl),
           ),
           const SizedBox(width: 6),
           ConstrainedBox(
@@ -836,25 +914,40 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
               ),
             ),
           ),
-          CircleAvatar(
-            radius: 11,
-            backgroundColor: AppColors.borderSubtle,
-            backgroundImage: NetworkImage(p2.avatarUrl),
-          ),
-          const SizedBox(width: 6),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 80),
-            child: Text(
-              p2.name,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: AppTypography.fontHeading,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+          if (p2 != null) ...[
+            BattlePlayerAvatar(
+              name: p2.name,
+              avatarUrl: p2.avatarUrl,
+              radius: 11,
+            ),
+            const SizedBox(width: 6),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 80),
+              child: Text(
+                p2.name,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
-          ),
+          ] else
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 96),
+              child: Text(
+                'Waiting Queue',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.warning,
+                ),
+              ),
+            ),
         ],
       );
     } else if (b.type == BattleType.room) {
@@ -990,95 +1083,121 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
           ),
           const SizedBox(height: 16),
 
-          // Row 1: Start (soft green) | Pause (soft amber) | End (soft red)
+          // Row 1: Start Waiting | Complete Live | Cancel Open
           Row(
             children: [
               Expanded(
                 child: _buildControlBtn(
-                  label: 'Start',
+                  label: 'Start Matched',
                   icon: Icons.play_arrow_rounded,
                   bg: AppColors.brandGreenLight,
                   fg: AppColors.brandGreenDark,
-                  onTap: () => _service.startAllWaiting(),
+                  onTap: () async {
+                    try {
+                      final count = await _service.startAllWaiting();
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            count == 0
+                                ? 'No matched waiting battles to start'
+                                : 'Started $count matched battles',
+                          ),
+                          backgroundColor: count == 0 ? AppColors.textSecondary : AppColors.brandGreen,
+                        ),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to start waiting battles: $e'), backgroundColor: AppColors.liveRed),
+                      );
+                    }
+                  },
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildControlBtn(
-                  label: 'Pause',
-                  icon: Icons.pause_rounded,
+                  label: 'Complete Live',
+                  icon: Icons.check_circle_outline_rounded,
                   bg: AppColors.coinGoldLight,
                   fg: AppColors.warning,
-                  onTap: () => _service.pauseAllLive(),
+                  onTap: () {
+                    AppModalDialog.show(
+                      context: context,
+                      builder: (_) => ConfirmActionDialog(
+                        title: 'Complete All Active Battles?',
+                        description: 'This updates all currently active 1v1 battles in Supabase to completed.',
+                        confirmLabel: 'Complete Live',
+                        isDestructive: false,
+                        onConfirm: (reason) async {
+                          await _service.completeAllActive(reason);
+                        },
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildControlBtn(
-                  label: 'End',
+                  label: 'Cancel Open',
                   icon: Icons.stop_rounded,
                   bg: AppColors.liveRedLight,
                   fg: AppColors.liveRedDark,
-                  onTap: () => _service.endAllLive(),
+                  onTap: () {
+                    AppModalDialog.show(
+                      context: context,
+                      builder: (_) => ConfirmActionDialog(
+                        title: 'Cancel All Open Battles?',
+                        description: 'This cancels all waiting and active battles in Supabase and logs the reason.',
+                        confirmLabel: 'Cancel Open',
+                        isDestructive: true,
+                        onConfirm: (reason) async {
+                          await _service.cancelAllOpen(reason);
+                        },
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
 
-          // Row 2: Force End (red border) | Add Time (purple border) | Clear Room (red border)
+          // Row 2: Refresh Sync | Create 1v1 | Broadcast
           Row(
             children: [
               Expanded(
                 child: _buildOutlinedControlBtn(
-                  label: 'Force End',
-                  icon: Icons.power_settings_new_rounded,
-                  color: AppColors.liveRed,
-                  onTap: () {
-                    AppModalDialog.show(
-                      context: context,
-                      builder: (_) => ConfirmActionDialog(
-                        title: 'Force End All Active Battles?',
-                        description: 'This will immediately abort all ongoing matches and record an administrative override in audit logs.',
-                        confirmLabel: 'Force End',
-                        isDestructive: true,
-                        onConfirm: (reason) async {
-                          _service.forceEndLive(reason);
-                        },
-                      ),
-                    );
-                  },
+                  label: 'Refresh DB',
+                  icon: Icons.refresh_rounded,
+                  color: AppColors.brandBlue,
+                  onTap: () => _service.refresh(),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildOutlinedControlBtn(
-                  label: 'Add Time',
-                  icon: Icons.timer_outlined,
+                  label: 'New Battle',
+                  icon: Icons.add_circle_outline_rounded,
                   color: AppColors.battleAdminPurple,
-                  onTap: () => _service.addTimeToAll(30),
+                  onTap: () => AppModalDialog.show(
+                    context: context,
+                    builder: (_) => const CreateBattleDialog(),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildOutlinedControlBtn(
-                  label: 'Clear Room',
-                  icon: Icons.delete_outline_rounded,
-                  color: AppColors.liveRed,
-                  onTap: () {
-                    AppModalDialog.show(
-                      context: context,
-                      builder: (_) => ConfirmActionDialog(
-                        title: 'Clear All Active Rooms?',
-                        description: 'This will disconnect all room participants and reset active rooms state.',
-                        confirmLabel: 'Clear All Rooms',
-                        isDestructive: true,
-                        onConfirm: (reason) async {
-                          _service.clearAllRooms(reason);
-                        },
-                      ),
-                    );
-                  },
+                  label: 'Broadcast',
+                  icon: Icons.campaign_outlined,
+                  color: AppColors.brandGreenDark,
+                  onTap: () => AppModalDialog.show(
+                    context: context,
+                    builder: (_) => const BroadcastDialog(),
+                  ),
                 ),
               ),
             ],
@@ -1099,14 +1218,21 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
       onTap: onTap,
       borderRadius: AppRadii.borderSm,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 9),
         decoration: BoxDecoration(color: bg, borderRadius: AppRadii.borderSm),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 16, color: fg),
+            Icon(icon, size: 15, color: fg),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 11, fontWeight: FontWeight.w700, color: fg),
+              ),
+            ),
           ],
         ),
       ),
@@ -1123,7 +1249,7 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
       onTap: onTap,
       borderRadius: AppRadii.borderSm,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 9),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadii.borderSm,
@@ -1132,9 +1258,16 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 15, color: color),
+            Icon(icon, size: 14, color: color),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 11, fontWeight: FontWeight.w700, color: color),
+              ),
+            ),
           ],
         ),
       ),
@@ -1168,7 +1301,20 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
             ],
           ),
           const SizedBox(height: 8),
-          const Expanded(child: LivePlayersChart()),
+          Expanded(
+            child: Builder(
+              builder: (_) {
+                final series = _service.buildActivityChartSeries();
+                return LivePlayersChart(
+                  dates: series.labels,
+                  values: series.values,
+                  highlightedIndex: series.highlightedIndex,
+                  tooltipValue: series.tooltipValue,
+                  emptyText: 'No battle participant activity in last 7 days',
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -1204,33 +1350,33 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
           _buildSummaryRow(
             icon: Icons.sports_kabaddi_rounded,
             iconColor: AppColors.battleAdminPurple,
-            label: '1 vs 1 Battles',
-            count: '3,120',
-            growth: '↑ +20%',
+            label: '1 vs 1 Battles Today',
+            count: '${_service.todayBattlesCount}',
+            growth: _service.battlesGrowthLabel,
           ),
           const Divider(height: 20, color: AppColors.borderSubtle),
           _buildSummaryRow(
-            icon: Icons.groups_rounded,
-            iconColor: AppColors.coinGold,
-            label: 'Multiplayer Battles',
-            count: '682',
-            growth: '↑ +9%',
+            icon: Icons.flash_on_rounded,
+            iconColor: AppColors.liveRed,
+            label: 'Currently Live Matches',
+            count: '${_service.liveBattlesCount}',
+            growth: '${_service.waitingBattlesCount} queued',
           ),
           const Divider(height: 20, color: AppColors.borderSubtle),
           _buildSummaryRow(
-            icon: Icons.storefront_rounded,
-            iconColor: AppColors.battleAdminPurple,
-            label: 'Rooms Created',
-            count: '316',
-            growth: '↑ +14%',
+            icon: Icons.check_circle_outline_rounded,
+            iconColor: AppColors.brandBlue,
+            label: 'Completed All-Time',
+            count: '${_service.completedBattlesCount}',
+            growth: '${_service.completionRatePct.round()}% rate',
           ),
           const Divider(height: 20, color: AppColors.borderSubtle),
           _buildSummaryRow(
             icon: Icons.sports_esports_rounded,
             iconColor: AppColors.brandGreen,
-            label: 'Total Players Participated',
-            count: '8,742',
-            growth: '↑ +16%',
+            label: 'Unique Players Today',
+            count: '${_service.todayParticipantsCount}',
+            growth: _service.participantsGrowthLabel,
           ),
         ],
       ),
@@ -1268,16 +1414,18 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(width: 8),
-        Text(
-          growth,
-          style: TextStyle(
-            fontFamily: AppTypography.fontHeading,
-            fontSize: 11.5,
-            fontWeight: FontWeight.w700,
-            color: AppColors.brandGreen,
+        if (growth.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          Text(
+            growth,
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: growth.startsWith('-') ? AppColors.liveRed : AppColors.brandGreen,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -1431,14 +1579,10 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
                             const AppLivePill(),
                             const SizedBox(width: 4),
                             IconButton(
-                              icon: const Icon(Icons.more_horiz_rounded, size: 18, color: AppColors.textMuted),
+                              icon: const Icon(Icons.open_in_new_rounded, size: 18, color: AppColors.textMuted),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Room ${r.code} selected'), duration: const Duration(seconds: 1)),
-                                );
-                              },
+                              onPressed: widget.onGoToRooms,
                             ),
                           ],
                         ),

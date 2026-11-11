@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'services/battle_dashboard_service.dart';
 import 'tabs/overview_tab.dart';
 import 'tabs/one_vs_one_tab.dart';
 import 'tabs/multiplayer_tab.dart';
@@ -26,7 +27,31 @@ class BattleDashboardTab extends StatefulWidget {
 }
 
 class _BattleDashboardTabState extends State<BattleDashboardTab> {
+  final _service = BattleDashboardService();
   BattleNavSubTab _activeTab = BattleNavSubTab.overview;
+
+  @override
+  void initState() {
+    super.initState();
+    _service.addListener(_onServiceChange);
+    _service.ensureLoaded();
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    _service.refresh();
+  }
+
+  @override
+  void dispose() {
+    _service.removeListener(_onServiceChange);
+    super.dispose();
+  }
+
+  void _onServiceChange() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,38 +154,109 @@ class _BattleDashboardTabState extends State<BattleDashboardTab> {
 
           const SizedBox(width: 14),
 
-          // Integrated System Live Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.brandGreenLight,
-              borderRadius: AppRadii.borderSm,
-              border: Border.all(color: AppColors.brandGreenMuted),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+          // Live DB Connection / Maintenance Status Badge + Sync Button
+          _buildSystemStatusBadge(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSystemStatusBadge() {
+    final bool isLoading = _service.isLoading;
+    final bool hasError = _service.errorMessage != null;
+    final bool offline = !_service.hasDbConnection;
+    final bool maintenance = _service.settings.maintenanceMode;
+
+    final Color bg;
+    final Color border;
+    final Color fg;
+    final String label;
+
+    if (isLoading) {
+      bg = AppColors.brandBlueLight;
+      border = AppColors.brandBlue.withValues(alpha: 0.3);
+      fg = AppColors.brandBlueDark;
+      label = 'Syncing DB…';
+    } else if (offline) {
+      bg = AppColors.surfaceSubtle;
+      border = AppColors.borderSubtle;
+      fg = AppColors.textSecondary;
+      label = 'Supabase Offline';
+    } else if (hasError) {
+      bg = AppColors.liveRedLight;
+      border = AppColors.liveRed.withValues(alpha: 0.35);
+      fg = AppColors.liveRedDark;
+      label = 'Sync Error';
+    } else if (maintenance) {
+      bg = AppColors.coinGoldLight;
+      border = AppColors.warning.withValues(alpha: 0.4);
+      fg = AppColors.warning;
+      label = 'Maintenance Mode';
+    } else {
+      bg = AppColors.brandGreenLight;
+      border = AppColors.brandGreenMuted;
+      fg = AppColors.brandGreenDark;
+      label = 'Supabase Live';
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: AppRadii.borderSm,
+            border: Border.all(color: border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isLoading)
+                SizedBox(
+                  width: 10,
+                  height: 10,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: fg),
+                )
+              else
                 Container(
                   width: 7,
                   height: 7,
-                  decoration: const BoxDecoration(
-                    color: AppColors.brandGreen,
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
                 ),
-                const SizedBox(width: 7),
-                Text(
-                  'System Live',
-                  style: AppTypography.labelSmall.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.brandGreenDark,
-                  ),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: AppTypography.labelSmall.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: fg,
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Tooltip(
+          message: 'Refresh from Supabase',
+          child: InkWell(
+            onTap: isLoading ? null : () => _service.refresh(),
+            borderRadius: AppRadii.borderSm,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppRadii.borderSm,
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
+              child: Icon(
+                Icons.refresh_rounded,
+                size: 16,
+                color: isLoading ? AppColors.textMuted : AppColors.textPrimary,
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -177,7 +273,7 @@ class _BattleDashboardTabState extends State<BattleDashboardTab> {
         borderRadius: AppRadii.borderSm,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
           decoration: BoxDecoration(
             gradient: isSelected
                 ? const LinearGradient(
@@ -197,13 +293,17 @@ class _BattleDashboardTabState extends State<BattleDashboardTab> {
                 size: 16,
                 color: isSelected ? AppColors.textOnPrimary : AppColors.textSecondary,
               ),
-              const SizedBox(width: 7),
-              Text(
-                label,
-                style: AppTypography.labelMedium.copyWith(
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? AppColors.textOnPrimary : AppColors.textPrimary,
-                  letterSpacing: -0.1,
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.labelMedium.copyWith(
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected ? AppColors.textOnPrimary : AppColors.textPrimary,
+                    letterSpacing: -0.1,
+                  ),
                 ),
               ),
             ],

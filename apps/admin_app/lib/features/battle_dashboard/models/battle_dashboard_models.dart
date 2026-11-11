@@ -141,6 +141,10 @@ class BattleItem {
   final int currentQuestion;
   final int totalQuestions;
   final DateTime createdAt;
+  final DateTime? completedAt;
+  final String? creatorId;
+  final String? opponentId;
+  final String? winnerId;
 
   const BattleItem({
     required this.id,
@@ -152,21 +156,29 @@ class BattleItem {
     required this.participants,
     required this.totalPlayers,
     required this.maxPlayers,
-    required this.timeRemainingSeconds,
-    required this.totalDurationSeconds,
+    this.timeRemainingSeconds = 0,
+    this.totalDurationSeconds = 0,
     required this.entryFee,
     required this.prizePool,
     this.roomName,
     this.roomCode,
-    this.currentQuestion = 1,
-    this.totalQuestions = 5,
+    this.currentQuestion = 0,
+    this.totalQuestions = 0,
     required this.createdAt,
+    this.completedAt,
+    this.creatorId,
+    this.opponentId,
+    this.winnerId,
   });
 
   String get formattedTimeLeft {
-    final m = (timeRemainingSeconds ~/ 60).toString().padLeft(2, '0');
-    final s = (timeRemainingSeconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
+    final secs = timeRemainingSeconds > 0
+        ? timeRemainingSeconds
+        : (completedAt ?? DateTime.now()).difference(createdAt).inSeconds.clamp(0, 86400);
+    final h = secs ~/ 3600;
+    final m = ((secs % 3600) ~/ 60).toString().padLeft(2, '0');
+    final s = (secs % 60).toString().padLeft(2, '0');
+    return h > 0 ? '$h:$m:$s' : '$m:$s';
   }
 
   BattleItem copyWith({
@@ -188,6 +200,10 @@ class BattleItem {
     int? currentQuestion,
     int? totalQuestions,
     DateTime? createdAt,
+    DateTime? completedAt,
+    String? creatorId,
+    String? opponentId,
+    String? winnerId,
   }) {
     return BattleItem(
       id: id ?? this.id,
@@ -208,6 +224,10 @@ class BattleItem {
       currentQuestion: currentQuestion ?? this.currentQuestion,
       totalQuestions: totalQuestions ?? this.totalQuestions,
       createdAt: createdAt ?? this.createdAt,
+      completedAt: completedAt ?? this.completedAt,
+      creatorId: creatorId ?? this.creatorId,
+      opponentId: opponentId ?? this.opponentId,
+      winnerId: winnerId ?? this.winnerId,
     );
   }
 }
@@ -263,6 +283,7 @@ class OngoingRoomItem {
 class PlayerBattleRecord {
   final String id;
   final String username;
+  final String email;
   final String avatarUrl;
   final String rank;
   final int totalBattles;
@@ -270,12 +291,15 @@ class PlayerBattleRecord {
   final int losses;
   final int winRate;
   final int coins;
-  final String status; // active, restricted, suspended
+  final String status; // active, suspended, banned (matches profiles.status CHECK)
+  final String? banReason;
+  final DateTime? banUntil;
   final DateTime joinedAt;
 
   const PlayerBattleRecord({
     required this.id,
     required this.username,
+    this.email = '',
     required this.avatarUrl,
     required this.rank,
     required this.totalBattles,
@@ -284,12 +308,15 @@ class PlayerBattleRecord {
     required this.winRate,
     required this.coins,
     required this.status,
+    this.banReason,
+    this.banUntil,
     required this.joinedAt,
   });
 
   PlayerBattleRecord copyWith({
     String? id,
     String? username,
+    String? email,
     String? avatarUrl,
     String? rank,
     int? totalBattles,
@@ -298,11 +325,14 @@ class PlayerBattleRecord {
     int? winRate,
     int? coins,
     String? status,
+    String? banReason,
+    DateTime? banUntil,
     DateTime? joinedAt,
   }) {
     return PlayerBattleRecord(
       id: id ?? this.id,
       username: username ?? this.username,
+      email: email ?? this.email,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       rank: rank ?? this.rank,
       totalBattles: totalBattles ?? this.totalBattles,
@@ -311,6 +341,8 @@ class PlayerBattleRecord {
       winRate: winRate ?? this.winRate,
       coins: coins ?? this.coins,
       status: status ?? this.status,
+      banReason: banReason ?? this.banReason,
+      banUntil: banUntil ?? this.banUntil,
       joinedAt: joinedAt ?? this.joinedAt,
     );
   }
@@ -342,6 +374,36 @@ class BattleSettingsData {
     this.speedCheckThreshold = 1.2,
     this.maintenanceMode = false,
   });
+
+  Map<String, dynamic> toJson() => {
+        'matchmakingTimeout': matchmakingTimeout,
+        'botAccuracy': botAccuracy,
+        'botFallback': botFallback,
+        'minEntryFee': minEntryFee,
+        'maxEntryFee': maxEntryFee,
+        'prizeMultiplier': prizeMultiplier,
+        'defaultQuestions': defaultQuestions,
+        'defaultQuestionTime': defaultQuestionTime,
+        'maxRoomCapacity': maxRoomCapacity,
+        'speedCheckThreshold': speedCheckThreshold,
+        'maintenanceMode': maintenanceMode,
+      };
+
+  factory BattleSettingsData.fromJson(Map<String, dynamic> json) {
+    return BattleSettingsData(
+      matchmakingTimeout: (json['matchmakingTimeout'] as num?)?.toInt() ?? 10,
+      botAccuracy: (json['botAccuracy'] as num?)?.toDouble() ?? 0.65,
+      botFallback: json['botFallback'] as bool? ?? true,
+      minEntryFee: (json['minEntryFee'] as num?)?.toInt() ?? 10,
+      maxEntryFee: (json['maxEntryFee'] as num?)?.toInt() ?? 500,
+      prizeMultiplier: (json['prizeMultiplier'] as num?)?.toDouble() ?? 1.8,
+      defaultQuestions: (json['defaultQuestions'] as num?)?.toInt() ?? 5,
+      defaultQuestionTime: (json['defaultQuestionTime'] as num?)?.toInt() ?? 10,
+      maxRoomCapacity: (json['maxRoomCapacity'] as num?)?.toInt() ?? 100,
+      speedCheckThreshold: (json['speedCheckThreshold'] as num?)?.toDouble() ?? 1.2,
+      maintenanceMode: json['maintenanceMode'] as bool? ?? false,
+    );
+  }
 
   BattleSettingsData copyWith({
     int? matchmakingTimeout,

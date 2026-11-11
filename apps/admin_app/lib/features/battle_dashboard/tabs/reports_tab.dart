@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
 import '../services/battle_dashboard_service.dart';
 
@@ -29,10 +30,25 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
     if (mounted) setState(() {});
   }
 
-  void _exportCSV() {
+  Future<void> _exportCSV(BattleReportSummary summary) async {
+    if (summary.filteredBattles.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No battle records in selected period to export.'),
+          backgroundColor: AppColors.textSecondary,
+        ),
+      );
+      return;
+    }
+
+    final csv = _service.buildCsvReport(_timeRange);
+    await Clipboard.setData(ClipboardData(text: csv));
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Downloading battle_report_2026.csv... Export successful!'),
+      SnackBar(
+        content: Text(
+          'Copied CSV report (${summary.filteredBattles.length} matches) to clipboard.',
+        ),
         backgroundColor: AppColors.brandGreen,
       ),
     );
@@ -40,6 +56,12 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final summary = _service.buildReportSummary(_timeRange);
+    final total = summary.totalMatches;
+    final oneVOneRatio = total == 0 ? 0.0 : summary.oneVsOneMatches / total;
+    final multiRatio = total == 0 ? 0.0 : summary.multiplayerMatches / total;
+    final roomsRatio = total == 0 ? 0.0 : summary.customRoomsCount / total;
+
     return SingleChildScrollView(
       padding: AppSpacing.pagePadding(context),
       child: Column(
@@ -48,25 +70,27 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
           // 1. HEADER BAR
           Row(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Battle Analytics & Performance Reports',
-                    style: AppTypography.headingSmall.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Battle Analytics & Performance Reports',
+                      style: AppTypography.headingSmall.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Evaluate battle engagement, revenue commissions, coin sinks and retention velocity',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      'Computed directly from live Supabase battles, wallet payouts and audit logs',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
-              // Range Filter
+              const SizedBox(width: 16),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
@@ -85,17 +109,20 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                       DropdownMenuItem(value: 'Today', child: Text('Today')),
                       DropdownMenuItem(value: 'Last 7 Days', child: Text('Last 7 Days')),
                       DropdownMenuItem(value: 'Last 30 Days', child: Text('Last 30 Days')),
+                      DropdownMenuItem(value: 'All Time', child: Text('All Time')),
                     ],
-                    onChanged: (v) => setState(() => _timeRange = v!),
+                    onChanged: (v) {
+                      if (v != null) setState(() => _timeRange = v);
+                    },
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               ElevatedButton.icon(
-                onPressed: _exportCSV,
-                icon: const Icon(Icons.download_rounded, size: 16),
+                onPressed: () => _exportCSV(summary),
+                icon: const Icon(Icons.copy_all_rounded, size: 16),
                 label: Text(
-                  'Export CSV',
+                  'Copy CSV',
                   style: AppTypography.labelSmall.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textOnPrimary,
@@ -129,42 +156,35 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                   AdminMetricCard(
                     width: cardWidth,
                     title: 'Total Matches Hosted',
-                    value: _timeRange == 'Today' ? '3,802' : '28,490',
-                    growth: '+24%',
-                    subtitle: 'Across all modes',
+                    value: '${summary.totalMatches}',
+                    subtitle: 'In $_timeRange',
                     icon: Icons.sports_kabaddi_rounded,
                     color: AppColors.battleAdminPurple,
-                    sparklineData: const [10, 14, 18, 22, 28, 32, 40],
+                    sparklineData: _service.sevenDayBattlesSparkline,
                   ),
                   AdminMetricCard(
                     width: cardWidth,
                     title: 'Total Coin Volume',
-                    value: _timeRange == 'Today' ? '184,200' : '1,420,500',
-                    growth: '+19%',
-                    subtitle: 'Wagered coins',
+                    value: '${summary.totalCoinVolume}',
+                    subtitle: 'Combined entry stakes',
                     icon: Icons.monetization_on_rounded,
                     color: AppColors.coinGold,
-                    sparklineData: const [20, 24, 22, 28, 35, 42, 48],
                   ),
                   AdminMetricCard(
                     width: cardWidth,
-                    title: 'Platform Rake (15%)',
-                    value: _timeRange == 'Today' ? '27,630 Coins' : '213,075 Coins',
-                    growth: '+18%',
-                    subtitle: 'Platform revenue',
+                    title: 'Estimated Net Rake',
+                    value: '${summary.platformRakeCoins} Coins',
+                    subtitle: 'Entry pot minus payouts/refunds',
                     icon: Icons.trending_up_rounded,
                     color: AppColors.brandGreen,
-                    sparklineData: const [18, 22, 26, 30, 36, 40, 42],
                   ),
                   AdminMetricCard(
                     width: cardWidth,
                     title: 'Completion Rate',
-                    value: '98.4%',
-                    growth: '+1.2%',
-                    subtitle: 'Completed games',
+                    value: '${summary.completionRatePct.toStringAsFixed(1)}%',
+                    subtitle: 'Of closed battles',
                     icon: Icons.check_circle_outline_rounded,
                     color: AppColors.brandBlue,
-                    sparklineData: const [95, 96, 96.5, 97, 97.8, 98.1, 98.4],
                   ),
                 ],
               );
@@ -199,18 +219,33 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                         ),
                       ),
                       const SizedBox(height: 18),
-                      _buildDistributionBar('1 vs 1 Battles', 0.65, '65% (18,518 Matches)', AppColors.battleAdminPurple),
+                      _buildDistributionBar(
+                        '1 vs 1 Battles',
+                        oneVOneRatio,
+                        '${(oneVOneRatio * 100).round()}% (${summary.oneVsOneMatches} Matches)',
+                        AppColors.battleAdminPurple,
+                      ),
                       const SizedBox(height: 14),
-                      _buildDistributionBar('Multiplayer Competitions', 0.23, '23% (6,552 Matches)', AppColors.coinGold),
+                      _buildDistributionBar(
+                        'Multiplayer Competitions',
+                        multiRatio,
+                        '${(multiRatio * 100).round()}% (${summary.multiplayerMatches} Matches)',
+                        AppColors.coinGold,
+                      ),
                       const SizedBox(height: 14),
-                      _buildDistributionBar('Custom User Rooms', 0.12, '12% (3,420 Rooms)', AppColors.brandBlue),
+                      _buildDistributionBar(
+                        'Custom User Rooms',
+                        roomsRatio,
+                        '${(roomsRatio * 100).round()}% (${summary.customRoomsCount} Rooms)',
+                        AppColors.brandBlue,
+                      ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(width: 20),
 
-              // Hourly Traffic
+              // Peak Battle Hours
               Expanded(
                 flex: 4,
                 child: Container(
@@ -225,7 +260,7 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Peak Battle Hours',
+                        'Peak Battle Hours ($_timeRange)',
                         style: AppTypography.headingSmall.copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
@@ -233,11 +268,30 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _buildPeakHour('12:00 PM - 02:00 PM', 'High Activity (Lunch Hour)', AppColors.brandGreen),
-                      const SizedBox(height: 10),
-                      _buildPeakHour('06:00 PM - 10:00 PM', 'Prime Peak Traffic (Evening Clashes)', AppColors.battleAdminPurple),
-                      const SizedBox(height: 10),
-                      _buildPeakHour('10:00 PM - 12:00 AM', 'Late Night Tournament Rush', AppColors.warning),
+                      if (summary.topPeakWindows.isEmpty)
+                        Text(
+                          'No battle timestamps recorded in $_timeRange.',
+                          style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                        )
+                      else
+                        ...summary.topPeakWindows.asMap().entries.map((entry) {
+                          final colors = [
+                            AppColors.battleAdminPurple,
+                            AppColors.brandGreen,
+                            AppColors.warning,
+                          ];
+                          final w = entry.value;
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              bottom: entry.key == summary.topPeakWindows.length - 1 ? 0 : 10,
+                            ),
+                            child: _buildPeakHour(
+                              w.windowLabel,
+                              '${w.matchCount} battle${w.matchCount == 1 ? '' : 's'} started',
+                              colors[entry.key % colors.length],
+                            ),
+                          );
+                        }),
                     ],
                   ),
                 ),
@@ -263,7 +317,7 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                     const Icon(Icons.history_edu_rounded, color: AppColors.battleAdminPurple, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Administrative Audit Log (Real-time)',
+                      'Administrative Audit Log (Persisted in Supabase)',
                       style: AppTypography.headingSmall.copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -273,13 +327,12 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                   ],
                 ),
                 const SizedBox(height: 16),
-
                 if (_service.auditLogs.isEmpty)
                   Container(
                     padding: const EdgeInsets.all(24),
                     alignment: Alignment.center,
                     child: Text(
-                      'No administrative overrides recorded yet in this session.',
+                      'No administrative actions recorded yet.',
                       style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
                     ),
                   )
@@ -287,7 +340,7 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _service.auditLogs.length.clamp(0, 5),
+                    itemCount: _service.auditLogs.length.clamp(0, 10),
                     separatorBuilder: (_, _) => const Divider(height: 16, color: AppColors.borderSubtle),
                     itemBuilder: (context, idx) {
                       final log = _service.auditLogs[idx];
@@ -300,7 +353,7 @@ class _BattleReportsTabState extends State<BattleReportsTab> {
                               borderRadius: AppRadii.badge,
                             ),
                             child: Text(
-                              log['time'] as String? ?? 'Just now',
+                              log['time'] as String? ?? 'Recorded',
                               style: AppTypography.captionBold.copyWith(
                                 fontSize: 10,
                                 color: AppColors.battleAdminPurple,

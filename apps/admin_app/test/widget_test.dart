@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:design_system/design_system.dart';
+import 'package:design_system/design_system.dart' hide BattleType;
 import 'package:data_layer/data_layer.dart';
 import 'package:admin_app/main.dart';
 import 'package:admin_app/features/overview/overview_tab.dart';
 import 'package:admin_app/features/tests/tests_tab.dart';
 import 'package:admin_app/features/tests/models/test_series_item.dart';
 import 'package:admin_app/features/tests/widgets/subject_wise_chart_card.dart';
+import 'package:admin_app/features/battle_dashboard/battle_dashboard_tab.dart';
+import 'package:admin_app/features/battle_dashboard/models/battle_dashboard_models.dart';
+import 'package:admin_app/features/battle_dashboard/services/battle_dashboard_service.dart';
 
 void main() {
   testWidgets('QuizMaster Admin App renders header, welcome banner, and metrics', (WidgetTester tester) async {
@@ -295,7 +298,7 @@ void main() {
     expect(find.text('Authorized Access Only'), findsOneWidget);
   });
 
-  testWidgets('AdminLoginScreen sign in navigates to dashboard and sign out returns to login', (WidgetTester tester) async {
+  testWidgets('AdminLoginScreen blocks hardcoded bypass when offline and sign out returns to login', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -307,26 +310,40 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify on login screen
+    // Verify on login screen with empty (no hardcoded) input controllers
     expect(find.text('Sign In to Admin Panel'), findsOneWidget);
+    final textFields = find.byType(TextFormField);
+    expect(tester.widget<TextFormField>(textFields.at(0)).controller?.text, isEmpty);
+    expect(tester.widget<TextFormField>(textFields.at(1)).controller?.text, isEmpty);
 
-    // Tap Sign In button
+    // Enter credentials and submit while Supabase is uninitialized
+    await tester.enterText(textFields.at(0), 'rankearnhelp@gmail.com');
+    await tester.enterText(textFields.at(1), '123456');
     await tester.tap(find.text('Sign In to Admin Panel'));
-    await tester.pump();
     await tester.pumpAndSettle();
 
-    // Verify transitioned to Admin Dashboard
-    expect(find.text('Admin User'), findsOneWidget);
-    expect(find.text('Quiz Attempts Overview'), findsOneWidget);
+    // Verify honest error instead of hardcoded bypass
+    expect(
+      find.text('Database connection is not initialized. Please check Supabase configuration.'),
+      findsOneWidget,
+    );
+    expect(find.text('Sign In to Admin Panel'), findsOneWidget);
 
-    // Sign out to verify return to login screen
+    // Verify Sign Out returns to login screen from an active session
+    await tester.pumpWidget(
+      const ProviderScope(
+        key: ValueKey('logged_in_app'),
+        child: RankearnAdminApp(startLoggedIn: true),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Admin User'), findsOneWidget);
     await tester.tap(find.text('Admin User'));
     await tester.pumpAndSettle();
     expect(find.text('Sign Out'), findsOneWidget);
     await tester.tap(find.text('Sign Out'));
     await tester.pumpAndSettle();
 
-    // Verified back on login screen
     expect(find.text('Sign In to Admin Panel'), findsOneWidget);
   });
 
@@ -1356,6 +1373,169 @@ void main() {
     await tester.tap(find.text('Close Ledger'));
     await tester.pumpAndSettle();
     expect(find.text('Authoritative Spin & Reward Ledger'), findsNothing);
+  });
+
+  testWidgets('BattleDashboardTab shows honest offline state with zero mock data', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final service = BattleDashboardService();
+    addTearDown(service.resetForTest);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: BattleDashboardTab(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Supabase Offline'), findsOneWidget);
+    expect(find.text('Database connection is not initialized.'), findsOneWidget);
+    expect(find.text('No battle participant activity in last 7 days'), findsOneWidget);
+    // Ensure old hardcoded mock numbers never appear
+    expect(find.text('12,840'), findsNothing);
+    expect(find.text('8,742 Live'), findsNothing);
+    expect(find.text('3,120'), findsNothing);
+  });
+
+  testWidgets('BattleDashboardTab renders populated live battle records, players, and reports accurately', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final service = BattleDashboardService();
+    addTearDown(service.resetForTest);
+
+    final now = DateTime.now();
+    service.configureForTest(
+      hasDbConnection: true,
+      hasPersistedSettings: true,
+      battleQuestionsCount: 42,
+      questionTopicCounts: const {'General Science': 24, 'Mathematics': 18},
+      settings: const BattleSettingsData(
+        matchmakingTimeout: 15,
+        prizeMultiplier: 1.8,
+        maintenanceMode: false,
+      ),
+      battles: [
+        BattleItem(
+          id: 'btl_prod_1',
+          title: 'Riya vs Kabir',
+          type: BattleType.oneVOne,
+          status: BattleStatus.live,
+          subject: 'Mixed Topics',
+          category: '1 vs 1 Arena',
+          participants: const [
+            BattleParticipant(id: 'u1', name: 'Riya Verma', avatarUrl: '', score: 40, rank: 1),
+            BattleParticipant(id: 'u2', name: 'Kabir Sen', avatarUrl: '', score: 20, rank: 2),
+          ],
+          totalPlayers: 2,
+          maxPlayers: 2,
+          entryFee: 50,
+          prizePool: 90,
+          createdAt: now.subtract(const Duration(minutes: 4)),
+          creatorId: 'u1',
+          opponentId: 'u2',
+        ),
+        BattleItem(
+          id: 'btl_prod_2',
+          title: 'Arjun (Queue)',
+          type: BattleType.oneVOne,
+          status: BattleStatus.completed,
+          subject: 'Mixed Topics',
+          category: '1 vs 1 Arena',
+          participants: const [
+            BattleParticipant(id: 'u3', name: 'Arjun Nair', avatarUrl: '', score: 50, rank: 1),
+            BattleParticipant(id: 'u2', name: 'Kabir Sen', avatarUrl: '', score: 30, rank: 2),
+          ],
+          totalPlayers: 2,
+          maxPlayers: 2,
+          entryFee: 20,
+          prizePool: 36,
+          createdAt: now.subtract(const Duration(hours: 2)),
+          completedAt: now.subtract(const Duration(hours: 1, minutes: 56)),
+          creatorId: 'u3',
+          opponentId: 'u2',
+          winnerId: 'u3',
+        ),
+      ],
+      players: [
+        PlayerBattleRecord(
+          id: 'u3',
+          username: 'Arjun Nair',
+          avatarUrl: '',
+          rank: '#1',
+          totalBattles: 1,
+          wins: 1,
+          losses: 0,
+          winRate: 100,
+          coins: 520,
+          status: 'active',
+          joinedAt: now,
+        ),
+        PlayerBattleRecord(
+          id: 'u1',
+          username: 'Riya Verma',
+          avatarUrl: '',
+          rank: '#2',
+          totalBattles: 1,
+          wins: 0,
+          losses: 0,
+          winRate: 0,
+          coins: 310,
+          status: 'active',
+          joinedAt: now,
+        ),
+      ],
+      auditLogs: const [
+        {
+          'time': '2026-11-11 20:00',
+          'action': 'Battle Created',
+          'details': 'Created 1v1 battle btl_prod_1 (fee: 50 coins)',
+        },
+      ],
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: BattleDashboardTab(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Supabase Live'), findsOneWidget);
+    expect(find.text('btl_prod_1'), findsOneWidget);
+    expect(find.text('42'), findsOneWidget); // Question Bank count
+    expect(find.text('100%'), findsOneWidget); // Completion rate (1 completed / 0 cancelled)
+
+    // Switch to 1 vs 1 Battles tab
+    await tester.tap(find.text('1 vs 1 Battles').first);
+    await tester.pumpAndSettle();
+    expect(find.text('1 vs 1 Battle Management'), findsOneWidget);
+    expect(find.text('Riya Verma'), findsWidgets);
+
+    // Switch to Players tab
+    await tester.tap(find.text('Players').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Arjun Nair'), findsOneWidget);
+    expect(find.text('520 Coins'), findsOneWidget);
+
+    // Switch to Reports tab
+    await tester.tap(find.text('Reports').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Battle Analytics & Performance Reports'), findsOneWidget);
+    expect(find.text('140'), findsOneWidget); // 50*2 + 20*2 coin volume
+    expect(find.text('Battle Created'), findsOneWidget);
+
+    // Switch to Settings tab
+    await tester.tap(find.text('Settings').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Synced with app_configs'), findsOneWidget);
   });
 }
 

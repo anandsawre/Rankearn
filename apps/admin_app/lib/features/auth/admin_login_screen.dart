@@ -26,8 +26,8 @@ class AdminLoginScreen extends StatefulWidget {
 
 class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'admin@rankearn.com');
-  final _passwordController = TextEditingController(text: 'Admin@Rankearn2026');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _rememberMe = true;
@@ -53,50 +53,53 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
-      // Check if this is the master platform admin credentials
-      final isMasterAdminCredentials =
-          (email.toLowerCase() == 'admin@rankearn.com' || email.toLowerCase().contains('admin')) &&
-          (password == 'Admin@Rankearn2026' || (email.toLowerCase().contains('admin') && password.length >= 6));
-
       final client = SupabaseConfig.clientSafe;
-      if (isMasterAdminCredentials) {
-        // Authenticate verified master admin directly without triggering an HTTP 400
-        // in browser devtools caused by Supabase cloud's unconfirmed mock email requirement
-        await Future.delayed(const Duration(milliseconds: 300));
-      } else if (client != null) {
-        // 1. Authenticate custom admin account with Supabase Auth
-        final authRes = await client.auth.signInWithPassword(
-          email: email,
-          password: password,
-        );
+      if (client == null) {
+        throw 'Database connection is not initialized. Please check Supabase configuration.';
+      }
 
-        final user = authRes.user;
-        if (user == null) {
-          throw 'Authentication failed: Invalid credentials provided.';
-        }
+      // 1. Authenticate admin account strictly with Supabase Auth
+      final authRes = await client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
 
-        // 2. Server-Side Role Authorization Check
-        final roleCheck = await client
+      final user = authRes.user;
+      if (user == null) {
+        throw 'Authentication failed: Invalid credentials provided.';
+      }
+
+      // 2. Server-Side Role Authorization Check via public.user_roles & is_admin() RPC
+      Map<String, dynamic>? roleCheck;
+      try {
+        roleCheck = await client
             .from('user_roles')
             .select('role')
             .eq('user_id', user.id)
             .eq('role', 'admin')
             .maybeSingle();
+      } catch (_) {}
 
-        final isAdmin = roleCheck != null ||
-            user.appMetadata['role'] == 'admin' ||
-            user.userMetadata?['role'] == 'admin';
+      bool rpcIsAdmin = false;
+      if (roleCheck == null) {
+        try {
+          final rpcRes = await client.rpc('is_admin');
+          rpcIsAdmin = rpcRes == true;
+        } catch (_) {}
+      }
 
-        if (!isAdmin) {
-          await client.auth.signOut();
-          throw 'Access Denied: Your account does not have administrator privileges.';
-        }
-      } else {
-        // Fallback for preview / demo environment without active network credentials
-        await Future.delayed(const Duration(milliseconds: 400));
-        if (password.length < 6) {
-          throw 'Password must be at least 6 characters.';
-        }
+      final appRole = user.appMetadata['role']?.toString().toLowerCase();
+      final userRole = user.userMetadata?['role']?.toString().toLowerCase();
+      final isAdmin = roleCheck != null ||
+          rpcIsAdmin ||
+          appRole == 'admin' ||
+          appRole == 'super_admin' ||
+          userRole == 'admin' ||
+          userRole == 'super_admin';
+
+      if (!isAdmin) {
+        await client.auth.signOut();
+        throw 'Access Denied: Your account does not have administrator privileges.';
       }
 
       if (mounted) {

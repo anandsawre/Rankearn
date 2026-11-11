@@ -1,67 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
-import '../services/battle_dashboard_service.dart';
+import 'create_battle_dialog.dart';
 
-class CreateRoomDialog extends StatefulWidget {
+class CreateRoomDialog extends StatelessWidget {
   const CreateRoomDialog({super.key});
-
-  @override
-  State<CreateRoomDialog> createState() => _CreateRoomDialogState();
-}
-
-class _CreateRoomDialogState extends State<CreateRoomDialog> {
-  final _nameController = TextEditingController(text: 'Railway Aspirants Tech Hub');
-  final _descController = TextEditingController(text: 'General Science & Reasoning battle group for RRB preparation');
-  final _passwordController = TextEditingController();
-  final String _roomCode = 'RM${(10000 + (DateTime.now().millisecondsSinceEpoch % 90000))}';
-
-  String _subject = 'Mathematics';
-  int _maxPlayers = 24;
-  int _entryFee = 15;
-  int _reward = 320;
-  bool _isPrivate = false;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  void _handleDeploy() {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) return;
-
-    BattleDashboardService().createNewRoom(
-      name: name,
-      code: _roomCode,
-      subject: _subject,
-      maxPlayers: _maxPlayers,
-      entryFee: _entryFee,
-      reward: _reward,
-      isPrivate: _isPrivate,
-      password: _isPrivate ? _passwordController.text.trim() : null,
-    );
-
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Room "$name" ($_roomCode) published!'),
-        backgroundColor: AppColors.brandGreen,
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return AppModalDialog(
-      title: 'Create Custom Battle Room',
-      subtitle: 'Configure custom room rules, code & access permissions',
+      title: 'Custom Battle Rooms',
+      subtitle: 'Supabase schema capability check',
       iconData: Icons.meeting_room_rounded,
-      gradientColors: const [AppColors.battleAdminPurpleSecondary, AppColors.battleAdminPurple],
-      maxWidth: 620,
-      scrollable: true,
+      gradientColors: const [
+        AppColors.battleAdminPurpleSecondary,
+        AppColors.battleAdminPurple,
+      ],
+      maxWidth: 480,
       actions: [
         OutlinedButton(
           onPressed: () => Navigator.pop(context),
@@ -70,265 +24,61 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
           ),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+          child: const Text(
+            'Close',
+            style: TextStyle(
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.w600,
+              fontSize: 12.5,
+            ),
+          ),
         ),
         const SizedBox(width: 10),
         ElevatedButton(
-          onPressed: _handleDeploy,
+          onPressed: () {
+            Navigator.pop(context);
+            AppModalDialog.show(
+              context: context,
+              builder: (_) => const CreateBattleDialog(),
+            );
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.battleAdminPurple,
             foregroundColor: AppColors.textOnPrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
           ),
-          child: const Text('Deploy Arena Room', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
+          child: const Text(
+            'Create 1v1 Battle Instead',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+          ),
         ),
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Room Name & Code
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Room Name', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      height: 40,
-                      child: TextField(
-                        controller: _nameController,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(fontSize: 12.5),
-                        decoration: _inputDecoration('e.g., RRB-Tech Practice'),
-                      ),
-                    ),
-                  ],
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.brandBlueLight,
+          borderRadius: AppRadii.borderMd,
+          border: Border.all(color: AppColors.brandBlue.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline_rounded, color: AppColors.brandBlueDark, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Custom battle rooms are not backed by a database table in the current Supabase schema (public.battles only provisions 1 vs 1 duels). Add a battle_rooms migration before deploying room creation.',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.brandBlueDark,
+                  height: 1.45,
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text('Code', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                          decoration: BoxDecoration(color: AppColors.brandPurpleLight, borderRadius: BorderRadius.circular(4)),
-                          child: const Text('Auto', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.battleAdminPurple)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      height: 40,
-                      child: TextFormField(
-                        initialValue: _roomCode,
-                        readOnly: true,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.battleAdminPurple),
-                        decoration: _inputDecoration('').copyWith(
-                          fillColor: AppColors.brandPurpleLight,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Description
-          const Text('Room Description', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 40,
-            child: TextField(
-              controller: _descController,
-              textAlignVertical: TextAlignVertical.center,
-              style: const TextStyle(fontSize: 12.5),
-              decoration: _inputDecoration('Describe tournament guidelines or audience...'),
             ),
-          ),
-          const SizedBox(height: 16),
-
-          // Subject & Capacity
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Subject', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      height: 40,
-                      child: AppDropdown<String>(
-                        height: 40,
-                        value: _subject,
-                        items: const [
-                          AppDropdownItem(value: 'Mathematics', label: 'Mathematics'),
-                          AppDropdownItem(value: 'General Science', label: 'General Science'),
-                          AppDropdownItem(value: 'Reasoning', label: 'Reasoning'),
-                          AppDropdownItem(value: 'General Awareness', label: 'General Awareness'),
-                          AppDropdownItem(value: 'Mixed (All)', label: 'Mixed (All)'),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) setState(() => _subject = v);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Max Participants', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      height: 40,
-                      child: TextFormField(
-                        initialValue: _maxPlayers.toString(),
-                        keyboardType: TextInputType.number,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(fontSize: 12.5),
-                        decoration: _inputDecoration(''),
-                        onChanged: (v) {
-                          final num = int.tryParse(v) ?? 20;
-                          setState(() {
-                            _maxPlayers = num;
-                            _reward = (_entryFee * num * 0.85).toInt();
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Entry fee & reward
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Entry Fee (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
-                      const SizedBox(height: 6),
-                      SizedBox(
-                        height: 40,
-                        child: TextFormField(
-                          initialValue: _entryFee.toString(),
-                          keyboardType: TextInputType.number,
-                          textAlignVertical: TextAlignVertical.center,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-                          decoration: _inputDecoration('').copyWith(
-                            prefixIcon: const Icon(Icons.monetization_on_rounded, color: AppColors.warning, size: 18),
-                          ),
-                          onChanged: (v) {
-                            final f = int.tryParse(v) ?? 10;
-                            setState(() {
-                              _entryFee = f;
-                              _reward = (f * _maxPlayers * 0.85).toInt();
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Prize Pool (Coins)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
-                      const SizedBox(height: 6),
-                      SizedBox(
-                        height: 40,
-                        child: TextFormField(
-                          key: ValueKey(_reward),
-                          initialValue: _reward.toString(),
-                          keyboardType: TextInputType.number,
-                          textAlignVertical: TextAlignVertical.center,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.brandGreen),
-                          decoration: _inputDecoration('').copyWith(
-                            prefixIcon: const Icon(Icons.emoji_events_rounded, color: AppColors.brandGreen, size: 18),
-                          ),
-                          onChanged: (v) => setState(() => _reward = int.tryParse(v) ?? 50),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Access Type (Public vs Private)
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
-            ),
-            child: Column(
-              children: [
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  value: _isPrivate,
-                  activeColor: AppColors.battleAdminPurple,
-                  onChanged: (val) => setState(() => _isPrivate = val ?? false),
-                  title: const Text('Require Password / PIN to Join', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
-                  subtitle: const Text('Only users with passcode can enter this arena', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                ),
-                if (_isPrivate) ...[
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 40,
-                    child: TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      textAlignVertical: TextAlignVertical.center,
-                      style: const TextStyle(fontSize: 12.5),
-                      decoration: _inputDecoration('Enter 4-6 digit passcode'),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-
-  InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: AppColors.battleAdminPurple);
 }

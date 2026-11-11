@@ -120,27 +120,56 @@ class _BattleRoomsTabState extends State<BattleRoomsTab> {
           ),
           const SizedBox(height: 20),
 
-          // 2. HEADER BAR (Title, Search, Create Room Button)
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Custom Room Management',
-                    style: AppTypography.headingSmall.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+          // 2. SCHEMA STATUS NOTICE
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.brandBlueLight,
+              borderRadius: AppRadii.borderMd,
+              border: Border.all(color: AppColors.brandBlue.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.brandBlueDark),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Custom battle rooms require a battle_rooms table in Supabase (currently only 1 vs 1 battles are provisioned in public.battles).',
+                    style: AppTypography.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.brandBlueDark,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Inspect active public and private custom rooms, participant thresholds and room lifecycle',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 3. HEADER BAR (Title, Search, Create Room Button)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Custom Room Management',
+                      style: AppTypography.headingSmall.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Inspect active public and private custom rooms, participant thresholds and room lifecycle',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 16),
               // Search Input
               SizedBox(
                 width: 240,
@@ -446,17 +475,17 @@ class _BattleRoomsTabState extends State<BattleRoomsTab> {
           // Actions
           IconButton(
             icon: const Icon(Icons.delete_outline_rounded, color: AppColors.liveRed, size: 20),
-            tooltip: 'Clear & Close Room',
+            tooltip: 'Cancel Room',
             onPressed: () {
               AppModalDialog.show(
                 context: context,
                 builder: (_) => ConfirmActionDialog(
-                  title: 'Clear Room "${r.name}" (${r.code})?',
-                  description: 'This will eject all participants, close the room, and log the action in audit records.',
-                  confirmLabel: 'Clear Room',
+                  title: 'Cancel Room "${r.name}" (${r.code})?',
+                  description: 'Cancel open battles associated with this room.',
+                  confirmLabel: 'Cancel Room',
                   isDestructive: true,
                   onConfirm: (reason) async {
-                    _service.clearAllRooms(reason);
+                    await _service.cancelSingleBattle(r.id, reason);
                   },
                 ),
               );

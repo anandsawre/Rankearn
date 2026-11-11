@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../models/battle_dashboard_models.dart';
 import '../services/battle_dashboard_service.dart';
+import '../widgets/battle_player_avatar.dart';
 import '../dialogs/confirm_action_dialog.dart';
 
 class BattlePlayersTab extends StatefulWidget {
@@ -14,7 +15,7 @@ class BattlePlayersTab extends StatefulWidget {
 class _BattlePlayersTabState extends State<BattlePlayersTab> {
   final _service = BattleDashboardService();
   String _search = '';
-  String _statusFilter = 'All'; // 'All', 'Active', 'Restricted', 'Suspended'
+  String _statusFilter = 'All'; // 'All', 'Active', 'Suspended', 'Banned'
 
   @override
   void initState() {
@@ -36,13 +37,13 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
   Widget build(BuildContext context) {
     final allPlayers = _service.players;
     final activeCount = allPlayers.where((p) => p.status == 'active').length;
-    final restrictedCount = allPlayers.where((p) => p.status == 'restricted').length;
     final suspendedCount = allPlayers.where((p) => p.status == 'suspended').length;
+    final bannedCount = allPlayers.where((p) => p.status == 'banned').length;
 
     final filtered = allPlayers.where((p) {
       if (_statusFilter == 'Active' && p.status != 'active') return false;
-      if (_statusFilter == 'Restricted' && p.status != 'restricted') return false;
       if (_statusFilter == 'Suspended' && p.status != 'suspended') return false;
+      if (_statusFilter == 'Banned' && p.status != 'banned') return false;
 
       if (_search.isNotEmpty) {
         final q = _search.toLowerCase();
@@ -93,9 +94,9 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
                     width: cardWidth,
                   ),
                   AdminMetricCard(
-                    title: 'Restricted Players',
-                    value: '$restrictedCount',
-                    subtitle: 'Under 24h duel restrictions',
+                    title: 'Suspended Players',
+                    value: '$suspendedCount',
+                    subtitle: 'Timed battle restrictions',
                     icon: Icons.warning_amber_rounded,
                     color: AppColors.warning,
                     iconBgColor: AppColors.coinGoldLight,
@@ -103,9 +104,9 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
                     width: cardWidth,
                   ),
                   AdminMetricCard(
-                    title: 'Suspended Accounts',
-                    value: '$suspendedCount',
-                    subtitle: 'Flagged for integrity review',
+                    title: 'Banned Accounts',
+                    value: '$bannedCount',
+                    subtitle: 'Locked from participation',
                     icon: Icons.block_rounded,
                     color: AppColors.liveRed,
                     iconBgColor: AppColors.liveRedLight,
@@ -121,24 +122,27 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
           // 2. HEADER BAR (Title, Search)
           Row(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Player Management & Moderation',
-                    style: AppTypography.headingSmall.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Player Management & Moderation',
+                      style: AppTypography.headingSmall.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Audit player win rates, duel ratings, disciplinary restrictions and account suspension',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      'Audit player win rates, duel rankings, and Supabase account moderation status',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 16),
               SizedBox(
                 width: 250,
                 child: TextField(
@@ -177,9 +181,9 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
               const SizedBox(width: 8),
               _buildFilterPill('Active', activeCount),
               const SizedBox(width: 8),
-              _buildFilterPill('Restricted', restrictedCount),
-              const SizedBox(width: 8),
               _buildFilterPill('Suspended', suspendedCount),
+              const SizedBox(width: 8),
+              _buildFilterPill('Banned', bannedCount),
             ],
           ),
           const SizedBox(height: 18),
@@ -255,7 +259,7 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
     if (p.status == 'active') {
       statusBg = AppColors.brandGreenLight;
       statusFg = AppColors.brandGreenDark;
-    } else if (p.status == 'restricted') {
+    } else if (p.status == 'suspended') {
       statusBg = AppColors.coinGoldLight;
       statusFg = AppColors.warning;
     } else {
@@ -273,7 +277,7 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
       ),
       child: Row(
         children: [
-          CircleAvatar(radius: 22, backgroundImage: NetworkImage(p.avatarUrl)),
+          BattlePlayerAvatar(name: p.username, avatarUrl: p.avatarUrl, radius: 22),
           const SizedBox(width: 14),
 
           // Player Name & Rank
@@ -367,76 +371,112 @@ class _BattlePlayersTabState extends State<BattlePlayersTab> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert_rounded, color: AppColors.textMuted),
             shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
-            onSelected: (val) {
-              if (val == 'restrict') {
+            onSelected: (val) async {
+              if (val == 'suspend_24h') {
                 AppModalDialog.show(
                   context: context,
                   builder: (_) => ConfirmActionDialog(
-                    title: 'Restrict Battle Access: ${p.username}?',
-                    description: 'Temporarily prevent this user from entering battles for 24 hours.',
-                    confirmLabel: 'Restrict for 24h',
+                    title: 'Suspend Battle Access (24h): ${p.username}?',
+                    description: 'Updates profile status in Supabase to suspended for 24 hours.',
+                    confirmLabel: 'Suspend 24h',
                     isDestructive: false,
                     onConfirm: (reason) async {
-                      _service.restrictPlayer(p.id, 24, reason);
+                      await _service.updatePlayerModeration(
+                        playerId: p.id,
+                        status: 'suspended',
+                        banUntil: DateTime.now().add(const Duration(hours: 24)),
+                        reason: reason,
+                      );
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${p.username} restricted for 24 hours'), backgroundColor: AppColors.warning),
+                        SnackBar(
+                          content: Text('${p.username} suspended for 24 hours'),
+                          backgroundColor: AppColors.warning,
+                        ),
                       );
                     },
                   ),
                 );
-              } else if (val == 'suspend') {
+              } else if (val == 'ban') {
                 AppModalDialog.show(
                   context: context,
                   builder: (_) => ConfirmActionDialog(
-                    title: 'Suspend Account: ${p.username}?',
-                    description: 'This will lock the account and bar all quiz participation until manually reviewed.',
-                    confirmLabel: 'Suspend Account',
+                    title: 'Ban Account: ${p.username}?',
+                    description: 'Updates profile status in Supabase to banned and prevents participation.',
+                    confirmLabel: 'Ban Account',
                     isDestructive: true,
                     onConfirm: (reason) async {
-                      _service.suspendPlayer(p.id, true, reason);
+                      await _service.updatePlayerModeration(
+                        playerId: p.id,
+                        status: 'banned',
+                        reason: reason,
+                      );
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${p.username} suspended!'), backgroundColor: AppColors.liveRed),
+                        SnackBar(
+                          content: Text('${p.username} banned'),
+                          backgroundColor: AppColors.liveRed,
+                        ),
                       );
                     },
                   ),
                 );
-              } else if (val == 'unsuspend') {
-                _service.suspendPlayer(p.id, false, 'Admin restored');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${p.username} account restored to active'), backgroundColor: AppColors.brandGreen),
-                );
+              } else if (val == 'restore') {
+                try {
+                  await _service.updatePlayerModeration(
+                    playerId: p.id,
+                    status: 'active',
+                    reason: 'Admin restored to active',
+                  );
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${p.username} account restored to active'),
+                      backgroundColor: AppColors.brandGreen,
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to restore: $e'),
+                      backgroundColor: AppColors.liveRed,
+                    ),
+                  );
+                }
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'restrict',
-                child: Row(
-                  children: [
-                    const Icon(Icons.timer_outlined, size: 16, color: AppColors.warning),
-                    const SizedBox(width: 8),
-                    Text('Restrict 24h', style: AppTypography.labelSmall),
-                  ],
-                ),
-              ),
-              if (p.status == 'suspended')
+              if (p.status == 'active')
                 PopupMenuItem(
-                  value: 'unsuspend',
+                  value: 'suspend_24h',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.timer_outlined, size: 16, color: AppColors.warning),
+                      const SizedBox(width: 8),
+                      Text('Suspend 24h', style: AppTypography.labelSmall),
+                    ],
+                  ),
+                ),
+              if (p.status != 'active')
+                PopupMenuItem(
+                  value: 'restore',
                   child: Row(
                     children: [
                       const Icon(Icons.check_circle_outline_rounded, size: 16, color: AppColors.brandGreen),
                       const SizedBox(width: 8),
-                      Text('Unsuspend Player', style: AppTypography.labelSmall.copyWith(color: AppColors.brandGreenDark)),
+                      Text('Restore Active', style: AppTypography.labelSmall.copyWith(color: AppColors.brandGreenDark)),
                     ],
                   ),
-                )
-              else
+                ),
+              if (p.status != 'banned')
                 PopupMenuItem(
-                  value: 'suspend',
+                  value: 'ban',
                   child: Row(
                     children: [
                       const Icon(Icons.block_rounded, size: 16, color: AppColors.liveRed),
                       const SizedBox(width: 8),
-                      Text('Suspend Account', style: AppTypography.labelSmall.copyWith(color: AppColors.liveRed)),
+                      Text('Ban Account', style: AppTypography.labelSmall.copyWith(color: AppColors.liveRed)),
                     ],
                   ),
                 ),

@@ -52,7 +52,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   bool _rememberMe = true;
   bool _agreeToTerms = true;
   bool _isLoading = false;
+  bool _needsEmailVerification = false;
+  bool _isResendingVerification = false;
   String? _errorMessage;
+  String? _infoMessage;
   final ScrollController _scrollController = ScrollController();
 
   final List<String> _examGoals = const [
@@ -91,6 +94,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     setState(() {
       _mode = newMode;
       _errorMessage = null;
+      _infoMessage = null;
+      _needsEmailVerification = false;
     });
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -115,6 +120,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _infoMessage = null;
+      _needsEmailVerification = false;
     });
 
     final email = _emailController.text.trim();
@@ -152,8 +159,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             _handleSuccess(mockProfile);
             return;
           }
+          final rawMsg = (res as Failure).message;
           setState(() {
-            _errorMessage = _formatAuthError((res as Failure).message);
+            _needsEmailVerification = rawMsg.toLowerCase().contains('email not confirmed');
+            _errorMessage = _formatAuthError(rawMsg);
           });
         }
       } else {
@@ -189,8 +198,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             _handleSuccess(newProfile);
             return;
           }
+          final rawMsg = (res as Failure).message;
           setState(() {
-            _errorMessage = _formatAuthError((res as Failure).message);
+            _needsEmailVerification = rawMsg.toLowerCase().contains('email not confirmed');
+            _errorMessage = _formatAuthError(rawMsg);
           });
         }
       }
@@ -201,6 +212,46 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleResendVerification() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() {
+        _errorMessage = 'Please enter a valid email address to resend verification.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isResendingVerification = true;
+      _infoMessage = null;
+    });
+
+    try {
+      final res = await _authRepository.resendVerificationEmail(email);
+      if (!mounted) return;
+      if (res is Success<bool>) {
+        setState(() {
+          _errorMessage = null;
+          _needsEmailVerification = false;
+          _infoMessage =
+              'Verification link sent to $email. Please check your inbox and spam folder.';
+        });
+      } else if (res is Failure) {
+        setState(() {
+          _errorMessage = _formatAuthError((res as Failure).message);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _errorMessage = _formatAuthError(e.toString()));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isResendingVerification = false);
       }
     }
   }
@@ -250,6 +301,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _infoMessage = null;
+      _needsEmailVerification = false;
     });
     try {
       final success = await _authRepository.signInWithGoogleOAuth();
@@ -1266,30 +1319,103 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
               const SizedBox(height: 12),
             ],
 
+            // Verification Sent Success Notice Banner
+            if (_infoMessage != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.mark_email_read_outlined, color: Color(0xFF059669), size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _infoMessage!,
+                        style: AppTypography.formError.copyWith(color: const Color(0xFF047857)),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => setState(() => _infoMessage = null),
+                      child: const Icon(Icons.close_rounded, size: 15, color: Color(0xFF059669)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+
             // Error Notice Banner
             if (_errorMessage != null) ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: const Color(0xFFFECACA)),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 15),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        _errorMessage!,
-                        style: AppTypography.formError.copyWith(color: const Color(0xFFB91C1C)),
+                    Row(
+                      children: [
+                        const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 15),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: AppTypography.formError.copyWith(color: const Color(0xFFB91C1C)),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => setState(() {
+                            _errorMessage = null;
+                            _needsEmailVerification = false;
+                          }),
+                          child: const Icon(Icons.close_rounded, size: 15, color: Color(0xFFDC2626)),
+                        ),
+                      ],
+                    ),
+                    if (_needsEmailVerification) ...[
+                      const SizedBox(height: 6),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _isResendingVerification ? null : _handleResendVerification,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            foregroundColor: const Color(0xFF00B96B),
+                          ),
+                          icon: _isResendingVerification
+                              ? const SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFF00B96B),
+                                  ),
+                                )
+                              : const Icon(Icons.mark_email_unread_outlined, size: 14),
+                          label: Text(
+                            _isResendingVerification
+                                ? 'Sending verification email...'
+                                : 'Resend Verification Email',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    InkWell(
-                      onTap: () => setState(() => _errorMessage = null),
-                      child: const Icon(Icons.close_rounded, size: 15, color: Color(0xFFDC2626)),
-                    ),
+                    ],
                   ],
                 ),
               ),

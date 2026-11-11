@@ -10,11 +10,10 @@ class BroadcastDialog extends StatefulWidget {
 }
 
 class _BroadcastDialogState extends State<BroadcastDialog> {
-  final _titleController = TextEditingController(text: 'Scheduled Battle Alert');
-  final _messageController = TextEditingController(
-    text: 'Mega 50-Player Battle is starting in 5 minutes! Join from lobby to win up to 4,500 coins.',
-  );
+  final _titleController = TextEditingController();
+  final _messageController = TextEditingController();
   String _target = 'All Players';
+  bool _isSending = false;
 
   @override
   void dispose() {
@@ -23,19 +22,41 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
     super.dispose();
   }
 
-  void _handleTransmit() {
+  Future<void> _handleTransmit() async {
     final title = _titleController.text.trim();
     final msg = _messageController.text.trim();
-    if (title.isEmpty || msg.isEmpty) return;
+    if (title.isEmpty || msg.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter both alert title and message.'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
 
-    BattleDashboardService().broadcastMessage(title, msg, _target);
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Broadcast sent to active players!'),
-        backgroundColor: AppColors.brandGreen,
-      ),
-    );
+    setState(() => _isSending = true);
+    try {
+      await BattleDashboardService().broadcastMessage(title, msg, _target);
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Broadcast saved to Supabase notifications!'),
+          backgroundColor: AppColors.brandGreen,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to transmit broadcast: $e'),
+          backgroundColor: AppColors.liveRed,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
   }
 
   @override
@@ -48,7 +69,7 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
       maxWidth: 500,
       actions: [
         OutlinedButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSending ? null : () => Navigator.pop(context),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Color(0xFFCBD5E1)),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -58,7 +79,7 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
         ),
         const SizedBox(width: 8),
         ElevatedButton.icon(
-          onPressed: _handleTransmit,
+          onPressed: _isSending ? null : _handleTransmit,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF0D9488),
             foregroundColor: Colors.white,
@@ -66,8 +87,17 @@ class _BroadcastDialogState extends State<BroadcastDialog> {
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             elevation: 0,
           ),
-          icon: const Icon(Icons.send_rounded, size: 16),
-          label: const Text('Transmit Alert', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+          icon: _isSending
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                )
+              : const Icon(Icons.send_rounded, size: 16),
+          label: Text(
+            _isSending ? 'Sending…' : 'Transmit Alert',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+          ),
         ),
       ],
       child: Column(

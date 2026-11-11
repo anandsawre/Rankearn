@@ -112,10 +112,77 @@ class _AdminAppShellState extends State<AdminAppShell> {
   late bool _isLoggedIn = widget.startLoggedIn;
   final ScrollController _navScrollController = ScrollController();
 
+  String _adminDisplayName = 'Admin User';
+  String _adminEmail = '';
+  String _adminRoleLabel = 'Super Admin';
+
+  @override
+  void initState() {
+    super.initState();
+    _syncCurrentAdminProfile();
+  }
+
   @override
   void dispose() {
     _navScrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _syncCurrentAdminProfile() async {
+    final client = SupabaseConfig.clientSafe;
+    final user = client?.auth.currentUser;
+    if (user == null) return;
+
+    final fallbackName = (user.userMetadata?['name']?.toString().trim().isNotEmpty ?? false)
+        ? user.userMetadata!['name'].toString().trim()
+        : (user.email?.split('@').first ?? 'Admin User');
+
+    if (mounted) {
+      setState(() {
+        _adminDisplayName = fallbackName;
+        _adminEmail = user.email ?? '';
+        _adminRoleLabel = 'Super Admin';
+      });
+    }
+
+    try {
+      final profile = await client!
+          .from('profiles')
+          .select('name, email')
+          .eq('id', user.id)
+          .maybeSingle();
+      if (profile != null && mounted) {
+        final dbName = profile['name']?.toString().trim();
+        final dbEmail = profile['email']?.toString().trim();
+        setState(() {
+          if (dbName != null && dbName.isNotEmpty) _adminDisplayName = dbName;
+          if (dbEmail != null && dbEmail.isNotEmpty) _adminEmail = dbEmail;
+        });
+      }
+    } catch (_) {
+      // Auth metadata fallback already applied cleanly.
+    }
+  }
+
+  String get _adminInitials {
+    final parts = _adminDisplayName.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return 'AD';
+    if (parts.length == 1) {
+      return parts.first.substring(0, parts.first.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+
+  Future<void> _handleSignOut() async {
+    try {
+      await SupabaseConfig.clientSafe?.auth.signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _isLoggedIn = false;
+      _adminDisplayName = 'Admin User';
+      _adminEmail = '';
+    });
   }
 
   void _navigateToTab(AdminNavTab tab) {
@@ -441,7 +508,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                         ElevatedButton.icon(
                           onPressed: () {
                             Navigator.pop(ctx);
-                            setState(() => _isLoggedIn = false);
+                            _handleSignOut();
                           },
                           icon: const Icon(Icons.logout_rounded, size: 16),
                           label: const Text('Sign Out'),
@@ -460,25 +527,25 @@ class _AdminAppShellState extends State<AdminAppShell> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: const Color(0xFFCBD5E1)),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
                             CircleAvatar(
                               radius: 20,
-                              backgroundColor: Color(0xFF5636F5),
-                              child: Text('AD', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              backgroundColor: const Color(0xFF5636F5),
+                              child: Text(_adminInitials, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                             ),
-                            SizedBox(width: 12),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Admin User',
-                                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary),
+                                    _adminDisplayName,
+                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary),
                                   ),
                                   Text(
-                                    'admin@quizmaster.com',
-                                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                    _adminEmail.isNotEmpty ? _adminEmail : _adminRoleLabel,
+                                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                                   ),
                                 ],
                               ),
@@ -508,10 +575,10 @@ class _AdminAppShellState extends State<AdminAppShell> {
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
-                              'Admin User',
-                              style: TextStyle(
+                              _adminDisplayName,
+                              style: const TextStyle(
                                 fontFamily: 'Plus Jakarta Sans',
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
@@ -519,10 +586,10 @@ class _AdminAppShellState extends State<AdminAppShell> {
                                 height: 1.15,
                               ),
                             ),
-                            SizedBox(height: 1),
+                            const SizedBox(height: 1),
                             Text(
-                              'Super Admin',
-                              style: TextStyle(
+                              _adminRoleLabel,
+                              style: const TextStyle(
                                 fontFamily: 'Plus Jakarta Sans',
                                 fontSize: 11,
                                 color: Color(0xFF94A3B8),
@@ -885,19 +952,19 @@ class _AdminAppShellState extends State<AdminAppShell> {
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
-                              'Admin User',
-                              style: TextStyle(
+                              _adminDisplayName,
+                              style: const TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF1E293B),
                               ),
                             ),
-                            SizedBox(height: 1),
+                            const SizedBox(height: 1),
                             Text(
-                              'Super Admin',
-                              style: TextStyle(
+                              _adminRoleLabel,
+                              style: const TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF5636F5),
                                 fontWeight: FontWeight.w600,
@@ -1057,6 +1124,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
     return AdminLoginScreen(
       onLoginSuccess: () {
         setState(() => _isLoggedIn = true);
+        _syncCurrentAdminProfile();
       },
       onBackToWebsite: () {
         ScaffoldMessenger.of(context).showSnackBar(

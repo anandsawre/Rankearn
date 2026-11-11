@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart' hide BattleType;
 import '../models/battle_dashboard_models.dart';
 import '../services/battle_dashboard_service.dart';
+import '../widgets/battle_player_avatar.dart';
 import '../dialogs/battle_detail_dialog.dart';
 import '../dialogs/confirm_action_dialog.dart';
 import '../dialogs/create_battle_dialog.dart';
@@ -97,9 +98,9 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
                     width: cardWidth,
                   ),
                   AdminMetricCard(
-                    title: 'Completed Today',
+                    title: 'Completed 1v1',
                     value: '$completedCount',
-                    subtitle: 'Rewards settled',
+                    subtitle: 'Settled in Supabase',
                     icon: Icons.task_alt_rounded,
                     color: AppColors.brandGreen,
                     iconBgColor: AppColors.brandGreenLight,
@@ -107,9 +108,9 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
                     width: cardWidth,
                   ),
                   AdminMetricCard(
-                    title: 'Cancelled / Disputed',
+                    title: 'Cancelled Matches',
                     value: '$cancelledCount',
-                    subtitle: 'Coins refunded',
+                    subtitle: 'Aborted or expired',
                     icon: Icons.cancel_outlined,
                     color: AppColors.liveRed,
                     iconBgColor: AppColors.liveRedLight,
@@ -125,24 +126,27 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
           // 2. HEADER BAR (Title, Search, Create Battle Button)
           Row(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '1 vs 1 Battle Management',
-                    style: AppTypography.headingSmall.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '1 vs 1 Battle Management',
+                      style: AppTypography.headingSmall.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Real-time head-to-head match inspection, matchmaking queue and dispute controls',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      'Real-time head-to-head match inspection, matchmaking queue and dispute controls',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 16),
               // Search Input
               SizedBox(
                 width: 260,
@@ -281,16 +285,16 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
     final p1 = b.participants.isNotEmpty
         ? b.participants[0]
         : const BattleParticipant(
-            id: 'p1',
-            name: 'Player 1',
-            avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+            id: 'unknown',
+            name: 'Unknown Creator',
+            avatarUrl: '',
           );
     final p2 = b.participants.length > 1
         ? b.participants[1]
         : const BattleParticipant(
-            id: 'p2',
-            name: 'Matching Opponent...',
-            avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80',
+            id: 'waiting',
+            name: 'Waiting for Opponent',
+            avatarUrl: '',
           );
 
     return Container(
@@ -356,7 +360,7 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
             flex: 3,
             child: Row(
               children: [
-                CircleAvatar(radius: 19, backgroundImage: NetworkImage(p1.avatarUrl)),
+                BattlePlayerAvatar(name: p1.name, avatarUrl: p1.avatarUrl, radius: 19),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -371,7 +375,7 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
                         ),
                       ),
                       Text(
-                        'Score: ${p1.score} • Correct: ${p1.correctAnswers}',
+                        'Score: ${p1.score} • Rank #${p1.rank}',
                         style: AppTypography.bodySmall.copyWith(
                           fontSize: 11,
                           color: AppColors.textSecondary,
@@ -408,7 +412,7 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
               padding: const EdgeInsets.only(left: 16),
               child: Row(
                 children: [
-                  CircleAvatar(radius: 19, backgroundImage: NetworkImage(p2.avatarUrl)),
+                  BattlePlayerAvatar(name: p2.name, avatarUrl: p2.avatarUrl, radius: 19),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -419,11 +423,15 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.labelMedium.copyWith(
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: b.participants.length > 1
+                                ? AppColors.textPrimary
+                                : AppColors.warning,
                           ),
                         ),
                         Text(
-                          'Score: ${p2.score} • Correct: ${p2.correctAnswers}',
+                          b.participants.length > 1
+                              ? 'Score: ${p2.score} • Rank #${p2.rank}'
+                              : 'Queue open',
                           style: AppTypography.bodySmall.copyWith(
                             fontSize: 11,
                             color: AppColors.textSecondary,
@@ -480,38 +488,67 @@ class _BattleOneVsOneTabState extends State<BattleOneVsOneTab> {
                   AppModalDialog.show(context: context, builder: (_) => BattleDetailDialog(battle: b));
                 },
               ),
-              IconButton(
-                icon: const Icon(Icons.add_alarm_rounded, size: 18, color: AppColors.brandGreen),
-                tooltip: 'Add Extra Time (+30s)',
-                onPressed: () {
-                  _service.addTimeToBattle(b.id, 30);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Added +30s to match ${b.id}'),
-                      duration: const Duration(seconds: 1),
-                      backgroundColor: AppColors.brandGreen,
-                    ),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.cancel_outlined, size: 18, color: AppColors.liveRed),
-                tooltip: 'Cancel Match & Refund',
-                onPressed: () {
-                  AppModalDialog.show(
-                    context: context,
-                    builder: (_) => ConfirmActionDialog(
-                      title: 'Cancel Match ${b.id}?',
-                      description: 'This will cancel the match, trigger entry fee refund transactions, and record audit logs.',
-                      confirmLabel: 'Cancel & Refund',
-                      isDestructive: true,
-                      onConfirm: (reason) async {
-                        _service.endSingleBattle(b.id, true, reason);
-                      },
-                    ),
-                  );
-                },
-              ),
+              if (b.status == BattleStatus.waiting)
+                IconButton(
+                  icon: const Icon(Icons.play_arrow_rounded, size: 18, color: AppColors.brandGreen),
+                  tooltip: 'Start Match',
+                  onPressed: () async {
+                    try {
+                      await _service.startSingleBattle(b.id);
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Started battle ${b.id}'),
+                          duration: const Duration(seconds: 2),
+                          backgroundColor: AppColors.brandGreen,
+                        ),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.liveRed),
+                      );
+                    }
+                  },
+                )
+              else if (b.status == BattleStatus.live)
+                IconButton(
+                  icon: const Icon(Icons.task_alt_rounded, size: 18, color: AppColors.brandGreen),
+                  tooltip: 'Complete Match',
+                  onPressed: () {
+                    AppModalDialog.show(
+                      context: context,
+                      builder: (_) => ConfirmActionDialog(
+                        title: 'Complete Match ${b.id}?',
+                        description: 'Mark this active 1v1 battle as completed in Supabase.',
+                        confirmLabel: 'Mark Completed',
+                        isDestructive: false,
+                        onConfirm: (reason) async {
+                          await _service.completeSingleBattle(b.id, reason: reason);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              if (b.status == BattleStatus.live || b.status == BattleStatus.waiting)
+                IconButton(
+                  icon: const Icon(Icons.cancel_outlined, size: 18, color: AppColors.liveRed),
+                  tooltip: 'Cancel Match',
+                  onPressed: () {
+                    AppModalDialog.show(
+                      context: context,
+                      builder: (_) => ConfirmActionDialog(
+                        title: 'Cancel Match ${b.id}?',
+                        description: 'This will set status to cancelled in Supabase and record an audit log entry.',
+                        confirmLabel: 'Cancel Match',
+                        isDestructive: true,
+                        onConfirm: (reason) async {
+                          await _service.cancelSingleBattle(b.id, reason);
+                        },
+                      ),
+                    );
+                  },
+                ),
             ],
           ),
         ],

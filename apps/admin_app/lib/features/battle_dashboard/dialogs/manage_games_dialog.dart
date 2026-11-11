@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import '../services/battle_dashboard_service.dart';
 import 'create_battle_dialog.dart';
 
 class ManageGamesDialog extends StatelessWidget {
@@ -7,9 +8,10 @@ class ManageGamesDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final service = BattleDashboardService();
     return AppModalDialog(
       title: 'Game Modes & Arenas',
-      subtitle: 'Quick deploy and battle parameters',
+      subtitle: 'Live Supabase counts & schema status',
       iconData: Icons.tune_rounded,
       gradientColors: const [Color(0xFFD97706), Color(0xFFF59E0B)],
       maxWidth: 540,
@@ -32,31 +34,34 @@ class ManageGamesDialog extends StatelessWidget {
           _buildModeTile(
             context,
             title: '1 vs 1 Rapid Duel',
-            subtitle: 'Head-to-head match with automated bot matchmaking & 10s timer.',
-            tag: '856 Active',
+            subtitle: 'Live head-to-head matches stored in public.battles.',
+            tag: '${service.liveBattlesCount} Live • ${service.waitingBattlesCount} Waiting',
             tagColor: AppColors.battleAdminPurple,
             tagBg: AppColors.brandPurpleLight,
             icon: Icons.sports_kabaddi_rounded,
+            canCreate: true,
           ),
           const SizedBox(height: 12),
           _buildModeTile(
             context,
-            title: 'Multiplayer Rumble',
-            subtitle: '3 to 100 players concurrent quiz battle with dynamic live leaderboard.',
-            tag: '328 Active',
-            tagColor: AppColors.coinGold,
-            tagBg: AppColors.coinGoldLight,
-            icon: Icons.groups_rounded,
+            title: 'Battle Question Bank',
+            subtitle: 'Active bilingual MCQs served from public.battle_questions.',
+            tag: '${service.battleQuestionsCount} Questions',
+            tagColor: AppColors.brandGreenDark,
+            tagBg: AppColors.brandGreenLight,
+            icon: Icons.quiz_outlined,
+            canCreate: false,
           ),
           const SizedBox(height: 12),
           _buildModeTile(
             context,
-            title: 'Private Custom Room',
-            subtitle: 'Code-based custom rooms with customizable stakes and subjects.',
-            tag: '140 Active',
-            tagColor: AppColors.brandBlue,
-            tagBg: AppColors.brandBlueLight,
+            title: 'Multiplayer & Custom Rooms',
+            subtitle: 'Not yet provisioned in current Supabase schema (1v1 only).',
+            tag: '0 Active',
+            tagColor: AppColors.textSecondary,
+            tagBg: AppColors.surfaceSubtle,
             icon: Icons.meeting_room_rounded,
+            canCreate: false,
           ),
         ],
       ),
@@ -71,6 +76,7 @@ class ManageGamesDialog extends StatelessWidget {
     required Color tagColor,
     required Color tagBg,
     required IconData icon,
+    required bool canCreate,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -84,7 +90,11 @@ class ManageGamesDialog extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE2E8F0))),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
             child: Icon(icon, color: tagColor, size: 20),
           ),
           const SizedBox(width: 12),
@@ -95,29 +105,55 @@ class ManageGamesDialog extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(color: tagBg, borderRadius: BorderRadius.circular(4)),
-                      child: Text(tag, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: tagColor)),
+                      decoration: BoxDecoration(
+                        color: tagBg,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        tag,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: tagColor,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B), height: 1.35)),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: Color(0xFF64748B),
+                    height: 1.35,
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, size: 20, color: Color(0xFF5636F5)),
-            tooltip: 'Deploy Arena',
-            onPressed: () {
-              Navigator.pop(context);
-              AppModalDialog.show(context: context, builder: (_) => const CreateBattleDialog());
-            },
-          ),
+          if (canCreate) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline_rounded, size: 20, color: Color(0xFF5636F5)),
+              tooltip: 'Create 1v1 Battle',
+              onPressed: () {
+                Navigator.pop(context);
+                AppModalDialog.show(context: context, builder: (_) => const CreateBattleDialog());
+              },
+            ),
+          ],
         ],
       ),
     );
