@@ -1,10 +1,15 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 import '../models/test_series_item.dart';
 import '../../questions/models/question_item.dart';
 
 class AiGenerateTestSeriesDialog extends StatefulWidget {
-  final Function(TestSeriesItem test, List<QuestionItem> questions) onSaveGenerated;
+  final Function(TestSeriesItem test, List<QuestionItem> questions)
+      onSaveGenerated;
 
   const AiGenerateTestSeriesDialog({
     super.key,
@@ -12,128 +17,363 @@ class AiGenerateTestSeriesDialog extends StatefulWidget {
   });
 
   @override
-  State<AiGenerateTestSeriesDialog> createState() => _AiGenerateTestSeriesDialogState();
+  State<AiGenerateTestSeriesDialog> createState() =>
+      _AiGenerateTestSeriesDialogState();
 }
 
-class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog> {
-  final TextEditingController _titleController =
-      TextEditingController(text: 'AI Generated Full Mock Test 01');
-  final TextEditingController _topicsController =
-      TextEditingController(text: 'Complete Syllabus, Current Affairs & Core Science');
+class _AiGenerateTestSeriesDialogState
+    extends State<AiGenerateTestSeriesDialog> {
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _topicsController = TextEditingController();
+  final TextEditingController _apiKeyController = TextEditingController();
 
-  String _targetExam = 'rrb_alp';
-  String _subject = 'General Science';
+  List<ExamCategoryModel> _examList = [];
+  List<String> _subjects = [];
+  String? _targetExam;
+  String? _subject;
   String _difficulty = 'Medium';
-  int _questionCount = 50;
+  int _questionCount = 20;
   int _duration = 60;
   String _language = 'Bilingual (English + Hindi)';
+  String _workerUrl = 'https://testkarlo.alleduupdated.workers.dev';
 
+  bool _isLoadingMeta = true;
   bool _isGenerating = false;
   double _progress = 0.0;
-  String _statusText = 'Ready to launch AI generation';
+  String _statusText = '';
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _initData();
+  }
 
   @override
   void dispose() {
     _titleController.dispose();
     _topicsController.dispose();
+    _apiKeyController.dispose();
     super.dispose();
   }
 
-  void _startGeneration() async {
+  Future<void> _initData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedKey = prefs.getString('gemini_api_key') ?? '';
+      final savedWorker = prefs.getString('gemini_worker_url');
+      if (savedKey.isNotEmpty) {
+        _apiKeyController.text = savedKey;
+      }
+      if (savedWorker != null && savedWorker.isNotEmpty) {
+        _workerUrl = savedWorker;
+      }
+
+      final client = SupabaseConfig.clientSafe;
+      if (client != null) {
+        final results = await Future.wait<dynamic>([
+          TestsRepository().getExamCategoryList(),
+          client.from('categories').select('name').order('display_order'),
+        ]);
+        final examsRes = results[0] as Result<List<ExamCategoryModel>>;
+        final catRows = List<Map<String, dynamic>>.from(results[1] as List);
+
+        if (mounted) {
+          setState(() {
+            _examList = examsRes is Success<List<ExamCategoryModel>>
+                ? examsRes.data
+                : [];
+            _targetExam = _examList.isNotEmpty ? _examList.first.id : null;
+            _subjects = catRows
+                .map((r) => r['name']?.toString().trim() ?? '')
+                .where((s) => s.isNotEmpty)
+                .toSet()
+                .toList();
+            _subject = _subjects.isNotEmpty ? _subjects.first : null;
+            _isLoadingMeta = false;
+          });
+        }
+        return;
+      }
+    } catch (_) {}
+
+    if (mounted) setState(() => _isLoadingMeta = false);
+  }
+
+  Future<void> _startGeneration() async {
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      setState(() => _errorMessage = 'Please enter a Test Series Title.');
+      return;
+    }
+
+    final topics = _topicsController.text.trim().isNotEmpty
+        ? _topicsController.text.trim()
+        : (_subject ?? 'General Competitive Syllabus');
+    final examName = _examList
+        .where((e) => e.id == _targetExam)
+        .map((e) => e.name)
+        .firstOrNull ??
+        'Competitive Exam';
+    final subjectName = _subject ?? 'General';
+    final apiKey = _apiKeyController.text.trim();
+
+    if (apiKey.isNotEmpty) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('gemini_api_key', apiKey);
+      } catch (_) {}
+    }
+
     setState(() {
       _isGenerating = true;
+      _errorMessage = null;
       _progress = 0.15;
-      _statusText = 'Analyzing exam pattern and syllabus weightage...';
+      _statusText = 'Connecting to Gemini AI service...';
     });
 
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-    setState(() {
-      _progress = 0.45;
-      _statusText = 'Generating $_questionCount high-yield MCQs with distractors...';
-    });
+    final prompt = '''
+Generate $_questionCount unique multiple-choice questions for "$examName".
+Subject: $subjectName
+Topics: $topics
+Difficulty: $_difficulty
+Language: $_language
 
-    await Future.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    setState(() {
-      _progress = 0.80;
-      _statusText = 'Formatting bilingual explanations and KaTeX notation...';
-    });
+Output STRICTLY a valid JSON array of objects, each with:
+- "questionText": string
+- "questionTextHi": string (Hindi translation if bilingual/Hindi, else empty string)
+- "options": array of exactly 4 strings
+- "correctOptionIndex": integer 0..3
+- "explanation": string
+Do not wrap in markdown code fences. Return pure JSON only.
+''';
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    String rawResponseText = '';
+    String? apiError;
+
+    // 1. Direct Google Gemini API if API Key provided
+    if (apiKey.isNotEmpty) {
+      try {
+        setState(() {
+          _progress = 0.40;
+          _statusText =
+              'Generating $_questionCount unique questions via Google Gemini API...';
+        });
+        final directUri = Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey',
+        );
+        final resp = await http
+            .post(
+              directUri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'contents': [
+                  {
+                    'parts': [
+                      {'text': prompt}
+                    ]
+                  }
+                ],
+                'generationConfig': {
+                  'temperature': 0.7,
+                  'maxOutputTokens': 8192,
+                  'responseMimeType': 'application/json',
+                }
+              }),
+            )
+            .timeout(const Duration(seconds: 45));
+
+        if (resp.statusCode == 200) {
+          final decoded = jsonDecode(resp.body);
+          final candidates = decoded['candidates'] as List<dynamic>?;
+          if (candidates != null && candidates.isNotEmpty) {
+            rawResponseText =
+                (candidates[0]['content']?['parts']?[0]?['text'] ?? '')
+                    .toString();
+          }
+        } else {
+          apiError = 'Gemini API returned HTTP ${resp.statusCode}.';
+        }
+      } catch (e) {
+        apiError = 'Gemini API request failed: $e';
+      }
+    }
+
+    // 2. Fallback to configured Worker Gateway if direct key not used or failed
+    if (rawResponseText.isEmpty) {
+      try {
+        if (mounted) {
+          setState(() {
+            _progress = 0.60;
+            _statusText = 'Requesting questions from Gemini Edge Gateway...';
+          });
+        }
+        final resp = await http
+            .post(
+              Uri.parse('$_workerUrl/api/generate'),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({
+                'prompt': prompt,
+                'temperature': 0.7,
+                'maxTokens': 8192,
+              }),
+            )
+            .timeout(const Duration(seconds: 45));
+
+        if (resp.statusCode == 200) {
+          final body = jsonDecode(resp.body);
+          rawResponseText =
+              (body['text'] ?? body['content'] ?? body['result'] ?? '')
+                  .toString();
+        } else {
+          apiError =
+              '${apiError != null ? '$apiError ' : ''}Worker gateway returned HTTP ${resp.statusCode}.';
+        }
+      } catch (e) {
+        apiError =
+            '${apiError != null ? '$apiError ' : ''}Worker gateway unreachable: $e';
+      }
+    }
+
     if (!mounted) return;
+
+    final parsedQuestions = _parseQuestionsFromJson(
+      rawResponseText: rawResponseText,
+      subjectName: subjectName,
+      testTitle: title,
+    );
+
+    if (parsedQuestions.isEmpty) {
+      setState(() {
+        _isGenerating = false;
+        _progress = 0.0;
+        _statusText = '';
+        _errorMessage = apiKey.isEmpty
+            ? 'AI generation failed. Configure a valid Gemini API key above or ensure the Edge Worker is reachable. ${apiError ?? ''}'
+            : 'Unable to generate valid questions from Gemini response. ${apiError ?? ''}';
+      });
+      return;
+    }
+
     setState(() {
       _progress = 1.0;
-      _statusText = 'Test generation completed!';
+      _statusText = 'Generated ${parsedQuestions.length} verified questions!';
     });
-
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
 
     final now = DateTime.now();
     final testId = 'ai_test_${now.millisecondsSinceEpoch}';
 
     final testItem = TestSeriesItem(
       id: testId,
-      title: _titleController.text.trim().isNotEmpty
-          ? _titleController.text.trim()
-          : 'AI Mock Test Series',
-      description: 'AI synthesized mock test covering: ${_topicsController.text.trim()}',
+      title: title,
+      description: 'AI generated test covering: $topics',
       examCategoryId: _targetExam,
       totalTests: 1,
-      totalQuestions: _questionCount,
+      totalQuestions: parsedQuestions.length,
       durationMinutes: _duration,
-      negativeMarking: 0.33,
+      negativeMarking: 0.25,
       priceInr: 0,
       entryFeeCoins: 0,
       enrollments: 0,
       status: TestSeriesStatus.published,
       testMode: 'mock',
-      subject: _subject,
-      topic: _topicsController.text.trim(),
+      subject: subjectName,
+      topic: topics,
       createdAt: now,
       icon: Icons.auto_awesome_rounded,
       iconColor: const Color(0xFFFF3385),
     );
 
-    final questions = <QuestionItem>[];
-    for (int i = 1; i <= _questionCount; i++) {
-      questions.add(QuestionItem(
-        id: 'q_${testId}_$i',
-        testId: testId,
-        questionNumber: i,
-        questionText: 'Which principle governs the working of hydraulic brakes in automobiles? (Q#$i)',
-        questionTextHindi: 'स्वचालित वाहनों में हाइड्रोलिक ब्रेक किस सिद्धांत पर कार्य करते हैं?',
-        subject: _subject,
-        testSeriesTitle: testItem.title,
-        questionType: 'MCQ',
-        difficulty: QuestionDifficulty.medium,
-        correctAnswerIndex: 1,
-        correctAnswerChar: 'B',
-        usageCount: 0,
-        status: QuestionStatus.published,
-        createdAt: now,
-        options: const [
-          QuestionOptionItem(label: 'A', text: 'Bernoulli\'s principle / बर्नौली का प्रमेय'),
-          QuestionOptionItem(label: 'B', text: 'Pascal\'s law / पास्कल का नियम'),
-          QuestionOptionItem(label: 'C', text: 'Archimedes principle / आर्किमिडीज सिद्धांत'),
-          QuestionOptionItem(label: 'D', text: 'Newton\'s third law / न्यूटन का तीसरा नियम'),
-        ],
-        explanation: 'Hydraulic brakes operate on Pascal\'s principle, stating pressure applied to an enclosed fluid is transmitted undiminished.',
-        marks: 1.0,
-        negativeMarks: 0.33,
-      ));
-    }
+    final linkedQuestions = parsedQuestions
+        .asMap()
+        .entries
+        .map((e) => e.value.copyWith(
+              id: 'q_${testId}_${e.key + 1}',
+              testId: testId,
+              questionNumber: e.key + 1,
+            ))
+        .toList();
 
-    widget.onSaveGenerated(testItem, questions);
+    widget.onSaveGenerated(testItem, linkedQuestions);
     Navigator.of(context).pop();
+  }
+
+  List<QuestionItem> _parseQuestionsFromJson({
+    required String rawResponseText,
+    required String subjectName,
+    required String testTitle,
+  }) {
+    if (rawResponseText.trim().isEmpty) return [];
+
+    String cleaned = rawResponseText.trim();
+    final startIdx = cleaned.indexOf('[');
+    final endIdx = cleaned.lastIndexOf(']');
+    if (startIdx == -1 || endIdx == -1 || endIdx <= startIdx) return [];
+    cleaned = cleaned.substring(startIdx, endIdx + 1);
+
+    try {
+      final decoded = jsonDecode(cleaned);
+      if (decoded is! List) return [];
+
+      final difficulty = switch (_difficulty.toLowerCase()) {
+        'easy' => QuestionDifficulty.easy,
+        'hard' => QuestionDifficulty.hard,
+        _ => QuestionDifficulty.medium,
+      };
+      const letters = ['A', 'B', 'C', 'D'];
+      final now = DateTime.now();
+
+      final list = <QuestionItem>[];
+      for (int i = 0; i < decoded.length; i++) {
+        final raw = decoded[i];
+        if (raw is! Map) continue;
+        final qText = raw['questionText']?.toString().trim() ?? '';
+        final optsRaw = raw['options'];
+        if (qText.isEmpty || optsRaw is! List || optsRaw.length < 4) continue;
+
+        final correctIdx =
+            ((raw['correctOptionIndex'] as num?)?.toInt() ?? 0).clamp(0, 3);
+        final options = List<QuestionOptionItem>.generate(
+          4,
+          (idx) => QuestionOptionItem(
+            label: letters[idx],
+            text: optsRaw[idx].toString().trim(),
+          ),
+        );
+
+        list.add(
+          QuestionItem(
+            id: 'ai_q_${now.microsecondsSinceEpoch}_$i',
+            questionNumber: i + 1,
+            questionText: qText,
+            questionTextHindi: raw['questionTextHi']?.toString().trim(),
+            subject: subjectName,
+            testSeriesTitle: testTitle,
+            questionType: 'MCQ',
+            difficulty: difficulty,
+            correctAnswerIndex: correctIdx,
+            correctAnswerChar: letters[correctIdx],
+            usageCount: 0,
+            status: QuestionStatus.published,
+            createdAt: now,
+            options: options,
+            explanation: raw['explanation']?.toString().trim(),
+            marks: 1.0,
+            negativeMarks: 0.25,
+          ),
+        );
+      }
+      return list;
+    } catch (_) {
+      return [];
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return AppModalDialog(
       title: 'AI Generate Test Series',
-      subtitle: 'Synthesize complete exam-standard mock tests with Gemini AI',
+      subtitle: 'Synthesize exam-standard mock tests using live Gemini AI',
       iconData: Icons.auto_awesome_rounded,
       gradientColors: const [Color(0xFFFF3385), Color(0xFFEC4899)],
       maxWidth: 620,
@@ -142,18 +382,24 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
         OutlinedButton(
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
           ),
           onPressed: _isGenerating ? null : () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+          child: const Text('Cancel',
+              style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12.5)),
         ),
         const SizedBox(width: 8),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFFF3385),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             elevation: 0,
           ),
@@ -162,7 +408,8 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
               ? const SizedBox(
                   width: 14,
                   height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
                 )
               : const Icon(Icons.auto_awesome_rounded, size: 16),
           label: Text(
@@ -174,6 +421,35 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_errorMessage != null) ...[
+            Container(
+              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: BoxDecoration(
+                color: AppColors.errorRoseLight,
+                borderRadius: BorderRadius.circular(8),
+                border:
+                    Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline_rounded,
+                      color: AppColors.error, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           // Row 1: Target Exam & Subject
           Row(
             children: [
@@ -181,19 +457,22 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Target Exam *', style: _labelStyle),
+                    const Text('Target Exam', style: _labelStyle),
                     const SizedBox(height: 6),
                     AppDropdown<String>(
-                      value: _targetExam,
-                      items: const [
-                        AppDropdownItem(value: 'rrb_alp', label: '🚂 RRB ALP & Technician'),
-                        AppDropdownItem(value: 'ssc_cgl', label: '🏛️ SSC CGL Tier 1'),
-                        AppDropdownItem(value: 'bpsc_pre', label: '📘 BPSC Civil Services'),
-                        AppDropdownItem(value: 'general', label: '🎯 General Competitive'),
-                      ],
-                      onChanged: (val) {
-                        if (val != null) setState(() => _targetExam = val);
-                      },
+                      value: _examList.any((e) => e.id == _targetExam)
+                          ? _targetExam
+                          : null,
+                      hint: _isLoadingMeta
+                          ? 'Loading exams...'
+                          : 'Select Target Exam...',
+                      items: _examList
+                          .map((e) => AppDropdownItem(
+                                value: e.id,
+                                label: '${e.iconUrl ?? "🎯"} ${e.name}',
+                              ))
+                          .toList(),
+                      onChanged: (val) => setState(() => _targetExam = val),
                     ),
                   ],
                 ),
@@ -203,20 +482,17 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Subject Focus *', style: _labelStyle),
+                    const Text('Subject Focus', style: _labelStyle),
                     const SizedBox(height: 6),
                     AppDropdown<String>(
-                      value: _subject,
-                      items: const [
-                        AppDropdownItem(value: 'General Science', label: '🔬 General Science'),
-                        AppDropdownItem(value: 'Mathematics', label: '📐 Quantitative Aptitude'),
-                        AppDropdownItem(value: 'Reasoning Ability', label: '💡 Reasoning Ability'),
-                        AppDropdownItem(value: 'General Awareness', label: '🌍 General Awareness'),
-                        AppDropdownItem(value: 'Complete Mixed Syllabus', label: '📑 Full Mixed Mock'),
-                      ],
-                      onChanged: (val) {
-                        if (val != null) setState(() => _subject = val);
-                      },
+                      value: _subjects.contains(_subject) ? _subject : null,
+                      hint: _isLoadingMeta
+                          ? 'Loading subjects...'
+                          : 'Select Subject...',
+                      items: _subjects
+                          .map((s) => AppDropdownItem(value: s, label: s))
+                          .toList(),
+                      onChanged: (val) => setState(() => _subject = val),
                     ),
                   ],
                 ),
@@ -231,7 +507,8 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
           TextField(
             controller: _titleController,
             style: const TextStyle(fontSize: 13),
-            decoration: _inputDecoration('e.g. RRB ALP CBT 1 - Rapid Science Mock 01'),
+            decoration:
+                _inputDecoration('e.g. RRB ALP CBT 1 - Rapid Science Mock 01'),
           ),
           const SizedBox(height: 14),
 
@@ -247,11 +524,10 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
                     AppDropdown<int>(
                       value: _questionCount,
                       items: const [
+                        AppDropdownItem(value: 10, label: '10 Questions'),
                         AppDropdownItem(value: 20, label: '20 Questions'),
                         AppDropdownItem(value: 30, label: '30 Questions'),
                         AppDropdownItem(value: 50, label: '50 Questions'),
-                        AppDropdownItem(value: 75, label: '75 Questions'),
-                        AppDropdownItem(value: 100, label: '100 Questions'),
                       ],
                       onChanged: (val) {
                         if (val != null) setState(() => _questionCount = val);
@@ -294,9 +570,9 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
                       value: _difficulty,
                       items: const [
                         AppDropdownItem(value: 'Easy', label: 'Easy Level'),
-                        AppDropdownItem(value: 'Medium', label: 'Standard Medium'),
+                        AppDropdownItem(
+                            value: 'Medium', label: 'Standard Medium'),
                         AppDropdownItem(value: 'Hard', label: 'Advanced Hard'),
-                        AppDropdownItem(value: 'Exam Pattern', label: 'Exam Pattern'),
                       ],
                       onChanged: (val) {
                         if (val != null) setState(() => _difficulty = val);
@@ -322,9 +598,13 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
                     AppDropdown<String>(
                       value: _language,
                       items: const [
-                        AppDropdownItem(value: 'Bilingual (English + Hindi)', label: '🌐 Bilingual (Eng + Hindi)'),
-                        AppDropdownItem(value: 'English Only', label: '🇬🇧 English Only'),
-                        AppDropdownItem(value: 'Hindi Only', label: '🇮🇳 Hindi Only'),
+                        AppDropdownItem(
+                            value: 'Bilingual (English + Hindi)',
+                            label: '🌐 Bilingual (Eng + Hindi)'),
+                        AppDropdownItem(
+                            value: 'English Only', label: '🇬🇧 English Only'),
+                        AppDropdownItem(
+                            value: 'Hindi Only', label: '🇮🇳 Hindi Only'),
                       ],
                       onChanged: (val) {
                         if (val != null) setState(() => _language = val);
@@ -344,12 +624,26 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
                     TextField(
                       controller: _topicsController,
                       style: const TextStyle(fontSize: 12),
-                      decoration: _inputDecoration('e.g. Physics, Chemistry, Indian Polity'),
+                      decoration: _inputDecoration(
+                          'e.g. Physics, Chemistry, Indian Polity'),
                     ),
                   ],
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 14),
+
+          // Optional Direct Gemini API Key
+          const Text('Gemini API Key (saved locally for direct API calls)',
+              style: _labelStyle),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _apiKeyController,
+            obscureText: true,
+            style: const TextStyle(fontSize: 12),
+            decoration:
+                _inputDecoration('AIza... (Optional if Edge Worker is active)'),
           ),
 
           // Progress indicator during generation
@@ -367,17 +661,24 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.auto_awesome_rounded, color: Color(0xFFFF3385), size: 16),
+                      const Icon(Icons.auto_awesome_rounded,
+                          color: Color(0xFFFF3385), size: 16),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _statusText,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF9D174D)),
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF9D174D)),
                         ),
                       ),
                       Text(
                         '${(_progress * 100).toInt()}%',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFFF3385)),
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFFF3385)),
                       ),
                     ],
                   ),
@@ -385,7 +686,8 @@ class _AiGenerateTestSeriesDialogState extends State<AiGenerateTestSeriesDialog>
                   LinearProgressIndicator(
                     value: _progress,
                     backgroundColor: const Color(0xFFFCE7F3),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF3385)),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Color(0xFFFF3385)),
                     minHeight: 6,
                     borderRadius: BorderRadius.circular(4),
                   ),

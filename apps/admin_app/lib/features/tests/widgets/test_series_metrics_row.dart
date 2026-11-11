@@ -2,14 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
 /// Test Series Metrics Row
-/// Displays 5 responsive statistics cards powered by the unified [AdminMetricCard]
-/// from the Rankearn design system to ensure 100% UI consistency across the admin panel.
+/// Displays 5 responsive live statistics cards powered by [AdminMetricCard]
+/// with real database aggregates, growth rates, and sparklines.
 class TestSeriesMetricsRow extends StatelessWidget {
   final int totalTestSeries;
   final int publishedCount;
   final int draftsCount;
   final int totalTests;
   final int totalEnrollments;
+  final bool isLoading;
+
+  final String totalSeriesGrowth;
+  final bool totalSeriesPositive;
+  final List<double>? totalSeriesSparkline;
+
+  final String publishedGrowth;
+  final bool publishedPositive;
+  final List<double>? publishedSparkline;
+
+  final String draftsGrowth;
+  final bool draftsPositive;
+  final List<double>? draftsSparkline;
+
+  final String questionsGrowth;
+  final bool questionsPositive;
+  final List<double>? questionsSparkline;
+
+  final String enrollmentsGrowth;
+  final bool enrollmentsPositive;
+  final List<double>? enrollmentsSparkline;
 
   const TestSeriesMetricsRow({
     super.key,
@@ -18,6 +39,22 @@ class TestSeriesMetricsRow extends StatelessWidget {
     required this.draftsCount,
     required this.totalTests,
     required this.totalEnrollments,
+    this.isLoading = false,
+    this.totalSeriesGrowth = '',
+    this.totalSeriesPositive = true,
+    this.totalSeriesSparkline,
+    this.publishedGrowth = '',
+    this.publishedPositive = true,
+    this.publishedSparkline,
+    this.draftsGrowth = '',
+    this.draftsPositive = true,
+    this.draftsSparkline,
+    this.questionsGrowth = '',
+    this.questionsPositive = true,
+    this.questionsSparkline,
+    this.enrollmentsGrowth = '',
+    this.enrollmentsPositive = true,
+    this.enrollmentsSparkline,
   });
 
   @override
@@ -25,53 +62,53 @@ class TestSeriesMetricsRow extends StatelessWidget {
     final metrics = [
       (
         title: 'Total Test Series',
-        value: totalTestSeries.toString(),
-        growth: '+12%',
-        isGrowthPositive: true,
-        subtitle: 'All active series',
+        value: isLoading ? '—' : _formatNumber(totalTestSeries),
+        growth: isLoading ? '' : totalSeriesGrowth,
+        isGrowthPositive: totalSeriesPositive,
+        subtitle: isLoading ? 'Loading series...' : 'All database series',
         icon: Icons.description_rounded,
-        color: const Color(0xFF3B82F6),
-        sparklineData: const [10.0, 12.0, 11.5, 14.0, 16.0, 18.0, 22.0],
+        color: AppColors.brandBlue,
+        sparklineData: totalSeriesSparkline,
       ),
       (
         title: 'Published',
-        value: publishedCount.toString(),
-        growth: '+15%',
-        isGrowthPositive: true,
-        subtitle: 'Live for students',
+        value: isLoading ? '—' : _formatNumber(publishedCount),
+        growth: isLoading ? '' : publishedGrowth,
+        isGrowthPositive: publishedPositive,
+        subtitle: isLoading ? 'Loading status...' : 'Live for students',
         icon: Icons.assignment_turned_in_rounded,
-        color: const Color(0xFF10B981),
-        sparklineData: const [8.0, 9.0, 8.5, 11.0, 12.0, 13.5, 16.0],
+        color: AppColors.brandGreen,
+        sparklineData: publishedSparkline,
       ),
       (
         title: 'Drafts',
-        value: draftsCount.toString(),
-        growth: '-25%',
-        isGrowthPositive: false,
-        subtitle: 'Pending review',
+        value: isLoading ? '—' : _formatNumber(draftsCount),
+        growth: isLoading ? '' : draftsGrowth,
+        isGrowthPositive: draftsPositive,
+        subtitle: isLoading ? 'Loading drafts...' : 'Pending review',
         icon: Icons.edit_note_rounded,
-        color: const Color(0xFFF59E0B),
-        sparklineData: const [14.0, 13.0, 12.0, 10.0, 9.0, 8.0, 6.0],
+        color: AppColors.coinGold,
+        sparklineData: draftsSparkline,
       ),
       (
         title: 'Total Tests',
-        value: totalTests.toString(),
-        growth: '+10%',
-        isGrowthPositive: true,
-        subtitle: 'Available test papers',
+        value: isLoading ? '—' : _formatNumber(totalTests),
+        growth: isLoading ? '' : questionsGrowth,
+        isGrowthPositive: questionsPositive,
+        subtitle: isLoading ? 'Loading papers...' : 'Available test papers',
         icon: Icons.emoji_events_rounded,
-        color: const Color(0xFF8B5CF6),
-        sparklineData: const [12.0, 14.0, 13.5, 16.0, 17.5, 20.0, 24.0],
+        color: AppColors.battleAdminPurple,
+        sparklineData: questionsSparkline,
       ),
       (
         title: 'Total Enrollments',
-        value: _formatNumber(totalEnrollments),
-        growth: '+22%',
-        isGrowthPositive: true,
-        subtitle: 'Active student attempts',
+        value: isLoading ? '—' : _formatNumber(totalEnrollments),
+        growth: isLoading ? '' : enrollmentsGrowth,
+        isGrowthPositive: enrollmentsPositive,
+        subtitle: isLoading ? 'Loading attempts...' : 'Student attempts & joins',
         icon: Icons.people_alt_rounded,
-        color: const Color(0xFFEF4444),
-        sparklineData: const [14.0, 15.5, 18.0, 17.5, 21.0, 25.0, 30.0],
+        color: AppColors.liveRed,
+        sparklineData: enrollmentsSparkline,
       ),
     ];
 
@@ -105,13 +142,9 @@ class TestSeriesMetricsRow extends StatelessWidget {
   }
 
   static String _formatNumber(int n) {
-    if (n >= 1000) {
-      final s = n.toString();
-      final len = s.length;
-      final part1 = s.substring(0, len - 3);
-      final part2 = s.substring(len - 3);
-      return '$part1,$part2';
-    }
-    return n.toString();
+    return n.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]},',
+    );
   }
 }

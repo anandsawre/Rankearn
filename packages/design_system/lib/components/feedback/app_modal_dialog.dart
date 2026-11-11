@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
+import '../../tokens/typography.dart';
 
 /// A rich, responsive, and visually stunning modal dialog component.
 ///
@@ -133,6 +134,62 @@ class AppModalDialog extends StatelessWidget {
     );
   }
 
+  /// Standard secondary / outlined action button style matching Rankearn dialog footer
+  static ButtonStyle secondaryButtonStyle({Color? borderColor, Color? foregroundColor}) {
+    return OutlinedButton.styleFrom(
+      foregroundColor: foregroundColor ?? AppColors.textSecondary,
+      side: BorderSide(color: borderColor ?? AppColors.borderStrong),
+      shape: RoundedRectangleBorder(borderRadius: AppRadii.borderSm),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    );
+  }
+
+  /// Convenience factory for a standardized outlined secondary button (e.g. Cancel / Close / Secondary action)
+  static Widget secondaryButton({
+    required VoidCallback? onPressed,
+    required Widget child,
+    Color? borderColor,
+    Color? foregroundColor,
+    Widget? icon,
+  }) {
+    final style = secondaryButtonStyle(
+      borderColor: borderColor,
+      foregroundColor: foregroundColor,
+    );
+    if (icon != null) {
+      return OutlinedButton.icon(
+        onPressed: onPressed,
+        style: style,
+        icon: icon,
+        label: child,
+      );
+    }
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: style,
+      child: child,
+    );
+  }
+
+  /// Convenience factory for a standardized Cancel / Close outlined dialog button
+  static Widget cancelButton(
+    BuildContext context, {
+    String label = 'Cancel',
+    VoidCallback? onPressed,
+  }) {
+    return secondaryButton(
+      onPressed: onPressed ?? () => Navigator.of(context).pop(),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: AppTypography.fontHeading,
+          fontSize: 12.5,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
   /// Standard input decoration matching Rankearn design system
   static InputDecoration inputDecoration(
     String hint, {
@@ -228,12 +285,18 @@ class AppModalDialog extends StatelessWidget {
     return argb == 0xFFDC2626 || argb == 0xFFEF4444 || argb == 0xFFE11D48;
   }
 
-  /// Automatically standardizes action buttons to the unified orange theme
-  /// Safely filters out any [Spacer] or [Expanded] widgets that could crash inside [Wrap].
+  /// Automatically standardizes action buttons to the unified orange theme.
+  /// Safely filters out layout spacers ([Spacer], [Expanded], empty [SizedBox])
+  /// so [Wrap] enforces consistent spacing across every dialog.
   static List<Widget>? _processActions(List<Widget>? rawActions) {
     if (rawActions == null) return null;
     return rawActions
-        .where((w) => w is! Spacer && w is! Expanded)
+        .where(
+          (w) =>
+              w is! Spacer &&
+              w is! Expanded &&
+              !(w is SizedBox && w.child == null),
+        )
         .map((widget) {
       if (widget is ElevatedButton) {
         final bg = widget.style?.backgroundColor?.resolve({WidgetState.selected}) ??
@@ -399,6 +462,7 @@ class AppModalDialog extends StatelessWidget {
                           Text(
                             title,
                             style: TextStyle(
+                              fontFamily: AppTypography.fontHeading,
                               fontSize: isMobile ? 16 : 16.5,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
@@ -412,6 +476,7 @@ class AppModalDialog extends StatelessWidget {
                             Text(
                               subtitle!,
                               style: TextStyle(
+                                fontFamily: AppTypography.fontHeading,
                                 fontSize: isMobile ? 11 : 11.5,
                                 color: Colors.white.withAlpha(210),
                                 height: 1.25,
@@ -489,6 +554,9 @@ class AppModalDialog extends StatelessWidget {
                     elevatedButtonTheme: ElevatedButtonThemeData(
                       style: primaryButtonStyle(),
                     ),
+                    outlinedButtonTheme: OutlinedButtonThemeData(
+                      style: secondaryButtonStyle(),
+                    ),
                   ),
                   child: Container(
                     padding: EdgeInsets.fromLTRB(
@@ -516,7 +584,7 @@ class AppModalDialog extends StatelessWidget {
                                 const SizedBox(height: 10),
                               ],
                               Wrap(
-                                spacing: 8,
+                                spacing: 10,
                                 runSpacing: 8,
                                 alignment: WrapAlignment.end,
                                 crossAxisAlignment: WrapCrossAlignment.center,
@@ -528,18 +596,23 @@ class AppModalDialog extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               if (effectiveFooterLeft != null)
-                                Expanded(child: effectiveFooterLeft)
+                                Flexible(
+                                  fit: FlexFit.loose,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    widthFactor: 1.0,
+                                    child: effectiveFooterLeft,
+                                  ),
+                                )
                               else
                                 const SizedBox.shrink(),
                               const SizedBox(width: 12),
-                              Flexible(
-                                child: Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  alignment: WrapAlignment.end,
-                                  children: effectiveActions ?? [],
-                                ),
+                              Wrap(
+                                spacing: 10,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                alignment: WrapAlignment.end,
+                                children: effectiveActions ?? [],
                               ),
                             ],
                           ),

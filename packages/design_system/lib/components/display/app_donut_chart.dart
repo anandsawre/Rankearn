@@ -314,18 +314,33 @@ class AppDonutChartCard extends StatelessWidget {
 
           // Donut Chart + Legend
           if (isLoading && slices.isEmpty)
-            const Expanded(
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.2,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+            if (isExpandedMode)
+              const Expanded(
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+                    ),
                   ),
                 ),
-              ),
-            )
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 28),
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+                    ),
+                  ),
+                ),
+              )
           else if (isExpandedMode)
             Expanded(
               child: AppDonutChart(

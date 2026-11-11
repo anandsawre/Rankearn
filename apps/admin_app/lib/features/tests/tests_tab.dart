@@ -22,7 +22,7 @@ import 'dialogs/ai_generate_test_series_dialog.dart';
 import '../questions/dialogs/create_question_dialog.dart';
 
 /// Test Series Management Screen
-/// Pixel-accurate reproduction of the Rankearn reference specification.
+/// Fully backed by live Supabase database queries and mutations.
 class TestsTab extends StatefulWidget {
   final List<TestSeriesItem>? initialItems;
 
@@ -33,12 +33,36 @@ class TestsTab extends StatefulWidget {
 }
 
 class _TestsTabState extends State<TestsTab> {
+  static const List<String> _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
   late List<TestSeriesItem> _allItems;
+  List<Map<String, dynamic>> _dbCategories = [];
+  List<DateTime> _attemptDates = [];
+  List<DateTime> _questionDates = [];
+  List<({String title, DateTime createdAt, bool isAttempt})> _dbActivityEvents = [];
+
+  bool _isLoading = true;
+  String? _errorMessage;
 
   // Search & Filtering State
   String _searchQuery = '';
   String _selectedSubject = 'All Subjects';
   String _selectedStatus = 'All Status';
+  String _accessFilter = 'All'; // 'All', 'Free', 'Premium'
+  String _modeFilter = 'All Modes'; // 'All Modes', 'mock', 'sectional', 'previous-year', 'tournament'
 
   // Pagination State
   int _currentPage = 1;
@@ -47,37 +71,153 @@ class _TestsTabState extends State<TestsTab> {
   @override
   void initState() {
     super.initState();
-    _allItems = widget.initialItems ?? [];
-    _loadFromSupabase();
+    if (widget.initialItems != null) {
+      _allItems = List.from(widget.initialItems!);
+      _isLoading = false;
+    } else {
+      _allItems = [];
+      _loadFromSupabase();
+    }
   }
 
   Future<void> _loadFromSupabase() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+
     final client = SupabaseConfig.clientSafe;
-    if (client == null) return;
+    if (client == null) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Database connection is not initialized.';
+        });
+      }
+      return;
+    }
 
     try {
-      final res = await client
-          .from('tests')
-          .select()
-          .order('created_at', ascending: false);
+      final results = await Future.wait([
+        client.from('tests').select().order('created_at', ascending: false),
+        client.from('categories').select('*').order('display_order', ascending: true),
+        client.from('questions').select('id, test_id, created_at').limit(5000),
+        client
+            .from('attempts')
+            .select('id, test_id, created_at')
+            .order('created_at', ascending: false)
+            .limit(2000),
+      ]);
+
+      final testRows = List<Map<String, dynamic>>.from(results[0] as List);
+      final categoryRows = List<Map<String, dynamic>>.from(results[1] as List);
+      final questionRows = List<Map<String, dynamic>>.from(results[2] as List);
+      final attemptRows = List<Map<String, dynamic>>.from(results[3] as List);
+
+      // Build category ID/name lookup
+      final catNameLookup = <String, String>{};
+      for (final c in categoryRows) {
+        final id = c['id']?.toString().trim() ?? '';
+        final name = c['name']?.toString().trim() ?? '';
+        if (id.isNotEmpty && name.isNotEmpty) {
+          catNameLookup[id.toLowerCase()] = name;
+        }
+        if (name.isNotEmpty) {
+          catNameLookup[name.toLowerCase()] = name;
+        }
+      }
+
+      // Count actual DB questions & attempts per test_id
+      final questionsCountByTest = <String, int>{};
+      final qDates = <DateTime>[];
+      for (final q in questionRows) {
+        final tid = q['test_id']?.toString().trim() ?? '';
+        if (tid.isNotEmpty) {
+          questionsCountByTest[tid] = (questionsCountByTest[tid] ?? 0) + 1;
+        }
+        final dt = DateTime.tryParse(q['created_at']?.toString() ?? '')?.toLocal();
+        if (dt != null) qDates.add(dt);
+      }
+
+      final attemptsCountByTest = <String, int>{};
+      final aDates = <DateTime>[];
+      for (final a in attemptRows) {
+        final tid = a['test_id']?.toString().trim() ?? '';
+        if (tid.isNotEmpty) {
+          attemptsCountByTest[tid] = (attemptsCountByTest[tid] ?? 0) + 1;
+        }
+        final dt = DateTime.tryParse(a['created_at']?.toString() ?? '')?.toLocal();
+        if (dt != null) aDates.add(dt);
+      }
+
+      final testTitleMap = <String, String>{};
+      final loadedItems = testRows.asMap().entries.map((entry) {
+        final row = entry.value;
+        final id = row['id']?.toString() ?? '';
+        final title = row['title']?.toString() ?? '';
+        if (id.isNotEmpty && title.isNotEmpty) testTitleMap[id] = title;
+
+        final rawCatId = row['category_id']?.toString().trim().toLowerCase() ?? '';
+        final rawCat = row['category']?.toString().trim().toLowerCase() ?? '';
+        final resolvedSub = catNameLookup[rawCatId] ?? catNameLookup[rawCat];
+
+        return TestSeriesItem.fromMap(
+          row,
+          entry.key + 1,
+          resolvedSubject: resolvedSub,
+          actualQuestionsCount: questionsCountByTest[id],
+          actualEnrollments: attemptsCountByTest[id],
+        );
+      }).toList();
+
+      // Build combined live activity events from real tests & attempts
+      final events = <({String title, DateTime createdAt, bool isAttempt})>[];
+      for (final item in loadedItems.take(5)) {
+        final label = item.status == TestSeriesStatus.published ? 'Published' : item.status.label;
+        events.add((
+          title: '$label: ${item.title}',
+          createdAt: item.createdAt,
+          isAttempt: false,
+        ));
+      }
+      for (final a in attemptRows.take(5)) {
+        final dt = DateTime.tryParse(a['created_at']?.toString() ?? '')?.toLocal();
+        if (dt != null) {
+          final tid = a['test_id']?.toString() ?? '';
+          final tTitle = testTitleMap[tid] ?? 'Test Series';
+          events.add((
+            title: 'Attempt submitted: $tTitle',
+            createdAt: dt,
+            isAttempt: true,
+          ));
+        }
+      }
+      events.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       if (!mounted) return;
       setState(() {
-        _allItems = res
-            .asMap()
-            .entries
-            .map((e) => TestSeriesItem.fromMap(e.value, e.key + 1))
-            .toList();
+        _allItems = loadedItems;
+        _dbCategories = categoryRows;
+        _attemptDates = aDates;
+        _questionDates = qDates;
+        _dbActivityEvents = events.take(6).toList();
+        _isLoading = false;
+        _errorMessage = null;
       });
     } catch (e) {
-      debugPrint('TestsTab Supabase fetch error: $e');
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to load test series from database: $e';
+      });
     }
   }
 
   // Filtered Items computation
   List<TestSeriesItem> get _filteredItems {
     return _allItems.where((item) {
-      // 1. Search Query Filter
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
         final matchesTitle = item.title.toLowerCase().contains(query);
@@ -86,16 +226,27 @@ class _TestsTabState extends State<TestsTab> {
         if (!matchesTitle && !matchesDesc && !matchesSub) return false;
       }
 
-      // 2. Subject Filter
       if (_selectedSubject != 'All Subjects') {
         if (item.subject.toLowerCase() != _selectedSubject.toLowerCase()) {
           return false;
         }
       }
 
-      // 3. Status Filter
       if (_selectedStatus != 'All Status') {
         if (item.status.label.toLowerCase() != _selectedStatus.toLowerCase()) {
+          return false;
+        }
+      }
+
+      if (_accessFilter == 'Free' && (item.isPremium || item.priceInr > 0)) {
+        return false;
+      }
+      if (_accessFilter == 'Premium' && (!item.isPremium && item.priceInr <= 0)) {
+        return false;
+      }
+
+      if (_modeFilter != 'All Modes') {
+        if (item.testMode.toLowerCase() != _modeFilter.toLowerCase()) {
           return false;
         }
       }
@@ -129,55 +280,150 @@ class _TestsTabState extends State<TestsTab> {
       _allItems.where((i) => i.status == TestSeriesStatus.draft).length;
   int get _totalTests =>
       _allItems.fold<int>(0, (sum, i) => sum + i.totalTests);
+  int get _totalQuestions =>
+      _allItems.fold<int>(0, (sum, i) => sum + i.totalQuestions);
   int get _totalEnrollments =>
       _allItems.fold<int>(0, (sum, i) => sum + i.enrollments);
+
+  ({String growth, bool isPositive, List<double> sparkline}) _computeTrend(
+    List<DateTime> dates,
+    int totalCount,
+  ) {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final sevenDaysAgo = now.subtract(const Duration(days: 7));
+    final fourteenDaysAgo = now.subtract(const Duration(days: 14));
+
+    int cur = 0;
+    int prev = 0;
+    final buckets = List<double>.filled(7, 0);
+
+    for (final dt in dates) {
+      if (!dt.isBefore(sevenDaysAgo)) {
+        cur++;
+      } else if (!dt.isBefore(fourteenDaysAgo)) {
+        prev++;
+      }
+      final dayOnly = DateTime(dt.year, dt.month, dt.day);
+      final diff = todayStart.difference(dayOnly).inDays;
+      if (diff >= 0 && diff < 7) {
+        buckets[6 - diff] += 1;
+      }
+    }
+
+    String growth = '';
+    bool isPos = true;
+    if (prev > 0) {
+      final pct = (((cur - prev) / prev) * 100).round();
+      isPos = pct >= 0;
+      growth = '${pct >= 0 ? '+' : ''}$pct%';
+    } else if (cur > 0 && totalCount > 0) {
+      final pct = ((cur / totalCount) * 100).round();
+      growth = '+$pct%';
+    }
+
+    return (growth: growth, isPositive: isPos, sparkline: buckets);
+  }
 
   // Dynamic Subject Slices for Donut Chart
   List<DonutSlice> get _subjectSlices {
     if (_allItems.isEmpty) return const [];
+    final colorLookup = <String, Color>{};
+    for (final c in _dbCategories) {
+      final name = c['name']?.toString().trim().toLowerCase() ?? '';
+      final parsed = _parseHexColor(c['icon_color']?.toString());
+      if (name.isNotEmpty && parsed != null) {
+        colorLookup[name] = parsed;
+      }
+    }
+
     final Map<String, int> counts = {};
     for (final item in _allItems) {
       final sub = item.subject.trim().isEmpty ? 'General' : item.subject.trim();
       counts[sub] = (counts[sub] ?? 0) + 1;
     }
-    const colors = [
-      Color(0xFF3B82F6),
-      Color(0xFF8B5CF6),
-      Color(0xFFF59E0B),
+
+    final sorted = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    const palette = [
+      AppColors.brandBlue,
+      AppColors.battleAdminPurple,
+      AppColors.coinGold,
       Color(0xFF06B6D4),
-      Color(0xFFEC4899),
-      Color(0xFFEA580C),
-      Color(0xFF10B981),
-      Color(0xFF6366F1),
+      AppColors.brandPink,
+      AppColors.brandOrange,
+      AppColors.brandGreen,
+      AppColors.brandPurple,
     ];
+
     int colorIdx = 0;
-    return counts.entries.map((entry) {
+    return sorted.map((entry) {
       final pct = (entry.value / _allItems.length) * 100;
-      final color = colors[colorIdx % colors.length];
+      final color = colorLookup[entry.key.toLowerCase()] ?? palette[colorIdx % palette.length];
       colorIdx++;
       return DonutSlice(
         label: entry.key,
-        percentage: pct.roundToDouble(),
+        percentage: pct,
         color: color,
         count: entry.value,
       );
     }).toList();
   }
 
-  // Dynamic Recent Activity from test series items
+  List<String> get _availableSubjects {
+    return <String>{
+      ..._dbCategories
+          .map((c) => c['name']?.toString().trim() ?? '')
+          .where((n) => n.isNotEmpty),
+      ..._allItems.map((i) => i.subject.trim()).where((s) => s.isNotEmpty),
+    }.toList()
+      ..sort();
+  }
+
+  // Dynamic Recent Activity from real database events
   List<ActivityItemData> get _recentActivities {
+    if (_dbActivityEvents.isNotEmpty) {
+      return _dbActivityEvents.take(5).map((ev) {
+        if (ev.isAttempt) {
+          return ActivityItemData(
+            icon: Icons.emoji_events_rounded,
+            iconColor: AppColors.battleAdminPurple,
+            iconBgColor: AppColors.battleAdminPurpleLight,
+            text: ev.title,
+            timeAgo: _formatTimeAgo(ev.createdAt),
+          );
+        }
+        final isPub = ev.title.startsWith('Published:');
+        return ActivityItemData(
+          icon: isPub ? Icons.check_circle_rounded : Icons.edit_note_rounded,
+          iconColor: isPub ? AppColors.brandGreen : AppColors.coinGold,
+          iconBgColor: isPub ? AppColors.brandGreenLight : AppColors.coinGoldLight,
+          text: ev.title,
+          timeAgo: _formatTimeAgo(ev.createdAt),
+        );
+      }).toList();
+    }
+
     if (_allItems.isEmpty) return const [];
-    final items = _allItems.take(5).toList();
-    return items.map((item) {
+    return _allItems.take(5).map((item) {
       final isPub = item.status == TestSeriesStatus.published;
       return ActivityItemData(
         icon: isPub ? Icons.check_circle_rounded : Icons.edit_note_rounded,
-        iconColor: isPub ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-        iconBgColor: isPub ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
-        text: '${isPub ? "Published" : "Draft"}: ${item.title}',
-        timeAgo: '${item.totalQuestions} Questions',
+        iconColor: isPub ? AppColors.brandGreen : AppColors.coinGold,
+        iconBgColor: isPub ? AppColors.brandGreenLight : AppColors.coinGoldLight,
+        text: '${isPub ? "Published" : item.status.label}: ${item.title}',
+        timeAgo: _formatTimeAgo(item.createdAt),
       );
     }).toList();
+  }
+
+  void _showSnack(String message, {bool isError = false, Color? backgroundColor}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppColors.error : (backgroundColor ?? AppColors.brandGreen),
+      ),
+    );
   }
 
   // Actions
@@ -187,34 +433,30 @@ class _TestsTabState extends State<TestsTab> {
       builder: (ctx) => CreateTestSeriesDialog(
         initialItem: itemToEdit,
         onSave: (savedItem) async {
-          setState(() {
-            final idx = _allItems.indexWhere((i) => i.id == savedItem.id);
-            if (idx >= 0) {
-              _allItems[idx] = savedItem;
-            } else {
-              _allItems.insert(0, savedItem);
-            }
-          });
-
-          // Sync to Supabase if connected
           final client = SupabaseConfig.clientSafe;
-          if (client != null) {
-            try {
-              await client.from('tests').upsert(savedItem.toMap());
-            } catch (_) {}
+          if (client == null) {
+            _showSnack('Database not connected. Cannot save test series.', isError: true);
+            return;
           }
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  itemToEdit != null
-                      ? 'Updated test series "${savedItem.title}"'
-                      : 'Created new test series "${savedItem.title}"',
-                ),
-                backgroundColor: const Color(0xFF10B981),
-              ),
+          try {
+            await client.from('tests').upsert(savedItem.toMap());
+            if (!mounted) return;
+            setState(() {
+              final idx = _allItems.indexWhere((i) => i.id == savedItem.id);
+              if (idx >= 0) {
+                _allItems[idx] = savedItem;
+              } else {
+                _allItems.insert(0, savedItem);
+              }
+            });
+            _showSnack(
+              itemToEdit != null
+                  ? 'Updated test series "${savedItem.title}"'
+                  : 'Created new test series "${savedItem.title}"',
             );
+          } catch (e) {
+            _showSnack('Failed to save test series to database: $e', isError: true);
           }
         },
       ),
@@ -251,38 +493,30 @@ class _TestsTabState extends State<TestsTab> {
         initialTestSeriesTitle: item?.title,
         initialTestId: item?.id,
         onBulkSave: (importedQuestions) {
-          if (item != null) {
-            final newCount = item.totalQuestions + importedQuestions.length;
-            setState(() {
-              final idx = _allItems.indexWhere((i) => i.id == item.id);
-              if (idx >= 0) {
-                _allItems[idx] = _allItems[idx].copyWith(totalQuestions: newCount);
-              }
-            });
-          }
+          _loadFromSupabase();
         },
         onSave: (savedQuestion) async {
-          String? syncNotice;
           final client = SupabaseConfig.clientSafe;
-          if (client != null) {
-            try {
-              final payload = savedQuestion.toMap();
-              if (item != null) {
-                payload['test_id'] = item.id;
-                try {
-                  await client.from('tests').upsert(item.toMap());
-                } catch (tErr) {
-                  debugPrint('Parent test upsert note: $tErr');
-                }
-              }
-              await client.from('questions').upsert(payload);
+          if (client == null) {
+            _showSnack('Database not connected. Cannot save question.', isError: true);
+            return;
+          }
 
-              if (item != null) {
-                final newCount = item.totalQuestions + 1;
-                await client.from('tests').update({
-                  'total_questions': newCount,
-                }).eq('id', item.id);
+          try {
+            final payload = savedQuestion.toMap();
+            if (item != null) {
+              payload['test_id'] = item.id;
+              await client.from('tests').upsert(item.toMap());
+            }
+            await client.from('questions').upsert(payload);
 
+            if (item != null) {
+              final newCount = item.totalQuestions + 1;
+              await client.from('tests').update({
+                'total_questions': newCount,
+              }).eq('id', item.id);
+
+              if (mounted) {
                 setState(() {
                   final idx = _allItems.indexWhere((i) => i.id == item.id);
                   if (idx >= 0) {
@@ -290,28 +524,15 @@ class _TestsTabState extends State<TestsTab> {
                   }
                 });
               }
-            } catch (e) {
-              debugPrint('Error saving question to Supabase: $e');
-              if (e.toString().contains('42501') || e.toString().contains('row-level security')) {
-                syncNotice = 'Saved locally! (Run Supabase RLS SQL migration to enable cloud sync)';
-              } else if (e.toString().contains('23502') || e.toString().contains('test_id')) {
-                syncNotice = 'Saved locally! (Run test_id DROP NOT NULL SQL migration in Supabase)';
-              }
             }
-          }
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  syncNotice ??
-                      (item != null
-                          ? 'Question added to "${item.title}" successfully!'
-                          : 'Question added to question bank successfully!'),
-                ),
-                backgroundColor: syncNotice != null ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
-              ),
+            _showSnack(
+              item != null
+                  ? 'Question added to "${item.title}" successfully!'
+                  : 'Question added to question bank successfully!',
             );
+          } catch (e) {
+            _showSnack('Failed to save question to Supabase: $e', isError: true);
           }
         },
       ),
@@ -324,24 +545,24 @@ class _TestsTabState extends State<TestsTab> {
       builder: (ctx) => AddTestPaperDialog(
         existingSeries: _allItems,
         onSave: (newItem) async {
-          setState(() {
-            _allItems.insert(0, newItem);
-          });
           final client = SupabaseConfig.clientSafe;
-          if (client != null) {
-            try {
-              await client.from('tests').upsert(newItem.toMap());
-            } catch (e) {
-              debugPrint('Error saving test paper to Supabase: $e');
-            }
+          if (client == null) {
+            _showSnack('Database not connected. Cannot add test paper.', isError: true);
+            return;
           }
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Test Paper "${newItem.title}" added successfully!'),
-                backgroundColor: const Color(0xFF0084FF),
-              ),
+
+          try {
+            await client.from('tests').upsert(newItem.toMap());
+            if (!mounted) return;
+            setState(() {
+              _allItems.insert(0, newItem);
+            });
+            _showSnack(
+              'Test Paper "${newItem.title}" added successfully!',
+              backgroundColor: const Color(0xFF0084FF),
             );
+          } catch (e) {
+            _showSnack('Failed to add test paper to Supabase: $e', isError: true);
           }
         },
       ),
@@ -365,25 +586,25 @@ class _TestsTabState extends State<TestsTab> {
       builder: (ctx) => ImportTestsDialog(
         existingTests: _allItems,
         onImportTests: (imported) async {
-          setState(() {
-            _allItems.insertAll(0, imported);
-          });
           final client = SupabaseConfig.clientSafe;
-          if (client != null) {
-            try {
-              final payload = imported.map((i) => i.toMap()).toList();
-              await client.from('tests').upsert(payload);
-            } catch (e) {
-              debugPrint('Error bulk inserting tests to Supabase: $e');
-            }
+          if (client == null) {
+            _showSnack('Database not connected. Cannot import tests.', isError: true);
+            return;
           }
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Successfully imported ${imported.length} test papers!'),
-                backgroundColor: const Color(0xFFFF9500),
-              ),
+
+          try {
+            final payload = imported.map((i) => i.toMap()).toList();
+            await client.from('tests').upsert(payload);
+            if (!mounted) return;
+            setState(() {
+              _allItems.insertAll(0, imported);
+            });
+            _showSnack(
+              'Successfully imported ${imported.length} test papers!',
+              backgroundColor: const Color(0xFFFF9500),
             );
+          } catch (e) {
+            _showSnack('Failed to import tests to Supabase: $e', isError: true);
           }
         },
       ),
@@ -395,26 +616,28 @@ class _TestsTabState extends State<TestsTab> {
       context: context,
       builder: (ctx) => AiGenerateTestSeriesDialog(
         onSaveGenerated: (testItem, questions) async {
-          setState(() {
-            _allItems.insert(0, testItem);
-          });
           final client = SupabaseConfig.clientSafe;
-          if (client != null) {
-            try {
-              await client.from('tests').upsert(testItem.toMap());
+          if (client == null) {
+            _showSnack('Database not connected. Cannot save AI generated test.', isError: true);
+            return;
+          }
+
+          try {
+            await client.from('tests').upsert(testItem.toMap());
+            if (questions.isNotEmpty) {
               final payload = questions.map((q) => q.toMap()).toList();
               await client.from('questions').upsert(payload);
-            } catch (e) {
-              debugPrint('Error saving AI generated test & questions: $e');
             }
-          }
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('AI Test Series "${testItem.title}" with ${questions.length} questions generated!'),
-                backgroundColor: const Color(0xFFFF3385),
-              ),
+            if (!mounted) return;
+            setState(() {
+              _allItems.insert(0, testItem);
+            });
+            _showSnack(
+              'AI Test Series "${testItem.title}" with ${questions.length} questions saved!',
+              backgroundColor: const Color(0xFFFF3385),
             );
+          } catch (e) {
+            _showSnack('Failed to save generated test series to Supabase: $e', isError: true);
           }
         },
       ),
@@ -425,6 +648,126 @@ class _TestsTabState extends State<TestsTab> {
     AppModalDialog.show(
       context: context,
       builder: (ctx) => AnalyticsTestSeriesDialog(item: item),
+    );
+  }
+
+  void _openAdvancedFiltersDialog() {
+    String draftAccess = _accessFilter;
+    String draftMode = _modeFilter;
+
+    AppModalDialog.show(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AppModalDialog(
+              title: 'Filter Test Series',
+              subtitle: 'Refine test series by pricing tier and exam mode',
+              iconData: Icons.filter_list_rounded,
+              maxWidth: 460,
+              footerLeft: TextButton.icon(
+                onPressed: () {
+                  setDialogState(() {
+                    draftAccess = 'All';
+                    draftMode = 'All Modes';
+                  });
+                },
+                icon: const Icon(
+                  Icons.restart_alt_rounded,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+                label: Text(
+                  'Reset',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontHeading,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: AppRadii.borderSm),
+                ),
+              ),
+              actions: [
+                AppModalDialog.cancelButton(ctx),
+                AppModalDialog.primaryButton(
+                  onPressed: () {
+                    setState(() {
+                      _accessFilter = draftAccess;
+                      _modeFilter = draftMode;
+                      _currentPage = 1;
+                    });
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(
+                    'Apply Filters',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Access Tier',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  AppDropdown<String>(
+                    value: draftAccess,
+                    items: const [
+                      AppDropdownItem(value: 'All', label: 'All Tiers'),
+                      AppDropdownItem(value: 'Free', label: 'Free Only'),
+                      AppDropdownItem(value: 'Premium', label: 'Premium / Paid'),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setDialogState(() => draftAccess = val);
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Test Mode',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  AppDropdown<String>(
+                    value: draftMode,
+                    items: const [
+                      AppDropdownItem(value: 'All Modes', label: 'All Modes'),
+                      AppDropdownItem(value: 'mock', label: 'Mock Test'),
+                      AppDropdownItem(value: 'sectional', label: 'Sectional Test'),
+                      AppDropdownItem(value: 'previous-year', label: 'Previous Year'),
+                      AppDropdownItem(value: 'tournament', label: 'Tournament'),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setDialogState(() => draftMode = val);
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -452,21 +795,20 @@ class _TestsTabState extends State<TestsTab> {
             ),
             onPressed: () async {
               Navigator.pop(ctx);
-              setState(() {
-                _allItems.removeWhere((i) => i.id == item.id);
-              });
               final client = SupabaseConfig.clientSafe;
-              if (client != null) {
-                try {
-                  await client.from('tests').delete().eq('id', item.id);
-                } catch (e) {
-                  debugPrint('Error deleting test from Supabase: $e');
-                }
+              if (client == null) {
+                _showSnack('Database not connected. Cannot delete test series.', isError: true);
+                return;
               }
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Deleted "${item.title}"')),
-                );
+              try {
+                await client.from('tests').delete().eq('id', item.id);
+                if (!mounted) return;
+                setState(() {
+                  _allItems.removeWhere((i) => i.id == item.id);
+                });
+                _showSnack('Deleted "${item.title}"', backgroundColor: AppColors.textPrimary);
+              } catch (e) {
+                _showSnack('Failed to delete test series: $e', isError: true);
               }
             },
             child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
@@ -481,31 +823,30 @@ class _TestsTabState extends State<TestsTab> {
   }
 
   void _toggleStatus(TestSeriesItem item) async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      _showSnack('Database not connected. Cannot update status.', isError: true);
+      return;
+    }
+
     final nextStatus = item.status == TestSeriesStatus.published
         ? TestSeriesStatus.draft
         : TestSeriesStatus.published;
     final updated = item.copyWith(status: nextStatus);
-    setState(() {
-      final idx = _allItems.indexWhere((i) => i.id == item.id);
-      if (idx >= 0) _allItems[idx] = updated;
-    });
 
-    final client = SupabaseConfig.clientSafe;
-    if (client != null) {
-      try {
-        await client.from('tests').update({'status': nextStatus.name}).eq('id', item.id);
-      } catch (e) {
-        debugPrint('Error updating test status in Supabase: $e');
-      }
-    }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Status changed to ${nextStatus.label} for "${item.title}"'),
-          backgroundColor: const Color(0xFF5636F5),
-        ),
+    try {
+      await client.from('tests').update({'status': nextStatus.name}).eq('id', item.id);
+      if (!mounted) return;
+      setState(() {
+        final idx = _allItems.indexWhere((i) => i.id == item.id);
+        if (idx >= 0) _allItems[idx] = updated;
+      });
+      _showSnack(
+        'Status changed to ${nextStatus.label} for "${item.title}"',
+        backgroundColor: const Color(0xFF5636F5),
       );
+    } catch (e) {
+      _showSnack('Failed to update status in Supabase: $e', isError: true);
     }
   }
 
@@ -514,6 +855,86 @@ class _TestsTabState extends State<TestsTab> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1100;
 
+    final seriesTrend = _computeTrend(
+      _allItems.map((i) => i.createdAt).toList(),
+      _totalTestSeries,
+    );
+    final publishedTrend = _computeTrend(
+      _allItems.where((i) => i.status == TestSeriesStatus.published).map((i) => i.createdAt).toList(),
+      _publishedCount,
+    );
+    final draftsTrend = _computeTrend(
+      _allItems.where((i) => i.status == TestSeriesStatus.draft).map((i) => i.createdAt).toList(),
+      _draftsCount,
+    );
+    final questionsTrend = _computeTrend(_questionDates, _totalQuestions);
+    final attemptsTrend = _computeTrend(_attemptDates, _totalEnrollments);
+
+    final metricsRow = TestSeriesMetricsRow(
+      totalTestSeries: _totalTestSeries,
+      publishedCount: _publishedCount,
+      draftsCount: _draftsCount,
+      totalTests: _totalTests,
+      totalEnrollments: _totalEnrollments,
+      isLoading: _isLoading && _allItems.isEmpty,
+      totalSeriesGrowth: seriesTrend.growth,
+      totalSeriesPositive: seriesTrend.isPositive,
+      totalSeriesSparkline: seriesTrend.sparkline,
+      publishedGrowth: publishedTrend.growth,
+      publishedPositive: publishedTrend.isPositive,
+      publishedSparkline: publishedTrend.sparkline,
+      draftsGrowth: draftsTrend.growth,
+      draftsPositive: draftsTrend.isPositive,
+      draftsSparkline: draftsTrend.sparkline,
+      questionsGrowth: questionsTrend.growth,
+      questionsPositive: questionsTrend.isPositive,
+      questionsSparkline: questionsTrend.sparkline,
+      enrollmentsGrowth: attemptsTrend.growth,
+      enrollmentsPositive: attemptsTrend.isPositive,
+      enrollmentsSparkline: attemptsTrend.sparkline,
+    );
+
+    final tableCard = TestSeriesTableCard(
+      items: _paginatedItems,
+      totalCount: _filteredItems.length,
+      selectedSubject: _selectedSubject,
+      availableSubjects: _availableSubjects,
+      selectedStatus: _selectedStatus,
+      searchQuery: _searchQuery,
+      currentPage: _currentPage,
+      totalPages: _totalPages,
+      isLoading: _isLoading,
+      onSubjectChanged: (val) {
+        setState(() {
+          _selectedSubject = val;
+          _currentPage = 1;
+        });
+      },
+      onStatusChanged: (val) {
+        setState(() {
+          _selectedStatus = val;
+          _currentPage = 1;
+        });
+      },
+      onSearchChanged: (val) {
+        setState(() {
+          _searchQuery = val;
+          _currentPage = 1;
+        });
+      },
+      onPageChanged: (page) {
+        setState(() => _currentPage = page);
+      },
+      onFiltersTap: _openAdvancedFiltersDialog,
+      onView: _openViewDialog,
+      onAnalytics: _openAnalyticsDialog,
+      onEdit: (item) => _openCreateDialog(item),
+      onDelete: _deleteItem,
+      onToggleStatus: _toggleStatus,
+      onAddQuestion: (item) => _openAddQuestionDialog(item),
+      onViewQuestions: _openViewQuestionsDialog,
+    );
+
     return Container(
       color: const Color(0xFFF8FAFC),
       child: SingleChildScrollView(
@@ -521,6 +942,48 @@ class _TestsTabState extends State<TestsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.errorRoseLight,
+                  borderRadius: AppRadii.borderMd,
+                  border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: _isLoading ? null : _loadFromSupabase,
+                      icon: const Icon(Icons.refresh_rounded, size: 16, color: AppColors.error),
+                      label: Text(
+                        'Retry',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             // ==========================================
             // ROW 1: HERO CARD + QUICK ACTIONS
             // ==========================================
@@ -528,14 +991,11 @@ class _TestsTabState extends State<TestsTab> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Wide Hero Card (63% width)
                   const Expanded(
                     flex: 63,
                     child: TestSeriesHeroCard(),
                   ),
                   const SizedBox(width: 16),
-
-                  // Quick Actions Card (37% width)
                   Expanded(
                     flex: 37,
                     child: TestSeriesQuickActions(
@@ -565,15 +1025,9 @@ class _TestsTabState extends State<TestsTab> {
             const SizedBox(height: 20),
 
             // ==========================================
-            // ROW 2: 5 METRIC CARDS
+            // ROW 2: 5 LIVE METRIC CARDS
             // ==========================================
-            TestSeriesMetricsRow(
-              totalTestSeries: _totalTestSeries,
-              publishedCount: _publishedCount,
-              draftsCount: _draftsCount,
-              totalTests: _totalTests,
-              totalEnrollments: _totalEnrollments,
-            ),
+            metricsRow,
             const SizedBox(height: 20),
 
             // ==========================================
@@ -583,49 +1037,8 @@ class _TestsTabState extends State<TestsTab> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Test Series List Table (Flexible width)
-                  Expanded(
-                    child: TestSeriesTableCard(
-                      items: _paginatedItems,
-                      totalCount: _filteredItems.length,
-                      selectedSubject: _selectedSubject,
-                      selectedStatus: _selectedStatus,
-                      searchQuery: _searchQuery,
-                      currentPage: _currentPage,
-                      totalPages: _totalPages,
-                      onSubjectChanged: (val) {
-                        setState(() {
-                          _selectedSubject = val;
-                          _currentPage = 1;
-                        });
-                      },
-                      onStatusChanged: (val) {
-                        setState(() {
-                          _selectedStatus = val;
-                          _currentPage = 1;
-                        });
-                      },
-                      onSearchChanged: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                          _currentPage = 1;
-                        });
-                      },
-                      onPageChanged: (page) {
-                        setState(() => _currentPage = page);
-                      },
-                      onView: _openViewDialog,
-                      onAnalytics: _openAnalyticsDialog,
-                      onEdit: (item) => _openCreateDialog(item),
-                      onDelete: _deleteItem,
-                      onToggleStatus: _toggleStatus,
-                      onAddQuestion: (item) => _openAddQuestionDialog(item),
-                      onViewQuestions: _openViewQuestionsDialog,
-                    ),
-                  ),
+                  Expanded(child: tableCard),
                   const SizedBox(width: 16),
-
-                  // Right Analytics Column
                   SizedBox(
                     width: 295,
                     child: Column(
@@ -633,10 +1046,13 @@ class _TestsTabState extends State<TestsTab> {
                         SubjectWiseChartCard(
                           totalCount: _totalTestSeries,
                           slices: _subjectSlices,
+                          isLoading: _isLoading && _allItems.isEmpty,
                         ),
                         const SizedBox(height: 16),
                         RecentActivityCard(
                           activities: _recentActivities,
+                          isLoading: _isLoading && _allItems.isEmpty,
+                          onViewAll: _isLoading ? null : _loadFromSupabase,
                         ),
                       ],
                     ),
@@ -646,43 +1062,7 @@ class _TestsTabState extends State<TestsTab> {
             else
               Column(
                 children: [
-                  TestSeriesTableCard(
-                    items: _paginatedItems,
-                    totalCount: _filteredItems.length,
-                    selectedSubject: _selectedSubject,
-                    selectedStatus: _selectedStatus,
-                    searchQuery: _searchQuery,
-                    currentPage: _currentPage,
-                    totalPages: _totalPages,
-                    onSubjectChanged: (val) {
-                      setState(() {
-                        _selectedSubject = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    onStatusChanged: (val) {
-                      setState(() {
-                        _selectedStatus = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    onSearchChanged: (val) {
-                      setState(() {
-                        _searchQuery = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    onPageChanged: (page) {
-                      setState(() => _currentPage = page);
-                    },
-                    onView: _openViewDialog,
-                    onAnalytics: _openAnalyticsDialog,
-                    onEdit: (item) => _openCreateDialog(item),
-                    onDelete: _deleteItem,
-                    onToggleStatus: _toggleStatus,
-                    onAddQuestion: (item) => _openAddQuestionDialog(item),
-                    onViewQuestions: _openViewQuestionsDialog,
-                  ),
+                  tableCard,
                   const SizedBox(height: 16),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -691,12 +1071,15 @@ class _TestsTabState extends State<TestsTab> {
                         child: SubjectWiseChartCard(
                           totalCount: _totalTestSeries,
                           slices: _subjectSlices,
+                          isLoading: _isLoading && _allItems.isEmpty,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: RecentActivityCard(
                           activities: _recentActivities,
+                          isLoading: _isLoading && _allItems.isEmpty,
+                          onViewAll: _isLoading ? null : _loadFromSupabase,
                         ),
                       ),
                     ],
@@ -708,5 +1091,27 @@ class _TestsTabState extends State<TestsTab> {
         ),
       ),
     );
+  }
+
+  String _formatTimeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${_months[dt.month - 1]} ${dt.day.toString().padLeft(2, '0')}';
+  }
+
+  Color? _parseHexColor(String? hex) {
+    if (hex == null || hex.isEmpty) return null;
+    final cleaned = hex.replaceAll('#', '').trim();
+    if (cleaned.length == 6) {
+      final val = int.tryParse('FF$cleaned', radix: 16);
+      if (val != null) return Color(val);
+    } else if (cleaned.length == 8) {
+      final val = int.tryParse(cleaned, radix: 16);
+      if (val != null) return Color(val);
+    }
+    return null;
   }
 }

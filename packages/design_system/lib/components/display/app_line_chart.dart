@@ -512,6 +512,7 @@ class AppLineChartCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: height != null ? MainAxisSize.max : MainAxisSize.min,
         children: [
           // Header Row
           Row(
@@ -560,32 +561,61 @@ class AppLineChartCard extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Chart Area
-          Expanded(
-            child: (isLoading && values.isEmpty)
-                ? const Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+          if (height != null)
+            Expanded(
+              child: (isLoading && values.isEmpty)
+                  ? const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+                        ),
                       ),
+                    )
+                  : AppLineChart(
+                      dates: dates,
+                      values: values,
+                      highlightedIndex: highlightedIndex,
+                      tooltipDate: tooltipDate,
+                      tooltipValue: tooltipValue,
+                      height: chartHeight,
+                      lineColor: lineColor,
+                      fillColor: fillColor,
+                      maxY: maxY,
+                      yLabels: yLabels,
+                      emptyText: emptyText,
                     ),
-                  )
-                : AppLineChart(
-                    dates: dates,
-                    values: values,
-                    highlightedIndex: highlightedIndex,
-                    tooltipDate: tooltipDate,
-                    tooltipValue: tooltipValue,
-                    height: chartHeight,
-                    lineColor: lineColor,
-                    fillColor: fillColor,
-                    maxY: maxY,
-                    yLabels: yLabels,
-                    emptyText: emptyText,
+            )
+          else if (isLoading && values.isEmpty)
+            SizedBox(
+              height: chartHeight,
+              child: const Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
                   ),
-          ),
+                ),
+              ),
+            )
+          else
+            AppLineChart(
+              dates: dates,
+              values: values,
+              highlightedIndex: highlightedIndex,
+              tooltipDate: tooltipDate,
+              tooltipValue: tooltipValue,
+              height: chartHeight,
+              lineColor: lineColor,
+              fillColor: fillColor,
+              maxY: maxY,
+              yLabels: yLabels,
+              emptyText: emptyText,
+            ),
         ],
       ),
     );

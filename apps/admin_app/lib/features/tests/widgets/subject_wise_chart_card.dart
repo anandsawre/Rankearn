@@ -10,6 +10,7 @@ class SubjectWiseChartCard extends StatelessWidget {
   final bool fillHeight;
   final int totalCount;
   final List<DonutSlice> slices;
+  final bool isLoading;
 
   const SubjectWiseChartCard({
     super.key,
@@ -17,6 +18,7 @@ class SubjectWiseChartCard extends StatelessWidget {
     this.fillHeight = false,
     this.totalCount = 0,
     this.slices = const [],
+    this.isLoading = false,
   });
 
   @override
@@ -24,12 +26,11 @@ class SubjectWiseChartCard extends StatelessWidget {
     return AppDonutChartCard(
       title: 'Subject Wise Test Series',
       icon: Icons.pie_chart_rounded,
-      iconBg: const Color(0xFF3B82F6),
+      iconBg: AppColors.brandBlue,
       totalCount: totalCount,
       totalLabel: 'Total',
-      slices: slices.isEmpty
-          ? const [DonutSlice(label: 'No Data', percentage: 100, color: Color(0xFFCBD5E1))]
-          : slices,
+      slices: slices,
+      isLoading: isLoading,
       height: height,
       fillHeight: fillHeight,
       chartSize: 100,

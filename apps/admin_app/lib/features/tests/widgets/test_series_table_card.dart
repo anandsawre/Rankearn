@@ -8,14 +8,17 @@ class TestSeriesTableCard extends StatefulWidget {
   final List<TestSeriesItem> items;
   final int totalCount;
   final String selectedSubject;
+  final List<String> availableSubjects;
   final String selectedStatus;
   final String searchQuery;
   final int currentPage;
   final int totalPages;
+  final bool isLoading;
   final ValueChanged<String> onSubjectChanged;
   final ValueChanged<String> onStatusChanged;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<int> onPageChanged;
+  final VoidCallback? onFiltersTap;
   final Function(TestSeriesItem) onView;
   final Function(TestSeriesItem) onAnalytics;
   final Function(TestSeriesItem) onEdit;
@@ -29,14 +32,17 @@ class TestSeriesTableCard extends StatefulWidget {
     required this.items,
     required this.totalCount,
     required this.selectedSubject,
+    this.availableSubjects = const [],
     required this.selectedStatus,
     required this.searchQuery,
     required this.currentPage,
     required this.totalPages,
+    this.isLoading = false,
     required this.onSubjectChanged,
     required this.onStatusChanged,
     required this.onSearchChanged,
     required this.onPageChanged,
+    this.onFiltersTap,
     required this.onView,
     required this.onAnalytics,
     required this.onEdit,
@@ -85,6 +91,13 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
     final double remainingSpace = cardWidth - (fixedColumnsWidth + detailsWidth);
     final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 10).clamp(6.0, 48.0) : 6.0;
 
+    final subjectDropdownItems = <String>{
+      'All Subjects',
+      ...widget.availableSubjects.where((s) => s.trim().isNotEmpty),
+      ...widget.items.map((i) => i.subject.trim()).where((s) => s.isNotEmpty),
+      widget.selectedSubject,
+    }.toList();
+
     return AdminDataTableCard(
           title: 'Test Series List',
           totalCount: widget.totalCount,
@@ -96,21 +109,13 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
           currentPage: widget.currentPage,
           totalPages: widget.totalPages,
           onPageChanged: widget.onPageChanged,
+          isLoading: widget.isLoading && widget.items.isEmpty,
           itemLabel: 'test series',
           columnSpacing: dynamicColumnSpacing,
           filterControls: [
             AdminTableDropdown(
               value: widget.selectedSubject,
-              items: const [
-                'All Subjects',
-                'General Science',
-                'Mathematics',
-                'Reasoning',
-                'Current Affairs',
-                'Chemistry',
-                'Biology',
-                'Mixed',
-              ],
+              items: subjectDropdownItems,
               onChanged: widget.onSubjectChanged,
             ),
             AdminTableDropdown(
@@ -123,16 +128,10 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
               ],
               onChanged: widget.onStatusChanged,
             ),
-            AdminTableFiltersButton(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Filter drawer opened with advanced criteria.'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
-            ),
+            if (widget.onFiltersTap != null)
+              AdminTableFiltersButton(
+                onTap: widget.onFiltersTap!,
+              ),
           ],
           columns: [
             DataColumn(

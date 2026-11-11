@@ -143,49 +143,66 @@ class TestSeriesItem {
       'scheduled_end_time': scheduledEndTime?.toIso8601String(),
       'total_participants': enrollments,
       'status': status.name,
-      'exam_category_id': (examCategoryId != null && examCategoryId!.isNotEmpty) ? examCategoryId : 'bpsc',
-      'category_id': subject.isNotEmpty ? subject : 'General Science',
+      'exam_category_id': (examCategoryId != null && examCategoryId!.isNotEmpty) ? examCategoryId : null,
+      'category_id': subject.isNotEmpty ? subject : null,
       'created_at': createdAt.toIso8601String(),
     };
   }
 
-  factory TestSeriesItem.fromMap(Map<String, dynamic> map, int fallbackIndex) {
+  factory TestSeriesItem.fromMap(
+    Map<String, dynamic> map,
+    int fallbackIndex, {
+    String? resolvedSubject,
+    int? actualQuestionsCount,
+    int? actualEnrollments,
+  }) {
     final statusStr = map['status']?.toString() ?? 'published';
-    final examCat = map['exam_category_id']?.toString() ?? 'bpsc';
+    final examCat = map['exam_category_id']?.toString();
     final mode = map['test_mode']?.toString() ?? 'mock';
-    final sub = map['category_id']?.toString() ?? 'General Science';
-    final dur = (map['duration_minutes'] as num?)?.toInt() ?? 60;
+    final rawSub = resolvedSubject?.trim().isNotEmpty == true
+        ? resolvedSubject!.trim()
+        : (map['category']?.toString().trim().isNotEmpty == true
+            ? map['category'].toString().trim()
+            : map['category_id']?.toString().trim());
+    final sub = (rawSub != null && rawSub.isNotEmpty) ? rawSub : 'General';
+    final dur = (map['duration_minutes'] as num?)?.toInt() ?? 0;
+    final storedQuestions = (map['total_questions'] as num?)?.toInt() ?? 0;
+    final storedEnrollments = (map['total_participants'] as num?)?.toInt() ?? 0;
+    final effectiveQuestions = (actualQuestionsCount != null && actualQuestionsCount > storedQuestions)
+        ? actualQuestionsCount
+        : storedQuestions;
+    final effectiveEnrollments = (actualEnrollments != null && actualEnrollments > storedEnrollments)
+        ? actualEnrollments
+        : storedEnrollments;
 
     final (icon, color) = _getIconAndColorForSubject(sub, fallbackIndex);
 
     return TestSeriesItem(
       id: map['id']?.toString() ?? 'ts-$fallbackIndex',
-      title: map['title']?.toString() ?? 'Test Series #$fallbackIndex',
-      description: map['syllabus']?.toString() ??
-          map['description']?.toString() ??
-          'Complete test series with solutions',
+      title: map['title']?.toString() ?? 'Untitled Test Series',
+      description: map['syllabus']?.toString() ?? map['description']?.toString() ?? '',
       subject: sub,
       examCategoryId: examCat,
       testMode: mode,
-      totalTests: dur,
-      durationMinutes: dur,
-      totalQuestions: (map['total_questions'] as num?)?.toInt() ?? 0,
+      totalTests: (map['total_tests'] as num?)?.toInt() ?? dur,
+      durationMinutes: dur > 0 ? dur : 60,
+      totalQuestions: effectiveQuestions,
       negativeMarking: (map['negative_marking'] as num?)?.toDouble() ?? 0.25,
       isPremium: map['is_premium'] == true,
       priceInr: (map['unlock_price_coins'] as num?)?.toInt() ?? 0,
       isTournament: map['is_tournament'] == true,
       entryFeeCoins: (map['entry_fee_coins'] as num?)?.toInt() ?? 0,
       scheduledStartTime: map['scheduled_start_time'] != null
-          ? DateTime.tryParse(map['scheduled_start_time'].toString())
+          ? DateTime.tryParse(map['scheduled_start_time'].toString())?.toLocal()
           : null,
       scheduledEndTime: map['scheduled_end_time'] != null
-          ? DateTime.tryParse(map['scheduled_end_time'].toString())
+          ? DateTime.tryParse(map['scheduled_end_time'].toString())?.toLocal()
           : null,
-      enrollments: (map['total_participants'] as num?)?.toInt() ?? 0,
+      enrollments: effectiveEnrollments,
       status: TestSeriesStatus.fromString(statusStr),
       createdAt: map['created_at'] != null
-          ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime(2026, 10, 10)
-          : DateTime(2026, 10, 10),
+          ? DateTime.tryParse(map['created_at'].toString())?.toLocal() ?? DateTime.now()
+          : DateTime.now(),
       icon: icon,
       iconColor: color,
     );
@@ -209,106 +226,4 @@ class TestSeriesItem {
       return (Icons.settings_suggest_rounded, const Color(0xFF06B6D4));
     }
   }
-
-  /// Initial reference dataset matching the screenshot exactly
-  static List<TestSeriesItem> get referenceData => [
-        TestSeriesItem(
-          id: 'ts-1',
-          title: 'RRB Technician Grade 3',
-          description: 'Complete test series with detailed solutions',
-          subject: 'General Science',
-          totalTests: 20,
-          totalQuestions: 2000,
-          priceInr: 199,
-          enrollments: 3245,
-          status: TestSeriesStatus.published,
-          createdAt: DateTime(2026, 10, 10),
-          icon: Icons.science_rounded,
-          iconColor: const Color(0xFF6366F1),
-        ),
-        TestSeriesItem(
-          id: 'ts-2',
-          title: 'Railway Maths Practice Series',
-          description: 'Topic wise and full length tests',
-          subject: 'Mathematics',
-          totalTests: 25,
-          totalQuestions: 2500,
-          priceInr: 149,
-          enrollments: 2891,
-          status: TestSeriesStatus.published,
-          createdAt: DateTime(2026, 10, 8),
-          icon: Icons.calculate_rounded,
-          iconColor: const Color(0xFFF43F5E),
-        ),
-        TestSeriesItem(
-          id: 'ts-3',
-          title: 'Reasoning Special Series',
-          description: 'Based on latest exam pattern',
-          subject: 'Reasoning',
-          totalTests: 20,
-          totalQuestions: 2000,
-          priceInr: 149,
-          enrollments: 1985,
-          status: TestSeriesStatus.published,
-          createdAt: DateTime(2026, 10, 5),
-          icon: Icons.lightbulb_rounded,
-          iconColor: const Color(0xFFF59E0B),
-        ),
-        TestSeriesItem(
-          id: 'ts-4',
-          title: 'Current Affairs Monthly Series',
-          description: 'Monthly current affairs tests',
-          subject: 'Current Affairs',
-          totalTests: 12,
-          totalQuestions: 1200,
-          priceInr: 99,
-          enrollments: 1542,
-          status: TestSeriesStatus.published,
-          createdAt: DateTime(2026, 10, 1),
-          icon: Icons.public_rounded,
-          iconColor: const Color(0xFF0284C7),
-        ),
-        TestSeriesItem(
-          id: 'ts-5',
-          title: 'Chemistry Practice Series',
-          description: 'Chapter wise tests with solutions',
-          subject: 'Chemistry',
-          totalTests: 18,
-          totalQuestions: 1800,
-          priceInr: 129,
-          enrollments: 1238,
-          status: TestSeriesStatus.draft,
-          createdAt: DateTime(2026, 9, 28),
-          icon: Icons.biotech_rounded,
-          iconColor: const Color(0xFFA855F7),
-        ),
-        TestSeriesItem(
-          id: 'ts-6',
-          title: 'Biology Marathon Series',
-          description: 'Complete biology test series',
-          subject: 'Biology',
-          totalTests: 15,
-          totalQuestions: 1500,
-          priceInr: 129,
-          enrollments: 980,
-          status: TestSeriesStatus.published,
-          createdAt: DateTime(2026, 9, 25),
-          icon: Icons.eco_rounded,
-          iconColor: const Color(0xFF10B981),
-        ),
-        TestSeriesItem(
-          id: 'ts-7',
-          title: 'Full Syllabus Mock Test Series',
-          description: 'Complete syllabus with previous year pattern',
-          subject: 'Mixed',
-          totalTests: 30,
-          totalQuestions: 3000,
-          priceInr: 249,
-          enrollments: 1610,
-          status: TestSeriesStatus.published,
-          createdAt: DateTime(2026, 9, 20),
-          icon: Icons.settings_suggest_rounded,
-          iconColor: const Color(0xFF06B6D4),
-        ),
-      ];
 }

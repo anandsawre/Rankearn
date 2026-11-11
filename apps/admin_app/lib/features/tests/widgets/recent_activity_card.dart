@@ -24,6 +24,7 @@ class RecentActivityCard extends StatelessWidget {
   final bool fillHeight;
   final VoidCallback? onViewAll;
   final List<ActivityItemData> activities;
+  final bool isLoading;
 
   const RecentActivityCard({
     super.key,
@@ -31,28 +32,43 @@ class RecentActivityCard extends StatelessWidget {
     this.fillHeight = false,
     this.onViewAll,
     this.activities = const [],
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final activityList = activities.isEmpty
+    final activityList = (isLoading && activities.isEmpty)
         ? const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
+            padding: EdgeInsets.symmetric(vertical: 28),
             child: Center(
-              child: Text(
-                'No recent activity',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textMuted,
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
                 ),
               ),
             ),
           )
-        : Column(
-            mainAxisSize: MainAxisSize.min,
-            children: activities.map((item) => _buildActivityRow(item)).toList(),
-          );
+        : activities.isEmpty
+            ? const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'No recent activity recorded',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: activities.map((item) => _buildActivityRow(item)).toList(),
+              );
 
     return Container(
       height: height,
@@ -99,27 +115,21 @@ class RecentActivityCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 6),
-              InkWell(
-                onTap: onViewAll ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Viewing complete audit activity history.'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                child: Text(
-                  'View All',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontHeading,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.brandPrimary,
+              if (onViewAll != null) ...[
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: onViewAll,
+                  child: Text(
+                    'Refresh',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.brandPrimary,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 10),

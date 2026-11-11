@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 import '../models/test_series_item.dart';
 
@@ -20,7 +21,9 @@ class ImportTestsDialog extends StatefulWidget {
 class _ImportTestsDialogState extends State<ImportTestsDialog> {
   final TextEditingController _rawInputController = TextEditingController();
   String _selectedFormat = 'CSV'; // 'Excel', 'CSV', 'JSON'
-  String _targetExam = 'rrb_alp';
+  String? _targetExam;
+  List<ExamCategoryModel> _examList = [];
+  bool _isLoadingExams = true;
 
   List<TestSeriesItem> _parsedTests = [];
   String? _parseError;
@@ -28,45 +31,59 @@ class _ImportTestsDialogState extends State<ImportTestsDialog> {
   @override
   void initState() {
     super.initState();
-    _loadSampleTemplate();
+    _loadExams();
   }
 
-  void _loadSampleTemplate() {
+  @override
+  void dispose() {
+    _rawInputController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadExams() async {
+    try {
+      final res = await TestsRepository().getExamCategoryList();
+      if (!mounted) return;
+      if (res is Success<List<ExamCategoryModel>>) {
+        setState(() {
+          _examList = res.data;
+          _targetExam = _examList.isNotEmpty ? _examList.first.id : null;
+          _isLoadingExams = false;
+        });
+      } else {
+        setState(() => _isLoadingExams = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingExams = false);
+    }
+  }
+
+  void _insertFormatExample() {
     if (_selectedFormat == 'CSV') {
       _rawInputController.text =
           'title,subject,topic,duration_minutes,total_questions,price_inr,status\n'
-          '"RRB ALP Basic Science & Engg Mock 01",Basic Science & Engg,Levers & Pulleys,60,75,0,published\n'
-          '"RRB Technician Physics Special 02",General Science,Electricity & Magnetism,45,50,0,published\n'
-          '"SSC CGL Tier 1 Full Practice Paper 04",General Awareness,Modern Indian History,60,100,50,published\n'
-          '"BPSC Civil Services General Studies Paper",General Studies,Bihar History & Economy,120,150,0,draft';
+          '"Mock Test Title",General Science,Topic Name,60,50,0,published';
     } else if (_selectedFormat == 'Excel') {
       _rawInputController.text =
           'title\tsubject\ttopic\tduration_minutes\ttotal_questions\tprice_inr\tstatus\n'
-          'RRB ALP Basic Science & Engg Mock 01\tBasic Science & Engg\tLevers & Pulleys\t60\t75\t0\tpublished\n'
-          'RRB Technician Physics Special 02\tGeneral Science\tElectricity & Magnetism\t45\t50\t0\tpublished\n'
-          'SSC CGL Tier 1 Full Practice Paper 04\tGeneral Awareness\tModern Indian History\t60\t100\t50\tpublished';
+          'Mock Test Title\tGeneral Science\tTopic Name\t60\t50\t0\tpublished';
     } else {
       _rawInputController.text = const JsonEncoder.withIndent('  ').convert([
         {
-          "title": "RRB ALP Basic Science & Engg Mock 01",
-          "subject": "Basic Science & Engg",
-          "topic": "Levers & Pulleys",
-          "duration_minutes": 60,
-          "total_questions": 75,
-          "price_inr": 0,
-          "status": "published"
-        },
-        {
-          "title": "RRB Technician Physics Special 02",
-          "subject": "General Science",
-          "topic": "Electricity & Magnetism",
-          "duration_minutes": 45,
-          "total_questions": 50,
-          "price_inr": 0,
-          "status": "published"
+          'title': 'Mock Test Title',
+          'subject': 'General Science',
+          'topic': 'Topic Name',
+          'duration_minutes': 60,
+          'total_questions': 50,
+          'price_inr': 0,
+          'status': 'published',
         }
       ]);
     }
+    setState(() {
+      _parsedTests.clear();
+      _parseError = null;
+    });
   }
 
   void _parseData() {
@@ -77,58 +94,65 @@ class _ImportTestsDialogState extends State<ImportTestsDialog> {
 
     final text = _rawInputController.text.trim();
     if (text.isEmpty) {
-      setState(() => _parseError = 'Please paste import data first.');
+      setState(() => _parseError = 'Please paste CSV, TSV, or JSON import data first.');
       return;
     }
 
     try {
       final List<TestSeriesItem> results = [];
+      final baseMicros = DateTime.now().microsecondsSinceEpoch;
       if (_selectedFormat == 'JSON') {
         final dynamic decoded = jsonDecode(text);
         if (decoded is List) {
-          for (final item in decoded) {
+          for (int i = 0; i < decoded.length; i++) {
+            final item = decoded[i];
             if (item is Map<String, dynamic>) {
-              results.add(_mapToTestItem(item));
+              results.add(_mapToTestItem(item, baseMicros, i));
             }
           }
+        } else {
+          setState(() => _parseError = 'JSON root must be an array of test objects.');
+          return;
         }
       } else {
-        // Delimited (CSV or Tab)
         final isTab = _selectedFormat == 'Excel';
         final lines = text.split('\n').where((l) => l.trim().isNotEmpty).toList();
-        if (lines.length > 1) {
-          for (int i = 1; i < lines.length; i++) {
-            final row = _parseDelimitedLine(lines[i], isTab ? '\t' : ',');
-            if (row.length >= 4) {
-              results.add(TestSeriesItem(
-                id: 'imp_${DateTime.now().microsecondsSinceEpoch}_$i',
-                title: row[0],
-                description: 'Bulk imported test paper for $_targetExam',
-                examCategoryId: _targetExam,
-                totalTests: 1,
-                totalQuestions: int.tryParse(row.length > 4 ? row[4] : '50') ?? 50,
-                durationMinutes: int.tryParse(row.length > 3 ? row[3] : '60') ?? 60,
-                negativeMarking: 0.33,
-                priceInr: int.tryParse(row.length > 5 ? row[5] : '0') ?? 0,
-                entryFeeCoins: 0,
-                enrollments: 0,
-                status: (row.length > 6 && row[6].toLowerCase().contains('draft'))
-                    ? TestSeriesStatus.draft
-                    : TestSeriesStatus.published,
-                testMode: 'mock',
-                subject: row.length > 1 ? row[1] : 'General Science',
-                topic: row.length > 2 ? row[2] : 'Complete Syllabus',
-                createdAt: DateTime.now(),
-                icon: Icons.description_outlined,
-                iconColor: const Color(0xFFFF9500),
-              ));
-            }
-          }
+        if (lines.length <= 1) {
+          setState(() => _parseError = 'Include a header row plus at least one data row.');
+          return;
+        }
+        for (int i = 1; i < lines.length; i++) {
+          final row = _parseDelimitedLine(lines[i], isTab ? '\t' : ',');
+          if (row.isEmpty || row[0].trim().isEmpty) continue;
+          results.add(TestSeriesItem(
+            id: 'imp_${baseMicros}_$i',
+            title: row[0].trim(),
+            description: _targetExam != null
+                ? 'Imported test paper for $_targetExam'
+                : 'Imported test paper',
+            examCategoryId: _targetExam,
+            totalTests: 1,
+            totalQuestions: int.tryParse(row.length > 4 ? row[4] : '0') ?? 0,
+            durationMinutes: int.tryParse(row.length > 3 ? row[3] : '60') ?? 60,
+            negativeMarking: 0.25,
+            priceInr: int.tryParse(row.length > 5 ? row[5] : '0') ?? 0,
+            entryFeeCoins: 0,
+            enrollments: 0,
+            status: (row.length > 6 && row[6].toLowerCase().contains('draft'))
+                ? TestSeriesStatus.draft
+                : TestSeriesStatus.published,
+            testMode: 'mock',
+            subject: (row.length > 1 && row[1].trim().isNotEmpty) ? row[1].trim() : 'General',
+            topic: (row.length > 2 && row[2].trim().isNotEmpty) ? row[2].trim() : null,
+            createdAt: DateTime.now(),
+            icon: Icons.description_outlined,
+            iconColor: const Color(0xFFFF9500),
+          ));
         }
       }
 
       if (results.isEmpty) {
-        setState(() => _parseError = 'Could not parse any valid test papers from the provided text.');
+        setState(() => _parseError = 'No valid test records could be parsed.');
       } else {
         setState(() => _parsedTests = results);
       }
@@ -137,23 +161,28 @@ class _ImportTestsDialogState extends State<ImportTestsDialog> {
     }
   }
 
-  TestSeriesItem _mapToTestItem(Map<String, dynamic> m) {
+  TestSeriesItem _mapToTestItem(Map<String, dynamic> m, int baseMicros, int idx) {
+    final title = m['title']?.toString().trim() ?? '';
     return TestSeriesItem(
-      id: 'imp_${DateTime.now().microsecondsSinceEpoch}',
-      title: m['title']?.toString() ?? 'Imported Test',
-      description: m['description']?.toString() ?? 'Imported test paper',
+      id: 'imp_${baseMicros}_$idx',
+      title: title.isNotEmpty ? title : 'Imported Test ${idx + 1}',
+      description: m['description']?.toString() ?? '',
       examCategoryId: _targetExam,
       totalTests: 1,
-      totalQuestions: (m['total_questions'] as num?)?.toInt() ?? 50,
+      totalQuestions: (m['total_questions'] as num?)?.toInt() ?? 0,
       durationMinutes: (m['duration_minutes'] as num?)?.toInt() ?? 60,
-      negativeMarking: (m['negative_marking'] as num?)?.toDouble() ?? 0.33,
+      negativeMarking: (m['negative_marking'] as num?)?.toDouble() ?? 0.25,
       priceInr: (m['price_inr'] as num?)?.toInt() ?? 0,
       entryFeeCoins: 0,
       enrollments: 0,
-      status: (m['status']?.toString() == 'draft') ? TestSeriesStatus.draft : TestSeriesStatus.published,
+      status: (m['status']?.toString().toLowerCase() == 'draft')
+          ? TestSeriesStatus.draft
+          : TestSeriesStatus.published,
       testMode: m['test_mode']?.toString() ?? 'mock',
-      subject: m['subject']?.toString() ?? 'General Science',
-      topic: m['topic']?.toString() ?? 'General',
+      subject: (m['subject']?.toString().trim().isNotEmpty == true)
+          ? m['subject'].toString().trim()
+          : 'General',
+      topic: m['topic']?.toString().trim(),
       createdAt: DateTime.now(),
       icon: Icons.description_outlined,
       iconColor: const Color(0xFFFF9500),
@@ -230,19 +259,18 @@ class _ImportTestsDialogState extends State<ImportTestsDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Target Exam *', style: _labelStyle),
+                    const Text('Target Exam', style: _labelStyle),
                     const SizedBox(height: 6),
                     AppDropdown<String>(
-                      value: _targetExam,
-                      items: const [
-                        AppDropdownItem(value: 'rrb_alp', label: '🚂 RRB ALP & Technician'),
-                        AppDropdownItem(value: 'ssc_cgl', label: '🏛️ SSC CGL Tier 1'),
-                        AppDropdownItem(value: 'bpsc_pre', label: '📘 BPSC Civil Services'),
-                        AppDropdownItem(value: 'general', label: '🎯 General Competitive'),
-                      ],
-                      onChanged: (val) {
-                        if (val != null) setState(() => _targetExam = val);
-                      },
+                      value: _examList.any((e) => e.id == _targetExam) ? _targetExam : null,
+                      hint: _isLoadingExams ? 'Loading exams...' : 'Select Target Exam...',
+                      items: _examList
+                          .map((e) => AppDropdownItem(
+                                value: e.id,
+                                label: '${e.iconUrl ?? "🎯"} ${e.name}',
+                              ))
+                          .toList(),
+                      onChanged: (val) => setState(() => _targetExam = val),
                     ),
                   ],
                 ),
@@ -265,7 +293,6 @@ class _ImportTestsDialogState extends State<ImportTestsDialog> {
                         if (val != null) {
                           setState(() {
                             _selectedFormat = val;
-                            _loadSampleTemplate();
                             _parsedTests.clear();
                             _parseError = null;
                           });
@@ -285,15 +312,9 @@ class _ImportTestsDialogState extends State<ImportTestsDialog> {
             children: [
               const Text('Raw Dataset / Paste Content', style: _labelStyle),
               TextButton.icon(
-                icon: const Icon(Icons.refresh_rounded, size: 14),
-                label: const Text('Reset Sample Template', style: TextStyle(fontSize: 11)),
-                onPressed: () {
-                  _loadSampleTemplate();
-                  setState(() {
-                    _parsedTests.clear();
-                    _parseError = null;
-                  });
-                },
+                icon: const Icon(Icons.code_rounded, size: 14),
+                label: const Text('Insert Format Example', style: TextStyle(fontSize: 11)),
+                onPressed: _insertFormatExample,
               ),
             ],
           ),
@@ -304,7 +325,7 @@ class _ImportTestsDialogState extends State<ImportTestsDialog> {
             maxLines: 14,
             style: const TextStyle(fontFamily: 'monospace', fontSize: 11.5, height: 1.4, color: Color(0xFF1E293B)),
             decoration: AppModalDialog.inputDecoration(
-              'Paste formatted CSV or JSON data here...',
+              'Paste CSV, Excel tab-separated, or JSON data here...\nRequired header columns (CSV/TSV): title,subject,topic,duration_minutes,total_questions,price_inr,status',
               focusColor: const Color(0xFFFF9500),
               isMultiline: true,
               contentPadding: const EdgeInsets.all(12),

@@ -5,9 +5,9 @@ import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:admin_app/main.dart';
 import 'package:admin_app/features/overview/overview_tab.dart';
-import 'package:admin_app/features/tests/widgets/test_series_table_card.dart';
+import 'package:admin_app/features/tests/tests_tab.dart';
+import 'package:admin_app/features/tests/models/test_series_item.dart';
 import 'package:admin_app/features/tests/widgets/subject_wise_chart_card.dart';
-import 'package:admin_app/features/tests/widgets/recent_activity_card.dart';
 
 void main() {
   testWidgets('QuizMaster Admin App renders header, welcome banner, and metrics', (WidgetTester tester) async {
@@ -359,31 +359,97 @@ void main() {
     expect(find.text('Import\nTests'), findsOneWidget);
     expect(find.text('AI Generate\nTest Series'), findsOneWidget);
 
-    // 3. Verify 5 Metric Cards
+    // 3. Verify 5 Metric Cards (zero fake mock growth %)
     expect(find.text('Total Test Series'), findsOneWidget);
     expect(find.text('Published'), findsWidgets);
     expect(find.text('Drafts'), findsOneWidget);
     expect(find.text('Total Tests'), findsWidgets);
     expect(find.text('Total Enrollments'), findsOneWidget);
+    expect(find.text('+12%'), findsNothing);
+    expect(find.text('+22%'), findsNothing);
 
-    // 4. Verify Table Card & Empty State (no hardcoded mock data)
+    // 4. Verify Table Card & Honest Disconnected/Empty State (no hardcoded mock data)
     expect(find.textContaining('Test Series List'), findsOneWidget);
-    expect(find.text('No Test Series Found'), findsOneWidget);
+    expect(find.text('No test series found'), findsOneWidget);
+    expect(find.text('RRB Technician Grade 3'), findsNothing);
 
     // 5. Verify Right Column (Subject Wise Donut Chart + Recent Activity)
     expect(find.text('Subject Wise Test Series'), findsOneWidget);
     expect(find.text('Recent Activity'), findsOneWidget);
-    expect(find.text('View All'), findsOneWidget);
-    expect(find.text('No recent activity'), findsOneWidget);
+    expect(find.text('No recent activity recorded'), findsOneWidget);
+  });
 
-    final tableSize = tester.getSize(find.byType(TestSeriesTableCard));
-    final chartSize = tester.getSize(find.byType(SubjectWiseChartCard));
-    final activitySize = tester.getSize(find.byType(RecentActivityCard));
-    final rightTotalHeight = chartSize.height + 16.0 + activitySize.height;
+  testWidgets('TestsTab renders real injected items and filters cleanly without dummy data', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
 
-    // Verify right column combined height exactly matches the test series table card height
-    expect((rightTotalHeight - tableSize.height).abs() < 0.1, isTrue,
-        reason: 'Combined right column height ($rightTotalHeight) must match table card height (${tableSize.height})');
+    final sampleItems = [
+      TestSeriesItem(
+        id: 'live-ts-1',
+        title: 'BPSC Prelims Mock',
+        description: 'Live DB syllabus',
+        subject: 'General Science',
+        totalTests: 10,
+        totalQuestions: 150,
+        priceInr: 99,
+        enrollments: 42,
+        status: TestSeriesStatus.published,
+        createdAt: DateTime.now(),
+        icon: Icons.science_rounded,
+        iconColor: const Color(0xFF6366F1),
+      ),
+      TestSeriesItem(
+        id: 'live-ts-2',
+        title: 'Quantitative Draft Set',
+        description: 'Arithmetic draft',
+        subject: 'Mathematics',
+        totalTests: 5,
+        totalQuestions: 50,
+        priceInr: 0,
+        enrollments: 0,
+        status: TestSeriesStatus.draft,
+        createdAt: DateTime.now(),
+        icon: Icons.calculate_rounded,
+        iconColor: const Color(0xFFF43F5E),
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TestsTab(initialItems: sampleItems),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('BPSC Prelims Mock'), findsOneWidget);
+    expect(find.text('Quantitative Draft Set'), findsOneWidget);
+    expect(find.text('Test Series List (2)'), findsOneWidget);
+    expect(find.text('42'), findsNWidgets(2));
+  });
+
+  testWidgets('SubjectWiseChartCard loading state inside SingleChildScrollView does not throw RenderFlex error', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                SubjectWiseChartCard(
+                  isLoading: true,
+                  slices: [],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
   testWidgets('Mobile layout renders Bottom Navigation Bar and Drawer', (WidgetTester tester) async {

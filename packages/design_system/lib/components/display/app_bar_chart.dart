@@ -252,6 +252,7 @@ class AppBarChartCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: height != null ? MainAxisSize.max : MainAxisSize.min,
         children: [
           // Header Row
           Row(
@@ -300,28 +301,53 @@ class AppBarChartCard extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Chart Area
-          Expanded(
-            child: (isLoading && values.isEmpty)
-                ? const Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+          if (height != null)
+            Expanded(
+              child: (isLoading && values.isEmpty)
+                  ? const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+                        ),
                       ),
+                    )
+                  : AppBarChart(
+                      dates: dates,
+                      values: values,
+                      height: chartHeight,
+                      barColors: barColors,
+                      maxY: maxY,
+                      yLabels: yLabels,
+                      emptyText: emptyText,
                     ),
-                  )
-                : AppBarChart(
-                    dates: dates,
-                    values: values,
-                    height: chartHeight,
-                    barColors: barColors,
-                    maxY: maxY,
-                    yLabels: yLabels,
-                    emptyText: emptyText,
+            )
+          else if (isLoading && values.isEmpty)
+            SizedBox(
+              height: chartHeight,
+              child: const Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
                   ),
-          ),
+                ),
+              ),
+            )
+          else
+            AppBarChart(
+              dates: dates,
+              values: values,
+              height: chartHeight,
+              barColors: barColors,
+              maxY: maxY,
+              yLabels: yLabels,
+              emptyText: emptyText,
+            ),
         ],
       ),
     );

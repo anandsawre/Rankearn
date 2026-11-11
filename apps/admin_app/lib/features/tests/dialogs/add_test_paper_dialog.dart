@@ -28,62 +28,93 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
   late final TextEditingController _priceCoinsController;
   late final TextEditingController _topicController;
 
-  String _examCategoryId = 'rrb_alp';
+  String? _examCategoryId;
   String _testMode = 'mock';
-  String _selectedSubject = 'General Science';
+  String? _selectedSubject;
   TestSeriesStatus _status = TestSeriesStatus.published;
   bool _isPremium = false;
 
   List<ExamCategoryModel> _examList = [];
-
-  static const List<String> _subjects = [
-    'General Science',
-    'Mathematics',
-    'Reasoning Ability',
-    'General Awareness',
-    'Current Affairs',
-    'Basic Science & Engg',
-    'Computer Knowledge',
-    'Technical Specialization',
-  ];
+  List<String> _subjects = [];
+  bool _isLoadingMeta = true;
 
   static const List<Map<String, String>> _modes = [
     {'value': 'mock', 'label': 'Full Mock Test'},
     {'value': 'sectional', 'label': 'Sectional / Subject Test'},
-    {'value': 'topic', 'label': 'Topic Practice Test'},
-    {'value': 'speed', 'label': 'Speed Quiz / Rapid Test'},
-    {'value': 'previous_year', 'label': 'Previous Year Paper (PYQ)'},
+    {'value': 'previous-year', 'label': 'Previous Year Paper (PYQ)'},
+    {'value': 'tournament', 'label': 'Tournament Paper'},
   ];
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: 'Mock Test Paper 01');
-    _descController = TextEditingController(text: 'Full syllabus mock test paper adhering strictly to latest exam pattern.');
+    _titleController = TextEditingController();
+    _descController = TextEditingController();
     _durationController = TextEditingController(text: '60');
-    _questionsCountController = TextEditingController(text: '75');
-    _negativeMarkingController = TextEditingController(text: '0.33');
+    _questionsCountController = TextEditingController(text: '50');
+    _negativeMarkingController = TextEditingController(text: '0.25');
     _priceCoinsController = TextEditingController(text: '0');
-    _topicController = TextEditingController(text: 'Complete Syllabus');
+    _topicController = TextEditingController();
 
-    _fetchExamCategories();
+    _fetchMetadata();
   }
 
-  Future<void> _fetchExamCategories() async {
+  Future<void> _fetchMetadata() async {
+    final existingSubjects = widget.existingSeries
+        .map((s) => s.subject.trim())
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
     final client = SupabaseConfig.clientSafe;
-    if (client == null) return;
-    try {
-      final res = await client.from('exam_categories').select().order('name');
-      if (mounted && res.isNotEmpty) {
+    if (client == null) {
+      if (mounted) {
         setState(() {
-          _examList = res.map((r) => ExamCategoryModel.fromMap(r)).toList();
-          if (_examList.isNotEmpty) {
-            _examCategoryId = _examList.first.id;
-          }
+          _subjects = existingSubjects;
+          _selectedSubject = _subjects.isNotEmpty ? _subjects.first : null;
+          _isLoadingMeta = false;
         });
       }
+      return;
+    }
+
+    try {
+      final results = await Future.wait<dynamic>([
+        TestsRepository().getExamCategoryList(),
+        client.from('categories').select('name').order('display_order'),
+      ]);
+
+      final examsRes = results[0] as Result<List<ExamCategoryModel>>;
+      final catRows = List<Map<String, dynamic>>.from(results[1] as List);
+
+      final exams = examsRes is Success<List<ExamCategoryModel>>
+          ? examsRes.data
+          : <ExamCategoryModel>[];
+      final dbSubjects = <String>{
+        ...catRows
+            .map((r) => r['name']?.toString().trim() ?? '')
+            .where((n) => n.isNotEmpty),
+        ...existingSubjects,
+      }.toList();
+
+      if (!mounted) return;
+      setState(() {
+        _examList = exams;
+        _examCategoryId = _examList.isNotEmpty ? _examList.first.id : null;
+        _subjects = dbSubjects;
+        _selectedSubject = _subjects.isNotEmpty ? _subjects.first : null;
+        _isLoadingMeta = false;
+      });
     } catch (e) {
-      debugPrint('Error fetching exams for AddTestPaperDialog: $e');
+      debugPrint('Error fetching metadata for AddTestPaperDialog: $e');
+      if (mounted) {
+        setState(() {
+          _subjects = existingSubjects;
+          _selectedSubject = _subjects.isNotEmpty ? _subjects.first : null;
+          _isLoadingMeta = false;
+        });
+      }
     }
   }
 
@@ -103,9 +134,9 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final duration = int.tryParse(_durationController.text.trim()) ?? 60;
-    final questions = int.tryParse(_questionsCountController.text.trim()) ?? 75;
-    final negMark = double.tryParse(_negativeMarkingController.text.trim()) ?? 0.33;
-    final price = int.tryParse(_priceCoinsController.text.trim()) ?? 0;
+    final questions = int.tryParse(_questionsCountController.text.trim()) ?? 50;
+    final negMark = double.tryParse(_negativeMarkingController.text.trim()) ?? 0.25;
+    final price = _isPremium ? (int.tryParse(_priceCoinsController.text.trim()) ?? 0) : 0;
 
     final now = DateTime.now();
     final newId = 'paper_${now.millisecondsSinceEpoch}';
@@ -120,12 +151,12 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
       durationMinutes: duration,
       negativeMarking: negMark,
       priceInr: price,
-      entryFeeCoins: _isPremium ? 20 : 0,
+      entryFeeCoins: 0,
       enrollments: 0,
       status: _status,
       testMode: _testMode,
-      subject: _selectedSubject,
-      topic: _topicController.text.trim(),
+      subject: _selectedSubject ?? 'General',
+      topic: _topicController.text.trim().isNotEmpty ? _topicController.text.trim() : null,
       isPremium: _isPremium,
       createdAt: now,
       icon: Icons.description_outlined,
@@ -180,26 +211,18 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Target Exam *', style: _labelStyle),
+                      const Text('Target Exam', style: _labelStyle),
                       const SizedBox(height: 6),
                       AppDropdown<String>(
-                        value: _examCategoryId,
-                        items: _examList.isNotEmpty
-                            ? _examList
-                                .map((e) => AppDropdownItem(
-                                      value: e.id,
-                                      label: '${e.iconUrl ?? "🎯"} ${e.name}',
-                                    ))
-                                .toList()
-                            : const [
-                                AppDropdownItem(value: 'rrb_alp', label: '🚂 RRB ALP & Technician'),
-                                AppDropdownItem(value: 'ssc_cgl', label: '🏛️ SSC CGL Tier 1'),
-                                AppDropdownItem(value: 'bpsc_pre', label: '📘 BPSC Civil Services'),
-                                AppDropdownItem(value: 'general', label: '🎯 General Competitive'),
-                              ],
-                        onChanged: (val) {
-                          if (val != null) setState(() => _examCategoryId = val);
-                        },
+                        value: _examList.any((e) => e.id == _examCategoryId) ? _examCategoryId : null,
+                        hint: _isLoadingMeta ? 'Loading exams...' : 'Select Exam (Optional)...',
+                        items: _examList
+                            .map((e) => AppDropdownItem(
+                                  value: e.id,
+                                  label: '${e.iconUrl ?? "🎯"} ${e.name}',
+                                ))
+                            .toList(),
+                        onChanged: (val) => setState(() => _examCategoryId = val),
                       ),
                     ],
                   ),
@@ -227,13 +250,22 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
             ),
             const SizedBox(height: 14),
 
-            // Paper Title
+            // Paper Title & Description
             const Text('Test Paper Title *', style: _labelStyle),
             const SizedBox(height: 6),
             TextFormField(
               controller: _titleController,
               decoration: _inputDecoration('e.g. RRB Technician Grade 3 - Full Mock Test 01'),
               validator: (v) => v == null || v.trim().isEmpty ? 'Title is required' : null,
+            ),
+            const SizedBox(height: 14),
+
+            const Text('Syllabus / Description', style: _labelStyle),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: _descController,
+              maxLines: 2,
+              decoration: _inputDecoration('Enter test coverage and instructions...'),
             ),
             const SizedBox(height: 14),
 
@@ -244,14 +276,13 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Subject *', style: _labelStyle),
+                      const Text('Subject', style: _labelStyle),
                       const SizedBox(height: 6),
                       AppDropdown<String>(
-                        value: _selectedSubject,
+                        value: _subjects.contains(_selectedSubject) ? _selectedSubject : null,
+                        hint: _isLoadingMeta ? 'Loading...' : 'Select Subject...',
                         items: _subjects.map((s) => AppDropdownItem(value: s, label: s)).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedSubject = val);
-                        },
+                        onChanged: (val) => setState(() => _selectedSubject = val),
                       ),
                     ],
                   ),
@@ -265,7 +296,7 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
                       const SizedBox(height: 6),
                       TextFormField(
                         controller: _topicController,
-                        decoration: _inputDecoration('e.g. Physics - Motion & Energy'),
+                        decoration: _inputDecoration('e.g. Motion & Energy'),
                       ),
                     ],
                   ),
@@ -302,7 +333,7 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
                       TextFormField(
                         controller: _questionsCountController,
                         keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('75'),
+                        decoration: _inputDecoration('50'),
                         validator: (v) => int.tryParse(v ?? '') == null ? 'Valid number' : null,
                       ),
                     ],
@@ -318,7 +349,7 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
                       TextFormField(
                         controller: _negativeMarkingController,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: _inputDecoration('0.33'),
+                        decoration: _inputDecoration('0.25'),
                       ),
                     ],
                   ),
@@ -357,8 +388,9 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
                       const SizedBox(height: 6),
                       TextFormField(
                         controller: _priceCoinsController,
+                        enabled: _isPremium,
                         keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('0 (Free) or coins'),
+                        decoration: _inputDecoration(_isPremium ? 'Coins required' : 'Free (0)'),
                       ),
                     ],
                   ),
@@ -367,7 +399,7 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
             ),
             const SizedBox(height: 14),
 
-            // Premium Toggle & Description
+            // Premium Toggle
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
