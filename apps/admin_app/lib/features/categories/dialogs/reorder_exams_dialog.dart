@@ -107,7 +107,7 @@ class _ReorderExamsDialogState extends State<ReorderExamsDialog> {
 
           // Reorderable List
           SizedBox(
-            height: 380,
+            height: 320,
             child: ReorderableListView.builder(
               itemCount: _items.length,
               // ignore: deprecated_member_use

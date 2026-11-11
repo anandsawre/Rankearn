@@ -11,6 +11,10 @@ import 'package:admin_app/features/tests/widgets/subject_wise_chart_card.dart';
 import 'package:admin_app/features/battle_dashboard/battle_dashboard_tab.dart';
 import 'package:admin_app/features/battle_dashboard/models/battle_dashboard_models.dart';
 import 'package:admin_app/features/battle_dashboard/services/battle_dashboard_service.dart';
+import 'package:admin_app/features/questions/questions_tab.dart';
+import 'package:admin_app/features/questions/models/question_item.dart';
+import 'package:admin_app/features/categories/categories_tab.dart';
+import 'package:admin_app/features/categories/models/category_item.dart';
 
 void main() {
   testWidgets('QuizMaster Admin App renders header, welcome banner, and metrics', (WidgetTester tester) async {
@@ -506,7 +510,7 @@ void main() {
     expect(find.text('Super Admin'), findsWidgets);
   });
 
-  testWidgets('Questions Management screen renders reference layout, metrics, table, and charts', (WidgetTester tester) async {
+  testWidgets('QuestionsTab shows honest offline state with zero mock data', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -521,115 +525,94 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // 1. Verify Top Navigation Questions Tab is Active
-    expect(find.text('Questions'), findsWidgets);
-
-    // 2. Verify Hero Card
     expect(find.text('Questions Management'), findsOneWidget);
-    expect(find.text('Create, manage and organize questions for your platform.'), findsOneWidget);
-    expect(find.text('Keep your question bank updated with high quality content.'), findsOneWidget);
+    expect(find.text('Database connection is not initialized.'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('No recent question activity'), findsOneWidget);
+    expect(find.text('Questions List (0)'), findsOneWidget);
 
-    // 3. Verify Quick Actions (6 actions + Customize)
-    expect(find.text('Quick Actions'), findsOneWidget);
-    expect(find.text('Customize'), findsOneWidget);
-    expect(find.text('Add\nQuestion'), findsOneWidget);
-    expect(find.text('Import\nQuestions'), findsOneWidget);
-    expect(find.text('AI Generate\nQuestions'), findsOneWidget);
-    expect(find.text('Manage\nQuestion Sets'), findsOneWidget);
-    expect(find.text('Duplicate\nQuestions'), findsOneWidget);
-    expect(find.text('Bulk\nActions'), findsOneWidget);
-
-    // 4. Verify 5 Metric Cards
-    expect(find.text('Total Questions'), findsOneWidget);
-    expect(find.text('9,842'), findsWidgets); // metric + list title + chart center
-    expect(find.text('Active Questions'), findsOneWidget);
-    expect(find.text('8,936'), findsOneWidget);
-    expect(find.text('Draft Questions'), findsOneWidget);
-    expect(find.text('542'), findsOneWidget);
-    expect(find.text('Archived Questions'), findsOneWidget);
-    expect(find.text('364'), findsOneWidget);
-    expect(find.text('Question Sets'), findsOneWidget);
-    expect(find.text('128'), findsOneWidget);
-
-    // 5. Verify Questions Table Card & Filters
-    expect(find.textContaining('Questions List'), findsOneWidget);
-    expect(find.text('All Test Series'), findsOneWidget);
-    expect(find.text('All Subjects'), findsOneWidget);
-    expect(find.text('All Types'), findsOneWidget);
-    expect(find.text('All Difficulty'), findsOneWidget);
-    expect(find.text('Search questions...'), findsOneWidget);
-    expect(find.text('Filters'), findsOneWidget);
-
-    // 6. Verify Reference Question Rows
-    expect(find.text('What is the SI unit of force?'), findsOneWidget);
-    expect(find.text('The capital of Australia is?'), findsOneWidget);
-    expect(find.textContaining('Find the missing number'), findsWidgets);
-    expect(find.textContaining('Which gas is known as'), findsOneWidget);
-    expect(find.text('Who discovered the cell?'), findsOneWidget);
-    expect(find.textContaining('Select the odd one out'), findsOneWidget);
-    expect(find.textContaining('Right to Education'), findsOneWidget);
-
-    // 7. Verify Pagination
-    expect(find.text('Showing 1 to 7 of 9,842 questions'), findsOneWidget);
-    expect(find.text('1,406'), findsOneWidget);
-
-    // 8. Verify Right Analytics Column
-    expect(find.text('Question Type Distribution'), findsOneWidget);
-    expect(find.text('MCQ'), findsWidgets);
-    expect(find.text('68%'), findsOneWidget);
-    expect(find.text('True/False'), findsOneWidget);
-    expect(find.text('12%'), findsOneWidget);
-    expect(find.text('Fill in the Blanks'), findsOneWidget);
-    expect(find.text('8%'), findsOneWidget);
-    expect(find.text('Match the Following'), findsOneWidget);
-    expect(find.text('6%'), findsOneWidget);
-    expect(find.text('Assertion & Reason'), findsOneWidget);
-    expect(find.text('4%'), findsOneWidget);
-    expect(find.text('Subjective'), findsOneWidget);
-    expect(find.text('2%'), findsOneWidget);
-
-    // 9. Verify Difficulty Wise Questions
-    expect(find.text('Difficulty Wise Questions'), findsOneWidget);
-    expect(find.text('3,624'), findsOneWidget);
-    expect(find.text('4,128'), findsOneWidget);
-    expect(find.text('1,680'), findsOneWidget);
-    expect(find.text('410'), findsOneWidget);
-
-    // 10. Verify Recent Activity
-    expect(find.text('Recent Activity'), findsOneWidget);
-    expect(find.text('New question added: What is the SI unit of force?'), findsOneWidget);
-    expect(find.text('Question updated: Find the missing number?'), findsOneWidget);
-    expect(find.text('50 questions imported from CSV'), findsOneWidget);
-    expect(find.text('Question archived: Old current affairs set'), findsOneWidget);
+    // Ensure old hardcoded mock metrics/rows never appear
+    expect(find.text('9,842'), findsNothing);
+    expect(find.text('8,936'), findsNothing);
+    expect(find.text('What is the SI unit of force?'), findsNothing);
+    expect(find.text('3,624'), findsNothing);
   });
 
-  testWidgets('Questions Management interactive dialogs open and dismiss correctly', (WidgetTester tester) async {
+  testWidgets('QuestionsTab renders populated questions, real analytics, and dialogs accurately', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
 
+    final now = DateTime.now();
+    final sampleQuestions = [
+      QuestionItem(
+        id: 'prod-q-1',
+        questionNumber: 1,
+        questionText: 'Calculate momentum for 4 kg at 3 m/s',
+        subject: 'Physics',
+        testSeriesTitle: 'Physics Mock 1',
+        testId: 'test-phy-1',
+        difficulty: QuestionDifficulty.easy,
+        options: const [
+          QuestionOptionItem(label: 'A', text: '12 kg m/s'),
+          QuestionOptionItem(label: 'B', text: '7 kg m/s'),
+          QuestionOptionItem(label: 'C', text: '1.33 kg m/s'),
+          QuestionOptionItem(label: 'D', text: '24 kg m/s'),
+        ],
+        correctAnswerIndex: 0,
+        correctAnswerChar: 'A',
+        usageCount: 45,
+        status: QuestionStatus.published,
+        createdAt: now.subtract(const Duration(minutes: 15)),
+      ),
+      QuestionItem(
+        id: 'prod-q-2',
+        questionNumber: 2,
+        questionText: 'Solve quadratic root sum for x^2 - 5x + 6 = 0',
+        subject: 'Mathematics',
+        testSeriesTitle: 'Maths Sectional 2',
+        testId: 'test-math-2',
+        difficulty: QuestionDifficulty.hard,
+        options: const [
+          QuestionOptionItem(label: 'A', text: '6'),
+          QuestionOptionItem(label: 'B', text: '5'),
+          QuestionOptionItem(label: 'C', text: '-5'),
+          QuestionOptionItem(label: 'D', text: '1'),
+        ],
+        correctAnswerIndex: 1,
+        correctAnswerChar: 'B',
+        usageCount: 12,
+        status: QuestionStatus.draft,
+        createdAt: now.subtract(const Duration(hours: 2)),
+      ),
+    ];
+
     await tester.pumpWidget(
-      const ProviderScope(
-        child: RankearnAdminApp(
-          startLoggedIn: true,
-          initialTab: AdminNavTab.battleQs,
+      MaterialApp(
+        home: Scaffold(
+          body: QuestionsTab(initialItems: sampleQuestions),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    // 1. Test Add Question dialog
+    expect(find.text('Questions Management'), findsOneWidget);
+    expect(find.text('Questions List (2)'), findsOneWidget);
+    expect(find.text('Calculate momentum for 4 kg at 3 m/s'), findsOneWidget);
+    expect(find.text('Solve quadratic root sum for x^2 - 5x + 6 = 0'), findsOneWidget);
+    expect(find.text('Subject Wise Questions'), findsOneWidget);
+    expect(find.text('Difficulty Wise Questions'), findsOneWidget);
+    expect(find.text('Physics: Calculate momentum for 4 kg at 3 m/s'), findsOneWidget);
+
+    // 1. Add Question dialog
     await tester.tap(find.text('Add\nQuestion'));
     await tester.pumpAndSettle();
-    expect(find.text('Create Question'), findsOneWidget);
-    expect(find.text('Question Text (English) *'), findsOneWidget);
-    expect(find.text('Answer Options (Select the correct answer button)'), findsOneWidget);
-    // Dismiss
+    expect(find.text('Add New Question'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Create Question'), findsNothing);
+    expect(find.text('Add New Question'), findsNothing);
 
-    // 2. Test Import Questions dialog
+    // 2. Import Questions dialog
     await tester.tap(find.text('Import\nQuestions'));
     await tester.pumpAndSettle();
     expect(find.textContaining('Import Questions'), findsWidgets);
@@ -638,39 +621,35 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Validate & Parse Data'), findsNothing);
 
-    // 3. Test AI Generate Questions dialog
+    // 3. AI Generate Questions dialog
     await tester.tap(find.text('AI Generate\nQuestions'));
     await tester.pumpAndSettle();
     expect(find.text('AI Question Generator'), findsOneWidget);
-    expect(find.text('Generate Questions with AI'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.close_rounded).first);
+    await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(find.text('AI Question Generator'), findsNothing);
 
-    // 4. Test Manage Question Sets dialog
+    // 4. Manage Question Sets dialog
     await tester.tap(find.text('Manage\nQuestion Sets'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Manage Question Sets'), findsWidgets);
-    expect(find.text('Create New Question Set'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.close_rounded).first);
+    expect(find.text('Manage Question Sets'), findsOneWidget);
+    await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
-    expect(find.text('Create New Question Set'), findsNothing);
+    expect(find.text('Manage Question Sets'), findsNothing);
 
-    // 5. Test Bulk Actions dialog (select a question first)
-    final tableCheckbox = find.byType(Checkbox).first;
-    await tester.tap(tableCheckbox);
+    // 5. Bulk Actions dialog
+    await tester.tap(find.byType(Checkbox).first);
     await tester.pumpAndSettle();
-
     await tester.tap(find.text('Bulk\nActions'));
     await tester.pumpAndSettle();
     expect(find.text('Bulk Actions'), findsWidgets);
-    expect(find.text('Apply Action'), findsOneWidget);
+    expect(find.text('Set Difficulty: Easy'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Apply Action'), findsNothing);
+    expect(find.text('Set Difficulty: Easy'), findsNothing);
   });
 
-  testWidgets('Categories Management screen renders hero, quick actions, 5 metric cards, table, donut chart, bar chart, and recent activity', (WidgetTester tester) async {
+  testWidgets('CategoriesTab (Exams) shows honest offline state with zero mock data', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -685,130 +664,128 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // 1. Verify Top Navigation Pill active state
-    expect(find.widgetWithText(InkWell, 'Categories'), findsOneWidget);
+    expect(find.text('Database connection is not initialized.'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Target Exams & Syllabus (0)'), findsOneWidget);
+    expect(find.text('No target exams in database yet'), findsOneWidget);
+    expect(find.text('No exam question metrics yet'), findsOneWidget);
+    expect(find.text('No recent exam activity'), findsOneWidget);
 
-    // 2. Verify Hero Banner
-    expect(find.textContaining('Categories'), findsWidgets);
-    expect(find.textContaining('Management'), findsWidgets);
-    expect(find.textContaining('Create, manage and organize categories for your platform.'), findsOneWidget);
-
-    // 3. Verify Quick Actions (6 buttons)
-    expect(find.text('Quick Actions'), findsOneWidget);
-    expect(find.text('Add\nCategory'), findsOneWidget);
-    expect(find.text('Import\nCategories'), findsOneWidget);
-    expect(find.text('Manage\nSubcategories'), findsOneWidget);
-    expect(find.text('Reorder\nCategories'), findsOneWidget);
-    expect(find.text('Duplicate\nCategory'), findsOneWidget);
-    expect(find.text('Bulk\nActions'), findsOneWidget);
-
-    // 4. Verify 5 Metric Cards
-    expect(find.text('Total Categories'), findsOneWidget);
-    expect(find.text('48'), findsWidgets);
-    expect(find.text('Active Categories'), findsOneWidget);
-    expect(find.text('42'), findsOneWidget);
-    expect(find.text('Draft Categories'), findsOneWidget);
-    expect(find.text('4'), findsWidgets);
-    expect(find.text('Archived Categories'), findsOneWidget);
-    expect(find.text('2'), findsWidgets);
-    expect(find.text('Total Subjects'), findsOneWidget);
-    expect(find.text('128'), findsOneWidget);
-
-    // 5. Verify Categories Table Card Header
-    expect(find.textContaining('Categories List (48)'), findsOneWidget);
-    expect(find.byType(TextField), findsWidgets);
-    expect(find.text('Filters'), findsOneWidget);
-
-    // 6. Verify Table Content
-    expect(find.text('Competitive Exams'), findsWidgets);
-    expect(find.text('School Education'), findsWidgets);
-    expect(find.text('State Level Exams'), findsWidgets);
-    expect(find.text('Entrance Exams'), findsWidgets);
-    expect(find.text('Skill Development'), findsWidgets);
-    expect(find.text('General Awareness'), findsWidgets);
-    expect(find.text('Practice & Mock Tests'), findsWidgets);
-
-    // 7. Verify Pagination Footer
-    expect(find.text('Showing 1 to 7 of 48 categories'), findsOneWidget);
-
-    // 8. Verify Right Column: Category Wise Test Series Donut Chart
-    expect(find.text('Category Wise Test Series'), findsOneWidget);
-    expect(find.text('320'), findsWidgets);
-
-    // 9. Verify Right Column: Top Categories by Questions Bar Chart
-    expect(find.text('Top Categories by Questions'), findsOneWidget);
-    expect(find.text('4,850'), findsWidgets);
-    expect(find.text('3,420'), findsWidgets);
-
-    // 10. Verify Right Column: Recent Activity
-    expect(find.text('Recent Activity'), findsOneWidget);
-    expect(find.text('New category created: Skill Development'), findsOneWidget);
-    expect(find.text('Category updated: General Awareness'), findsOneWidget);
-    expect(find.text('Subject added to Competitive Exams'), findsOneWidget);
-    expect(find.text('Category archived: Practice & Mock Tests'), findsOneWidget);
+    // Ensure old hardcoded mock data never appears
+    expect(find.text('Competitive Exams'), findsNothing);
+    expect(find.text('Skill Development'), findsNothing);
+    expect(find.text('4,850'), findsNothing);
   });
 
-  testWidgets('Categories Management interactive dialogs open and dismiss correctly', (WidgetTester tester) async {
+  testWidgets('CategoriesTab (Exams) renders populated exams, subjects, analytics, and dialogs cleanly', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
 
+    final exams = [
+      const ExamCategoryModel(
+        id: 'exam-prod-1',
+        name: 'Combined Graduate Exam',
+        iconUrl: '📘',
+        displayOrder: 1,
+        isPublished: true,
+        totalTests: 6,
+      ),
+      const ExamCategoryModel(
+        id: 'exam-prod-2',
+        name: 'Engineering Gate Mock',
+        iconUrl: '⚡',
+        displayOrder: 2,
+        isPublished: false,
+        totalTests: 2,
+      ),
+    ];
+
+    final subjects = [
+      CategoryItem(
+        id: 'cat-prod-1',
+        index: 1,
+        name: 'Linear Algebra',
+        examCategoryId: 'exam-prod-1',
+        topics: const ['Matrices', 'Eigenvalues'],
+        slug: 'linear-algebra',
+        description: 'Linear equations and vector spaces',
+        subcategoriesCount: 2,
+        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
+      ),
+    ];
+
     await tester.pumpWidget(
-      const ProviderScope(
-        child: RankearnAdminApp(
-          startLoggedIn: true,
-          initialTab: AdminNavTab.patterns,
+      MaterialApp(
+        home: Scaffold(
+          body: CategoriesTab(
+            initialExams: exams,
+            initialCategories: subjects,
+          ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    // 1. Test Add Category dialog
-    await tester.tap(find.text('Add\nCategory'));
+    expect(find.text('Target Exams & Syllabus (2)'), findsOneWidget);
+    expect(find.text('Combined Graduate Exam'), findsWidgets);
+    expect(find.text('Engineering Gate Mock'), findsWidgets);
+    expect(find.text('Linear Algebra'), findsOneWidget);
+    expect(find.text('Exam Wise Test Series'), findsOneWidget);
+    expect(find.text('Top Exams by Questions'), findsOneWidget);
+
+    // 1. Add Subject dialog
+    await tester.tap(find.text('Add\nSubject'));
     await tester.pumpAndSettle();
-    expect(find.text('Create Category'), findsWidgets);
-    expect(find.text('Category Name *'), findsOneWidget);
+    expect(find.text('Create New Subject'), findsOneWidget);
+    expect(find.text('Subject Name *'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Category Name *'), findsNothing);
+    expect(find.text('Create New Subject'), findsNothing);
 
-    // 2. Test Import Categories dialog
-    await tester.tap(find.text('Import\nCategories'));
+    // 2. Import Syllabus dialog
+    await tester.tap(find.text('Import\nSyllabus'));
     await tester.pumpAndSettle();
-    expect(find.text('Import Categories (CSV / JSON)'), findsOneWidget);
+    expect(find.text('Import Categories'), findsOneWidget);
     expect(find.text('Validate & Parse Data'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Import Categories (CSV / JSON)'), findsNothing);
+    expect(find.text('Import Categories'), findsNothing);
 
-    // 3. Test Manage Subcategories dialog
-    await tester.tap(find.text('Manage\nSubcategories'));
+    // 3. Manage Chapters dialog
+    await tester.tap(find.text('Manage\nChapters'));
     await tester.pumpAndSettle();
-    expect(find.text('Manage Subcategories'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.close_rounded).first);
+    expect(find.text('Manage Chapters & Units'), findsOneWidget);
+    expect(find.text('Matrices'), findsOneWidget);
+    expect(find.text('Eigenvalues'), findsOneWidget);
+    await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
-    expect(find.text('Manage Subcategories'), findsNothing);
+    expect(find.text('Manage Chapters & Units'), findsNothing);
 
-    // 4. Test Reorder Categories dialog
-    await tester.tap(find.text('Reorder\nCategories'));
+    // 4. Reorder Exams dialog
+    await tester.tap(find.text('Reorder\nExams'));
     await tester.pumpAndSettle();
-    expect(find.text('Reorder Categories'), findsOneWidget);
+    expect(find.text('Reorder Target Exams'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Reorder Categories'), findsNothing);
+    expect(find.text('Reorder Target Exams'), findsNothing);
 
-    // 5. Test Bulk Actions dialog
-    final tableCheckbox = find.byType(Checkbox).first;
-    await tester.tap(tableCheckbox);
+    // 5. Duplicate Exam dialog
+    await tester.tap(find.text('Duplicate\nExam'));
     await tester.pumpAndSettle();
+    expect(find.text('Duplicate Target Exam'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Duplicate Target Exam'), findsNothing);
 
+    // 6. Bulk Actions dialog
     await tester.tap(find.text('Bulk\nActions'));
     await tester.pumpAndSettle();
-    expect(find.text('Bulk Actions'), findsWidgets);
-    expect(find.text('Apply Action'), findsOneWidget);
+    expect(find.text('Bulk Exam Actions'), findsOneWidget);
+    expect(find.text('Publish Selected'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Apply Action'), findsNothing);
+    expect(find.text('Bulk Exam Actions'), findsNothing);
   });
 
   testWidgets('Users Management tab renders hero, quick actions, metric cards, table, and right analytics', (WidgetTester tester) async {

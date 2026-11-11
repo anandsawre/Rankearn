@@ -1,40 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 import '../models/question_set_item.dart';
 
 class ManageQuestionSetsDialog extends StatefulWidget {
   final List<QuestionSetItem>? initialSets;
+  final VoidCallback? onSetsUpdated;
 
-  const ManageQuestionSetsDialog({super.key, this.initialSets});
+  const ManageQuestionSetsDialog({
+    super.key,
+    this.initialSets,
+    this.onSetsUpdated,
+  });
 
   @override
   State<ManageQuestionSetsDialog> createState() => _ManageQuestionSetsDialogState();
 }
 
 class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
-  late List<QuestionSetItem> _sets;
+  List<QuestionSetItem> _sets = [];
+  List<String> _subjects = [];
+  bool _isLoading = true;
+  bool _isSaving = false;
   bool _isCreating = false;
+  String? _errorMessage;
 
   final TextEditingController _nameController = TextEditingController();
-  String _selectedSubject = 'Physics';
+  String? _selectedSubject;
   String _selectedDifficulty = 'Medium';
-
-  final List<String> _subjects = [
-    'Physics',
-    'General Awareness',
-    'Mathematics',
-    'Chemistry',
-    'Biology',
-    'Reasoning',
-    'Polity',
-  ];
 
   @override
   void initState() {
     super.initState();
-    _sets = widget.initialSets != null
-        ? List.from(widget.initialSets!)
-        : List.from(QuestionSetItem.sampleSets);
+    if (widget.initialSets != null) {
+      _sets = List.from(widget.initialSets!);
+      _isLoading = false;
+    } else {
+      _loadFromSupabase();
+    }
   }
 
   @override
@@ -43,39 +46,161 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
     super.dispose();
   }
 
-  void _addNewSet() {
+  Future<void> _loadFromSupabase() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Database connection is not initialized.';
+        });
+      }
+      return;
+    }
+
+    try {
+      final results = await Future.wait([
+        client.from('tests').select('id, title, category_id, status, created_at').order('created_at', ascending: false),
+        client.from('questions').select('id, test_id').limit(5000),
+        client.from('categories').select('id, name').order('display_order', ascending: true),
+      ]);
+
+      final testRows = List<Map<String, dynamic>>.from(results[0] as List);
+      final qRows = List<Map<String, dynamic>>.from(results[1] as List);
+      final catRows = List<Map<String, dynamic>>.from(results[2] as List);
+
+      final catNameLookup = <String, String>{};
+      final subjNames = <String>[];
+      for (final c in catRows) {
+        final id = c['id']?.toString().trim() ?? '';
+        final name = c['name']?.toString().trim() ?? '';
+        if (name.isNotEmpty) {
+          subjNames.add(name);
+          catNameLookup[name.toLowerCase()] = name;
+          if (id.isNotEmpty) catNameLookup[id.toLowerCase()] = name;
+        }
+      }
+
+      final qCountByTest = <String, int>{};
+      for (final q in qRows) {
+        final tid = q['test_id']?.toString().trim() ?? '';
+        if (tid.isNotEmpty) {
+          qCountByTest[tid] = (qCountByTest[tid] ?? 0) + 1;
+        }
+      }
+
+      final loadedSets = testRows.map((row) {
+        final id = row['id']?.toString() ?? '';
+        final rawCat = row['category_id']?.toString().trim() ?? '';
+        final resolvedSubj = catNameLookup[rawCat.toLowerCase()] ??
+            (rawCat.isNotEmpty ? rawCat : 'Uncategorized');
+        return QuestionSetItem(
+          id: id,
+          name: row['title']?.toString() ?? 'Untitled Set',
+          subject: resolvedSubj,
+          totalQuestions: qCountByTest[id] ?? 0,
+          difficulty: 'Mixed',
+          status: row['status']?.toString() ?? 'draft',
+          createdAt: DateTime.tryParse(row['created_at']?.toString() ?? '') ?? DateTime.now(),
+        );
+      }).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _sets = loadedSets;
+        _subjects = subjNames.toSet().toList();
+        _selectedSubject ??= _subjects.isNotEmpty ? _subjects.first : null;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to load question sets: $e';
+      });
+    }
+  }
+
+  Future<void> _addNewSet() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
 
-    final newSet = QuestionSetItem(
-      id: 'qs-${DateTime.now().millisecondsSinceEpoch}',
-      name: name,
-      subject: _selectedSubject,
-      totalQuestions: 0,
-      difficulty: _selectedDifficulty,
-      status: 'Active',
-      createdAt: DateTime.now(),
-    );
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      setState(() => _errorMessage = 'Database not connected. Cannot create question set.');
+      return;
+    }
 
     setState(() {
-      _sets.insert(0, newSet);
-      _isCreating = false;
-      _nameController.clear();
+      _isSaving = true;
+      _errorMessage = null;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Created question set "$name"'),
-        backgroundColor: const Color(0xFF10B981),
-      ),
-    );
+    final now = DateTime.now();
+    final id = 'set-${now.millisecondsSinceEpoch}';
+    final subject = _selectedSubject ?? 'General';
+
+    try {
+      await client.from('tests').insert({
+        'id': id,
+        'title': name,
+        'category_id': subject,
+        'test_mode': 'sectional',
+        'duration_minutes': 30,
+        'total_questions': 0,
+        'status': 'draft',
+        'created_at': now.toIso8601String(),
+      });
+
+      final newSet = QuestionSetItem(
+        id: id,
+        name: name,
+        subject: subject,
+        totalQuestions: 0,
+        difficulty: _selectedDifficulty,
+        status: 'draft',
+        createdAt: now,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _sets.insert(0, newSet);
+        _isCreating = false;
+        _isSaving = false;
+        _nameController.clear();
+      });
+
+      widget.onSetsUpdated?.call();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Created question set "$name" in Supabase'),
+          backgroundColor: const Color(0xFF10B981),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSaving = false;
+        _errorMessage = 'Failed to create question set: $e';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final subjOptions = _subjects.isNotEmpty ? _subjects : ['General'];
+    final activeSubj = (_selectedSubject != null && subjOptions.contains(_selectedSubject))
+        ? _selectedSubject!
+        : subjOptions.first;
+
     return AppModalDialog(
       title: 'Manage Question Sets',
-      subtitle: '${_sets.length} organized curriculum question pools',
+      subtitle: '${_sets.length} live test series question pools in Supabase',
       iconData: Icons.folder_outlined,
       gradientColors: const [Color(0xFFD97706), Color(0xFFF59E0B)],
       maxWidth: 640,
@@ -97,7 +222,33 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Create New Set Toggle or Form
+          if (_errorMessage != null) ...[
+            Container(
+              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF1F2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFDA4AF)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Color(0xFFE11D48), size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(fontSize: 11.5, color: Color(0xFF9F1239), fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _loadFromSupabase,
+                    child: const Text('Retry', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (!_isCreating)
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
@@ -131,7 +282,7 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
                     controller: _nameController,
                     style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
                     decoration: AppModalDialog.inputDecoration(
-                      'Enter question set name (e.g. Current Affairs Part 2)',
+                      'Enter question set name...',
                       focusColor: const Color(0xFFF59E0B),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     ),
@@ -149,8 +300,8 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
                             ),
                             const SizedBox(height: 4),
                             AppDropdown<String>(
-                              value: _selectedSubject,
-                              items: _subjects.map((s) => AppDropdownItem(value: s, label: s)).toList(),
+                              value: activeSubj,
+                              items: subjOptions.map((s) => AppDropdownItem(value: s, label: s)).toList(),
                               onChanged: (val) {
                                 if (val != null) setState(() => _selectedSubject = val);
                               },
@@ -164,13 +315,13 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Difficulty',
+                              'Difficulty Target',
                               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
                             ),
                             const SizedBox(height: 4),
                             AppDropdown<String>(
                               value: _selectedDifficulty,
-                              items: ['Easy', 'Medium', 'Hard', 'Expert']
+                              items: ['Easy', 'Medium', 'Hard']
                                   .map((d) => AppDropdownItem(value: d, label: d))
                                   .toList(),
                               onChanged: (val) {
@@ -187,7 +338,7 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: () => setState(() => _isCreating = false),
+                        onPressed: _isSaving ? null : () => setState(() => _isCreating = false),
                         child: const Text('Cancel', style: TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
                       ),
                       const SizedBox(width: 8),
@@ -199,8 +350,8 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           elevation: 0,
                         ),
-                        onPressed: _addNewSet,
-                        child: const Text('Save Set', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                        onPressed: _isSaving ? null : _addNewSet,
+                        child: Text(_isSaving ? 'Saving...' : 'Save Set', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
@@ -215,60 +366,82 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
           ),
           const SizedBox(height: 10),
 
-          for (final set in _sets) ...[
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFCBD5E1)),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_sets.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text(
+                  'No question sets found in Supabase yet.',
+                  style: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+                ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF3C7),
-                      borderRadius: BorderRadius.circular(8),
+            )
+          else
+            for (final set in _sets) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.folder_copy_outlined, size: 18, color: Color(0xFFD97706)),
                     ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.folder_copy_outlined, size: 18, color: Color(0xFFD97706)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          set.name,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            set.name,
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${set.subject} • ${set.totalQuestions} Questions',
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                      decoration: BoxDecoration(
+                        color: set.status == 'published' ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: set.status == 'published' ? const Color(0xFFBBF7D0) : const Color(0xFFFDE68A),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${set.subject} • ${set.totalQuestions} Questions • ${set.difficulty}',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                      ),
+                      child: Text(
+                        set.status,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: set.status == 'published' ? const Color(0xFF16A34A) : const Color(0xFFD97706),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDCFCE7),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFFBBF7D0)),
-                    ),
-                    child: Text(
-                      set.status,
-                      style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Color(0xFF16A34A)),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
         ],
       ),
     );

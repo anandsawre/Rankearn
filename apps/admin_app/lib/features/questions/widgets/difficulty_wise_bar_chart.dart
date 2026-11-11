@@ -7,14 +7,16 @@ class DifficultyWiseBarChartCard extends StatelessWidget {
   final int mediumCount;
   final int hardCount;
   final int expertCount;
+  final bool isLoading;
 
   const DifficultyWiseBarChartCard({
     super.key,
     this.fillHeight = false,
-    this.easyCount = 3624,
-    this.mediumCount = 4128,
-    this.hardCount = 1680,
-    this.expertCount = 410,
+    this.easyCount = 0,
+    this.mediumCount = 0,
+    this.hardCount = 0,
+    this.expertCount = 0,
+    this.isLoading = false,
   });
 
   @override
@@ -62,52 +64,59 @@ class DifficultyWiseBarChartCard extends StatelessWidget {
 
           // 4 Vertical Bars
           Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final maxCount = [easyCount, mediumCount, hardCount, expertCount]
-                    .reduce((a, b) => a > b ? a : b);
-                // Calculate available bar height dynamically based on constraints
-                final availableHeight = (constraints.maxHeight - 38).clamp(16.0, 60.0);
+            child: (isLoading && easyCount == 0 && mediumCount == 0 && hardCount == 0 && expertCount == 0)
+                ? const Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2.2),
+                    ),
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final maxCount = [easyCount, mediumCount, hardCount, expertCount]
+                          .reduce((a, b) => a > b ? a : b);
+                      final availableHeight = (constraints.maxHeight - 38).clamp(16.0, 60.0);
 
-                return Padding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 2),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildBar(
-                        label: 'Easy',
-                        count: easyCount,
-                        maxCount: maxCount,
-                        availableHeight: availableHeight,
-                        color: const Color(0xFF10B981),
-                      ),
-                      _buildBar(
-                        label: 'Medium',
-                        count: mediumCount,
-                        maxCount: maxCount,
-                        availableHeight: availableHeight,
-                        color: const Color(0xFFF59E0B),
-                      ),
-                      _buildBar(
-                        label: 'Hard',
-                        count: hardCount,
-                        maxCount: maxCount,
-                        availableHeight: availableHeight,
-                        color: const Color(0xFFF43F5E),
-                      ),
-                      _buildBar(
-                        label: 'Expert',
-                        count: expertCount,
-                        maxCount: maxCount,
-                        availableHeight: availableHeight,
-                        color: const Color(0xFF8B5CF6),
-                      ),
-                    ],
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4, bottom: 2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildBar(
+                              label: 'Easy',
+                              count: easyCount,
+                              maxCount: maxCount,
+                              availableHeight: availableHeight,
+                              color: const Color(0xFF10B981),
+                            ),
+                            _buildBar(
+                              label: 'Medium',
+                              count: mediumCount,
+                              maxCount: maxCount,
+                              availableHeight: availableHeight,
+                              color: const Color(0xFFF59E0B),
+                            ),
+                            _buildBar(
+                              label: 'Hard',
+                              count: hardCount,
+                              maxCount: maxCount,
+                              availableHeight: availableHeight,
+                              color: const Color(0xFFF43F5E),
+                            ),
+                            _buildBar(
+                              label: 'Expert',
+                              count: expertCount,
+                              maxCount: maxCount,
+                              availableHeight: availableHeight,
+                              color: const Color(0xFF8B5CF6),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
@@ -124,8 +133,8 @@ class DifficultyWiseBarChartCard extends StatelessWidget {
     required double availableHeight,
     required Color color,
   }) {
-    final double fraction = maxCount > 0 ? (count / maxCount).clamp(0.12, 1.0) : 0.2;
-    final double barHeight = availableHeight * fraction;
+    final double fraction = (maxCount > 0 && count > 0) ? (count / maxCount).clamp(0.12, 1.0) : 0.0;
+    final double barHeight = count > 0 ? (availableHeight * fraction) : 3.0;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,

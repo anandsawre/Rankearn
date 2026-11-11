@@ -1,23 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
-/// Categories Metrics Row
-/// Displays 5 responsive statistics cards powered by the unified [AdminMetricCard]
-/// from the Rankearn design system.
+/// Categories & Exams Metrics Row
+/// Displays 5 responsive live statistics cards powered by [AdminMetricCard]
+/// with real database counts, 7-day trends, and sparklines.
 class CategoriesMetricsRow extends StatelessWidget {
-  final int totalCategories;
-  final int activeCategories;
-  final int draftCategories;
-  final int archivedCategories;
+  final int totalExams;
+  final int publishedExams;
+  final int hiddenExams;
+  final int linkedTests;
   final int totalSubjects;
+  final bool isLoading;
+
+  final String totalGrowth;
+  final bool totalPositive;
+  final List<double>? totalSparkline;
+
+  final String publishedGrowth;
+  final bool publishedPositive;
+  final List<double>? publishedSparkline;
+
+  final String hiddenGrowth;
+  final bool hiddenPositive;
+  final List<double>? hiddenSparkline;
+
+  final String testsGrowth;
+  final bool testsPositive;
+  final List<double>? testsSparkline;
+
+  final String subjectsGrowth;
+  final bool subjectsPositive;
+  final List<double>? subjectsSparkline;
 
   const CategoriesMetricsRow({
     super.key,
-    this.totalCategories = 48,
-    this.activeCategories = 42,
-    this.draftCategories = 4,
-    this.archivedCategories = 2,
-    this.totalSubjects = 128,
+    this.totalExams = 0,
+    this.publishedExams = 0,
+    this.hiddenExams = 0,
+    this.linkedTests = 0,
+    this.totalSubjects = 0,
+    this.isLoading = false,
+    this.totalGrowth = '',
+    this.totalPositive = true,
+    this.totalSparkline,
+    this.publishedGrowth = '',
+    this.publishedPositive = true,
+    this.publishedSparkline,
+    this.hiddenGrowth = '',
+    this.hiddenPositive = true,
+    this.hiddenSparkline,
+    this.testsGrowth = '',
+    this.testsPositive = true,
+    this.testsSparkline,
+    this.subjectsGrowth = '',
+    this.subjectsPositive = true,
+    this.subjectsSparkline,
   });
 
   @override
@@ -25,53 +62,53 @@ class CategoriesMetricsRow extends StatelessWidget {
     final metrics = [
       (
         title: 'Total Exams',
-        value: totalCategories.toString(),
-        growth: '+12%',
-        isGrowthPositive: true,
-        subtitle: '+6 this month',
+        value: isLoading ? '—' : _formatNumber(totalExams),
+        growth: isLoading ? '' : totalGrowth,
+        isGrowthPositive: totalPositive,
+        subtitle: isLoading ? 'Loading exams...' : 'Target exams configured',
         icon: Icons.explore_rounded,
         color: const Color(0xFF3B82F6),
-        sparklineData: const [20.0, 24.0, 22.0, 28.0, 35.0, 42.0, 48.0],
+        sparklineData: totalSparkline,
       ),
       (
         title: 'Published Exams',
-        value: activeCategories.toString(),
-        growth: '+10%',
-        isGrowthPositive: true,
-        subtitle: '+5 this month',
+        value: isLoading ? '—' : _formatNumber(publishedExams),
+        growth: isLoading ? '' : publishedGrowth,
+        isGrowthPositive: publishedPositive,
+        subtitle: isLoading ? 'Loading status...' : 'Visible to students',
         icon: Icons.check_circle_outline_rounded,
         color: const Color(0xFF10B981),
-        sparklineData: const [18.0, 22.0, 26.0, 30.0, 36.0, 40.0, 42.0],
+        sparklineData: publishedSparkline,
       ),
       (
         title: 'Draft Exams',
-        value: draftCategories.toString(),
-        growth: '-20%',
-        isGrowthPositive: false,
-        subtitle: '-1 this month',
+        value: isLoading ? '—' : _formatNumber(hiddenExams),
+        growth: isLoading ? '' : hiddenGrowth,
+        isGrowthPositive: hiddenPositive,
+        subtitle: isLoading ? 'Loading drafts...' : 'Hidden / unpublished',
         icon: Icons.edit_note_rounded,
         color: const Color(0xFFF59E0B),
-        sparklineData: const [8.0, 7.0, 9.0, 6.0, 5.0, 4.0, 4.0],
+        sparklineData: hiddenSparkline,
       ),
       (
-        title: 'Archived Exams',
-        value: archivedCategories.toString(),
-        growth: '+0%',
-        isGrowthPositive: true,
-        subtitle: '0 this month',
-        icon: Icons.archive_rounded,
+        title: 'Linked Tests',
+        value: isLoading ? '—' : _formatNumber(linkedTests),
+        growth: isLoading ? '' : testsGrowth,
+        isGrowthPositive: testsPositive,
+        subtitle: isLoading ? 'Loading tests...' : 'Active test series',
+        icon: Icons.assignment_turned_in_rounded,
         color: const Color(0xFF8B5CF6),
-        sparklineData: const [2.0, 2.0, 2.0, 3.0, 2.0, 2.0, 2.0],
+        sparklineData: testsSparkline,
       ),
       (
         title: 'Total Subjects',
-        value: totalSubjects.toString(),
-        growth: '+18%',
-        isGrowthPositive: true,
-        subtitle: '+20 this month',
+        value: isLoading ? '—' : _formatNumber(totalSubjects),
+        growth: isLoading ? '' : subjectsGrowth,
+        isGrowthPositive: subjectsPositive,
+        subtitle: isLoading ? 'Loading subjects...' : 'Curriculum subjects',
         icon: Icons.menu_book_rounded,
         color: const Color(0xFFEF4444),
-        sparklineData: const [12.0, 15.0, 14.0, 18.0, 20.0, 24.0, 28.0],
+        sparklineData: subjectsSparkline,
       ),
     ];
 
@@ -102,5 +139,14 @@ class CategoriesMetricsRow extends StatelessWidget {
         );
       },
     );
+  }
+
+  static String _formatNumber(int n) {
+    if (n >= 1000) {
+      final s = n.toString();
+      final len = s.length;
+      return '${s.substring(0, len - 3)},${s.substring(len - 3)}';
+    }
+    return n.toString();
   }
 }

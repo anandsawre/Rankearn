@@ -25,10 +25,12 @@ class SubjectDraft {
 
 class ManageTargetExamsDialog extends StatefulWidget {
   final VoidCallback? onExamsUpdated;
+  final ExamCategoryModel? initialExamToEdit;
 
   const ManageTargetExamsDialog({
     super.key,
     this.onExamsUpdated,
+    this.initialExamToEdit,
   });
 
   @override
@@ -46,6 +48,7 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
   final _categoriesRepo = CategoriesRepository();
 
   bool _isLoading = true;
+  String? _errorMessage;
   List<ExamCategoryModel> _exams = [];
 
   // Form state for creating / editing
@@ -82,7 +85,11 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
       }
     });
 
-    _loadExams();
+    _loadExams().then((_) {
+      if (widget.initialExamToEdit != null && mounted) {
+        _startEdit(widget.initialExamToEdit!);
+      }
+    });
   }
 
   void _clearSubjectDrafts() {
@@ -103,60 +110,67 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
   }
 
   Future<void> _loadExams() async {
-    setState(() => _isLoading = true);
-    final res = await _testsRepo.getExamCategoryList();
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (!mounted) return;
+      setState(() {
+        _exams = [];
+        _isLoading = false;
+        _errorMessage = 'Database connection is not initialized.';
+      });
+      return;
+    }
+
+    final res = await _categoriesRepo.getExamCategories();
     if (!mounted) return;
 
-    if (res is Success<List<ExamCategoryModel>> && res.data.isNotEmpty) {
+    if (res is Success<List<ExamCategoryModel>>) {
+      final mockCounts = <String, int>{};
+      final sectionalCounts = <String, int>{};
+      final totalCounts = <String, int>{};
+      try {
+        final testsRows = await client
+            .from('tests')
+            .select('exam_category_id, test_mode');
+        for (final t in (testsRows as List)) {
+          final eid = t['exam_category_id']?.toString() ?? '';
+          final mode = t['test_mode']?.toString() ?? 'mock';
+          if (eid.isNotEmpty) {
+            totalCounts[eid] = (totalCounts[eid] ?? 0) + 1;
+            if (mode == 'mock') {
+              mockCounts[eid] = (mockCounts[eid] ?? 0) + 1;
+            } else if (mode == 'sectional') {
+              sectionalCounts[eid] = (sectionalCounts[eid] ?? 0) + 1;
+            }
+          }
+        }
+      } catch (_) {}
+
+      if (!mounted) return;
+      final enriched = res.data
+          .map(
+            (e) => e.copyWith(
+              totalTests: totalCounts[e.id] ?? 0,
+              totalMocks: mockCounts[e.id] ?? 0,
+              totalSectional: sectionalCounts[e.id] ?? 0,
+            ),
+          )
+          .toList();
+
       setState(() {
-        _exams = List<ExamCategoryModel>.from(res.data);
+        _exams = enriched;
         _isLoading = false;
       });
-    } else {
+    } else if (res is Failure<List<ExamCategoryModel>>) {
       setState(() {
-        _exams = [
-          const ExamCategoryModel(
-            id: 'bpsc',
-            name: 'BPSC & State PCS',
-            normalizedName: 'bpsc',
-            iconUrl: '🏛️',
-            displayOrder: 1,
-            isPublished: true,
-          ),
-          const ExamCategoryModel(
-            id: 'ssc',
-            name: 'SSC CGL & CHSL',
-            normalizedName: 'ssc',
-            iconUrl: '📋',
-            displayOrder: 2,
-            isPublished: true,
-          ),
-          const ExamCategoryModel(
-            id: 'upsc',
-            name: 'UPSC Civil Services',
-            normalizedName: 'upsc',
-            iconUrl: '🇮🇳',
-            displayOrder: 3,
-            isPublished: true,
-          ),
-          const ExamCategoryModel(
-            id: 'railway',
-            name: 'RRB NTPC & Group D',
-            normalizedName: 'railway',
-            iconUrl: '🚆',
-            displayOrder: 4,
-            isPublished: true,
-          ),
-          const ExamCategoryModel(
-            id: 'banking',
-            name: 'Banking & Insurance',
-            normalizedName: 'banking',
-            iconUrl: '🏦',
-            displayOrder: 5,
-            isPublished: true,
-          ),
-        ];
+        _exams = [];
         _isLoading = false;
+        _errorMessage = res.message;
       });
     }
   }
@@ -193,9 +207,7 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
 
     if (cats.isNotEmpty) {
       for (final cat in cats) {
-        final subsRes = await _categoriesRepo.getSubcategories(categoryId: cat.id);
-        final subs = subsRes.dataOrNull ?? [];
-        final chapters = subs.map((s) => s.name).join(', ');
+        final chapters = cat.topics.join(', ');
         _subjectDrafts.add(
           SubjectDraft(name: cat.name, chapters: chapters, topics: ''),
         );
@@ -238,9 +250,19 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
     );
 
     // 1. Save Target Exam
-    await _testsRepo.upsertExamCategory(model);
+    final examSaveRes = await _testsRepo.upsertExamCategory(model);
+    if (!mounted) return;
+    if (examSaveRes is Failure<ExamCategoryModel>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(examSaveRes.message),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
 
-    // 2. Save all Dynamic Subjects & Chapters under this exam (Tareeqa 1)
+    // 2. Save all Dynamic Subjects & Chapters under this exam into `categories`
     int validSubjectsSaved = 0;
     for (int i = 0; i < _subjectDrafts.length; i++) {
       final draft = _subjectDrafts[i];
@@ -250,68 +272,27 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
       final subjectSlug = subjectName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
       final subjectId = 'cat-$id-$subjectSlug';
 
-      final catModel = CategoryModel(
-        id: subjectId,
-        examCategoryId: id,
-        name: subjectName,
-        slug: subjectSlug,
-        description: '$subjectName syllabus for $name',
-        displayOrder: i + 1,
-        status: _isPublished ? 'active' : 'draft',
-        createdAt: DateTime.now(),
-      );
-      await _categoriesRepo.upsertCategory(catModel);
-      validSubjectsSaved++;
-
-      // Chapters (Subcategories)
       final rawChapters = draft.chaptersCtrl.text
           .split(',')
           .map((s) => s.trim())
           .where((s) => s.isNotEmpty)
           .toList();
 
-      final rawTopics = draft.topicsCtrl.text
-          .split(',')
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty)
-          .toList();
-
-      for (int cIdx = 0; cIdx < rawChapters.length; cIdx++) {
-        final chapterName = rawChapters[cIdx];
-        final chapterSlug = chapterName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
-        final chapterId = 'sub-$subjectId-$chapterSlug';
-
-        final subModel = SubcategoryModel(
-          id: chapterId,
-          categoryId: subjectId,
-          name: chapterName,
-          slug: chapterSlug,
-          displayOrder: cIdx + 1,
-          status: _isPublished ? 'active' : 'draft',
-          createdAt: DateTime.now(),
-        );
-        await _categoriesRepo.upsertSubcategory(subModel);
-
-        // Topics
-        if (rawTopics.isNotEmpty) {
-          for (int tIdx = 0; tIdx < rawTopics.length; tIdx++) {
-            final topicName = rawTopics[tIdx];
-            final topicSlug = topicName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
-            final topicId = 'top-$chapterId-$topicSlug';
-
-            final topicModel = TopicModel(
-              id: topicId,
-              subcategoryId: chapterId,
-              categoryId: subjectId,
-              name: topicName,
-              slug: topicSlug,
-              displayOrder: tIdx + 1,
-              status: _isPublished ? 'active' : 'draft',
-              createdAt: DateTime.now(),
-            );
-            await _categoriesRepo.upsertTopic(topicModel);
-          }
-        }
+      final catModel = CategoryModel(
+        id: subjectId,
+        examCategoryId: id,
+        name: subjectName,
+        slug: subjectSlug,
+        description: '$subjectName syllabus for $name',
+        topics: rawChapters,
+        subcategoriesCount: rawChapters.length,
+        displayOrder: i + 1,
+        status: _isPublished ? 'active' : 'draft',
+        createdAt: DateTime.now(),
+      );
+      final catRes = await _categoriesRepo.upsertCategory(catModel);
+      if (catRes is Success<CategoryModel>) {
+        validSubjectsSaved++;
       }
     }
 
@@ -369,8 +350,17 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
 
     if (confirmed != true) return;
 
-    await _testsRepo.deleteExamCategory(exam.id);
+    final delRes = await _testsRepo.deleteExamCategory(exam.id);
     if (!mounted) return;
+    if (delRes is Failure<bool>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(delRes.message),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _exams = List<ExamCategoryModel>.from(_exams)..removeWhere((e) => e.id == exam.id);
@@ -463,6 +453,35 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
         height: 280,
         child: Center(
           child: CircularProgressIndicator(strokeWidth: 2, color: _primaryPurple),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return SizedBox(
+        height: 220,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded, size: 32, color: Color(0xFFDC2626)),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF9F1239), fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextButton.icon(
+                onPressed: _loadExams,
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }

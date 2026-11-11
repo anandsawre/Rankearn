@@ -31,13 +31,7 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
   late String _iconName;
   late String _iconColor;
 
-  List<ExamCategoryModel> _examList = const [
-    ExamCategoryModel(id: 'bpsc', name: 'BPSC & State PCS', iconUrl: '🏛️'),
-    ExamCategoryModel(id: 'ssc', name: 'SSC CGL & CHSL', iconUrl: '📋'),
-    ExamCategoryModel(id: 'upsc', name: 'UPSC Civil Services', iconUrl: '🇮🇳'),
-    ExamCategoryModel(id: 'railway', name: 'RRB NTPC & Group D', iconUrl: '🚆'),
-    ExamCategoryModel(id: 'banking', name: 'Banking & Insurance', iconUrl: '🏦'),
-  ];
+  List<ExamCategoryModel> _examList = const [];
 
   final List<({String name, IconData icon})> _availableIcons = const [
     (name: 'school', icon: Icons.school_rounded),
@@ -90,8 +84,8 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
   }
 
   Future<void> _loadExams() async {
-    final res = await TestsRepository().getExamCategoryList();
-    if (res is Success<List<ExamCategoryModel>> && res.data.isNotEmpty && mounted) {
+    final res = await CategoriesRepository().getExamCategories();
+    if (res is Success<List<ExamCategoryModel>> && mounted) {
       setState(() {
         _examList = res.data;
       });

@@ -25,7 +25,6 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
   @override
   void initState() {
     super.initState();
-    _loadSampleTemplate();
   }
 
   void _loadSampleTemplate() {
@@ -330,7 +329,6 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                   setState(() {
                     _selectedFormat = set.first;
                   });
-                  _loadSampleTemplate();
                 },
               ),
               OutlinedButton.icon(
@@ -341,7 +339,7 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                 ),
                 icon: const Icon(Icons.description_outlined, size: 14, color: Color(0xFFEA580C)),
                 label: const Text(
-                  'Load Sample Template',
+                  'Insert Example Format',
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFEA580C)),
                 ),
                 onPressed: _loadSampleTemplate,

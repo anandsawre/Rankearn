@@ -1,39 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
-/// Question Type Distribution Donut Chart Card
-/// Powered by the centralized, reusable [AppDonutChartCard].
+/// Subject Wise Questions Donut Chart Card
+/// Powered by [AppDonutChartCard] with live database counts and slices.
 class QuestionTypeDonutChartCard extends StatelessWidget {
   final bool fillHeight;
   final int totalCount;
+  final List<DonutSlice> slices;
+  final bool isLoading;
 
   const QuestionTypeDonutChartCard({
     super.key,
     this.fillHeight = false,
-    this.totalCount = 9842,
+    this.totalCount = 0,
+    this.slices = const [],
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return AppDonutChartCard(
-      title: 'Question Type Distribution',
+      title: 'Subject Wise Questions',
       icon: Icons.pie_chart_rounded,
-      iconBg: const Color(0xFF3B82F6),
+      iconBg: const Color(0xFF8B5CF6),
       totalCount: totalCount,
       totalLabel: 'Total',
       fillHeight: fillHeight,
-      height: fillHeight ? null : 160,
-      chartSize: 84,
-      strokeWidth: 12,
+      height: fillHeight ? null : 210,
+      chartSize: 92,
+      strokeWidth: 14.0,
       strokeCap: StrokeCap.round,
-      slices: const [
-        DonutSlice(label: 'MCQ', percentage: 68, color: Color(0xFF3B82F6)),
-        DonutSlice(label: 'True/False', percentage: 12, color: Color(0xFF8B5CF6)),
-        DonutSlice(label: 'Fill in the Blanks', percentage: 8, color: Color(0xFFF59E0B)),
-        DonutSlice(label: 'Match the Following', percentage: 6, color: Color(0xFF06B6D4)),
-        DonutSlice(label: 'Assertion & Reason', percentage: 4, color: Color(0xFFEC4899)),
-        DonutSlice(label: 'Subjective', percentage: 2, color: Color(0xFF94A3B8)),
-      ],
+      isLoading: isLoading,
+      slices: slices,
     );
   }
 }

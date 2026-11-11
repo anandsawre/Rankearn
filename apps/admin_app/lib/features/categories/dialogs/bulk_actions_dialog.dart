@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
 enum BulkCategoryActionType {
-  makeActive('Mark as Active', Icons.check_circle_outline_rounded, Color(0xFF10B981)),
-  makeDraft('Mark as Draft', Icons.edit_note_rounded, Color(0xFFF59E0B)),
-  makeArchived('Mark as Archived', Icons.archive_outlined, Color(0xFF8B5CF6)),
+  makeActive('Publish Selected', Icons.check_circle_outline_rounded, Color(0xFF10B981)),
+  makeDraft('Set as Hidden / Draft', Icons.edit_note_rounded, Color(0xFFF59E0B)),
   delete('Delete Selected', Icons.delete_outline_rounded, Color(0xFFF43F5E));
 
   final String label;

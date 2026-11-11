@@ -18,27 +18,9 @@ class _ImportCategoriesDialogState extends State<ImportCategoriesDialog> {
   String? _error;
   bool _isValidated = false;
 
-  final String _sampleJson = '''[
-  {
-    "name": "Artificial Intelligence & ML",
-    "description": "Machine learning, prompt engineering, and deep learning",
-    "icon_name": "psychology",
-    "icon_color": "#8B5CF6",
-    "status": "active"
-  },
-  {
-    "name": "Cybersecurity & Ethical Hacking",
-    "description": "Network defense, vulnerability assessment, and certs",
-    "icon_name": "code",
-    "icon_color": "#10B981",
-    "status": "draft"
-  }
-]''';
-
   @override
   void initState() {
     super.initState();
-    _textController.text = _sampleJson;
   }
 
   @override

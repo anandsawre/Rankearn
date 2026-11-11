@@ -71,6 +71,7 @@ class _DuplicateExamDialogState extends State<DuplicateExamDialog> {
       iconData: Icons.content_copy_rounded,
       gradientColors: const [Color(0xFFE11D48), Color(0xFFF43F5E)],
       maxWidth: 520,
+      scrollable: true,
       actions: [
         OutlinedButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -142,15 +143,14 @@ class _DuplicateExamDialogState extends State<DuplicateExamDialog> {
           const SizedBox(height: 14),
 
           // Clone subjects checkbox
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+          Material(
+            color: const Color(0xFFF8FAFC),
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             child: CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               value: _copySubjects,
               activeColor: const Color(0xFFE11D48),
               onChanged: (val) => setState(() => _copySubjects = val ?? true),

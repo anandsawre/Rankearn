@@ -2,91 +2,113 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
 /// Questions Metrics Row
-/// Displays 5 responsive statistics cards powered by the unified [AdminMetricCard]
-/// from the Rankearn design system.
+/// Displays 5 responsive live statistics cards powered by [AdminMetricCard]
+/// with real database counts, 7-day growth percentages, and sparklines.
 class QuestionsMetricsRow extends StatelessWidget {
   final int totalQuestions;
   final int activeQuestions;
   final int draftQuestions;
   final int archivedQuestions;
   final int questionSets;
+  final bool isLoading;
+
+  final String totalGrowth;
+  final bool totalPositive;
+  final List<double>? totalSparkline;
+
+  final String activeGrowth;
+  final bool activePositive;
+  final List<double>? activeSparkline;
+
+  final String draftGrowth;
+  final bool draftPositive;
+  final List<double>? draftSparkline;
+
+  final String archivedGrowth;
+  final bool archivedPositive;
+  final List<double>? archivedSparkline;
+
+  final String setsGrowth;
+  final bool setsPositive;
+  final List<double>? setsSparkline;
 
   const QuestionsMetricsRow({
     super.key,
-    this.totalQuestions = 9842,
-    this.activeQuestions = 8936,
-    this.draftQuestions = 542,
-    this.archivedQuestions = 364,
-    this.questionSets = 128,
+    this.totalQuestions = 0,
+    this.activeQuestions = 0,
+    this.draftQuestions = 0,
+    this.archivedQuestions = 0,
+    this.questionSets = 0,
+    this.isLoading = false,
+    this.totalGrowth = '',
+    this.totalPositive = true,
+    this.totalSparkline,
+    this.activeGrowth = '',
+    this.activePositive = true,
+    this.activeSparkline,
+    this.draftGrowth = '',
+    this.draftPositive = true,
+    this.draftSparkline,
+    this.archivedGrowth = '',
+    this.archivedPositive = true,
+    this.archivedSparkline,
+    this.setsGrowth = '',
+    this.setsPositive = true,
+    this.setsSparkline,
   });
-
-  String _formatNumber(int number) {
-    final str = number.toString();
-    final buffer = StringBuffer();
-    int count = 0;
-    for (int i = str.length - 1; i >= 0; i--) {
-      buffer.write(str[i]);
-      count++;
-      if (count == 3 && i != 0) {
-        buffer.write(',');
-        count = 0;
-      }
-    }
-    return buffer.toString().split('').reversed.join('');
-  }
 
   @override
   Widget build(BuildContext context) {
     final metrics = [
       (
         title: 'Total Questions',
-        value: _formatNumber(totalQuestions),
-        growth: '+15%',
-        isGrowthPositive: true,
-        subtitle: '+1,280 this month',
-        icon: Icons.question_mark_rounded,
+        value: isLoading ? '—' : _formatNumber(totalQuestions),
+        growth: isLoading ? '' : totalGrowth,
+        isGrowthPositive: totalPositive,
+        subtitle: isLoading ? 'Loading bank...' : 'All bank questions',
+        icon: Icons.help_outline_rounded,
         color: const Color(0xFF3B82F6),
-        sparklineData: const [20.0, 24.0, 22.0, 28.0, 35.0, 42.0, 48.0],
+        sparklineData: totalSparkline,
       ),
       (
         title: 'Active Questions',
-        value: _formatNumber(activeQuestions),
-        growth: '+18%',
-        isGrowthPositive: true,
-        subtitle: '+1,324 this month',
-        icon: Icons.check_rounded,
+        value: isLoading ? '—' : _formatNumber(activeQuestions),
+        growth: isLoading ? '' : activeGrowth,
+        isGrowthPositive: activePositive,
+        subtitle: isLoading ? 'Loading status...' : 'Published & ready',
+        icon: Icons.check_circle_outline_rounded,
         color: const Color(0xFF10B981),
-        sparklineData: const [18.0, 22.0, 26.0, 30.0, 36.0, 40.0, 42.0],
+        sparklineData: activeSparkline,
       ),
       (
         title: 'Draft Questions',
-        value: _formatNumber(draftQuestions),
-        growth: '-12%',
-        isGrowthPositive: false,
-        subtitle: '-84 this month',
-        icon: Icons.description_outlined,
+        value: isLoading ? '—' : _formatNumber(draftQuestions),
+        growth: isLoading ? '' : draftGrowth,
+        isGrowthPositive: draftPositive,
+        subtitle: isLoading ? 'Loading drafts...' : 'Linked to draft tests',
+        icon: Icons.edit_note_rounded,
         color: const Color(0xFFF59E0B),
-        sparklineData: const [8.0, 7.0, 9.0, 6.0, 5.0, 4.0, 4.0],
+        sparklineData: draftSparkline,
       ),
       (
         title: 'Archived Questions',
-        value: _formatNumber(archivedQuestions),
-        growth: '+6%',
-        isGrowthPositive: true,
-        subtitle: '+21 this month',
-        icon: Icons.inventory_2_outlined,
+        value: isLoading ? '—' : _formatNumber(archivedQuestions),
+        growth: isLoading ? '' : archivedGrowth,
+        isGrowthPositive: archivedPositive,
+        subtitle: isLoading ? 'Loading archive...' : 'Linked to archived tests',
+        icon: Icons.archive_outlined,
         color: const Color(0xFF8B5CF6),
-        sparklineData: const [2.0, 2.0, 2.0, 3.0, 2.0, 2.0, 2.0],
+        sparklineData: archivedSparkline,
       ),
       (
         title: 'Question Sets',
-        value: _formatNumber(questionSets),
-        growth: '+22%',
-        isGrowthPositive: true,
-        subtitle: '+23 this month',
+        value: isLoading ? '—' : _formatNumber(questionSets),
+        growth: isLoading ? '' : setsGrowth,
+        isGrowthPositive: setsPositive,
+        subtitle: isLoading ? 'Loading sets...' : 'Test series pools',
         icon: Icons.layers_rounded,
         color: const Color(0xFFEF4444),
-        sparklineData: const [10.0, 12.0, 15.0, 14.0, 18.0, 20.0, 22.0],
+        sparklineData: setsSparkline,
       ),
     ];
 
@@ -117,5 +139,16 @@ class QuestionsMetricsRow extends StatelessWidget {
         );
       },
     );
+  }
+
+  static String _formatNumber(int n) {
+    if (n >= 1000) {
+      final s = n.toString();
+      final len = s.length;
+      final part1 = s.substring(0, len - 3);
+      final part2 = s.substring(len - 3);
+      return '$part1,$part2';
+    }
+    return n.toString();
   }
 }

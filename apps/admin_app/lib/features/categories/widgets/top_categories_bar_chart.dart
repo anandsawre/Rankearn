@@ -1,25 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
+class TopExamBarData {
+  final String label;
+  final int value;
+  final Color color;
+
+  const TopExamBarData({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+}
+
 class TopCategoriesBarChartCard extends StatelessWidget {
   final bool fillHeight;
+  final List<TopExamBarData> bars;
+  final bool isLoading;
 
   const TopCategoriesBarChartCard({
     super.key,
     this.fillHeight = false,
+    this.bars = const [],
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bars = [
-      _BarData(label: 'Competitive\nExams', value: 4850, valueStr: '4,850', color: const Color(0xFF0084FF)),
-      _BarData(label: 'Entrance\nExams', value: 3420, valueStr: '3,420', color: const Color(0xFFF43F5E)),
-      _BarData(label: 'School\nEducation', value: 2340, valueStr: '2,340', color: const Color(0xFFF59E0B)),
-      _BarData(label: 'General\nAwareness', value: 2100, valueStr: '2,100', color: const Color(0xFF8B5CF6)),
-      _BarData(label: 'State Level\nExams', value: 1950, valueStr: '1,950', color: const Color(0xFF10B981)),
-    ];
+    final maxVal = bars.isEmpty
+        ? 0
+        : bars.map((b) => b.value).reduce((a, b) => a > b ? a : b);
 
-    const maxVal = 4850.0;
+    final Widget body;
+    if (isLoading && bars.isEmpty) {
+      body = const Center(
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2.2),
+        ),
+      );
+    } else if (bars.isEmpty) {
+      body = const Center(
+        child: Text(
+          'No exam question metrics yet',
+          style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+        ),
+      );
+    } else {
+      body = Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: bars.take(5).map((b) {
+          final ratio = maxVal > 0 ? (b.value / maxVal) : 0.0;
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    _formatNumber(b.value),
+                    style: const TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF101A3A),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: FractionallySizedBox(
+                        heightFactor: b.value > 0 ? ratio.clamp(0.15, 1.0) : 0.06,
+                        widthFactor: 0.72,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: b.value > 0 ? b.color : const Color(0xFFE2E8F0),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    height: 24,
+                    child: Text(
+                      b.label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF64748B),
+                        height: 1.1,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    }
 
     final content = Container(
       padding: const EdgeInsets.all(12),
@@ -32,7 +122,6 @@ class TopCategoriesBarChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
           Row(
             children: [
               Container(
@@ -48,7 +137,7 @@ class TopCategoriesBarChartCard extends StatelessWidget {
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
-                  'Top Categories by Questions',
+                  'Top Exams by Questions',
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
@@ -61,95 +150,21 @@ class TopCategoriesBarChartCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-
-          // Bars Area
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: bars.map((b) {
-                final ratio = b.value / maxVal;
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        // Value label on top
-                        Text(
-                          b.valueStr,
-                          style: const TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF101A3A),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-
-                        // The Bar
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: FractionallySizedBox(
-                              heightFactor: ratio.clamp(0.15, 1.0),
-                              widthFactor: 0.72,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: b.color,
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(4),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Category Name underneath
-                        SizedBox(
-                          height: 24,
-                          child: Text(
-                            b.label,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF64748B),
-                              height: 1.1,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
+          Expanded(child: body),
         ],
       ),
     );
 
     if (fillHeight) return content;
-    return SizedBox(height: 155, child: content);
+    return SizedBox(height: 165, child: content);
   }
-}
 
-class _BarData {
-  final String label;
-  final int value;
-  final String valueStr;
-  final Color color;
-
-  const _BarData({
-    required this.label,
-    required this.value,
-    required this.valueStr,
-    required this.color,
-  });
+  static String _formatNumber(int n) {
+    if (n >= 1000) {
+      final s = n.toString();
+      final len = s.length;
+      return '${s.substring(0, len - 3)},${s.substring(len - 3)}';
+    }
+    return n.toString();
+  }
 }

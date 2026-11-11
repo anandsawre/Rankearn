@@ -46,26 +46,9 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
 
   bool _showPreview = false;
 
-  final List<String> _subjects = [
-    'General Science',
-    'Physics',
-    'General Awareness',
-    'Mathematics',
-    'Chemistry',
-    'Biology',
-    'Reasoning',
-    'Polity',
-  ];
+  final List<String> _subjects = ['General'];
 
-  final List<String> _testSeriesList = [
-    'RRB Technician Grade 3',
-    'Current Affairs Practice Series',
-    'Railway Maths Practice Series',
-    'Chemistry Practice Series',
-    'Biology Marathon Series',
-    'Reasoning Special Series',
-    'Current Affairs Monthly Series',
-  ];
+  final List<String> _testSeriesList = ['Unassigned (General Bank)'];
 
   final Map<String, String> _testTitleToId = {};
 
@@ -132,27 +115,48 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
 
     final client = SupabaseConfig.clientSafe;
     if (client != null) {
-      client.from('tests').select('id, title').then((res) {
-        if (res.isNotEmpty && mounted) {
-          final titles = <String>[];
-          for (final r in res as List) {
-            final tId = r['id']?.toString() ?? '';
-            final tTitle = r['title']?.toString() ?? '';
-            if (tTitle.isNotEmpty) {
-              titles.add(tTitle);
-              if (tId.isNotEmpty) {
-                _testTitleToId[tTitle] = tId;
-              }
+      Future.wait([
+        client.from('tests').select('id, title').order('created_at', ascending: false),
+        client.from('categories').select('name').order('display_order', ascending: true),
+      ]).then((results) {
+        if (!mounted) return;
+        final testRows = results[0] as List;
+        final catRows = results[1] as List;
+
+        final fetchedTitles = <String>[];
+        for (final r in testRows) {
+          final tId = r['id']?.toString() ?? '';
+          final tTitle = r['title']?.toString().trim() ?? '';
+          if (tTitle.isNotEmpty) {
+            fetchedTitles.add(tTitle);
+            if (tId.isNotEmpty) {
+              _testTitleToId[tTitle] = tId;
             }
           }
-          if (titles.isNotEmpty) {
-            setState(() {
-              for (final t in titles) {
-                if (!_testSeriesList.contains(t)) _testSeriesList.add(t);
-              }
-            });
-          }
         }
+
+        final fetchedSubjects = catRows
+            .map((r) => r['name']?.toString().trim() ?? '')
+            .where((n) => n.isNotEmpty)
+            .toSet()
+            .toList();
+
+        setState(() {
+          for (final t in fetchedTitles) {
+            if (!_testSeriesList.contains(t)) _testSeriesList.add(t);
+          }
+          if (widget.initialTestSeriesTitle == null &&
+              widget.initialItem == null &&
+              fetchedTitles.isNotEmpty) {
+            _selectedTestSeries = fetchedTitles.first;
+          }
+          for (final s in fetchedSubjects) {
+            if (!_subjects.contains(s)) _subjects.add(s);
+          }
+          if (widget.initialItem == null && fetchedSubjects.isNotEmpty && _selectedSubject == 'General') {
+            _selectedSubject = fetchedSubjects.first;
+          }
+        });
       }).catchError((_) {});
     }
   }
@@ -183,9 +187,9 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
     });
 
     final defaultChar = _selectedCorrectIndex < labels.length ? labels[_selectedCorrectIndex] : 'A';
-    final targetTestId = widget.initialTestId ??
-        widget.initialItem?.testId ??
-        _testTitleToId[_selectedTestSeries];
+    final targetTestId = _selectedTestSeries == 'Unassigned (General Bank)'
+        ? null
+        : (widget.initialTestId ?? _testTitleToId[_selectedTestSeries] ?? widget.initialItem?.testId);
 
     final savedItem = QuestionItem(
       id: widget.initialItem?.id ?? 'q-${DateTime.now().millisecondsSinceEpoch}',
@@ -224,83 +228,75 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
         onImport: (importedList) async {
           if (importedList.isEmpty) return;
 
-          // 1. Determine effective test ID and title
-          final selectedTitle = _selectedTestSeries.trim();
-          final rawTargetTestId = widget.initialTestId ?? _testTitleToId[selectedTitle];
-          final effectiveTestId = (rawTargetTestId != null && rawTargetTestId.isNotEmpty)
-              ? rawTargetTestId
-              : (selectedTitle.isNotEmpty && selectedTitle != 'All Test Series'
-                  ? 'test-${selectedTitle.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')}'
-                  : 'general-question-bank');
-          final effectiveTestTitle = widget.initialTestSeriesTitle ??
-              (selectedTitle.isNotEmpty ? selectedTitle : 'Question Bank');
-
           final client = SupabaseConfig.clientSafe;
-          String? syncNotice;
-
-          if (client != null) {
-            // 2. Ensure parent test exists in `tests` table so foreign key constraint passes
-            try {
-              await client.from('tests').upsert({
-                'id': effectiveTestId,
-                'title': effectiveTestTitle,
-                'test_mode': 'mock',
-                'duration_minutes': 60,
-                'total_questions': importedList.length,
-                'status': 'published',
-                'category_id': 'General Science',
-                'exam_category_id': 'bpsc',
-              });
-            } catch (tErr) {
-              debugPrint('Parent test ensure note: $tErr');
+          if (client == null) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Database not connected. Cannot import questions.'),
+                  backgroundColor: Color(0xFFDC2626),
+                ),
+              );
             }
-
-            // 3. Prepare questions payload with test_id guaranteed
-            try {
-              final seenIds = <String>{};
-              final payload = <Map<String, dynamic>>[];
-              for (int i = 0; i < importedList.length; i++) {
-                final m = importedList[i].toMap();
-                m['test_id'] = effectiveTestId;
-                String qId = m['id']?.toString() ?? '';
-                if (qId.isEmpty || seenIds.contains(qId)) {
-                  qId = 'q_${DateTime.now().microsecondsSinceEpoch}_${i + 1}_${math.Random().nextInt(999999)}';
-                  m['id'] = qId;
-                }
-                seenIds.add(qId);
-                m['question_number'] = i + 1;
-                payload.add(m);
-              }
-
-              await client.from('questions').upsert(payload);
-
-              // 4. Update parent test total_questions count in cloud
-              try {
-                await client.from('tests').update({
-                  'total_questions': importedList.length,
-                }).eq('id', effectiveTestId);
-              } catch (_) {}
-            } catch (e) {
-              debugPrint('Bulk import Supabase sync error: $e');
-              final errStr = e.toString().toLowerCase();
-              if (errStr.contains('42501') || errStr.contains('row-level security')) {
-                syncNotice = 'Imported locally! (Run Supabase RLS SQL migration for cloud sync)';
-              } else if (errStr.contains('23502') || errStr.contains('test_id')) {
-                syncNotice = 'Imported locally! (Run test_id DROP NOT NULL SQL migration in Supabase)';
-              } else if (errStr.contains('23503') || errStr.contains('foreign key')) {
-                syncNotice = 'Imported locally! (Parent test foreign key missing in Supabase)';
-              } else {
-                syncNotice = 'Imported locally! (Cloud sync note: $e)';
-              }
-            }
+            return;
           }
 
-          // 5. Update local state
+          final selectedTitle = _selectedTestSeries.trim();
+          final hasRealTestId = (widget.initialTestId != null && widget.initialTestId!.isNotEmpty) ||
+              (_testTitleToId[selectedTitle]?.isNotEmpty ?? false);
+          final String? resolvedTestId = widget.initialTestId ?? _testTitleToId[selectedTitle];
+          final String effectiveTestTitle = widget.initialTestSeriesTitle ??
+              (hasRealTestId ? selectedTitle : 'General Bank');
+
+          try {
+            final seenIds = <String>{};
+            final payload = <Map<String, dynamic>>[];
+            for (int i = 0; i < importedList.length; i++) {
+              final m = importedList[i].toMap();
+              if (resolvedTestId != null && resolvedTestId.isNotEmpty) {
+                m['test_id'] = resolvedTestId;
+              } else {
+                m.remove('test_id');
+              }
+              String qId = m['id']?.toString() ?? '';
+              if (qId.isEmpty || seenIds.contains(qId)) {
+                qId = 'q_${DateTime.now().microsecondsSinceEpoch}_${i + 1}_${math.Random().nextInt(999999)}';
+                m['id'] = qId;
+              }
+              seenIds.add(qId);
+              m['question_number'] = i + 1;
+              payload.add(m);
+            }
+
+            await client.from('questions').upsert(payload);
+            if (resolvedTestId != null && resolvedTestId.isNotEmpty) {
+              try {
+                final countRows = await client
+                    .from('questions')
+                    .select('id')
+                    .eq('test_id', resolvedTestId);
+                await client.from('tests').update({
+                  'total_questions': (countRows as List).length,
+                }).eq('id', resolvedTestId);
+              } catch (_) {}
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to import questions to Supabase: $e'),
+                  backgroundColor: const Color(0xFFDC2626),
+                ),
+              );
+            }
+            return;
+          }
+
           final itemsWithTest = importedList.asMap().entries.map((entry) {
             final idx = entry.key;
             final q = entry.value;
             return q.copyWith(
-              testId: effectiveTestId,
+              testId: resolvedTestId,
               testSeriesTitle: effectiveTestTitle,
               questionNumber: idx + 1,
             );
@@ -314,18 +310,14 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
             }
           }
 
-          // 6. Dismiss CreateQuestionDialog & show success/notice SnackBar
           if (mounted) {
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  syncNotice ??
-                      'Successfully imported ${importedList.length} questions into "$effectiveTestTitle"!',
+                  'Successfully imported ${importedList.length} questions into "$effectiveTestTitle"!',
                 ),
-                backgroundColor: syncNotice != null
-                    ? const Color(0xFFF59E0B)
-                    : const Color(0xFF10B981),
+                backgroundColor: const Color(0xFF10B981),
               ),
             );
           }

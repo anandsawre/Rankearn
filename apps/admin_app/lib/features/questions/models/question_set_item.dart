@@ -20,11 +20,11 @@ class QuestionSetItem {
   factory QuestionSetItem.fromMap(Map<String, dynamic> map) {
     return QuestionSetItem(
       id: map['id']?.toString() ?? '',
-      name: map['name']?.toString() ?? 'Default Set',
-      subject: map['subject']?.toString() ?? 'General Science',
+      name: map['name']?.toString() ?? map['title']?.toString() ?? 'Untitled Set',
+      subject: map['subject']?.toString() ?? map['category_id']?.toString() ?? 'General',
       totalQuestions: (map['total_questions'] as num?)?.toInt() ?? 0,
-      difficulty: map['difficulty']?.toString() ?? 'Medium',
-      status: map['status']?.toString() ?? 'Active',
+      difficulty: map['difficulty']?.toString() ?? 'Mixed',
+      status: map['status']?.toString() ?? 'published',
       createdAt: map['created_at'] != null
           ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
@@ -40,52 +40,4 @@ class QuestionSetItem {
         'status': status,
         'created_at': createdAt.toIso8601String(),
       };
-
-  static List<QuestionSetItem> get sampleSets => [
-        QuestionSetItem(
-          id: 'qs-1',
-          name: 'RRB Technician Grade 3 Master Set',
-          subject: 'Physics',
-          totalQuestions: 250,
-          difficulty: 'Easy',
-          status: 'Active',
-          createdAt: DateTime(2026, 10, 18),
-        ),
-        QuestionSetItem(
-          id: 'qs-2',
-          name: 'Current Affairs 2026 Q-Bank',
-          subject: 'General Awareness',
-          totalQuestions: 500,
-          difficulty: 'Easy',
-          status: 'Active',
-          createdAt: DateTime(2026, 10, 15),
-        ),
-        QuestionSetItem(
-          id: 'qs-3',
-          name: 'Quantitative Aptitude Special',
-          subject: 'Mathematics',
-          totalQuestions: 400,
-          difficulty: 'Medium',
-          status: 'Active',
-          createdAt: DateTime(2026, 10, 10),
-        ),
-        QuestionSetItem(
-          id: 'qs-4',
-          name: 'Organic & Inorganic Chemistry Set',
-          subject: 'Chemistry',
-          totalQuestions: 320,
-          difficulty: 'Medium',
-          status: 'Active',
-          createdAt: DateTime(2026, 10, 5),
-        ),
-        QuestionSetItem(
-          id: 'qs-5',
-          name: 'Logical Reasoning Marathon',
-          subject: 'Reasoning',
-          totalQuestions: 450,
-          difficulty: 'Hard',
-          status: 'Active',
-          createdAt: DateTime(2026, 10, 1),
-        ),
-      ];
 }

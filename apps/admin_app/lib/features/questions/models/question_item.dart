@@ -169,7 +169,12 @@ class QuestionItem {
     );
   }
 
-  factory QuestionItem.fromMap(Map<String, dynamic> map, [int defaultNumber = 1]) {
+  factory QuestionItem.fromMap(
+    Map<String, dynamic> map, [
+    int defaultNumber = 1,
+    String? resolvedTestTitle,
+    QuestionStatus? derivedStatus,
+  ]) {
     final rawOptions = map['options'];
     final List<QuestionOptionItem> parsedOpts = [];
     if (rawOptions is List) {
@@ -256,19 +261,24 @@ class QuestionItem {
           map['text']?.toString() ??
           'Untitled Question',
       questionTextHindi: map['question_text_hindi']?.toString(),
-      subject: map['subject']?.toString() ?? 'General Awareness',
-      testSeriesTitle: map['test_series_title']?.toString() ??
-          map['test_title']?.toString() ??
-          'Practice Series',
+      subject: (map['subject']?.toString().trim().isNotEmpty ?? false)
+          ? map['subject'].toString().trim()
+          : 'Uncategorized',
+      testSeriesTitle: (resolvedTestTitle != null && resolvedTestTitle.trim().isNotEmpty)
+          ? resolvedTestTitle.trim()
+          : (map['test_series_title']?.toString() ??
+              map['test_title']?.toString() ??
+              'General Bank'),
       testId: map['test_id']?.toString(),
-      questionSet: map['question_set']?.toString() ?? 'Set A',
+      questionSet: map['question_set']?.toString() ?? 'General',
       questionType: map['question_type']?.toString() ?? 'MCQ',
       difficulty: QuestionDifficulty.fromString(diffStr),
       options: parsedOpts,
       correctAnswerIndex: cIdx,
       correctAnswerChar: cChar,
       usageCount: usageVal,
-      status: QuestionStatus.fromString(map['status']?.toString() ?? 'published'),
+      status: derivedStatus ??
+          QuestionStatus.fromString(map['status']?.toString() ?? 'published'),
       createdAt: dt,
       explanation: map['explanation_english']?.toString() ?? map['explanation']?.toString(),
       marks: marksVal,
@@ -397,155 +407,4 @@ class QuestionItem {
         return const Color(0xFF64748B);
     }
   }
-
-  // Exact reference data from the specification screenshot
-  static List<QuestionItem> get referenceData => [
-        QuestionItem(
-          id: 'q-001',
-          questionNumber: 1,
-          questionText: 'What is the SI unit of force?',
-          subject: 'Physics',
-          testSeriesTitle: 'RRB Technician\nGrade 3',
-          questionType: 'MCQ',
-          difficulty: QuestionDifficulty.easy,
-          correctAnswerIndex: 1,
-          correctAnswerChar: 'B',
-          usageCount: 1245,
-          status: QuestionStatus.published,
-          createdAt: DateTime(2026, 10, 18),
-          options: const [
-            QuestionOptionItem(label: 'A', text: 'Joule'),
-            QuestionOptionItem(label: 'B', text: 'Newton'),
-            QuestionOptionItem(label: 'C', text: 'Pascal'),
-            QuestionOptionItem(label: 'D', text: 'Watt'),
-          ],
-          explanation: 'Newton (N) is the SI unit of force, named after Sir Isaac Newton.',
-        ),
-        QuestionItem(
-          id: 'q-002',
-          questionNumber: 2,
-          questionText: 'The capital of Australia is?',
-          subject: 'General Awareness',
-          testSeriesTitle: 'Current Affairs\nPractice Series',
-          questionType: 'MCQ',
-          difficulty: QuestionDifficulty.easy,
-          correctAnswerIndex: 2,
-          correctAnswerChar: 'C',
-          usageCount: 892,
-          status: QuestionStatus.published,
-          createdAt: DateTime(2026, 10, 17),
-          options: const [
-            QuestionOptionItem(label: 'A', text: 'Sydney'),
-            QuestionOptionItem(label: 'B', text: 'Melbourne'),
-            QuestionOptionItem(label: 'C', text: 'Canberra'),
-            QuestionOptionItem(label: 'D', text: 'Brisbane'),
-          ],
-          explanation: 'Canberra is the federal capital city of the Commonwealth of Australia.',
-        ),
-        QuestionItem(
-          id: 'q-003',
-          questionNumber: 3,
-          questionText: 'Find the missing number:\n2, 6, 12, 20, ?',
-          subject: 'Mathematics',
-          testSeriesTitle: 'Railway Maths\nPractice Series',
-          questionType: 'MCQ',
-          difficulty: QuestionDifficulty.medium,
-          correctAnswerIndex: 3,
-          correctAnswerChar: 'D',
-          usageCount: 1050,
-          status: QuestionStatus.published,
-          createdAt: DateTime(2026, 10, 16),
-          options: const [
-            QuestionOptionItem(label: 'A', text: '26'),
-            QuestionOptionItem(label: 'B', text: '28'),
-            QuestionOptionItem(label: 'C', text: '29'),
-            QuestionOptionItem(label: 'D', text: '30'),
-          ],
-          explanation: 'Pattern is n^2 + n or consecutive even differences: +4, +6, +8, +10. Next term is 20 + 10 = 30.',
-        ),
-        QuestionItem(
-          id: 'q-004',
-          questionNumber: 4,
-          questionText: 'Which gas is known as\nlaughing gas?',
-          subject: 'Chemistry',
-          testSeriesTitle: 'Chemistry Practice\nSeries',
-          questionType: 'MCQ',
-          difficulty: QuestionDifficulty.medium,
-          correctAnswerIndex: 0,
-          correctAnswerChar: 'A',
-          usageCount: 730,
-          status: QuestionStatus.draft,
-          createdAt: DateTime(2026, 10, 15),
-          options: const [
-            QuestionOptionItem(label: 'A', text: 'Nitrous Oxide (N2O)'),
-            QuestionOptionItem(label: 'B', text: 'Carbon Monoxide'),
-            QuestionOptionItem(label: 'C', text: 'Sulphur Dioxide'),
-            QuestionOptionItem(label: 'D', text: 'Methane'),
-          ],
-          explanation: 'Nitrous oxide (N2O) is commonly known as laughing gas due to its euphoric and anesthetic properties.',
-        ),
-        QuestionItem(
-          id: 'q-005',
-          questionNumber: 5,
-          questionText: 'Who discovered the cell?',
-          subject: 'Biology',
-          testSeriesTitle: 'Biology Marathon\nSeries',
-          questionType: 'MCQ',
-          difficulty: QuestionDifficulty.easy,
-          correctAnswerIndex: 1,
-          correctAnswerChar: 'B',
-          usageCount: 620,
-          status: QuestionStatus.published,
-          createdAt: DateTime(2026, 10, 14),
-          options: const [
-            QuestionOptionItem(label: 'A', text: 'Robert Brown'),
-            QuestionOptionItem(label: 'B', text: 'Robert Hooke'),
-            QuestionOptionItem(label: 'C', text: 'Antonie van Leeuwenhoek'),
-            QuestionOptionItem(label: 'D', text: 'Alexander Fleming'),
-          ],
-          explanation: 'Robert Hooke discovered cells in 1665 by examining thin slices of cork under an early compound microscope.',
-        ),
-        QuestionItem(
-          id: 'q-006',
-          questionNumber: 6,
-          questionText: 'Select the odd one out:\nTable, Chair, Window, Apple',
-          subject: 'Reasoning',
-          testSeriesTitle: 'Reasoning Special\nSeries',
-          questionType: 'MCQ',
-          difficulty: QuestionDifficulty.medium,
-          correctAnswerIndex: 3,
-          correctAnswerChar: 'D',
-          usageCount: 540,
-          status: QuestionStatus.published,
-          createdAt: DateTime(2026, 10, 13),
-          options: const [
-            QuestionOptionItem(label: 'A', text: 'Table'),
-            QuestionOptionItem(label: 'B', text: 'Chair'),
-            QuestionOptionItem(label: 'C', text: 'Window'),
-            QuestionOptionItem(label: 'D', text: 'Apple'),
-          ],
-          explanation: 'Apple is an edible organic fruit, while Table, Chair, and Window are inanimate structural/furniture items.',
-        ),
-        QuestionItem(
-          id: 'q-007',
-          questionNumber: 7,
-          questionText: 'Which article deals with\nthe Right to Education?',
-          subject: 'Polity',
-          testSeriesTitle: 'Current Affairs\nMonthly Series',
-          questionType: 'MCQ',
-          difficulty: QuestionDifficulty.hard,
-          correctAnswerIndex: 2,
-          correctAnswerChar: 'C',
-          usageCount: 480,
-          status: QuestionStatus.archived,
-          createdAt: DateTime(2026, 10, 12),
-          options: const [
-            QuestionOptionItem(label: 'A', text: 'Article 19'),
-            QuestionOptionItem(label: 'B', text: 'Article 21'),
-            QuestionOptionItem(label: 'C', text: 'Article 21A'),
-            QuestionOptionItem(label: 'D', text: 'Article 22'),
-          ],
-          explanation: 'Article 21A was inserted by the 86th Constitutional Amendment Act, providing free and compulsory education for children ages 6 to 14.',
-        ),
-      ];
 }

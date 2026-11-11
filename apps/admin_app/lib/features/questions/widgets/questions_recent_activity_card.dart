@@ -1,18 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
+class QuestionActivityItem {
+  final IconData icon;
+  final Color iconBg;
+  final String text;
+  final String timeAgo;
+
+  const QuestionActivityItem({
+    required this.icon,
+    required this.iconBg,
+    required this.text,
+    required this.timeAgo,
+  });
+}
+
 class QuestionsRecentActivityCard extends StatelessWidget {
   final bool fillHeight;
   final VoidCallback? onViewAll;
+  final List<QuestionActivityItem> activities;
+  final bool isLoading;
 
   const QuestionsRecentActivityCard({
     super.key,
     this.fillHeight = false,
     this.onViewAll,
+    this.activities = const [],
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final Widget body;
+    if (isLoading && activities.isEmpty) {
+      body = const Center(
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2.2),
+        ),
+      );
+    } else if (activities.isEmpty) {
+      body = const Center(
+        child: Text(
+          'No recent question activity',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF94A3B8),
+          ),
+        ),
+      );
+    } else {
+      body = SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: activities
+              .map(
+                (item) => _ActivityRow(
+                  icon: item.icon,
+                  iconBg: item.iconBg,
+                  text: item.text,
+                  time: item.timeAgo,
+                ),
+              )
+              .toList(),
+        ),
+      );
+    }
+
     final content = Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -24,7 +81,6 @@ class QuestionsRecentActivityCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header: Recent Activity + View All
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -57,57 +113,24 @@ class QuestionsRecentActivityCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
-              InkWell(
-                onTap: onViewAll,
-                child: const Text(
-                  'View All',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF5636F5),
+              if (onViewAll != null) ...[
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: onViewAll,
+                  child: const Text(
+                    'View All',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF5636F5),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 8),
-
-          // 4 Activity Items
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  _ActivityRow(
-                    icon: Icons.check_rounded,
-                    iconBg: Color(0xFF10B981),
-                    text: 'New question added: What is the SI unit of force?',
-                    time: '5 minutes ago',
-                  ),
-                  _ActivityRow(
-                    icon: Icons.edit_rounded,
-                    iconBg: Color(0xFFF59E0B),
-                    text: 'Question updated: Find the missing number?',
-                    time: '18 minutes ago',
-                  ),
-                  _ActivityRow(
-                    icon: Icons.file_upload_outlined,
-                    iconBg: Color(0xFF0284C7),
-                    text: '50 questions imported from CSV',
-                    time: '1 hour ago',
-                  ),
-                  _ActivityRow(
-                    icon: Icons.inventory_2_outlined,
-                    iconBg: Color(0xFFF43F5E),
-                    text: 'Question archived: Old current affairs set',
-                    time: '2 hours ago',
-                  ),
-                ],
-              ),
-            ),
-          ),
+          Expanded(child: body),
         ],
       ),
     );
@@ -133,7 +156,7 @@ class _ActivityRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 2.5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

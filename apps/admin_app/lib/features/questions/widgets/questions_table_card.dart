@@ -11,9 +11,12 @@ class QuestionsTableCard extends StatefulWidget {
   final String selectedSubject;
   final String selectedType;
   final String selectedDifficulty;
+  final List<String> availableTestSeries;
+  final List<String> availableSubjects;
   final String searchQuery;
   final int currentPage;
   final int totalPages;
+  final bool isLoading;
   final ValueChanged<String> onTestSeriesChanged;
   final ValueChanged<String> onSubjectChanged;
   final ValueChanged<String> onTypeChanged;
@@ -36,9 +39,12 @@ class QuestionsTableCard extends StatefulWidget {
     required this.selectedSubject,
     required this.selectedType,
     required this.selectedDifficulty,
+    this.availableTestSeries = const [],
+    this.availableSubjects = const [],
     required this.searchQuery,
     required this.currentPage,
     required this.totalPages,
+    this.isLoading = false,
     required this.onTestSeriesChanged,
     required this.onSubjectChanged,
     required this.onTypeChanged,
@@ -100,6 +106,18 @@ class _QuestionsTableCardState extends State<QuestionsTableCard> {
     final double remainingSpace = cardWidth - (fixedColumnsWidth + detailsWidth);
     final double dynamicColumnSpacing = remainingSpace > 0 ? (remainingSpace / 11).clamp(6.0, 40.0) : 6.0;
 
+    final testSeriesOptions = <String>{
+      'All Test Series',
+      ...widget.availableTestSeries,
+      if (widget.selectedTestSeries != 'All Test Series') widget.selectedTestSeries,
+    }.toList();
+
+    final subjectOptions = <String>{
+      'All Subjects',
+      ...widget.availableSubjects,
+      if (widget.selectedSubject != 'All Subjects') widget.selectedSubject,
+    }.toList();
+
     return AdminDataTableCard(
           title: 'Questions List',
           totalCount: widget.totalCount,
@@ -113,33 +131,16 @@ class _QuestionsTableCardState extends State<QuestionsTableCard> {
           onPageChanged: widget.onPageChanged,
           itemLabel: 'questions',
           columnSpacing: dynamicColumnSpacing,
+          isLoading: widget.isLoading,
           filterControls: [
             AdminTableDropdown(
               value: widget.selectedTestSeries,
-              items: const [
-                'All Test Series',
-                'RRB Technician Grade 3',
-                'Current Affairs Practice Series',
-                'Railway Maths Practice Series',
-                'Chemistry Practice Series',
-                'Biology Marathon Series',
-                'Reasoning Special Series',
-                'Current Affairs Monthly Series',
-              ],
+              items: testSeriesOptions,
               onChanged: widget.onTestSeriesChanged,
             ),
             AdminTableDropdown(
               value: widget.selectedSubject,
-              items: const [
-                'All Subjects',
-                'Physics',
-                'General Awareness',
-                'Mathematics',
-                'Chemistry',
-                'Biology',
-                'Reasoning',
-                'Polity',
-              ],
+              items: subjectOptions,
               onChanged: widget.onSubjectChanged,
             ),
             AdminTableDropdown(
@@ -166,17 +167,10 @@ class _QuestionsTableCardState extends State<QuestionsTableCard> {
               ],
               onChanged: widget.onDifficultyChanged,
             ),
-            AdminTableFiltersButton(
-              onTap: widget.onOpenFilters ??
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Filter drawer opened with advanced criteria.'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-            ),
+            if (widget.onOpenFilters != null)
+              AdminTableFiltersButton(
+                onTap: widget.onOpenFilters!,
+              ),
           ],
           columns: [
             DataColumn(
@@ -431,27 +425,6 @@ class _QuestionsTableCardState extends State<QuestionsTableCard> {
                                 const SizedBox(width: 8),
                                 Text(
                                   'Duplicate',
-                                  style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'toggle_status',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  item.status == QuestionStatus.published
-                                      ? Icons.pause_circle_outline
-                                      : Icons.play_circle_outline,
-                                  size: 16,
-                                  color: AppColors.brandGreen,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  item.status == QuestionStatus.published
-                                      ? 'Change to Draft'
-                                      : 'Publish Question',
                                   style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 12),
                                 ),
                               ],

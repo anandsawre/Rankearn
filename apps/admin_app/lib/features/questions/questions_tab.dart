@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
-
+import 'package:data_layer/data_layer.dart';
 import 'models/question_item.dart';
 import 'widgets/questions_hero_card.dart';
 import 'widgets/questions_quick_actions.dart';
@@ -10,7 +9,6 @@ import 'widgets/questions_table_card.dart';
 import 'widgets/question_type_donut_chart.dart';
 import 'widgets/difficulty_wise_bar_chart.dart';
 import 'widgets/questions_recent_activity_card.dart';
-
 import 'dialogs/create_question_dialog.dart';
 import 'dialogs/view_question_dialog.dart';
 import 'dialogs/import_questions_dialog.dart';
@@ -18,8 +16,8 @@ import 'dialogs/ai_generate_questions_dialog.dart';
 import 'dialogs/manage_question_sets_dialog.dart';
 import 'dialogs/bulk_actions_dialog.dart';
 
-/// Questions Management Screen
-/// Pixel-accurate reproduction of the Rankearn Questions Management specification.
+/// Questions Bank Management Screen
+/// Fully backed by live Supabase `questions`, `tests`, and `categories` tables.
 class QuestionsTab extends StatefulWidget {
   final List<QuestionItem>? initialItems;
 
@@ -30,128 +28,322 @@ class QuestionsTab extends StatefulWidget {
 }
 
 class _QuestionsTabState extends State<QuestionsTab> {
+  static const List<String> _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
   late List<QuestionItem> _allItems;
+  List<({String id, String title, String status, DateTime createdAt})> _dbTests = [];
+  List<String> _dbCategories = [];
   final Set<String> _selectedIds = {};
 
-  // Filters State
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  // Filters
   String _searchQuery = '';
   String _selectedTestSeries = 'All Test Series';
   String _selectedSubject = 'All Subjects';
   String _selectedType = 'All Types';
   String _selectedDifficulty = 'All Difficulty';
 
-  // Pagination State
+  // Pagination
   int _currentPage = 1;
   static const int _rowsPerPage = 7;
 
   @override
   void initState() {
     super.initState();
-    _allItems = widget.initialItems ?? List.from(QuestionItem.referenceData);
-    _loadFromSupabase();
+    if (widget.initialItems != null) {
+      _allItems = List.from(widget.initialItems!);
+      _isLoading = false;
+    } else {
+      _allItems = [];
+      _loadFromSupabase();
+    }
   }
 
   Future<void> _loadFromSupabase() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+
     final client = SupabaseConfig.clientSafe;
-    if (client == null) return;
-
-    try {
-      final res = await client
-          .from('questions')
-          .select()
-          .order('question_number', ascending: true);
-
-      if (res.isNotEmpty) {
-        if (!mounted) return;
+    if (client == null) {
+      if (mounted) {
         setState(() {
-          _allItems = (res as List)
-              .asMap()
-              .entries
-              .map((e) => QuestionItem.fromMap(e.value, e.key + 1))
-              .toList();
+          _isLoading = false;
+          _errorMessage = 'Database connection is not initialized.';
         });
       }
+      return;
+    }
+
+    try {
+      final results = await Future.wait([
+        client.from('questions').select().order('created_at', ascending: false),
+        client
+            .from('tests')
+            .select('id, title, status, created_at')
+            .order('created_at', ascending: false),
+        client
+            .from('categories')
+            .select('id, name')
+            .order('display_order', ascending: true),
+      ]);
+
+      final qRows = List<Map<String, dynamic>>.from(results[0] as List);
+      final testRows = List<Map<String, dynamic>>.from(results[1] as List);
+      final catRows = List<Map<String, dynamic>>.from(results[2] as List);
+
+      final testLookup = <String, ({String title, QuestionStatus status})>{};
+      final parsedTests = <({String id, String title, String status, DateTime createdAt})>[];
+      for (final t in testRows) {
+        final id = t['id']?.toString() ?? '';
+        final title = t['title']?.toString().trim() ?? '';
+        final statusStr = t['status']?.toString().trim() ?? 'published';
+        final dt = DateTime.tryParse(t['created_at']?.toString() ?? '')?.toLocal() ??
+            DateTime.now();
+        if (id.isNotEmpty) {
+          testLookup[id] = (
+            title: title.isNotEmpty ? title : 'Untitled Test',
+            status: QuestionStatus.fromString(statusStr),
+          );
+          if (title.isNotEmpty) {
+            parsedTests.add((id: id, title: title, status: statusStr, createdAt: dt));
+          }
+        }
+      }
+
+      final catNames = catRows
+          .map((c) => c['name']?.toString().trim() ?? '')
+          .where((n) => n.isNotEmpty)
+          .toSet()
+          .toList();
+
+      final loadedQuestions = qRows.asMap().entries.map((entry) {
+        final row = entry.value;
+        final tid = row['test_id']?.toString().trim() ?? '';
+        final parentTest = tid.isNotEmpty ? testLookup[tid] : null;
+        return QuestionItem.fromMap(
+          row,
+          entry.key + 1,
+          parentTest?.title,
+          parentTest?.status,
+        );
+      }).toList();
+
+      if (!mounted) return;
+      setState(() {
+        _allItems = loadedQuestions;
+        _dbTests = parsedTests;
+        _dbCategories = catNames;
+        _isLoading = false;
+        _errorMessage = null;
+      });
     } catch (e) {
-      debugPrint('QuestionsTab Supabase fetch (using robust fallback dataset): $e');
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to load questions from Supabase: $e';
+      });
     }
   }
 
-  // Filtered Questions computation
   List<QuestionItem> get _filteredItems {
     return _allItems.where((item) {
-      // 1. Search Query Filter
-      if (_searchQuery.isNotEmpty) {
-        final query = _searchQuery.toLowerCase();
-        final matchesText = item.questionText.toLowerCase().contains(query);
-        final matchesSub = item.subject.toLowerCase().contains(query);
-        final matchesTest = item.testSeriesTitle.toLowerCase().contains(query);
-        if (!matchesText && !matchesSub && !matchesTest) return false;
-      }
+      final matchesSearch = _searchQuery.isEmpty ||
+          item.questionText.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          item.subject.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          item.testSeriesTitle.toLowerCase().contains(_searchQuery.toLowerCase());
 
-      // 2. Test Series Filter
-      if (_selectedTestSeries != 'All Test Series') {
-        if (!item.testSeriesTitle
-            .toLowerCase()
-            .contains(_selectedTestSeries.toLowerCase())) {
-          return false;
-        }
-      }
+      final cleanTest = item.testSeriesTitle.replaceAll('\n', ' ').trim();
+      final matchesTestSeries = _selectedTestSeries == 'All Test Series' ||
+          cleanTest.toLowerCase() == _selectedTestSeries.toLowerCase();
 
-      // 3. Subject Filter
-      if (_selectedSubject != 'All Subjects') {
-        if (item.subject.toLowerCase() != _selectedSubject.toLowerCase()) {
-          return false;
-        }
-      }
+      final matchesSubject = _selectedSubject == 'All Subjects' ||
+          item.subject.toLowerCase() == _selectedSubject.toLowerCase();
 
-      // 4. Type Filter
-      if (_selectedType != 'All Types') {
-        if (item.questionType.toLowerCase() != _selectedType.toLowerCase()) {
-          return false;
-        }
-      }
+      final matchesType = _selectedType == 'All Types' ||
+          item.questionType.toLowerCase() == _selectedType.toLowerCase();
 
-      // 5. Difficulty Filter
-      if (_selectedDifficulty != 'All Difficulty') {
-        if (item.difficulty.label.toLowerCase() != _selectedDifficulty.toLowerCase()) {
-          return false;
-        }
-      }
+      final matchesDifficulty = _selectedDifficulty == 'All Difficulty' ||
+          item.difficulty.label.toLowerCase() == _selectedDifficulty.toLowerCase();
 
-      return true;
+      return matchesSearch &&
+          matchesTestSeries &&
+          matchesSubject &&
+          matchesType &&
+          matchesDifficulty;
     }).toList();
   }
 
-  // Pagination computation
+  int get _totalPages {
+    final filteredLen = _filteredItems.length;
+    return (filteredLen / _rowsPerPage).ceil().clamp(1, 999);
+  }
+
   List<QuestionItem> get _paginatedItems {
     final filtered = _filteredItems;
-    final startIndex = (_currentPage - 1) * _rowsPerPage;
-    if (startIndex >= filtered.length) {
-      return filtered.isNotEmpty ? filtered.sublist(0, filtered.length) : [];
+    final startIdx = (_currentPage - 1) * _rowsPerPage;
+    if (startIdx >= filtered.length) return [];
+    final endIdx = (startIdx + _rowsPerPage).clamp(0, filtered.length);
+    return filtered.sublist(startIdx, endIdx);
+  }
+
+  // Real computed metrics
+  int get _totalQuestions => _allItems.length;
+  int get _activeQuestions =>
+      _allItems.where((i) => i.status == QuestionStatus.published).length;
+  int get _draftQuestions =>
+      _allItems.where((i) => i.status == QuestionStatus.draft).length;
+  int get _archivedQuestions =>
+      _allItems.where((i) => i.status == QuestionStatus.archived).length;
+  int get _questionSets => _dbTests.isNotEmpty
+      ? _dbTests.length
+      : _allItems
+          .map((i) => i.testId ?? i.testSeriesTitle)
+          .where((s) => s.isNotEmpty && s != 'General Bank')
+          .toSet()
+          .length;
+
+  int get _easyCount =>
+      _allItems.where((i) => i.difficulty == QuestionDifficulty.easy).length;
+  int get _mediumCount =>
+      _allItems.where((i) => i.difficulty == QuestionDifficulty.medium).length;
+  int get _hardCount =>
+      _allItems.where((i) => i.difficulty == QuestionDifficulty.hard).length;
+  int get _expertCount =>
+      _allItems.where((i) => i.difficulty == QuestionDifficulty.expert).length;
+
+  List<String> get _availableTestSeries {
+    return <String>{
+      ..._dbTests.map((t) => t.title),
+      ..._allItems
+          .map((i) => i.testSeriesTitle.replaceAll('\n', ' ').trim())
+          .where((t) => t.isNotEmpty),
+    }.toList()
+      ..sort();
+  }
+
+  List<String> get _availableSubjects {
+    return <String>{
+      ..._dbCategories,
+      ..._allItems.map((i) => i.subject.trim()).where((s) => s.isNotEmpty),
+    }.toList()
+      ..sort();
+  }
+
+  ({String growth, bool isPositive, List<double> sparkline}) _computeGrowthAndSparkline(
+    List<DateTime> dates, {
+    int totalCount = 0,
+  }) {
+    if (dates.isEmpty) {
+      return (growth: '', isPositive: true, sparkline: const [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
     }
-    final endIndex = (startIndex + _rowsPerPage).clamp(0, filtered.length);
-    return filtered.sublist(startIndex, endIndex);
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final sevenDaysAgo = todayStart.subtract(const Duration(days: 6));
+    final fourteenDaysAgo = todayStart.subtract(const Duration(days: 13));
+
+    int cur = 0;
+    int prev = 0;
+    final buckets = List<double>.filled(7, 0.0);
+
+    for (final dt in dates) {
+      if (!dt.isBefore(sevenDaysAgo)) {
+        cur++;
+      } else if (!dt.isBefore(fourteenDaysAgo)) {
+        prev++;
+      }
+      final dayOnly = DateTime(dt.year, dt.month, dt.day);
+      final diff = todayStart.difference(dayOnly).inDays;
+      if (diff >= 0 && diff < 7) {
+        buckets[6 - diff] += 1;
+      }
+    }
+
+    String growth = '';
+    bool isPos = true;
+    if (prev > 0) {
+      final pct = (((cur - prev) / prev) * 100).round();
+      isPos = pct >= 0;
+      growth = '${pct >= 0 ? '+' : ''}$pct%';
+    } else if (cur > 0 && totalCount > 0) {
+      final pct = ((cur / totalCount) * 100).round();
+      growth = '+$pct%';
+    }
+    return (growth: growth, isPositive: isPos, sparkline: buckets);
   }
 
-  int get _totalPages {
-    final count = _filteredItems.length;
-    if (count == 0) return 1;
-    return (count / _rowsPerPage).ceil();
+  List<DonutSlice> get _subjectSlices {
+    if (_allItems.isEmpty) return const [];
+    final counts = <String, int>{};
+    for (final item in _allItems) {
+      final sub = item.subject.trim().isEmpty ? 'Uncategorized' : item.subject.trim();
+      counts[sub] = (counts[sub] ?? 0) + 1;
+    }
+
+    final sorted = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    const palette = [
+      Color(0xFF3B82F6),
+      Color(0xFF8B5CF6),
+      Color(0xFFF59E0B),
+      Color(0xFF06B6D4),
+      Color(0xFFEC4899),
+      Color(0xFF10B981),
+      Color(0xFF94A3B8),
+    ];
+
+    return sorted.asMap().entries.map((entry) {
+      final sub = entry.value.key;
+      final cnt = entry.value.value;
+      return DonutSlice(
+        label: sub,
+        percentage: (cnt / _allItems.length) * 100,
+        color: palette[entry.key % palette.length],
+        count: cnt,
+      );
+    }).toList();
   }
 
-  bool get _hasActiveFilters =>
-      _selectedTestSeries != 'All Test Series' ||
-      _selectedSubject != 'All Subjects' ||
-      _selectedType != 'All Types' ||
-      _selectedDifficulty != 'All Difficulty' ||
-      _searchQuery.isNotEmpty;
+  List<QuestionActivityItem> get _recentActivities {
+    if (_allItems.isEmpty) return const [];
+    final sorted = List<QuestionItem>.from(_allItems)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-  // Metrics aggregates
-  int get _totalQuestions => 9842; // Matches reference header & chart
-  int get _activeQuestions => 8936;
-  int get _draftQuestions => 542;
-  int get _archivedQuestions => 364;
-  int get _questionSets => 128;
+    return sorted.take(5).map((item) {
+      return QuestionActivityItem(
+        icon: item.subjectIcon,
+        iconBg: item.iconContainerBg,
+        text: '${item.subject}: ${item.questionText.replaceAll('\n', ' ')}',
+        timeAgo: _formatTimeAgo(item.createdAt),
+      );
+    }).toList();
+  }
+
+  static String _formatTimeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt.toLocal());
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${_months[dt.month - 1]} ${dt.day}';
+  }
+
+  void _showSnack(String message, {bool isError = false, Color? bg}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppColors.error : (bg ?? const Color(0xFF10B981)),
+      ),
+    );
+  }
 
   // Actions
   void _openCreateDialog([QuestionItem? itemToEdit]) {
@@ -159,40 +351,32 @@ class _QuestionsTabState extends State<QuestionsTab> {
       context: context,
       builder: (ctx) => CreateQuestionDialog(
         initialItem: itemToEdit,
-        onBulkSave: (importedQuestions) {
-          setState(() {
-            _allItems.insertAll(0, importedQuestions);
-          });
-        },
+        onBulkSave: (_) => _loadFromSupabase(),
         onSave: (savedItem) async {
-          setState(() {
-            final idx = _allItems.indexWhere((i) => i.id == savedItem.id);
-            if (idx >= 0) {
-              _allItems[idx] = savedItem;
-            } else {
-              _allItems.insert(0, savedItem);
-            }
-          });
-
-          // Sync to Supabase if connected
           final client = SupabaseConfig.clientSafe;
-          if (client != null) {
-            try {
-              await client.from('questions').upsert(savedItem.toMap());
-            } catch (_) {}
+          if (client == null) {
+            _showSnack('Database not connected. Cannot save question.', isError: true);
+            return;
           }
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  itemToEdit != null
-                      ? 'Updated question #${savedItem.questionNumber}'
-                      : 'Created new question #${savedItem.questionNumber}',
-                ),
-                backgroundColor: const Color(0xFF10B981),
-              ),
+          try {
+            await client.from('questions').upsert(savedItem.toMap());
+            if (!mounted) return;
+            setState(() {
+              final idx = _allItems.indexWhere((i) => i.id == savedItem.id);
+              if (idx >= 0) {
+                _allItems[idx] = savedItem;
+              } else {
+                _allItems.insert(0, savedItem);
+              }
+            });
+            _showSnack(
+              itemToEdit != null
+                  ? 'Updated question #${savedItem.questionNumber}'
+                  : 'Added new question #${savedItem.questionNumber}',
             );
+          } catch (e) {
+            _showSnack('Failed to save question to Supabase: $e', isError: true);
           }
         },
       ),
@@ -211,27 +395,25 @@ class _QuestionsTabState extends State<QuestionsTab> {
       context: context,
       builder: (ctx) => ImportQuestionsDialog(
         onImport: (importedItems) async {
-          setState(() {
-            _allItems.insertAll(0, importedItems);
-          });
-
-          // Sync to Supabase
+          if (importedItems.isEmpty) return;
           final client = SupabaseConfig.clientSafe;
-          if (client != null) {
-            try {
-              await client
-                  .from('questions')
-                  .upsert(importedItems.map((i) => i.toMap()).toList());
-            } catch (_) {}
+          if (client == null) {
+            _showSnack('Database not connected. Cannot import questions.', isError: true);
+            return;
           }
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Successfully imported ${importedItems.length} questions.'),
-                backgroundColor: const Color(0xFF0284C7),
-              ),
+          try {
+            await client
+                .from('questions')
+                .upsert(importedItems.map((i) => i.toMap()).toList());
+            if (!mounted) return;
+            await _loadFromSupabase();
+            _showSnack(
+              'Successfully imported ${importedItems.length} questions to Supabase.',
+              bg: const Color(0xFF0284C7),
             );
+          } catch (e) {
+            _showSnack('Failed to import questions: $e', isError: true);
           }
         },
       ),
@@ -243,27 +425,22 @@ class _QuestionsTabState extends State<QuestionsTab> {
       context: context,
       builder: (ctx) => AiGenerateQuestionsDialog(
         onSaveGenerated: (generatedItems) async {
-          setState(() {
-            _allItems.insertAll(0, generatedItems);
-          });
-
-          // Sync to Supabase
+          if (generatedItems.isEmpty) return;
           final client = SupabaseConfig.clientSafe;
-          if (client != null) {
-            try {
-              await client
-                  .from('questions')
-                  .upsert(generatedItems.map((i) => i.toMap()).toList());
-            } catch (_) {}
+          if (client == null) {
+            _showSnack('Database not connected. Cannot save generated questions.', isError: true);
+            return;
           }
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Saved ${generatedItems.length} AI generated questions to bank.'),
-                backgroundColor: const Color(0xFF10B981),
-              ),
-            );
+          try {
+            await client
+                .from('questions')
+                .upsert(generatedItems.map((i) => i.toMap()).toList());
+            if (!mounted) return;
+            await _loadFromSupabase();
+            _showSnack('Saved ${generatedItems.length} AI generated questions to Supabase.');
+          } catch (e) {
+            _showSnack('Failed to save generated questions: $e', isError: true);
           }
         },
       ),
@@ -273,11 +450,19 @@ class _QuestionsTabState extends State<QuestionsTab> {
   void _openManageQuestionSetsDialog() {
     AppModalDialog.show(
       context: context,
-      builder: (ctx) => const ManageQuestionSetsDialog(),
+      builder: (ctx) => ManageQuestionSetsDialog(
+        onSetsUpdated: _loadFromSupabase,
+      ),
     );
   }
 
-  void _duplicateQuestion(QuestionItem item) {
+  Future<void> _duplicateQuestion(QuestionItem item) async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      _showSnack('Database not connected. Cannot duplicate question.', isError: true);
+      return;
+    }
+
     final duplicated = item.copyWith(
       id: 'q-${DateTime.now().millisecondsSinceEpoch}',
       questionNumber: _allItems.length + 1,
@@ -286,23 +471,16 @@ class _QuestionsTabState extends State<QuestionsTab> {
       createdAt: DateTime.now(),
     );
 
-    setState(() {
-      _allItems.insert(0, duplicated);
-    });
-
-    final client = SupabaseConfig.clientSafe;
-    if (client != null) {
-      try {
-        client.from('questions').upsert(duplicated.toMap());
-      } catch (_) {}
+    try {
+      await client.from('questions').upsert(duplicated.toMap());
+      if (!mounted) return;
+      setState(() {
+        _allItems.insert(0, duplicated);
+      });
+      _showSnack('Duplicated question #${item.questionNumber}', bg: const Color(0xFFF59E0B));
+    } catch (e) {
+      _showSnack('Failed to duplicate question: $e', isError: true);
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Duplicated question #${item.questionNumber}'),
-        backgroundColor: const Color(0xFFF59E0B),
-      ),
-    );
   }
 
   void _deleteQuestion(QuestionItem item) {
@@ -327,21 +505,24 @@ class _QuestionsTabState extends State<QuestionsTab> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               elevation: 0,
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              setState(() {
-                _allItems.removeWhere((i) => i.id == item.id);
-                _selectedIds.remove(item.id);
-              });
               final client = SupabaseConfig.clientSafe;
-              if (client != null) {
-                try {
-                  client.from('questions').delete().eq('id', item.id);
-                } catch (_) {}
+              if (client == null) {
+                _showSnack('Database not connected. Cannot delete question.', isError: true);
+                return;
               }
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Deleted question #${item.questionNumber}')),
-              );
+              try {
+                await client.from('questions').delete().eq('id', item.id);
+                if (!mounted) return;
+                setState(() {
+                  _allItems.removeWhere((i) => i.id == item.id);
+                  _selectedIds.remove(item.id);
+                });
+                _showSnack('Deleted question #${item.questionNumber}');
+              } catch (e) {
+                _showSnack('Failed to delete question: $e', isError: true);
+              }
             },
             child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
@@ -357,87 +538,121 @@ class _QuestionsTabState extends State<QuestionsTab> {
     );
   }
 
-  void _toggleStatus(QuestionItem item) {
-    final nextStatus = item.status == QuestionStatus.published
-        ? QuestionStatus.draft
-        : QuestionStatus.published;
-    final updated = item.copyWith(status: nextStatus);
-
-    setState(() {
-      final idx = _allItems.indexWhere((i) => i.id == item.id);
-      if (idx >= 0) _allItems[idx] = updated;
-    });
-
-    final client = SupabaseConfig.clientSafe;
-    if (client != null) {
-      try {
-        client.from('questions').upsert(updated.toMap());
-      } catch (_) {}
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Status changed to ${nextStatus.label} for question #${item.questionNumber}'),
-        backgroundColor: const Color(0xFF5636F5),
-      ),
-    );
-  }
-
   void _openBulkActionsDialog() {
     if (_selectedIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select one or more questions from the table first.'),
-          backgroundColor: Color(0xFFF59E0B),
-        ),
+      _showSnack(
+        'Please select one or more questions from the table first.',
+        bg: const Color(0xFFF59E0B),
       );
       return;
     }
+
+    final testOptions = _dbTests.map((t) => (id: t.id, title: t.title)).toList();
 
     AppModalDialog.show(
       context: context,
       builder: (ctx) => BulkActionsDialog(
         selectedCount: _selectedIds.length,
-        onExecute: (op) {
-          setState(() {
+        availableTests: testOptions,
+        onExecute: (op, targetTestId) async {
+          final client = SupabaseConfig.clientSafe;
+          if (client == null) {
+            _showSnack('Database not connected. Cannot apply bulk operation.', isError: true);
+            return;
+          }
+
+          final ids = _selectedIds.toList();
+          try {
             switch (op) {
-              case BulkOperation.publish:
-                for (int i = 0; i < _allItems.length; i++) {
-                  if (_selectedIds.contains(_allItems[i].id)) {
-                    _allItems[i] = _allItems[i].copyWith(status: QuestionStatus.published);
-                  }
-                }
+              case BulkOperation.setEasy:
+                await client
+                    .from('questions')
+                    .update({'difficulty_level': 'easy'})
+                    .inFilter('id', ids);
                 break;
-              case BulkOperation.draft:
-                for (int i = 0; i < _allItems.length; i++) {
-                  if (_selectedIds.contains(_allItems[i].id)) {
-                    _allItems[i] = _allItems[i].copyWith(status: QuestionStatus.draft);
-                  }
-                }
+              case BulkOperation.setMedium:
+                await client
+                    .from('questions')
+                    .update({'difficulty_level': 'medium'})
+                    .inFilter('id', ids);
                 break;
-              case BulkOperation.archive:
-                for (int i = 0; i < _allItems.length; i++) {
-                  if (_selectedIds.contains(_allItems[i].id)) {
-                    _allItems[i] = _allItems[i].copyWith(status: QuestionStatus.archived);
-                  }
+              case BulkOperation.setHard:
+                await client
+                    .from('questions')
+                    .update({'difficulty_level': 'hard'})
+                    .inFilter('id', ids);
+                break;
+              case BulkOperation.assignTest:
+                if (targetTestId != null && targetTestId.isNotEmpty) {
+                  await client
+                      .from('questions')
+                      .update({'test_id': targetTestId})
+                      .inFilter('id', ids);
                 }
                 break;
               case BulkOperation.delete:
-                _allItems.removeWhere((i) => _selectedIds.contains(i.id));
+                await client.from('questions').delete().inFilter('id', ids);
                 _selectedIds.clear();
                 break;
-              case BulkOperation.assignTest:
-                break;
             }
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Executed ${op.label} on ${_selectedIds.length} items.'),
-              backgroundColor: const Color(0xFF10B981),
-            ),
-          );
+            if (!mounted) return;
+            await _loadFromSupabase();
+            _showSnack('Executed ${op.label} on ${ids.length} question(s).');
+          } catch (e) {
+            _showSnack('Bulk operation failed: $e', isError: true);
+          }
         },
+      ),
+    );
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _searchQuery = '';
+      _selectedTestSeries = 'All Test Series';
+      _selectedSubject = 'All Subjects';
+      _selectedType = 'All Types';
+      _selectedDifficulty = 'All Difficulty';
+      _currentPage = 1;
+    });
+  }
+
+  bool get _hasActiveFilters =>
+      _searchQuery.isNotEmpty ||
+      _selectedTestSeries != 'All Test Series' ||
+      _selectedSubject != 'All Subjects' ||
+      _selectedType != 'All Types' ||
+      _selectedDifficulty != 'All Difficulty';
+
+  Widget _buildErrorBanner() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF1F2),
+        borderRadius: AppRadii.borderMd,
+        border: Border.all(color: const Color(0xFFFDA4AF)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: Color(0xFFE11D48), size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF9F1239),
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: _loadFromSupabase,
+            icon: const Icon(Icons.refresh_rounded, size: 15),
+            label: const Text('Retry', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+          ),
+        ],
       ),
     );
   }
@@ -447,6 +662,125 @@ class _QuestionsTabState extends State<QuestionsTab> {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isDesktop = screenWidth >= 1024;
 
+    final totalTrend = _computeGrowthAndSparkline(
+      _allItems.map((i) => i.createdAt).toList(),
+      totalCount: _totalQuestions,
+    );
+    final activeTrend = _computeGrowthAndSparkline(
+      _allItems.where((i) => i.status == QuestionStatus.published).map((i) => i.createdAt).toList(),
+      totalCount: _activeQuestions,
+    );
+    final draftTrend = _computeGrowthAndSparkline(
+      _allItems.where((i) => i.status == QuestionStatus.draft).map((i) => i.createdAt).toList(),
+      totalCount: _draftQuestions,
+    );
+    final archivedTrend = _computeGrowthAndSparkline(
+      _allItems.where((i) => i.status == QuestionStatus.archived).map((i) => i.createdAt).toList(),
+      totalCount: _archivedQuestions,
+    );
+    final setsTrend = _computeGrowthAndSparkline(
+      _dbTests.map((t) => t.createdAt).toList(),
+      totalCount: _questionSets,
+    );
+
+    final quickActions = QuestionsQuickActions(
+      onAddQuestion: () => _openCreateDialog(),
+      onImportQuestions: _openImportDialog,
+      onAiGenerateQuestions: _openAiGenerateDialog,
+      onManageQuestionSets: _openManageQuestionSetsDialog,
+      onDuplicateQuestions: () {
+        if (_selectedIds.isEmpty) {
+          _showSnack('Select a question in the table to duplicate.', bg: const Color(0xFFF59E0B));
+        } else {
+          final target = _allItems.firstWhere(
+            (i) => _selectedIds.contains(i.id),
+            orElse: () => _allItems.first,
+          );
+          _duplicateQuestion(target);
+        }
+      },
+      onBulkActions: _openBulkActionsDialog,
+    );
+
+    final tableCard = QuestionsTableCard(
+      items: _paginatedItems,
+      totalCount: _filteredItems.length,
+      selectedTestSeries: _selectedTestSeries,
+      selectedSubject: _selectedSubject,
+      selectedType: _selectedType,
+      selectedDifficulty: _selectedDifficulty,
+      availableTestSeries: _availableTestSeries,
+      availableSubjects: _availableSubjects,
+      searchQuery: _searchQuery,
+      currentPage: _currentPage,
+      totalPages: _totalPages,
+      isLoading: _isLoading,
+      onOpenFilters: _hasActiveFilters ? _resetFilters : null,
+      onTestSeriesChanged: (val) {
+        setState(() {
+          _selectedTestSeries = val;
+          _currentPage = 1;
+        });
+      },
+      onSubjectChanged: (val) {
+        setState(() {
+          _selectedSubject = val;
+          _currentPage = 1;
+        });
+      },
+      onTypeChanged: (val) {
+        setState(() {
+          _selectedType = val;
+          _currentPage = 1;
+        });
+      },
+      onDifficultyChanged: (val) {
+        setState(() {
+          _selectedDifficulty = val;
+          _currentPage = 1;
+        });
+      },
+      onSearchChanged: (val) {
+        setState(() {
+          _searchQuery = val;
+          _currentPage = 1;
+        });
+      },
+      onPageChanged: (page) {
+        setState(() => _currentPage = page);
+      },
+      onView: _openViewDialog,
+      onEdit: (item) => _openCreateDialog(item),
+      onDuplicate: _duplicateQuestion,
+      onDelete: _deleteQuestion,
+      onToggleStatus: (_) {},
+      onSelectionChanged: (ids) {
+        setState(() {
+          _selectedIds.clear();
+          _selectedIds.addAll(ids);
+        });
+      },
+    );
+
+    final donutCard = QuestionTypeDonutChartCard(
+      totalCount: _totalQuestions,
+      slices: _subjectSlices,
+      isLoading: _isLoading,
+    );
+
+    final difficultyCard = DifficultyWiseBarChartCard(
+      easyCount: _easyCount,
+      mediumCount: _mediumCount,
+      hardCount: _hardCount,
+      expertCount: _expertCount,
+      isLoading: _isLoading,
+    );
+
+    final activityCard = QuestionsRecentActivityCard(
+      activities: _recentActivities,
+      isLoading: _isLoading,
+    );
+
     return Container(
       color: const Color(0xFFF4F7FF),
       child: SingleChildScrollView(
@@ -454,161 +788,64 @@ class _QuestionsTabState extends State<QuestionsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ==========================================
-            // ROW 1: HERO CARD + QUICK ACTIONS PANEL
-            // ==========================================
+            if (_errorMessage != null) _buildErrorBanner(),
             if (isDesktop)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Expanded(
-                    flex: 63,
-                    child: QuestionsHeroCard(),
-                  ),
+                  const Expanded(flex: 63, child: QuestionsHeroCard()),
                   const SizedBox(width: 14),
-                  Expanded(
-                    flex: 37,
-                    child: QuestionsQuickActions(
-                        onAddQuestion: () => _openCreateDialog(),
-                        onImportQuestions: _openImportDialog,
-                        onAiGenerateQuestions: _openAiGenerateDialog,
-                        onManageQuestionSets: _openManageQuestionSetsDialog,
-                        onDuplicateQuestions: () {
-                          if (_selectedIds.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Select a question in the table to duplicate.'),
-                                backgroundColor: Color(0xFFF59E0B),
-                              ),
-                            );
-                          } else {
-                            final target = _allItems.firstWhere((i) => _selectedIds.contains(i.id));
-                            _duplicateQuestion(target);
-                          }
-                        },
-                        onBulkActions: _openBulkActionsDialog,
-                      ),
-                    ),
-                  ],
-                )
+                  Expanded(flex: 37, child: quickActions),
+                ],
+              )
             else
               Column(
                 children: [
                   const QuestionsHeroCard(),
                   const SizedBox(height: 14),
-                  QuestionsQuickActions(
-                    onAddQuestion: () => _openCreateDialog(),
-                    onImportQuestions: _openImportDialog,
-                    onAiGenerateQuestions: _openAiGenerateDialog,
-                    onManageQuestionSets: _openManageQuestionSetsDialog,
-                    onDuplicateQuestions: () {
-                      if (_selectedIds.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Select a question in the table to duplicate.'),
-                            backgroundColor: Color(0xFFF59E0B),
-                          ),
-                        );
-                      } else {
-                        final target = _allItems.firstWhere((i) => _selectedIds.contains(i.id));
-                        _duplicateQuestion(target);
-                      }
-                    },
-                    onBulkActions: _openBulkActionsDialog,
-                  ),
+                  quickActions,
                 ],
               ),
             const SizedBox(height: 16),
-
-            // ==========================================
-            // ROW 2: 5 STATISTICS CARDS
-            // ==========================================
             QuestionsMetricsRow(
               totalQuestions: _totalQuestions,
               activeQuestions: _activeQuestions,
               draftQuestions: _draftQuestions,
               archivedQuestions: _archivedQuestions,
               questionSets: _questionSets,
+              isLoading: _isLoading,
+              totalGrowth: totalTrend.growth,
+              totalPositive: totalTrend.isPositive,
+              totalSparkline: totalTrend.sparkline,
+              activeGrowth: activeTrend.growth,
+              activePositive: activeTrend.isPositive,
+              activeSparkline: activeTrend.sparkline,
+              draftGrowth: draftTrend.growth,
+              draftPositive: draftTrend.isPositive,
+              draftSparkline: draftTrend.sparkline,
+              archivedGrowth: archivedTrend.growth,
+              archivedPositive: archivedTrend.isPositive,
+              archivedSparkline: archivedTrend.sparkline,
+              setsGrowth: setsTrend.growth,
+              setsPositive: setsTrend.isPositive,
+              setsSparkline: setsTrend.sparkline,
             ),
             const SizedBox(height: 18),
-
-            // ==========================================
-            // ROW 3: QUESTIONS TABLE CARD + RIGHT ANALYTICS
-            // ==========================================
             if (isDesktop)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Questions List Table
-                  Expanded(
-                    child: QuestionsTableCard(
-                      items: _paginatedItems,
-                      totalCount: _hasActiveFilters ? _filteredItems.length : _totalQuestions,
-                      selectedTestSeries: _selectedTestSeries,
-                      selectedSubject: _selectedSubject,
-                      selectedType: _selectedType,
-                      selectedDifficulty: _selectedDifficulty,
-                      searchQuery: _searchQuery,
-                      currentPage: _currentPage,
-                      totalPages: _totalPages,
-                      onTestSeriesChanged: (val) {
-                        setState(() {
-                          _selectedTestSeries = val;
-                          _currentPage = 1;
-                        });
-                      },
-                      onSubjectChanged: (val) {
-                        setState(() {
-                          _selectedSubject = val;
-                          _currentPage = 1;
-                        });
-                      },
-                      onTypeChanged: (val) {
-                        setState(() {
-                          _selectedType = val;
-                          _currentPage = 1;
-                        });
-                      },
-                      onDifficultyChanged: (val) {
-                        setState(() {
-                          _selectedDifficulty = val;
-                          _currentPage = 1;
-                        });
-                      },
-                      onSearchChanged: (val) {
-                        setState(() {
-                          _searchQuery = val;
-                          _currentPage = 1;
-                        });
-                      },
-                      onPageChanged: (page) {
-                        setState(() => _currentPage = page);
-                      },
-                      onView: _openViewDialog,
-                      onEdit: (item) => _openCreateDialog(item),
-                      onDuplicate: _duplicateQuestion,
-                      onDelete: _deleteQuestion,
-                      onToggleStatus: _toggleStatus,
-                      onSelectionChanged: (ids) {
-                        setState(() {
-                          _selectedIds.clear();
-                          _selectedIds.addAll(ids);
-                        });
-                      },
-                    ),
-                  ),
+                  Expanded(child: tableCard),
                   const SizedBox(width: 14),
-
-                  // Right Analytics Column (3 Cards matching reference)
                   SizedBox(
                     width: 285,
                     child: Column(
-                      children: const [
-                        QuestionTypeDonutChartCard(),
-                        SizedBox(height: 12),
-                        DifficultyWiseBarChartCard(),
-                        SizedBox(height: 12),
-                        QuestionsRecentActivityCard(),
+                      children: [
+                        donutCard,
+                        const SizedBox(height: 12),
+                        difficultyCard,
+                        const SizedBox(height: 12),
+                        activityCard,
                       ],
                     ),
                   ),
@@ -617,72 +854,18 @@ class _QuestionsTabState extends State<QuestionsTab> {
             else
               Column(
                 children: [
-                  QuestionsTableCard(
-                    items: _paginatedItems,
-                    totalCount: _hasActiveFilters ? _filteredItems.length : _totalQuestions,
-                    selectedTestSeries: _selectedTestSeries,
-                    selectedSubject: _selectedSubject,
-                    selectedType: _selectedType,
-                    selectedDifficulty: _selectedDifficulty,
-                    searchQuery: _searchQuery,
-                    currentPage: _currentPage,
-                    totalPages: _totalPages,
-                    onTestSeriesChanged: (val) {
-                      setState(() {
-                        _selectedTestSeries = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    onSubjectChanged: (val) {
-                      setState(() {
-                        _selectedSubject = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    onTypeChanged: (val) {
-                      setState(() {
-                        _selectedType = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    onDifficultyChanged: (val) {
-                      setState(() {
-                        _selectedDifficulty = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    onSearchChanged: (val) {
-                      setState(() {
-                        _searchQuery = val;
-                        _currentPage = 1;
-                      });
-                    },
-                    onPageChanged: (page) {
-                      setState(() => _currentPage = page);
-                    },
-                    onView: _openViewDialog,
-                    onEdit: (item) => _openCreateDialog(item),
-                    onDuplicate: _duplicateQuestion,
-                    onDelete: _deleteQuestion,
-                    onToggleStatus: _toggleStatus,
-                    onSelectionChanged: (ids) {
-                      setState(() {
-                        _selectedIds.clear();
-                        _selectedIds.addAll(ids);
-                      });
-                    },
-                  ),
+                  tableCard,
                   const SizedBox(height: 14),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Expanded(child: QuestionTypeDonutChartCard()),
-                      SizedBox(width: 12),
-                      Expanded(child: DifficultyWiseBarChartCard()),
+                    children: [
+                      Expanded(child: donutCard),
+                      const SizedBox(width: 12),
+                      Expanded(child: difficultyCard),
                     ],
                   ),
                   const SizedBox(height: 14),
-                  const QuestionsRecentActivityCard(),
+                  activityCard,
                 ],
               ),
             const SizedBox(height: 32),
