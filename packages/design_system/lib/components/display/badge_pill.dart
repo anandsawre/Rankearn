@@ -203,3 +203,52 @@ class AppStatusPill extends StatelessWidget {
     );
   }
 }
+
+/// Tokenized Live Status Indicator Pill (Header, Battle Tables, Contests)
+class AppLivePill extends StatelessWidget {
+  final String label;
+  final bool showDot;
+
+  const AppLivePill({
+    super.key,
+    this.label = 'Live',
+    this.showDot = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: const BoxDecoration(
+        color: AppColors.liveRedLight,
+        borderRadius: AppRadii.badge,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showDot) ...[
+            Container(
+              width: 5,
+              height: 5,
+              decoration: const BoxDecoration(
+                color: AppColors.liveRed,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: AppColors.liveRed,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

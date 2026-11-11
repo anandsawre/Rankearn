@@ -5,12 +5,21 @@ import '../../tokens/radii.dart';
 import '../../tokens/shadows.dart';
 import '../../tokens/typography.dart';
 
+/// Presentation style for the highlighted tooltip / badge on [AppLineChart].
+enum AppLineChartTooltipStyle {
+  /// Standard card with date and value (white card with border & shadow).
+  card,
+
+  /// Compact colored pill badge (e.g. `• 8,742 Live`).
+  pill,
+}
+
 /// Reusable smooth area / spline line chart component matching the Rankearn design system.
 ///
 /// Features:
 /// - Smooth cubic bezier curve with gradient fill
 /// - Responsive horizontal grid lines with comma-formatted Y-axis labels
-/// - Highlighted point with interactive / static floating tooltip card
+/// - Highlighted point with interactive / static floating tooltip card or pill badge
 /// - Design token support (`AppColors`, `AppTypography`, `AppRadii`)
 class AppLineChart extends StatelessWidget {
   final List<String> dates;
@@ -23,23 +32,47 @@ class AppLineChart extends StatelessWidget {
   final Color? fillColor;
   final double? maxY;
   final List<double>? yLabels;
+  final AppLineChartTooltipStyle tooltipStyle;
+  final String Function(double)? yLabelFormatter;
+  final String emptyText;
 
   const AppLineChart({
     super.key,
-    this.dates = const ['Oct 12', 'Oct 13', 'Oct 14', 'Oct 15', 'Oct 16', 'Oct 17', 'Oct 18'],
-    this.values = const [500, 650, 800, 950, 1200, 1520, 1400],
-    this.highlightedIndex = 5,
-    this.tooltipDate = 'Oct 17, 2026',
-    this.tooltipValue = '1,520 attempts',
+    this.dates = const [],
+    this.values = const [],
+    this.highlightedIndex,
+    this.tooltipDate,
+    this.tooltipValue,
     this.height = 165,
     this.lineColor = const Color(0xFF6366F1),
     this.fillColor,
     this.maxY,
     this.yLabels,
+    this.tooltipStyle = AppLineChartTooltipStyle.card,
+    this.yLabelFormatter,
+    this.emptyText = 'No activity data in selected range',
   });
 
   @override
   Widget build(BuildContext context) {
+    if (dates.isEmpty || values.isEmpty) {
+      return SizedBox(
+        height: height,
+        child: Center(
+          child: Text(
+            emptyText,
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return CustomPaint(
@@ -54,6 +87,8 @@ class AppLineChart extends StatelessWidget {
             fillColor: fillColor,
             maxY: maxY,
             yLabels: yLabels,
+            tooltipStyle: tooltipStyle,
+            yLabelFormatter: yLabelFormatter,
           ),
         );
       },
@@ -71,6 +106,8 @@ class _AppLineChartPainter extends CustomPainter {
   final Color? fillColor;
   final double? maxY;
   final List<double>? yLabels;
+  final AppLineChartTooltipStyle tooltipStyle;
+  final String Function(double)? yLabelFormatter;
 
   _AppLineChartPainter({
     required this.dates,
@@ -82,6 +119,8 @@ class _AppLineChartPainter extends CustomPainter {
     this.fillColor,
     this.maxY,
     this.yLabels,
+    this.tooltipStyle = AppLineChartTooltipStyle.card,
+    this.yLabelFormatter,
   });
 
   @override
@@ -131,12 +170,14 @@ class _AppLineChartPainter extends CustomPainter {
         gridPaint,
       );
 
-      final formattedVal = yVal == 0
-          ? '0'
-          : yVal.round().toString().replaceAllMapped(
-                RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                (m) => '${m[1]},',
-              );
+      final formattedVal = yLabelFormatter != null
+          ? yLabelFormatter!(yVal)
+          : yVal == 0
+              ? '0'
+              : yVal.round().toString().replaceAllMapped(
+                    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                    (m) => '${m[1]},',
+                  );
 
       final tp = TextPainter(
         text: TextSpan(text: formattedVal, style: textStyle),
@@ -147,7 +188,7 @@ class _AppLineChartPainter extends CustomPainter {
 
     // Points calculation
     final points = <Offset>[];
-    final count = dates.length;
+    final count = math.min(dates.length, values.length);
     final dx = count > 1 ? (chartWidth / (count - 1)) : 0.0;
 
     for (int i = 0; i < count; i++) {
@@ -253,92 +294,152 @@ class _AppLineChartPainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
 
-      // Tooltip Card
-      final tooltipWidth = 96.0;
-      final tooltipHeight = 36.0;
-      final maxTtLeft = (size.width - rightMargin - tooltipWidth < leftMargin)
-          ? leftMargin
-          : size.width - rightMargin - tooltipWidth;
-      final ttLeft = (hlPoint.dx - tooltipWidth / 2).clamp(leftMargin, maxTtLeft);
-      final ttTop = (hlPoint.dy - tooltipHeight - 8).clamp(2.0, size.height);
+      if (tooltipStyle == AppLineChartTooltipStyle.pill) {
+        final text = tooltipValue ?? '${values[highlightedIndex!].round()}';
+        final tp = TextPainter(
+          text: TextSpan(
+            text: text,
+            style: const TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
 
-      final shadowRRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(ttLeft, ttTop, tooltipWidth, tooltipHeight),
-        const Radius.circular(8),
-      );
+        final pillWidth = tp.width + 26;
+        const pillHeight = 24.0;
+        final maxTtLeft = (size.width - rightMargin - pillWidth < leftMargin)
+            ? leftMargin
+            : size.width - rightMargin - pillWidth;
+        final ttLeft =
+            (hlPoint.dx - pillWidth / 2).clamp(leftMargin, maxTtLeft);
+        final ttTop = (hlPoint.dy - pillHeight - 8).clamp(2.0, size.height);
 
-      // Shadow
-      canvas.drawRRect(
-        shadowRRect,
-        Paint()
-          ..color = Colors.black.withAlpha(20)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-      );
+        final pillRRect = RRect.fromRectAndRadius(
+          Rect.fromLTWH(ttLeft, ttTop, pillWidth, pillHeight),
+          const Radius.circular(12),
+        );
 
-      // Card surface
-      canvas.drawRRect(
-        shadowRRect,
-        Paint()
-          ..color = AppColors.surface
-          ..style = PaintingStyle.fill,
-      );
+        // Shadow
+        canvas.drawRRect(
+          pillRRect,
+          Paint()
+            ..color = lineColor.withAlpha(90)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+        );
 
-      // Card border
-      canvas.drawRRect(
-        shadowRRect,
-        Paint()
-          ..color = AppColors.borderSubtle
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
-      );
+        // Pill Surface
+        canvas.drawRRect(
+          pillRRect,
+          Paint()
+            ..color = lineColor
+            ..style = PaintingStyle.fill,
+        );
 
-      // Downward pointer arrow
-      final arrowPath = Path()
-        ..moveTo(hlPoint.dx - 5, ttTop + tooltipHeight)
-        ..lineTo(hlPoint.dx + 5, ttTop + tooltipHeight)
-        ..lineTo(hlPoint.dx, ttTop + tooltipHeight + 5)
-        ..close();
-      canvas.drawPath(arrowPath, Paint()..color = AppColors.surface);
-      canvas.drawPath(
-        Path()
+        // White Dot
+        canvas.drawCircle(
+          Offset(ttLeft + 10, ttTop + pillHeight / 2),
+          2.5,
+          Paint()..color = Colors.white,
+        );
+
+        // Text
+        tp.paint(
+          canvas,
+          Offset(ttLeft + 18, ttTop + (pillHeight - tp.height) / 2),
+        );
+      } else {
+        // Tooltip Card
+        final tooltipWidth = 96.0;
+        final tooltipHeight = 36.0;
+        final maxTtLeft = (size.width - rightMargin - tooltipWidth < leftMargin)
+            ? leftMargin
+            : size.width - rightMargin - tooltipWidth;
+        final ttLeft = (hlPoint.dx - tooltipWidth / 2).clamp(leftMargin, maxTtLeft);
+        final ttTop = (hlPoint.dy - tooltipHeight - 8).clamp(2.0, size.height);
+
+        final shadowRRect = RRect.fromRectAndRadius(
+          Rect.fromLTWH(ttLeft, ttTop, tooltipWidth, tooltipHeight),
+          const Radius.circular(8),
+        );
+
+        // Shadow
+        canvas.drawRRect(
+          shadowRRect,
+          Paint()
+            ..color = Colors.black.withAlpha(20)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+        );
+
+        // Card surface
+        canvas.drawRRect(
+          shadowRRect,
+          Paint()
+            ..color = AppColors.surface
+            ..style = PaintingStyle.fill,
+        );
+
+        // Card border
+        canvas.drawRRect(
+          shadowRRect,
+          Paint()
+            ..color = AppColors.borderSubtle
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1,
+        );
+
+        // Downward pointer arrow
+        final arrowPath = Path()
           ..moveTo(hlPoint.dx - 5, ttTop + tooltipHeight)
+          ..lineTo(hlPoint.dx + 5, ttTop + tooltipHeight)
           ..lineTo(hlPoint.dx, ttTop + tooltipHeight + 5)
-          ..lineTo(hlPoint.dx + 5, ttTop + tooltipHeight),
-        Paint()
-          ..color = AppColors.borderSubtle
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
-      );
+          ..close();
+        canvas.drawPath(arrowPath, Paint()..color = AppColors.surface);
+        canvas.drawPath(
+          Path()
+            ..moveTo(hlPoint.dx - 5, ttTop + tooltipHeight)
+            ..lineTo(hlPoint.dx, ttTop + tooltipHeight + 5)
+            ..lineTo(hlPoint.dx + 5, ttTop + tooltipHeight),
+          Paint()
+            ..color = AppColors.borderSubtle
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1,
+        );
 
-      // Date Text
-      final dateTp = TextPainter(
-        text: TextSpan(
-          text: tooltipDate ?? dates[highlightedIndex!],
-          style: TextStyle(
-            fontFamily: AppTypography.fontHeading,
-            color: AppColors.textPrimary,
-            fontSize: 9.5,
-            fontWeight: FontWeight.w700,
+        // Date Text
+        final dateTp = TextPainter(
+          text: TextSpan(
+            text: tooltipDate ?? dates[highlightedIndex!],
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              color: AppColors.textPrimary,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      dateTp.paint(canvas, Offset(ttLeft + (tooltipWidth - dateTp.width) / 2, ttTop + 4));
+          textDirection: TextDirection.ltr,
+        )..layout();
+        dateTp.paint(canvas, Offset(ttLeft + (tooltipWidth - dateTp.width) / 2, ttTop + 4));
 
-      // Value Text
-      final valTp = TextPainter(
-        text: TextSpan(
-          text: tooltipValue ?? '${values[highlightedIndex!].round()}',
-          style: TextStyle(
-            fontFamily: AppTypography.fontHeading,
-            color: lineColor,
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
+        // Value Text
+        final valTp = TextPainter(
+          text: TextSpan(
+            text: tooltipValue ?? '${values[highlightedIndex!].round()}',
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              color: lineColor,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      valTp.paint(canvas, Offset(ttLeft + (tooltipWidth - valTp.width) / 2, ttTop + 18));
+          textDirection: TextDirection.ltr,
+        )..layout();
+        valTp.paint(canvas, Offset(ttLeft + (tooltipWidth - valTp.width) / 2, ttTop + 18));
+      }
     }
   }
 
@@ -372,6 +473,8 @@ class AppLineChartCard extends StatelessWidget {
   final double chartHeight;
   final double? height;
   final EdgeInsetsGeometry? padding;
+  final bool isLoading;
+  final String emptyText;
 
   const AppLineChartCard({
     super.key,
@@ -380,11 +483,11 @@ class AppLineChartCard extends StatelessWidget {
     this.iconColor = const Color(0xFF6366F1),
     this.iconBg,
     this.trailingHeader,
-    this.dates = const ['Oct 12', 'Oct 13', 'Oct 14', 'Oct 15', 'Oct 16', 'Oct 17', 'Oct 18'],
-    this.values = const [500, 650, 800, 950, 1200, 1520, 1400],
-    this.highlightedIndex = 5,
-    this.tooltipDate = 'Oct 17, 2026',
-    this.tooltipValue = '1,520 attempts',
+    this.dates = const [],
+    this.values = const [],
+    this.highlightedIndex,
+    this.tooltipDate,
+    this.tooltipValue,
     this.lineColor = const Color(0xFF6366F1),
     this.fillColor,
     this.maxY,
@@ -392,6 +495,8 @@ class AppLineChartCard extends StatelessWidget {
     this.chartHeight = 165,
     this.height = 260,
     this.padding,
+    this.isLoading = false,
+    this.emptyText = 'No attempts recorded in selected range',
   });
 
   @override
@@ -456,18 +561,30 @@ class AppLineChartCard extends StatelessWidget {
 
           // Chart Area
           Expanded(
-            child: AppLineChart(
-              dates: dates,
-              values: values,
-              highlightedIndex: highlightedIndex,
-              tooltipDate: tooltipDate,
-              tooltipValue: tooltipValue,
-              height: chartHeight,
-              lineColor: lineColor,
-              fillColor: fillColor,
-              maxY: maxY,
-              yLabels: yLabels,
-            ),
+            child: (isLoading && values.isEmpty)
+                ? const Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+                      ),
+                    ),
+                  )
+                : AppLineChart(
+                    dates: dates,
+                    values: values,
+                    highlightedIndex: highlightedIndex,
+                    tooltipDate: tooltipDate,
+                    tooltipValue: tooltipValue,
+                    height: chartHeight,
+                    lineColor: lineColor,
+                    fillColor: fillColor,
+                    maxY: maxY,
+                    yLabels: yLabels,
+                    emptyText: emptyText,
+                  ),
           ),
         ],
       ),

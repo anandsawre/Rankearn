@@ -56,7 +56,7 @@ class RecentActivityCard extends StatelessWidget {
 
     return Container(
       height: height,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.borderLg,
@@ -71,26 +71,27 @@ class RecentActivityCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 22,
-                height: 22,
+                width: 24,
+                height: 24,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF101A3A),
+                  color: Color(0xFF1E293B),
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
                   Icons.history_rounded,
                   color: Colors.white,
-                  size: 13,
+                  size: 14,
                 ),
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Recent Activity',
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontFamily: AppTypography.fontHeading,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                     letterSpacing: -0.2,
                   ),
@@ -109,12 +110,13 @@ class RecentActivityCard extends StatelessWidget {
                         ),
                       );
                     },
-                child: const Text(
+                child: Text(
                   'View All',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontFamily: AppTypography.fontHeading,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF5636F5),
+                    color: AppColors.brandPrimary,
                   ),
                 ),
               ),
@@ -139,28 +141,29 @@ class RecentActivityCard extends StatelessWidget {
 
   Widget _buildActivityRow(ActivityItemData item) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 5.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 22,
-            height: 22,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
               color: item.iconBgColor,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: Icon(item.icon, color: item.iconColor, size: 12),
+            child: Icon(item.icon, color: item.iconColor, size: 13),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               item.text,
-              style: const TextStyle(
-                fontSize: 10,
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+                color: AppColors.textPrimary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -169,10 +172,11 @@ class RecentActivityCard extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             item.timeAgo,
-            style: const TextStyle(
-              fontSize: 9.5,
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: AppColors.textMuted,
+              color: AppColors.textSecondary,
             ),
           ),
         ],

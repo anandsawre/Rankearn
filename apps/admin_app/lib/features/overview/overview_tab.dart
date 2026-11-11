@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'banner_image_data.dart';
 
 class OverviewTab extends StatefulWidget {
@@ -12,6 +13,8 @@ class OverviewTab extends StatefulWidget {
   final VoidCallback? onGoToCategories;
   final VoidCallback? onGoToLiveQuiz;
   final VoidCallback? onGoToTournaments;
+  final AdminDashboardRepository? repository;
+  final AdminDashboardSnapshot? initialSnapshot;
 
   const OverviewTab({
     super.key,
@@ -23,6 +26,8 @@ class OverviewTab extends StatefulWidget {
     this.onGoToCategories,
     this.onGoToLiveQuiz,
     this.onGoToTournaments,
+    this.repository,
+    this.initialSnapshot,
   });
 
   @override
@@ -30,128 +35,198 @@ class OverviewTab extends StatefulWidget {
 }
 
 class _OverviewTabState extends State<OverviewTab> {
+  static const String _quickActionsPrefsKey = 'admin_overview_quick_actions_v1';
+  static const List<String> _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  late final AdminDashboardRepository _repository;
+  late DateTimeRange _attemptsDateRange;
   String _userGrowthPeriod = 'Last 7 Days';
-  String _totalUsers = '12,458';
-  String _usersGrowth = '+12%';
-  String _usersSubtitle = '+1,324 this week';
 
-  String _totalQuizzes = '386';
-  String _quizzesGrowth = '+8%';
-  String _quizzesSubtitle = '+28 this week';
+  AdminDashboardSnapshot? _snapshot;
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  String _totalQuestions = '9,842';
-  String _questionsGrowth = '+15%';
-  String _questionsSubtitle = '+1,280 this week';
-
-  String _totalAttempts = '28,731';
-  String _attemptsGrowth = '+22%';
-  String _attemptsSubtitle = '+5,182 this week';
-
-  final String _activeLiveQuiz = '3';
+  final List<Map<String, dynamic>> _quickActions = [
+    {
+      'id': 'create_quiz',
+      'label': 'Create\nQuiz',
+      'icon': Icons.add_circle_outline_rounded,
+      'color': AppColors.brandPurple,
+      'cardColor': AppColors.brandPurpleLight,
+      'enabled': true,
+    },
+    {
+      'id': 'add_question',
+      'label': 'Add\nQuestion',
+      'icon': Icons.description_outlined,
+      'color': AppColors.brandBlue,
+      'cardColor': AppColors.brandBlueLight,
+      'enabled': true,
+    },
+    {
+      'id': 'manage_categories',
+      'label': 'Target\nExams',
+      'icon': Icons.explore_outlined,
+      'color': AppColors.battleAdminPurple,
+      'cardColor': AppColors.battleAdminPurpleLight,
+      'enabled': true,
+    },
+    {
+      'id': 'start_live_quiz',
+      'label': 'Start Live\nQuiz',
+      'icon': Icons.cell_tower_rounded,
+      'color': AppColors.liveRed,
+      'cardColor': AppColors.liveRedLight,
+      'enabled': true,
+    },
+    {
+      'id': 'create_tournament',
+      'label': 'Create\nTournament',
+      'icon': Icons.emoji_events_outlined,
+      'color': AppColors.coinGold,
+      'cardColor': AppColors.coinGoldLight,
+      'enabled': true,
+    },
+    {
+      'id': 'invite_users',
+      'label': 'Invite\nUsers',
+      'icon': Icons.person_add_alt_1_outlined,
+      'color': AppColors.brandPink,
+      'cardColor': AppColors.brandPinkLight,
+      'enabled': true,
+    },
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchLiveMetricsIfAvailable();
+    _repository = widget.repository ?? AdminDashboardRepository();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    _attemptsDateRange = DateTimeRange(
+      start: today.subtract(const Duration(days: 6)),
+      end: today,
+    );
+
+    if (widget.initialSnapshot != null) {
+      _snapshot = widget.initialSnapshot;
+      _isLoading = false;
+    } else {
+      _loadQuickActionPreferences();
+      _fetchDashboardData();
+    }
   }
 
-  Future<void> _fetchLiveMetricsIfAvailable() async {
-    final client = SupabaseConfig.clientSafe;
-    if (client == null) return;
-
+  Future<void> _loadQuickActionPreferences() async {
     try {
-      final now = DateTime.now();
-      final oneWeekAgo = now.subtract(const Duration(days: 7));
+      Map<String, bool>? prefsMap = await _repository.fetchQuickActionPreferences();
+      if (prefsMap == null) {
+        final prefs = await SharedPreferences.getInstance();
+        final saved = prefs.getStringList(_quickActionsPrefsKey);
+        if (saved != null) {
+          prefsMap = {for (final a in _quickActions) a['id'] as String: saved.contains(a['id'])};
+        }
+      }
 
-      final userRes = await client.from('profiles').select('id, created_at');
-      final usersList = userRes as List;
-      final usersCount = usersList.length;
-      final usersWeek = usersList.where((u) {
-        final ca = u['created_at'];
-        return ca != null && DateTime.tryParse(ca.toString())?.isAfter(oneWeekAgo) == true;
-      }).length;
-
-      final testsRes = await client.from('tests').select('id, created_at');
-      final testsList = testsRes as List;
-      final testsCount = testsList.length;
-      final testsWeek = testsList.where((t) {
-        final ca = t['created_at'];
-        return ca != null && DateTime.tryParse(ca.toString())?.isAfter(oneWeekAgo) == true;
-      }).length;
-
-      final questionsRes = await client.from('questions').select('id, created_at');
-      final questionsList = questionsRes as List;
-      final questionsCount = questionsList.length;
-      final questionsWeek = questionsList.where((q) {
-        final ca = q['created_at'];
-        return ca != null && DateTime.tryParse(ca.toString())?.isAfter(oneWeekAgo) == true;
-      }).length;
-
-      final attemptsRes = await client.from('attempts').select('id, created_at');
-      final attemptsList = attemptsRes as List;
-      final attemptsCount = attemptsList.length;
-      final attemptsWeek = attemptsList.where((a) {
-        final ca = a['created_at'];
-        return ca != null && DateTime.tryParse(ca.toString())?.isAfter(oneWeekAgo) == true;
-      }).length;
-
-      if (mounted) {
+      if (prefsMap != null && mounted) {
         setState(() {
-          if (usersCount > 0) {
-            _totalUsers = _formatCount(usersCount);
-            if (usersWeek > 0) {
-              _usersSubtitle = '+$usersWeek this week';
-              _usersGrowth = '+${((usersWeek / usersCount) * 100).round()}%';
-            } else {
-              _usersSubtitle = 'Registered platform users';
-              _usersGrowth = '';
-            }
-          }
-
-          if (testsCount > 0) {
-            _totalQuizzes = _formatCount(testsCount);
-            if (testsWeek > 0) {
-              _quizzesSubtitle = '+$testsWeek this week';
-              _quizzesGrowth = '+${((testsWeek / testsCount) * 100).round()}%';
-            } else {
-              _quizzesSubtitle = 'Published test series';
-              _quizzesGrowth = '';
-            }
-          }
-
-          if (questionsCount > 0) {
-            _totalQuestions = _formatCount(questionsCount);
-            if (questionsWeek > 0) {
-              _questionsSubtitle = '+$questionsWeek this week';
-              _questionsGrowth = '+${((questionsWeek / questionsCount) * 100).round()}%';
-            } else {
-              _questionsSubtitle = 'Active question bank';
-              _questionsGrowth = '';
-            }
-          }
-
-          if (attemptsCount > 0) {
-            _totalAttempts = _formatCount(attemptsCount);
-            if (attemptsWeek > 0) {
-              _attemptsSubtitle = '+$attemptsWeek this week';
-              _attemptsGrowth = '+${((attemptsWeek / attemptsCount) * 100).round()}%';
-            } else {
-              _attemptsSubtitle = 'Completed user attempts';
-              _attemptsGrowth = '';
+          for (final action in _quickActions) {
+            final id = action['id'] as String;
+            if (prefsMap!.containsKey(id)) {
+              action['enabled'] = prefsMap[id] ?? true;
             }
           }
         });
       }
     } catch (_) {
-      // Fallback to pixel-perfect default mock data
+      // Default shortcuts remain enabled
     }
   }
 
-  String _formatCount(int number) {
-    return number.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]},',
+  Future<void> _saveQuickActionPreferences() async {
+    final map = <String, bool>{
+      for (final a in _quickActions) a['id'] as String: a['enabled'] == true,
+    };
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final enabledIds = map.entries.where((e) => e.value).map((e) => e.key).toList();
+      await prefs.setStringList(_quickActionsPrefsKey, enabledIds);
+      await _repository.saveQuickActionPreferences(map);
+    } catch (_) {
+      // Non-fatal UI preference persistence
+    }
+  }
+
+  Future<void> _fetchDashboardData() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+
+    final result = await _repository.fetchOverviewSnapshot(
+      attemptsStartDate: _attemptsDateRange.start,
+      attemptsEndDate: _attemptsDateRange.end,
+      userGrowthPeriod: _userGrowthPeriod,
     );
+
+    if (!mounted) return;
+
+    switch (result) {
+      case Success(:final data):
+        setState(() {
+          _snapshot = data;
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      case Failure(:final message):
+        setState(() {
+          _isLoading = false;
+          _errorMessage = message;
+        });
+    }
+  }
+
+  Future<void> _pickAttemptsDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2024, 1, 1),
+      lastDate: DateTime(now.year + 1, 12, 31),
+      initialDateRange: _attemptsDateRange,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppColors.brandPurple,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && mounted) {
+      setState(() {
+        _attemptsDateRange = picked;
+      });
+      await _fetchDashboardData();
+    }
   }
 
   @override
@@ -161,6 +236,11 @@ class _OverviewTabState extends State<OverviewTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_errorMessage != null) ...[
+            _buildErrorBanner(_errorMessage!),
+            const SizedBox(height: 16),
+          ],
+
           // ROW 1: Welcome Banner (Left) + Quick Actions (Right)
           LayoutBuilder(
             builder: (context, constraints) {
@@ -193,11 +273,11 @@ class _OverviewTabState extends State<OverviewTab> {
           ),
           const SizedBox(height: 20),
 
-          // ROW 2: 5 Metric Cards
+          // ROW 2: 5 Live KPI Metric Cards
           _buildMetricCardsRow(),
           const SizedBox(height: 20),
 
-          // ROW 3: 3 Analytics Charts
+          // ROW 3: 3 Live Analytics Charts
           LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth > 1180) {
@@ -243,7 +323,7 @@ class _OverviewTabState extends State<OverviewTab> {
           ),
           const SizedBox(height: 20),
 
-          // ROW 4: 4 Bottom Cards
+          // ROW 4: 4 Live Activity & Telemetry Cards
           LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth > 1460) {
@@ -304,10 +384,60 @@ class _OverviewTabState extends State<OverviewTab> {
     );
   }
 
+  Widget _buildErrorBanner(String message) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.errorRoseLight,
+        borderRadius: AppRadii.borderMd,
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.error,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          TextButton.icon(
+            onPressed: _isLoading ? null : _fetchDashboardData,
+            icon: const Icon(Icons.refresh_rounded, size: 16, color: AppColors.error),
+            label: Text(
+              'Retry',
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ==========================================
   // ROW 1: WELCOME BANNER
   // ==========================================
   Widget _buildWelcomeBanner() {
+    final currentUser = SupabaseConfig.clientSafe?.auth.currentUser;
+    final rawName = (currentUser?.userMetadata?['name'] ??
+            currentUser?.userMetadata?['full_name'])
+        ?.toString()
+        .trim();
+    final adminDisplayName =
+        (rawName != null && rawName.isNotEmpty) ? rawName : 'Admin';
+
     return Builder(
       builder: (context) {
         final screenWidth = MediaQuery.sizeOf(context).width;
@@ -350,36 +480,98 @@ class _OverviewTabState extends State<OverviewTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text.rich(
-                      const TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Welcome Back, ',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
-                              height: 1.15,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Welcome Back, ',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontHeading,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                    height: 1.15,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '$adminDisplayName! 👋',
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.fontHeading,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                    height: 1.15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Tooltip(
+                          message: 'Refresh live metrics',
+                          child: InkWell(
+                            onTap: _isLoading ? null : _fetchDashboardData,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.78),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AppColors.borderSubtle),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_isLoading)
+                                    const SizedBox(
+                                      width: 12,
+                                      height: 12,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.8,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          AppColors.brandPurple,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    const Icon(
+                                      Icons.refresh_rounded,
+                                      size: 13,
+                                      color: AppColors.brandPurple,
+                                    ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _isLoading ? 'Syncing...' : 'Sync',
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontHeading,
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.brandPurple,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          TextSpan(
-                            text: 'Admin! 👋',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
-                              height: 1.15,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      'Manage quizzes, users, content and track platform performance all in one place.',
+                    Text(
+                      'Manage quizzes, users, content and track live platform performance all in one place.',
                       style: TextStyle(
+                        fontFamily: AppTypography.fontHeading,
                         fontSize: 12,
-                        color: Color(0xFF64748B),
+                        color: AppColors.textSecondary,
                         height: 1.3,
                         fontWeight: FontWeight.w400,
                       ),
@@ -415,57 +607,6 @@ class _OverviewTabState extends State<OverviewTab> {
     );
   }
 
-  late final List<Map<String, dynamic>> _quickActions = [
-    {
-      'id': 'create_quiz',
-      'label': 'Create\nQuiz',
-      'icon': Icons.add_circle_outline_rounded,
-      'color': AppColors.brandPurple,
-      'cardColor': AppColors.brandPurpleLight,
-      'enabled': true,
-    },
-    {
-      'id': 'add_question',
-      'label': 'Add\nQuestion',
-      'icon': Icons.description_outlined,
-      'color': AppColors.brandBlue,
-      'cardColor': AppColors.brandBlueLight,
-      'enabled': true,
-    },
-    {
-      'id': 'manage_categories',
-      'label': 'Target\nExams',
-      'icon': Icons.explore_outlined,
-      'color': AppColors.battleAdminPurple,
-      'cardColor': AppColors.battleAdminPurpleLight,
-      'enabled': true,
-    },
-    {
-      'id': 'start_live_quiz',
-      'label': 'Start Live\nQuiz',
-      'icon': Icons.cell_tower_rounded,
-      'color': AppColors.liveRed,
-      'cardColor': AppColors.liveRedLight,
-      'enabled': true,
-    },
-    {
-      'id': 'create_tournament',
-      'label': 'Create\nTournament',
-      'icon': Icons.emoji_events_outlined,
-      'color': AppColors.coinGold,
-      'cardColor': AppColors.coinGoldLight,
-      'enabled': true,
-    },
-    {
-      'id': 'invite_users',
-      'label': 'Invite\nUsers',
-      'icon': Icons.person_add_alt_1_outlined,
-      'color': AppColors.brandPink,
-      'cardColor': AppColors.brandPinkLight,
-      'enabled': true,
-    },
-  ];
-
   VoidCallback _getActionCallback(String id) {
     switch (id) {
       case 'create_quiz':
@@ -493,7 +634,8 @@ class _OverviewTabState extends State<OverviewTab> {
           builder: (context, setDialogState) {
             return AppModalDialog(
               title: 'Customize Quick Actions',
-              subtitle: 'Choose which quick action shortcuts appear on your dashboard overview',
+              subtitle:
+                  'Choose which quick action shortcuts appear on your dashboard overview',
               iconData: Icons.tune_rounded,
               gradientColors: const [Color(0xFFEC4899), Color(0xFFF43F5E)],
               maxWidth: 520,
@@ -517,9 +659,14 @@ class _OverviewTabState extends State<OverviewTab> {
               ),
               actions: [
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(dialogCtx).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(this.context);
+                    await _saveQuickActionPreferences();
+                    if (dialogCtx.mounted) {
+                      Navigator.of(dialogCtx).pop();
+                    }
+                    if (!mounted) return;
+                    messenger.showSnackBar(
                       SnackBar(
                         content: Text(
                           'Quick Actions updated successfully',
@@ -550,7 +697,8 @@ class _OverviewTabState extends State<OverviewTab> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: _quickActions.length,
-                  separatorBuilder: (ctx, idx) => Divider(height: 1, color: AppColors.borderSubtle),
+                  separatorBuilder: (ctx, idx) =>
+                      Divider(height: 1, color: AppColors.borderSubtle),
                   itemBuilder: (context, index) {
                     final action = _quickActions[index];
                     final isEnabled = action['enabled'] as bool;
@@ -635,54 +783,81 @@ class _OverviewTabState extends State<OverviewTab> {
   }
 
   // ==========================================
-  // ROW 2: 5 METRIC CARDS
+  // ROW 2: 5 METRIC CARDS (LIVE DATABASE METRICS)
   // ==========================================
   Widget _buildMetricCardsRow() {
+    final snap = _snapshot;
+    final bool loadingInitial = _isLoading && snap == null;
+
     final metrics = [
       (
         title: 'Total Users',
-        value: _totalUsers,
-        growth: _usersGrowth,
-        subtitle: _usersSubtitle,
+        value: loadingInitial ? '—' : _formatCount(snap?.usersMetric.total ?? 0),
+        growth: loadingInitial ? '' : (snap?.usersMetric.growthLabel ?? ''),
+        isPositive: snap?.usersMetric.isGrowthPositive ?? true,
+        subtitle: loadingInitial
+            ? 'Loading users...'
+            : (snap?.usersMetric.subtitle ?? '0 this week'),
         icon: Icons.people_alt_rounded,
-        color: const Color(0xFF3B82F6),
-        sparklineData: const [10.0, 12.0, 11.5, 14.0, 16.0, 18.0, 22.0],
+        color: AppColors.brandBlue,
+        sparklineData: snap?.usersMetric.sparklineData,
+        onTap: widget.onGoToUsers,
       ),
       (
         title: 'Total Quizzes',
-        value: _totalQuizzes,
-        growth: _quizzesGrowth,
-        subtitle: _quizzesSubtitle,
+        value: loadingInitial ? '—' : _formatCount(snap?.quizzesMetric.total ?? 0),
+        growth: loadingInitial ? '' : (snap?.quizzesMetric.growthLabel ?? ''),
+        isPositive: snap?.quizzesMetric.isGrowthPositive ?? true,
+        subtitle: loadingInitial
+            ? 'Loading quizzes...'
+            : (snap?.quizzesMetric.subtitle ?? '0 this week'),
         icon: Icons.description_rounded,
-        color: const Color(0xFF10B981),
-        sparklineData: const [8.0, 9.0, 8.5, 11.0, 12.0, 13.5, 16.0],
+        color: AppColors.brandGreen,
+        sparklineData: snap?.quizzesMetric.sparklineData,
+        onTap: widget.onGoToTests,
       ),
       (
         title: 'Total Questions',
-        value: _totalQuestions,
-        growth: _questionsGrowth,
-        subtitle: _questionsSubtitle,
+        value: loadingInitial ? '—' : _formatCount(snap?.questionsMetric.total ?? 0),
+        growth: loadingInitial ? '' : (snap?.questionsMetric.growthLabel ?? ''),
+        isPositive: snap?.questionsMetric.isGrowthPositive ?? true,
+        subtitle: loadingInitial
+            ? 'Loading questions...'
+            : (snap?.questionsMetric.subtitle ?? '0 this week'),
         icon: Icons.help_outline_rounded,
-        color: const Color(0xFFF59E0B),
-        sparklineData: const [12.0, 13.0, 15.0, 14.5, 17.0, 19.0, 24.0],
+        color: AppColors.coinGold,
+        sparklineData: snap?.questionsMetric.sparklineData,
+        onTap: widget.onGoToTests,
       ),
       (
         title: 'Total Attempts',
-        value: _totalAttempts,
-        growth: _attemptsGrowth,
-        subtitle: _attemptsSubtitle,
+        value: loadingInitial ? '—' : _formatCount(snap?.attemptsMetric.total ?? 0),
+        growth: loadingInitial ? '' : (snap?.attemptsMetric.growthLabel ?? ''),
+        isPositive: snap?.attemptsMetric.isGrowthPositive ?? true,
+        subtitle: loadingInitial
+            ? 'Loading attempts...'
+            : (snap?.attemptsMetric.subtitle ?? '0 this week'),
         icon: Icons.emoji_events_rounded,
-        color: const Color(0xFF8B5CF6),
-        sparklineData: const [14.0, 15.5, 18.0, 17.5, 21.0, 25.0, 30.0],
+        color: AppColors.battleAdminPurple,
+        sparklineData: snap?.attemptsMetric.sparklineData,
+        onTap: widget.onGoToTests,
       ),
       (
         title: 'Active Live Quiz',
-        value: _activeLiveQuiz,
+        value: loadingInitial
+            ? '—'
+            : _formatCount(snap?.activeLiveQuizzesCount ?? 0),
         growth: '',
-        subtitle: 'Active live contests',
+        isPositive: true,
+        subtitle: loadingInitial
+            ? 'Checking live schedule...'
+            : (snap != null && snap.activeLiveQuizzesCount > 0
+                ? 'Active live contests'
+                : 'No live contest active'),
         icon: Icons.podcasts_rounded,
-        color: const Color(0xFFEF4444),
-        sparklineData: const [2.0, 3.0, 2.5, 4.0, 3.2, 4.5, 3.8],
+        color: AppColors.liveRed,
+        sparklineData: snap?.activeLiveQuizzesSparkline,
+        onTap: widget.onGoToLiveQuiz ?? widget.onGoToTests,
       ),
     ];
 
@@ -703,10 +878,12 @@ class _OverviewTabState extends State<OverviewTab> {
               title: m.title,
               value: m.value,
               growth: m.growth,
+              isGrowthPositive: m.isPositive,
               subtitle: m.subtitle,
               icon: m.icon,
               color: m.color,
               sparklineData: m.sparklineData,
+              onTap: m.onTap,
             );
           }).toList(),
         );
@@ -718,13 +895,26 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 3: QUIZ ATTEMPTS OVERVIEW (CHART 1)
   // ==========================================
   Widget _buildQuizAttemptsOverviewCard() {
+    final chart = _snapshot?.attemptsChart;
+    final rangeText =
+        '${_formatFullDate(_attemptsDateRange.start)} - ${_formatFullDate(_attemptsDateRange.end)}';
+
     return AppLineChartCard(
       title: 'Quiz Attempts Overview',
       icon: Icons.bar_chart_rounded,
-      iconColor: const Color(0xFF6366F1),
+      iconColor: AppColors.brandPurple,
+      isLoading: _isLoading && _snapshot == null,
+      dates: chart?.labels ?? const [],
+      values: chart?.values ?? const [],
+      highlightedIndex: chart?.highlightedIndex,
+      tooltipDate: chart?.tooltipDate,
+      tooltipValue: chart?.tooltipValue,
+      emptyText: _errorMessage != null
+          ? 'Unable to load attempts data'
+          : 'No attempts recorded in selected range',
       trailingHeader: AdminTableDateRangeButton(
-        text: 'Oct 12, 2026 - Oct 18, 2026',
-        onTap: () {},
+        text: rangeText,
+        onTap: _pickAttemptsDateRange,
       ),
     );
   }
@@ -733,15 +923,25 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 3: USER GROWTH (CHART 2)
   // ==========================================
   Widget _buildUserGrowthCard() {
+    final chart = _snapshot?.userGrowthChart;
+
     return AppBarChartCard(
       title: 'User Growth',
       icon: Icons.people_alt_rounded,
-      iconColor: const Color(0xFF3B82F6),
+      iconColor: AppColors.brandBlue,
+      isLoading: _isLoading && _snapshot == null,
+      dates: chart?.labels ?? const [],
+      values: chart?.values ?? const [],
+      emptyText: _errorMessage != null
+          ? 'Unable to load user growth'
+          : 'No user registrations in $_userGrowthPeriod',
       trailingHeader: AdminTableDropdown<String>(
         value: _userGrowthPeriod,
         items: const ['Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'This Year'],
         onChanged: (val) {
+          if (val == _userGrowthPeriod) return;
           setState(() => _userGrowthPeriod = val);
+          _fetchDashboardData();
         },
       ),
     );
@@ -751,25 +951,41 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 3: CATEGORY WISE QUIZZES (CHART 3)
   // ==========================================
   Widget _buildCategoryWiseCard() {
-    return const AppDonutChartCard(
+    const palette = [
+      AppColors.brandBlue,
+      AppColors.battleAdminPurple,
+      AppColors.coinGold,
+      Color(0xFF06B6D4),
+      AppColors.brandPink,
+      AppColors.textMuted,
+    ];
+
+    final breakdown = _snapshot?.categoryBreakdown ?? const [];
+    final slices = breakdown.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final item = entry.value;
+      final color = _parseHexColor(item.hexColor) ?? palette[idx % palette.length];
+      return DonutSlice(
+        label: item.label,
+        percentage: item.percentage,
+        count: item.count,
+        color: color,
+      );
+    }).toList();
+
+    return AppDonutChartCard(
       height: 260,
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       title: 'Category Wise Quizzes',
       icon: Icons.pie_chart_rounded,
-      iconBg: Color(0xFFEF4444),
-      totalCount: 386,
+      iconBg: AppColors.liveRed,
+      isLoading: _isLoading && _snapshot == null,
+      totalCount: _snapshot?.totalCategoriesQuizzesCount ?? 0,
       totalLabel: 'Total',
       chartSize: 145,
       strokeWidth: 20.0,
       strokeCap: StrokeCap.round,
-      slices: [
-        DonutSlice(label: 'General Science', percentage: 28, color: Color(0xFF3B82F6)),
-        DonutSlice(label: 'Mathematics', percentage: 22, color: Color(0xFF8B5CF6)),
-        DonutSlice(label: 'Reasoning', percentage: 18, color: Color(0xFFF59E0B)),
-        DonutSlice(label: 'Current Affairs', percentage: 14, color: Color(0xFF06B6D4)),
-        DonutSlice(label: 'Technical', percentage: 10, color: Color(0xFFEC4899)),
-        DonutSlice(label: 'Others', percentage: 8, color: Color(0xFF94A3B8)),
-      ],
+      slices: slices,
     );
   }
 
@@ -777,8 +993,34 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 4: RECENT QUIZZES
   // ==========================================
   Widget _buildRecentQuizzesCard() {
+    const quizColors = [
+      AppColors.brandPurple,
+      AppColors.coinGold,
+      AppColors.brandPink,
+      AppColors.brandBlue,
+      AppColors.battleAdminPurple,
+    ];
+
+    final items = (_snapshot?.recentQuizzes ?? const []).asMap().entries.map((entry) {
+      final idx = entry.key;
+      final q = entry.value;
+      return RecentQuizItem(
+        title: q.title,
+        subtitle: '${q.subjectLabel} • ${q.totalQuestions} Questions',
+        status: q.status,
+        isPublished: q.isPublished,
+        date: _formatFullDate(q.createdAt),
+        icon: _iconForSubject(q.subjectLabel),
+        color: quizColors[idx % quizColors.length],
+        onTap: widget.onGoToTests,
+      );
+    }).toList();
+
     return AppRecentQuizzesCard(
+      isLoading: _isLoading && _snapshot == null,
+      quizzes: items,
       onViewAll: widget.onGoToTests,
+      emptyText: _errorMessage != null ? 'Failed to load quizzes' : 'No quizzes created yet',
     );
   }
 
@@ -786,8 +1028,32 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 4: RECENT USERS
   // ==========================================
   Widget _buildRecentUsersCard() {
+    const userColors = [
+      AppColors.brandPurple,
+      AppColors.brandBlue,
+      AppColors.battleAdminPurple,
+      AppColors.brandPink,
+      AppColors.brandGreen,
+    ];
+
+    final items = (_snapshot?.recentUsers ?? const []).asMap().entries.map((entry) {
+      final idx = entry.key;
+      final u = entry.value;
+      return RecentUserItem(
+        initials: _initialsForName(u.name),
+        name: u.name,
+        email: u.email,
+        date: _formatFullDate(u.createdAt),
+        color: userColors[idx % userColors.length],
+        onTap: widget.onGoToUsers,
+      );
+    }).toList();
+
     return AppRecentUsersCard(
+      isLoading: _isLoading && _snapshot == null,
+      users: items,
       onViewAll: widget.onGoToUsers,
+      emptyText: _errorMessage != null ? 'Failed to load users' : 'No registered users yet',
     );
   }
 
@@ -795,8 +1061,40 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 4: RECENT ACTIVITY
   // ==========================================
   Widget _buildRecentActivityCard() {
+    final items = (_snapshot?.recentActivities ?? const []).map((ev) {
+      final (icon, color) = _styleForActivity(ev.type);
+      return RecentActivityItem(
+        icon: icon,
+        color: color,
+        title: ev.title,
+        time: _formatTimeAgo(ev.createdAt),
+        onTap: () {
+          switch (ev.type) {
+            case DashboardActivityType.quizCreated:
+            case DashboardActivityType.attemptCompleted:
+              widget.onGoToTests();
+              break;
+            case DashboardActivityType.liveQuiz:
+              (widget.onGoToLiveQuiz ?? widget.onGoToTests)();
+              break;
+            case DashboardActivityType.userRegistered:
+            case DashboardActivityType.userActivity:
+              widget.onGoToUsers();
+              break;
+            case DashboardActivityType.topupRequest:
+            case DashboardActivityType.withdrawalRequest:
+              widget.onGoToFinance();
+              break;
+          }
+        },
+      );
+    }).toList();
+
     return AppRecentActivityCard(
+      isLoading: _isLoading && _snapshot == null,
+      activities: items,
       onViewAll: widget.onGoToNotifications,
+      emptyText: _errorMessage != null ? 'Failed to load activity' : 'No recent platform activity',
     );
   }
 
@@ -804,6 +1102,156 @@ class _OverviewTabState extends State<OverviewTab> {
   // ROW 4: PLATFORM STATUS
   // ==========================================
   Widget _buildPlatformStatusCard() {
-    return const AppPlatformStatusCard();
+    final snap = _snapshot;
+    if (_isLoading && snap == null) {
+      return const AppPlatformStatusCard(
+        isLoading: true,
+        badgeText: 'Checking Systems...',
+        isAllOperational: true,
+      );
+    }
+
+    if (snap == null) {
+      return AppPlatformStatusCard(
+        badgeText: _errorMessage != null ? 'Connection Error' : 'Unavailable',
+        isAllOperational: false,
+        services: const [
+          PlatformServiceItem(
+            name: 'Database Connection',
+            status: 'Offline',
+            isHealthy: false,
+          ),
+        ],
+        metrics: [
+          PlatformMetricItem(
+            icon: Icons.history_rounded,
+            label: 'Last Attempt',
+            value: _formatTimestamp(DateTime.now()),
+          ),
+        ],
+      );
+    }
+
+    final healthyCount = snap.services.where((s) => s.isHealthy).length;
+    final allOk = snap.isAllOperational;
+
+    return AppPlatformStatusCard(
+      badgeText: allOk ? 'All Systems Operational' : 'Degraded Service',
+      isAllOperational: allOk,
+      services: snap.services
+          .map(
+            (s) => PlatformServiceItem(
+              name: s.name,
+              status: s.status,
+              isHealthy: s.isHealthy,
+            ),
+          )
+          .toList(),
+      metrics: [
+        PlatformMetricItem(
+          icon: Icons.verified_user_outlined,
+          label: 'Health Checks',
+          value: '$healthyCount/${snap.services.length} Passed',
+        ),
+        PlatformMetricItem(
+          icon: Icons.schedule_rounded,
+          label: 'Response Time',
+          value: '${snap.apiLatencyMs}ms',
+        ),
+        PlatformMetricItem(
+          icon: Icons.history_rounded,
+          label: 'Last Synced',
+          value: _formatTimestamp(snap.fetchedAt),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // FORMAT & STYLE HELPERS
+  // ==========================================
+  String _formatCount(int number) {
+    return number.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]},',
+    );
+  }
+
+  String _formatFullDate(DateTime dt) {
+    return '${_months[dt.month - 1]} ${dt.day.toString().padLeft(2, '0')}, ${dt.year}';
+  }
+
+  String _formatTimestamp(DateTime dt) {
+    final hour12 = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final min = dt.minute.toString().padLeft(2, '0');
+    final amPm = dt.hour >= 12 ? 'PM' : 'AM';
+    return '${_months[dt.month - 1]} ${dt.day.toString().padLeft(2, '0')}, ${dt.year} $hour12:$min $amPm';
+  }
+
+  String _formatTimeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return _formatFullDate(dt);
+  }
+
+  String _initialsForName(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) {
+      return parts.first.substring(0, parts.first.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+
+  Color? _parseHexColor(String? hex) {
+    if (hex == null || hex.isEmpty) return null;
+    final cleaned = hex.replaceAll('#', '').trim();
+    if (cleaned.length == 6) {
+      final val = int.tryParse('FF$cleaned', radix: 16);
+      if (val != null) return Color(val);
+    } else if (cleaned.length == 8) {
+      final val = int.tryParse(cleaned, radix: 16);
+      if (val != null) return Color(val);
+    }
+    return null;
+  }
+
+  IconData _iconForSubject(String subject) {
+    final lower = subject.toLowerCase();
+    if (lower.contains('science') || lower.contains('chem')) {
+      return Icons.science_outlined;
+    } else if (lower.contains('phys')) {
+      return Icons.biotech_outlined;
+    } else if (lower.contains('math')) {
+      return Icons.calculate_outlined;
+    } else if (lower.contains('reason')) {
+      return Icons.psychology_outlined;
+    } else if (lower.contains('current') || lower.contains('affairs') || lower.contains('gk')) {
+      return Icons.public_outlined;
+    } else if (lower.contains('history') || lower.contains('polity')) {
+      return Icons.menu_book_outlined;
+    }
+    return Icons.description_outlined;
+  }
+
+  (IconData, Color) _styleForActivity(DashboardActivityType type) {
+    switch (type) {
+      case DashboardActivityType.quizCreated:
+        return (Icons.emoji_events_rounded, AppColors.coinGold);
+      case DashboardActivityType.userRegistered:
+        return (Icons.person_rounded, AppColors.brandBlue);
+      case DashboardActivityType.attemptCompleted:
+        return (Icons.flag_rounded, AppColors.battleAdminPurple);
+      case DashboardActivityType.liveQuiz:
+        return (Icons.play_circle_fill_rounded, AppColors.brandGreen);
+      case DashboardActivityType.topupRequest:
+      case DashboardActivityType.withdrawalRequest:
+        return (Icons.account_balance_wallet_rounded, AppColors.brandOrange);
+      case DashboardActivityType.userActivity:
+        return (Icons.bolt_rounded, AppColors.infoBlue);
+    }
   }
 }

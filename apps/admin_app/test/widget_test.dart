@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 import 'package:admin_app/main.dart';
+import 'package:admin_app/features/overview/overview_tab.dart';
 import 'package:admin_app/features/tests/widgets/test_series_table_card.dart';
 import 'package:admin_app/features/tests/widgets/subject_wise_chart_card.dart';
 import 'package:admin_app/features/tests/widgets/recent_activity_card.dart';
@@ -94,7 +96,7 @@ void main() {
     expect(find.text('Lucky Wheel'), findsAtLeastNWidgets(1));
   });
 
-  testWidgets('Platform status shows operational checks', (WidgetTester tester) async {
+  testWidgets('Platform status honestly reports disconnected state without mock 99.9% fallback', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -106,10 +108,132 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('Connection Error'), findsOneWidget);
+    expect(find.text('Database Connection'), findsOneWidget);
+    expect(find.text('Offline'), findsOneWidget);
+    expect(find.text('99.9%'), findsNothing);
+    expect(find.text('12,458'), findsNothing);
+  });
+
+  testWidgets('OverviewTab renders injected production snapshot cleanly', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final snapshot = AdminDashboardSnapshot(
+      usersMetric: const DashboardMetricSummary(
+        total: 420,
+        currentWeekCount: 18,
+        previousWeekCount: 12,
+        growthLabel: '+50%',
+        isGrowthPositive: true,
+        subtitle: '+18 this week',
+        sparklineData: [2, 3, 1, 4, 2, 3, 3],
+      ),
+      quizzesMetric: const DashboardMetricSummary(
+        total: 35,
+        currentWeekCount: 4,
+        previousWeekCount: 2,
+        growthLabel: '+100%',
+        isGrowthPositive: true,
+        subtitle: '+4 this week',
+        sparklineData: [0, 1, 0, 1, 1, 0, 1],
+      ),
+      questionsMetric: const DashboardMetricSummary(
+        total: 1250,
+        currentWeekCount: 90,
+        previousWeekCount: 60,
+        growthLabel: '+50%',
+        isGrowthPositive: true,
+        subtitle: '+90 this week',
+        sparklineData: [10, 15, 12, 18, 10, 15, 10],
+      ),
+      attemptsMetric: const DashboardMetricSummary(
+        total: 890,
+        currentWeekCount: 45,
+        previousWeekCount: 30,
+        growthLabel: '+50%',
+        isGrowthPositive: true,
+        subtitle: '+45 this week',
+        sparklineData: [5, 7, 6, 8, 5, 7, 7],
+      ),
+      activeLiveQuizzesCount: 2,
+      activeLiveQuizzesSparkline: const [0, 1, 1, 0, 1, 1, 2],
+      attemptsChart: const DashboardSeriesData(
+        labels: ['Nov 05', 'Nov 06', 'Nov 07', 'Nov 08', 'Nov 09', 'Nov 10', 'Nov 11'],
+        values: [12, 18, 9, 25, 14, 19, 22],
+        highlightedIndex: 3,
+        tooltipDate: 'Nov 08, 2026',
+        tooltipValue: '25 attempts',
+      ),
+      userGrowthChart: const DashboardSeriesData(
+        labels: ['Nov 05', 'Nov 06', 'Nov 07', 'Nov 08', 'Nov 09', 'Nov 10', 'Nov 11'],
+        values: [3, 4, 2, 5, 1, 2, 1],
+      ),
+      totalCategoriesQuizzesCount: 35,
+      categoryBreakdown: const [
+        DashboardCategoryBreakdown(label: 'General Science', count: 20, percentage: 57.14, hexColor: '#3B82F6'),
+        DashboardCategoryBreakdown(label: 'Mathematics', count: 15, percentage: 42.86, hexColor: '#8B5CF6'),
+      ],
+      recentQuizzes: [
+        DashboardRecentQuiz(
+          id: 't-1',
+          title: 'Production Mock Test',
+          subjectLabel: 'General Science',
+          totalQuestions: 50,
+          status: 'Published',
+          isPublished: true,
+          createdAt: DateTime(2026, 11, 11, 10, 0),
+        ),
+      ],
+      recentUsers: [
+        DashboardRecentUser(
+          id: 'u-1',
+          name: 'Aarav Mehta',
+          email: 'aarav@rankearn.in',
+          status: 'active',
+          createdAt: DateTime(2026, 11, 11, 9, 30),
+        ),
+      ],
+      recentActivities: [
+        DashboardActivityEvent(
+          id: 'a-1',
+          type: DashboardActivityType.quizCreated,
+          title: 'Quiz: Production Mock Test',
+          createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+        ),
+      ],
+      services: const [
+        DashboardSystemService(name: 'Database (Profiles)', status: 'Operational', isHealthy: true, latencyMs: 42),
+        DashboardSystemService(name: 'Quizzes & Question Bank', status: 'Operational', isHealthy: true, latencyMs: 38),
+      ],
+      apiLatencyMs: 42,
+      fetchedAt: DateTime(2026, 11, 11, 18, 45),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: OverviewTab(
+            onGoToTests: () {},
+            onGoToFinance: () {},
+            onGoToUsers: () {},
+            onGoToAiCreator: () {},
+            onGoToNotifications: () {},
+            initialSnapshot: snapshot,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('420'), findsOneWidget);
+    expect(find.text('1,250'), findsOneWidget);
+    expect(find.text('Production Mock Test'), findsOneWidget);
+    expect(find.text('Aarav Mehta'), findsOneWidget);
     expect(find.text('All Systems Operational'), findsOneWidget);
-    expect(find.text('Database'), findsOneWidget);
-    expect(find.text('API Services'), findsOneWidget);
-    expect(find.text('99.9%'), findsOneWidget);
+    expect(find.text('42ms'), findsOneWidget);
+    expect(find.text('2/2 Passed'), findsOneWidget);
   });
 
   testWidgets('AdminLoginScreen renders all visual elements from reference design', (WidgetTester tester) async {

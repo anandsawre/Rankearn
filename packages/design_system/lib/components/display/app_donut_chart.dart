@@ -102,7 +102,8 @@ class AppDonutChart extends StatelessWidget {
                 style:
                     totalNumberStyle ??
                     TextStyle(
-                      fontSize: isLarge ? 22 : 16,
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: isLarge ? 22 : 19,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                       letterSpacing: -0.5,
@@ -114,9 +115,10 @@ class AppDonutChart extends StatelessWidget {
                 style:
                     totalLabelStyle ??
                     TextStyle(
-                      fontSize: isLarge ? 12 : 9.5,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textMuted,
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: isLarge ? 12 : 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
                     ),
               ),
             ],
@@ -133,8 +135,8 @@ class AppDonutChart extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: isLarge ? 8 : 7.5,
-              height: isLarge ? 8 : 7.5,
+              width: isLarge ? 8.5 : 8,
+              height: isLarge ? 8.5 : 8,
               decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 7),
@@ -144,9 +146,10 @@ class AppDonutChart extends StatelessWidget {
                 style:
                     legendLabelStyle ??
                     TextStyle(
-                      fontSize: isLarge ? 11.5 : 10,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: isLarge ? 13 : 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -159,7 +162,8 @@ class AppDonutChart extends StatelessWidget {
               style:
                   legendPercentageStyle ??
                   TextStyle(
-                    fontSize: isLarge ? 11.5 : 10,
+                    fontFamily: AppTypography.fontHeading,
+                    fontSize: isLarge ? 13 : 12,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
@@ -175,14 +179,26 @@ class AppDonutChart extends StatelessWidget {
         donutVisual,
         SizedBox(width: legendSpacing),
         Expanded(
-          child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: legendItems,
-            ),
-          ),
+          child: legendItems.isEmpty
+              ? Center(
+                  child: Text(
+                    'No data available',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: legendItems,
+                  ),
+                ),
         ),
       ],
     );
@@ -218,13 +234,14 @@ class AppDonutChartCard extends StatelessWidget {
   final BorderRadius? iconRadius;
   final BoxShape iconShape;
   final EdgeInsetsGeometry? padding;
+  final bool isLoading;
 
   const AppDonutChartCard({
     super.key,
     required this.title,
     this.icon = Icons.pie_chart_rounded,
     this.iconBg = const Color(0xFF3B82F6),
-    required this.slices,
+    this.slices = const [],
     this.totalCount = 0,
     this.totalLabel = 'Total',
     this.height = 260,
@@ -236,6 +253,7 @@ class AppDonutChartCard extends StatelessWidget {
     this.iconRadius,
     this.iconShape = BoxShape.circle,
     this.padding,
+    this.isLoading = false,
   });
 
   @override
@@ -295,7 +313,20 @@ class AppDonutChartCard extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Donut Chart + Legend
-          if (isExpandedMode)
+          if (isLoading && slices.isEmpty)
+            const Expanded(
+              child: Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+                  ),
+                ),
+              ),
+            )
+          else if (isExpandedMode)
             Expanded(
               child: AppDonutChart(
                 slices: slices,
@@ -342,7 +373,17 @@ class _DonutChartPainter extends CustomPainter {
     final radius = (math.min(size.width, size.height) / 2) - (strokeWidth / 2);
 
     final totalPct = slices.fold<double>(0, (sum, s) => sum + s.percentage);
-    if (totalPct <= 0) return;
+    if (totalPct <= 0) {
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = AppColors.borderSubtle
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth,
+      );
+      return;
+    }
 
     double startAngle = -math.pi / 2;
     for (final s in slices) {

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart' hide BattleType;
 import '../../overview/banner_image_data.dart';
@@ -35,7 +36,37 @@ class BattleOverviewTab extends StatefulWidget {
 
 class _BattleOverviewTabState extends State<BattleOverviewTab> {
   final _service = BattleDashboardService();
-  bool _isFullscreen = false;
+  String _battleSearchQuery = '';
+  String _selectedBattleType = 'All Types';
+  String _selectedBattleStatus = 'All Status';
+  final Set<String> _selectedBattleIds = {};
+  int _battleCurrentPage = 1;
+  static const int _battleRowsPerPage = 8;
+
+  List<BattleItem> get _filteredBattles {
+    return _service.battles.where((b) {
+      if (_selectedBattleType == '1 vs 1' && b.type != BattleType.oneVOne) return false;
+      if (_selectedBattleType == 'Multiplayer' && b.type != BattleType.multiplayer) return false;
+      if (_selectedBattleType == 'Rooms' && b.type != BattleType.room) return false;
+
+      if (_selectedBattleStatus != 'All Status') {
+        if (b.status.label.toLowerCase() != _selectedBattleStatus.toLowerCase()) return false;
+      }
+
+      if (_battleSearchQuery.isNotEmpty) {
+        final q = _battleSearchQuery.toLowerCase();
+        final matchesId = b.id.toLowerCase().contains(q);
+        final matchesSubject = b.subject.toLowerCase().contains(q);
+        final matchesPlayer = b.participants.any((p) => p.name.toLowerCase().contains(q));
+        final matchesRoom = b.roomName?.toLowerCase().contains(q) ?? false;
+        if (!matchesId && !matchesSubject && !matchesPlayer && !matchesRoom) {
+          return false;
+        }
+      }
+
+      return true;
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -101,27 +132,31 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
               const SizedBox(height: 20),
 
               // ==========================================
-              // ROW 3: LIVE BATTLES TABLE + CONTROL & CHART
+              // ROW 3: LIVE BATTLES TABLE + RIGHT SIDEBAR CARDS
               // ==========================================
               if (isWide)
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left Column: Live Battles Monitoring Table (approx 68% width)
+                    // Left Column: Live Battles Monitoring Table (approx 65% width)
                     Expanded(
-                      flex: 68,
+                      flex: 65,
                       child: _buildLiveBattlesCard(),
                     ),
                     const SizedBox(width: 20),
 
-                    // Right Column: Battle Control Center + Live Players Chart (approx 32% width)
+                    // Right Column: Battle Control, Live Chart, Today's Summary, Ongoing Rooms (approx 35% width)
                     Expanded(
-                      flex: 32,
+                      flex: 35,
                       child: Column(
                         children: [
                           _buildBattleControlCard(),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
                           _buildLiveChartCard(),
+                          const SizedBox(height: 16),
+                          _buildTodaySummaryCard(),
+                          const SizedBox(height: 16),
+                          _buildOngoingRoomsCard(),
                         ],
                       ),
                     ),
@@ -135,25 +170,7 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
                     _buildBattleControlCard(),
                     const SizedBox(height: 20),
                     _buildLiveChartCard(),
-                  ],
-                ),
-              const SizedBox(height: 20),
-
-              // ==========================================
-              // ROW 4: TODAY'S SUMMARY + ONGOING ROOMS
-              // ==========================================
-              if (isWide)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 42, child: _buildTodaySummaryCard()),
-                    const SizedBox(width: 20),
-                    Expanded(flex: 58, child: _buildOngoingRoomsCard()),
-                  ],
-                )
-              else
-                Column(
-                  children: [
+                    const SizedBox(height: 20),
                     _buildTodaySummaryCard(),
                     const SizedBox(height: 20),
                     _buildOngoingRoomsCard(),
@@ -448,333 +465,336 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
   }
 
   Widget _buildRedLivePill() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-      decoration: const BoxDecoration(
-        color: AppColors.liveRedLight,
-        borderRadius: AppRadii.badge,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 5,
-            height: 5,
-            decoration: const BoxDecoration(
-              color: AppColors.liveRed,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            'Live',
-            style: AppTypography.labelSmall.copyWith(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: AppColors.liveRed,
-            ),
-          ),
-        ],
-      ),
-    );
+    return const AppLivePill();
   }
 
   // ==========================================
   // ROW 3: LIVE BATTLES MONITORING TABLE CARD
+  // Powered by unified AdminDataTableCard from design_system
   // ==========================================
   Widget _buildLiveBattlesCard() {
-    final battles = _service.filteredBattles;
+    final allBattles = _filteredBattles;
+    final totalCount = allBattles.length;
+    final totalPages = math.max(1, (totalCount / _battleRowsPerPage).ceil());
+    final safePage = _battleCurrentPage.clamp(1, totalPages);
+    final startIndex = (safePage - 1) * _battleRowsPerPage;
+    final endIndex = math.min(startIndex + _battleRowsPerPage, totalCount);
+    final pagedBattles = (startIndex < totalCount)
+        ? allBattles.sublist(startIndex, endIndex)
+        : <BattleItem>[];
+    final allSelected = pagedBattles.isNotEmpty &&
+        pagedBattles.every((b) => _selectedBattleIds.contains(b.id));
 
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-        boxShadow: AppShadows.subtle,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Table Card Header
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.brandPurpleLight,
-                  borderRadius: AppRadii.borderMd,
-                ),
-                child: const Icon(Icons.sports_kabaddi_rounded, color: AppColors.brandPurple, size: 18),
+    return AdminDataTableCard(
+      title: 'Live Battles List',
+      totalCount: totalCount,
+      icon: Icons.sports_kabaddi_rounded,
+      iconBgColor: AppColors.battleAdminPurple,
+      searchQuery: _battleSearchQuery,
+      searchHint: 'Search live battles...',
+      onSearchChanged: (q) {
+        setState(() {
+          _battleSearchQuery = q;
+          _battleCurrentPage = 1;
+        });
+      },
+      currentPage: safePage,
+      totalPages: totalPages,
+      onPageChanged: (p) => setState(() => _battleCurrentPage = p),
+      itemLabel: 'live battles',
+      minWidth: 840,
+      filterControls: [
+        AdminTableDropdown(
+          value: _selectedBattleType,
+          items: const [
+            'All Types',
+            '1 vs 1',
+            'Multiplayer',
+            'Rooms',
+          ],
+          onChanged: (val) {
+            setState(() {
+              _selectedBattleType = val;
+              _battleCurrentPage = 1;
+            });
+          },
+        ),
+        AdminTableDropdown(
+          value: _selectedBattleStatus,
+          items: const [
+            'All Status',
+            'Live',
+            'Waiting',
+            'Paused',
+            'Completed',
+          ],
+          onChanged: (val) {
+            setState(() {
+              _selectedBattleStatus = val;
+              _battleCurrentPage = 1;
+            });
+          },
+        ),
+        AdminTableFiltersButton(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Filter drawer opened with advanced battle criteria.'),
+                duration: Duration(seconds: 2),
               ),
-              const SizedBox(width: 10),
+            );
+          },
+        ),
+      ],
+      columns: [
+        DataColumn(
+          label: SizedBox(
+            width: 20,
+            child: Checkbox(
+              value: allSelected,
+              onChanged: (val) {
+                setState(() {
+                  if (val == true) {
+                    _selectedBattleIds.addAll(pagedBattles.map((b) => b.id));
+                  } else {
+                    for (final b in pagedBattles) {
+                      _selectedBattleIds.remove(b.id);
+                    }
+                  }
+                });
+              },
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              activeColor: AppColors.battleAdminPurple,
+            ),
+          ),
+        ),
+        DataColumn(label: Text('#', style: _headerStyle)),
+        DataColumn(label: Text('Type', style: _headerStyle)),
+        DataColumn(label: Text('Battle ID', style: _headerStyle)),
+        DataColumn(label: Text('Players / Room', style: _headerStyle)),
+        DataColumn(label: Text('• Subject', style: _headerStyle)),
+        DataColumn(label: Text('Players', style: _headerStyle)),
+        DataColumn(label: Text('• Status', style: _headerStyle)),
+        DataColumn(label: Text('Time Left', style: _headerStyle)),
+        DataColumn(label: Text('Actions', style: _headerStyle)),
+      ],
+      rows: List.generate(pagedBattles.length, (index) {
+        final b = pagedBattles[index];
+        final isSelected = _selectedBattleIds.contains(b.id);
+        final rowIndex = startIndex + index + 1;
+
+        return DataRow(
+          selected: isSelected,
+          onSelectChanged: (_) {
+            setState(() {
+              if (isSelected) {
+                _selectedBattleIds.remove(b.id);
+              } else {
+                _selectedBattleIds.add(b.id);
+              }
+            });
+          },
+          color: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (states.contains(WidgetState.hovered)) {
+              return const Color(0xFFF8FAFC);
+            }
+            if (isSelected) {
+              return const Color(0xFFEEF2FF);
+            }
+            return Colors.white;
+          }),
+          cells: [
+            DataCell(
+              SizedBox(
+                width: 20,
+                child: Checkbox(
+                  value: isSelected,
+                  onChanged: (_) {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedBattleIds.remove(b.id);
+                      } else {
+                        _selectedBattleIds.add(b.id);
+                      }
+                    });
+                  },
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  activeColor: AppColors.battleAdminPurple,
+                ),
+              ),
+            ),
+            DataCell(
               Text(
-                'Live Battles (Real-time)',
-                style: AppTypography.headingSmall.copyWith(
-                  fontWeight: FontWeight.w800,
+                '$rowIndex',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            DataCell(_buildTypeBadge(b.type)),
+            DataCell(
+              Text(
+                b.id,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(width: 10),
-              _buildRedLivePill(),
-              const Spacer(),
-              // View Fullscreen Button
-              InkWell(
-                onTap: () {
-                  setState(() => _isFullscreen = !_isFullscreen);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(_isFullscreen ? 'Fullscreen table mode enabled' : 'Normal view restored'),
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
-                },
-                borderRadius: AppRadii.button,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceSubtle,
-                    borderRadius: AppRadii.button,
-                    border: Border.all(color: AppColors.borderSubtle),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _isFullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
-                        size: 16,
-                        color: AppColors.brandPurple,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'View Fullscreen',
-                        style: AppTypography.labelSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.brandPurple,
-                        ),
-                      ),
-                    ],
-                  ),
+            ),
+            DataCell(_buildPlayersCell(b)),
+            DataCell(_buildSubjectBadge(b.subject)),
+            DataCell(
+              Text(
+                '${b.totalPlayers}',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Sub-Filter Tabs: All (1,324), 1 vs 1 (856), Multiplayer (328), Rooms (140)
-          Row(
-            children: [
-              _buildSubFilterTab('All (1,324)', 'All'),
-              const SizedBox(width: 8),
-              _buildSubFilterTab('1 vs 1 (856)', '1 vs 1'),
-              const SizedBox(width: 8),
-              _buildSubFilterTab('Multiplayer (328)', 'Multiplayer'),
-              const SizedBox(width: 8),
-              _buildSubFilterTab('Rooms (140)', 'Rooms'),
-            ],
-          ),
-          const SizedBox(height: 18),
-
-          // The Table
-          ClipRRect(
-            borderRadius: AppRadii.borderLg,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.borderSubtle),
-                borderRadius: AppRadii.borderLg,
-              ),
-              child: Column(
-                children: [
-                  // Table Column Header
-                  Container(
-                    height: 42,
-                    color: AppColors.surfaceSubtle,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 30, child: Text('#', style: _headerStyle)),
-                        const SizedBox(width: 90, child: Text('Type', style: _headerStyle)),
-                        const SizedBox(width: 95, child: Text('Battle ID', style: _headerStyle)),
-                        const Expanded(flex: 3, child: Text('Players / Room', style: _headerStyle)),
-                        const Expanded(flex: 3, child: Text('Subject', style: _headerStyle)),
-                        const SizedBox(width: 60, child: Text('Players', textAlign: TextAlign.center, style: _headerStyle)),
-                        const SizedBox(width: 80, child: Text('Status', textAlign: TextAlign.center, style: _headerStyle)),
-                        const SizedBox(width: 75, child: Text('Time Left', textAlign: TextAlign.center, style: _headerStyle)),
-                        const SizedBox(width: 60, child: Text('Actions', textAlign: TextAlign.center, style: _headerStyle)),
-                      ],
+            ),
+            DataCell(
+              b.status == BattleStatus.live
+                  ? const AppLivePill()
+                  : AdminTableStatusBadge(
+                      label: b.status.label,
+                      backgroundColor: b.status == BattleStatus.completed
+                          ? const Color(0xFFDCFCE7)
+                          : const Color(0xFFEFF6FF),
+                      textColor: b.status == BattleStatus.completed
+                          ? const Color(0xFF16A34A)
+                          : const Color(0xFF3B82F6),
                     ),
+            ),
+            DataCell(
+              Text(
+                b.formattedTimeLeft,
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AdminTableActionButton(
+                    icon: Icons.visibility_outlined,
+                    tooltip: 'View Battle',
+                    onTap: () {
+                      AppModalDialog.show(
+                        context: context,
+                        builder: (_) => BattleDetailDialog(battle: b),
+                      );
+                    },
                   ),
-
-                  // Table Rows
-                  if (battles.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(32),
-                      alignment: Alignment.center,
-                      child: Text('No battles found matching criteria.', style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted)),
-                    )
-                  else
-                    ...battles.asMap().entries.map((entry) {
-                      final index = entry.key + 1;
-                      final b = entry.value;
-                      return _buildTableRow(index, b);
-                    }),
+                  const SizedBox(width: 4),
+                  AdminTableActionButton(
+                    icon: Icons.bar_chart_rounded,
+                    tooltip: 'Analytics',
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Analytics opened for Battle ${b.id}'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 4),
+                  AdminTableActionButton(
+                    icon: Icons.stop_circle_outlined,
+                    tooltip: 'End Battle',
+                    color: AppColors.error,
+                    onTap: () {
+                      AppModalDialog.show(
+                        context: context,
+                        builder: (_) => ConfirmActionDialog(
+                          title: 'End Battle',
+                          description:
+                              'Are you sure you want to forcibly terminate Battle ${b.id}?',
+                          confirmLabel: 'End Battle',
+                          isDestructive: true,
+                          onConfirm: (reason) async {
+                            _service.endSingleBattle(
+                                b.id, true, reason.isEmpty ? 'Force ended by admin' : reason);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Battle ${b.id} ended'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      }),
     );
   }
 
-  static const _headerStyle = AppTypography.labelSmall;
+  static TextStyle get _headerStyle => TextStyle(
+        fontFamily: AppTypography.fontHeading,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textSecondary,
+        letterSpacing: 0.1,
+      );
 
-  Widget _buildSubFilterTab(String label, String key) {
-    final isSelected = _service.currentFilter == key;
-    return InkWell(
-      onTap: () => _service.setFilter(key),
-      borderRadius: AppRadii.borderSm,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.battleAdminPurple : AppColors.surfaceSubtle,
-          borderRadius: AppRadii.borderSm,
-          border: Border.all(
-            color: isSelected ? AppColors.battleAdminPurple : AppColors.borderSubtle,
-          ),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.labelSmall.copyWith(
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-            color: isSelected ? AppColors.textOnPrimary : AppColors.textPrimary,
-          ),
-        ),
-      ),
+  Widget _buildTypeBadge(BattleType type) {
+    return AdminTableStatusBadge(
+      label: type.label,
+      backgroundColor: type.bgColor,
+      textColor: type.color,
     );
   }
 
-  Widget _buildTableRow(int index, BattleItem b) {
-    return Container(
-      height: 52,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle, width: 1)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          // # Index
-          SizedBox(
-            width: 30,
-            child: Text(
-              '$index',
-              style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-            ),
-          ),
+  Widget _buildSubjectBadge(String subject) {
+    Color bg = const Color(0xFFF1F5F9);
+    Color text = const Color(0xFF475569);
 
-          // Type Badge
-          SizedBox(
-            width: 90,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-                decoration: BoxDecoration(
-                  color: b.type.bgColor,
-                  borderRadius: AppRadii.badge,
-                ),
-                child: Text(
-                  b.type.label,
-                  style: AppTypography.captionBold.copyWith(
-                    fontSize: 10.5,
-                    color: b.type.color,
-                  ),
-                ),
-              ),
-            ),
-          ),
+    final lower = subject.toLowerCase();
+    if (lower.contains('science')) {
+      bg = const Color(0xFFEEF2FF);
+      text = const Color(0xFF6366F1);
+    } else if (lower.contains('math')) {
+      bg = const Color(0xFFFFF1F2);
+      text = const Color(0xFFF43F5E);
+    } else if (lower.contains('reasoning')) {
+      bg = const Color(0xFFF0F9FF);
+      text = const Color(0xFF0284C7);
+    } else if (lower.contains('awareness') || lower.contains('current')) {
+      bg = const Color(0xFFFFF7ED);
+      text = const Color(0xFFEA580C);
+    } else if (lower.contains('chemistry')) {
+      bg = const Color(0xFFFDF2F8);
+      text = const Color(0xFFDB2777);
+    } else if (lower.contains('biology')) {
+      bg = const Color(0xFFF0FDF4);
+      text = const Color(0xFF16A34A);
+    }
 
-          // Battle ID
-          SizedBox(
-            width: 95,
-            child: Text(
-              b.id,
-              style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-            ),
-          ),
-
-          // Players / Room
-          Expanded(
-            flex: 3,
-            child: _buildPlayersCell(b),
-          ),
-
-          // Subject Pill with Icon
-          Expanded(
-            flex: 3,
-            child: _buildSubjectPill(b.subject),
-          ),
-
-          // Players Count
-          SizedBox(
-            width: 60,
-            child: Text(
-              '${b.totalPlayers}',
-              textAlign: TextAlign.center,
-              style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-            ),
-          ),
-
-          // Status Badge
-          SizedBox(
-            width: 80,
-            child: Center(
-              child: _buildRedLivePill(),
-            ),
-          ),
-
-          // Time Left
-          SizedBox(
-            width: 75,
-            child: Text(
-              b.formattedTimeLeft,
-              textAlign: TextAlign.center,
-              style: AppTypography.labelMedium.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ),
-
-          // Actions
-          SizedBox(
-            width: 60,
-            child: Center(
-              child: InkWell(
-                onTap: () {
-                  AppModalDialog.show(
-                    context: context,
-                    builder: (_) => BattleDetailDialog(battle: b),
-                  );
-                },
-                borderRadius: AppRadii.borderSm,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: const BoxDecoration(
-                    color: AppColors.brandPurpleLight,
-                    borderRadius: AppRadii.borderSm,
-                  ),
-                  child: const Icon(Icons.visibility_outlined, size: 16, color: AppColors.brandPurple),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return AdminTableStatusBadge(
+      label: subject,
+      backgroundColor: bg,
+      textColor: text,
     );
   }
 
@@ -783,49 +803,105 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
       final p1 = b.participants[0];
       final p2 = b.participants[1];
       return Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          CircleAvatar(radius: 11, backgroundImage: NetworkImage(p1.avatarUrl)),
+          CircleAvatar(
+            radius: 11,
+            backgroundColor: AppColors.borderSubtle,
+            backgroundImage: NetworkImage(p1.avatarUrl),
+          ),
           const SizedBox(width: 6),
-          Flexible(
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 80),
             child: Text(
               p1.name,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 5),
-            child: Text('vs', style: AppTypography.labelSmall.copyWith(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.textMuted)),
+            child: Text(
+              'vs',
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textMuted,
+              ),
+            ),
           ),
-          CircleAvatar(radius: 11, backgroundImage: NetworkImage(p2.avatarUrl)),
+          CircleAvatar(
+            radius: 11,
+            backgroundColor: AppColors.borderSubtle,
+            backgroundImage: NetworkImage(p2.avatarUrl),
+          ),
           const SizedBox(width: 6),
-          Flexible(
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 80),
             child: Text(
               p2.name,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ],
       );
     } else if (b.type == BattleType.room) {
       return Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.meeting_room_outlined, size: 15, color: AppColors.brandBlue),
+          const Icon(
+            Icons.meeting_room_outlined,
+            size: 15,
+            color: AppColors.brandBlue,
+          ),
           const SizedBox(width: 6),
-          Flexible(
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 160),
             child: Text(
               b.roomName ?? 'Custom Room',
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ],
       );
     } else {
-      return Text(
-        '${b.totalPlayers} Players',
-        style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.groups_rounded,
+            size: 15,
+            color: AppColors.coinGold,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '${b.totalPlayers} Players',
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
       );
     }
   }
@@ -835,19 +911,20 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
     Color fg;
     IconData icon;
 
-    if (subject.toLowerCase().contains('science')) {
+    final lower = subject.toLowerCase();
+    if (lower.contains('science')) {
       bg = AppColors.brandGreenLight;
       fg = AppColors.brandGreenDark;
       icon = Icons.science_outlined;
-    } else if (subject.toLowerCase().contains('reasoning')) {
+    } else if (lower.contains('reasoning')) {
       bg = AppColors.brandPurpleLight;
       fg = AppColors.brandPurple;
       icon = Icons.psychology_outlined;
-    } else if (subject.toLowerCase().contains('math')) {
+    } else if (lower.contains('math')) {
       bg = AppColors.brandBlueLight;
       fg = AppColors.brandBlueDark;
       icon = Icons.calculate_outlined;
-    } else if (subject.toLowerCase().contains('awareness')) {
+    } else if (lower.contains('awareness')) {
       bg = AppColors.brandOrangeLight;
       fg = AppColors.brandOrange;
       icon = Icons.menu_book_outlined;
@@ -871,7 +948,12 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
               child: Text(
                 subject,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.captionBold.copyWith(fontSize: 10.5, color: fg),
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: fg,
+                ),
               ),
             ),
           ],
@@ -883,15 +965,10 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
   // ==========================================
   // ROW 3: BATTLE CONTROL CARD
   // ==========================================
-  Widget _buildBattleControlCard() {
-    return Container(
+  Widget _buildBattleControlCard({double? height}) {
+    return AppCard(
+      height: height,
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-        boxShadow: AppShadows.subtle,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -901,7 +978,13 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
               const SizedBox(width: 8),
               Text(
                 'Battle Control',
-                style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.2,
+                ),
               ),
             ],
           ),
@@ -1023,7 +1106,7 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
           children: [
             Icon(icon, size: 16, color: fg),
             const SizedBox(width: 4),
-            Text(label, style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: fg)),
+            Text(label, style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
           ],
         ),
       ),
@@ -1051,7 +1134,7 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
           children: [
             Icon(icon, size: 15, color: color),
             const SizedBox(width: 4),
-            Text(label, style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: color)),
+            Text(label, style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 11, fontWeight: FontWeight.w700, color: color)),
           ],
         ),
       ),
@@ -1061,16 +1144,10 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
   // ==========================================
   // ROW 3: PLAYERS IN LIVE BATTLES (AREA CHART)
   // ==========================================
-  Widget _buildLiveChartCard() {
-    return Container(
-      height: 240,
+  Widget _buildLiveChartCard({double? height}) {
+    return AppCard(
+      height: height ?? 240,
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-        boxShadow: AppShadows.subtle,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1080,7 +1157,13 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
               const SizedBox(width: 8),
               Text(
                 'Players in Live Battles',
-                style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.2,
+                ),
               ),
             ],
           ),
@@ -1094,16 +1177,10 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
   // ==========================================
   // ROW 4: TODAY'S BATTLE SUMMARY CARD
   // ==========================================
-  Widget _buildTodaySummaryCard() {
-    return Container(
-      height: 280,
+  Widget _buildTodaySummaryCard({double? height}) {
+    return AppCard(
+      height: height ?? 260,
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-        boxShadow: AppShadows.subtle,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1113,12 +1190,17 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
               const SizedBox(width: 8),
               Text(
                 "Today's Battle Summary",
-                style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.2,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 18),
-
           _buildSummaryRow(
             icon: Icons.sports_kabaddi_rounded,
             iconColor: AppColors.battleAdminPurple,
@@ -1127,7 +1209,6 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
             growth: '↑ +20%',
           ),
           const Divider(height: 20, color: AppColors.borderSubtle),
-
           _buildSummaryRow(
             icon: Icons.groups_rounded,
             iconColor: AppColors.coinGold,
@@ -1136,7 +1217,6 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
             growth: '↑ +9%',
           ),
           const Divider(height: 20, color: AppColors.borderSubtle),
-
           _buildSummaryRow(
             icon: Icons.storefront_rounded,
             iconColor: AppColors.battleAdminPurple,
@@ -1145,7 +1225,6 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
             growth: '↑ +14%',
           ),
           const Divider(height: 20, color: AppColors.borderSubtle),
-
           _buildSummaryRow(
             icon: Icons.sports_esports_rounded,
             iconColor: AppColors.brandGreen,
@@ -1172,17 +1251,32 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
         Expanded(
           child: Text(
             label,
-            style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
         Text(
           count,
-          style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+          style: TextStyle(
+            fontFamily: AppTypography.fontHeading,
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
         ),
         const SizedBox(width: 8),
         Text(
           growth,
-          style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.brandGreen),
+          style: TextStyle(
+            fontFamily: AppTypography.fontHeading,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: AppColors.brandGreen,
+          ),
         ),
       ],
     );
@@ -1191,18 +1285,12 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
   // ==========================================
   // ROW 4: ONGOING ROOMS CARD
   // ==========================================
-  Widget _buildOngoingRoomsCard() {
+  Widget _buildOngoingRoomsCard({double? height}) {
     final rooms = _service.ongoingRooms;
 
-    return Container(
-      height: 280,
+    return AppCard(
+      height: height ?? 280,
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadii.card,
-        border: Border.all(color: AppColors.borderSubtle, width: 1.2),
-        boxShadow: AppShadows.subtle,
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1214,33 +1302,83 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
                   const Icon(Icons.meeting_room_outlined, color: AppColors.battleAdminPurple, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'Ongoing Rooms (316)',
-                    style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                    'Ongoing Rooms (${rooms.length})',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
+                    ),
                   ),
                 ],
               ),
               InkWell(
                 onTap: widget.onGoToRooms,
-                child: Row(
-                  children: [
-                    Text('View All', style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.battleAdminPurple)),
-                    const SizedBox(width: 3),
-                    const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.battleAdminPurple),
-                  ],
+                borderRadius: AppRadii.button,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'View All',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.battleAdminPurple,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.battleAdminPurple),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-
           Expanded(
             child: rooms.isEmpty
-                ? Center(child: Text('No active rooms found', style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted)))
+                ? Center(
+                    child: Text(
+                      'No active rooms found',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontHeading,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  )
                 : ListView.separated(
                     itemCount: rooms.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
+                    separatorBuilder: (context, index) => const SizedBox(height: 10),
                     itemBuilder: (context, idx) {
                       final r = rooms[idx];
+                      Color iconBg;
+                      Color iconFg;
+                      IconData iconData;
+
+                      switch (idx % 3) {
+                        case 0:
+                          iconBg = AppColors.brandBlueLight;
+                          iconFg = AppColors.brandBlueDark;
+                          iconData = Icons.groups_rounded;
+                          break;
+                        case 1:
+                          iconBg = AppColors.brandPurpleLight;
+                          iconFg = AppColors.brandPurple;
+                          iconData = Icons.group_work_rounded;
+                          break;
+                        default:
+                          iconBg = AppColors.brandGreenLight;
+                          iconFg = AppColors.brandGreenDark;
+                          iconData = Icons.sports_esports_rounded;
+                          break;
+                      }
+
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                         decoration: BoxDecoration(
@@ -1254,26 +1392,11 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: idx == 0
-                                    ? AppColors.brandBlueLight
-                                    : idx == 1
-                                        ? AppColors.brandPurpleLight
-                                        : AppColors.brandGreenLight,
+                                color: iconBg,
                                 borderRadius: AppRadii.borderMd,
                               ),
-                              child: Icon(
-                                idx == 0
-                                    ? Icons.groups_rounded
-                                    : idx == 1
-                                        ? Icons.group_work_rounded
-                                        : Icons.sports_esports_rounded,
-                                size: 16,
-                                color: idx == 0
-                                    ? AppColors.brandBlueDark
-                                    : idx == 1
-                                        ? AppColors.brandPurple
-                                        : AppColors.brandGreenDark,
-                              ),
+                              alignment: Alignment.center,
+                              child: Icon(iconData, size: 16, color: iconFg),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -1283,19 +1406,29 @@ class _BattleOverviewTabState extends State<BattleOverviewTab> {
                                   Text(
                                     r.name,
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontHeading,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                    ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     '${r.currentPlayers} / ${r.maxPlayers}',
-                                    style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontHeading,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                             _buildSubjectPill(r.subject),
                             const SizedBox(width: 8),
-                            _buildRedLivePill(),
+                            const AppLivePill(),
                             const SizedBox(width: 4),
                             IconButton(
                               icon: const Icon(Icons.more_horiz_rounded, size: 18, color: AppColors.textMuted),

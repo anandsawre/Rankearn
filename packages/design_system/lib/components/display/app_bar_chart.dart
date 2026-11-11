@@ -18,11 +18,12 @@ class AppBarChart extends StatelessWidget {
   final List<Color> barColors;
   final double? maxY;
   final List<double>? yLabels;
+  final String emptyText;
 
   const AppBarChart({
     super.key,
-    this.dates = const ['Oct 12', 'Oct 13', 'Oct 14', 'Oct 15', 'Oct 16', 'Oct 17', 'Oct 18'],
-    this.values = const [620, 780, 940, 1220, 1480, 1720, 1590],
+    this.dates = const [],
+    this.values = const [],
     this.height = 165,
     this.barColors = const [
       Color(0xFF34D399), // lighter emerald green top
@@ -30,10 +31,29 @@ class AppBarChart extends StatelessWidget {
     ],
     this.maxY,
     this.yLabels,
+    this.emptyText = 'No user growth data available',
   });
 
   @override
   Widget build(BuildContext context) {
+    if (dates.isEmpty || values.isEmpty) {
+      return SizedBox(
+        height: height,
+        child: Center(
+          child: Text(
+            emptyText,
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return CustomPaint(
@@ -128,7 +148,8 @@ class _AppBarChartPainter extends CustomPainter {
     }
 
     // Draw Bars
-    final barCount = dates.length;
+    final barCount = math.min(dates.length, values.length);
+    if (barCount == 0) return;
     final slotWidth = chartWidth / barCount;
     final barWidth = math.min(slotWidth * 0.58, 28.0);
 
@@ -193,6 +214,8 @@ class AppBarChartCard extends StatelessWidget {
   final double chartHeight;
   final double? height;
   final EdgeInsetsGeometry? padding;
+  final bool isLoading;
+  final String emptyText;
 
   const AppBarChartCard({
     super.key,
@@ -201,8 +224,8 @@ class AppBarChartCard extends StatelessWidget {
     this.iconColor = const Color(0xFF3B82F6),
     this.iconBg,
     this.trailingHeader,
-    this.dates = const ['Oct 12', 'Oct 13', 'Oct 14', 'Oct 15', 'Oct 16', 'Oct 17', 'Oct 18'],
-    this.values = const [620, 780, 940, 1220, 1480, 1720, 1590],
+    this.dates = const [],
+    this.values = const [],
     this.barColors = const [
       Color(0xFF34D399),
       Color(0xFF10B981),
@@ -212,6 +235,8 @@ class AppBarChartCard extends StatelessWidget {
     this.chartHeight = 165,
     this.height = 260,
     this.padding,
+    this.isLoading = false,
+    this.emptyText = 'No user growth data in this period',
   });
 
   @override
@@ -276,14 +301,26 @@ class AppBarChartCard extends StatelessWidget {
 
           // Chart Area
           Expanded(
-            child: AppBarChart(
-              dates: dates,
-              values: values,
-              height: chartHeight,
-              barColors: barColors,
-              maxY: maxY,
-              yLabels: yLabels,
-            ),
+            child: (isLoading && values.isEmpty)
+                ? const Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+                      ),
+                    ),
+                  )
+                : AppBarChart(
+                    dates: dates,
+                    values: values,
+                    height: chartHeight,
+                    barColors: barColors,
+                    maxY: maxY,
+                    yLabels: yLabels,
+                    emptyText: emptyText,
+                  ),
           ),
         ],
       ),

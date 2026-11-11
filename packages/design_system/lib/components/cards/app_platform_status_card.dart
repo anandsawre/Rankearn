@@ -43,44 +43,165 @@ class AppPlatformStatusCard extends StatelessWidget {
   final double? height;
   final bool fillHeight;
   final EdgeInsetsGeometry? padding;
+  final bool isLoading;
 
   const AppPlatformStatusCard({
     super.key,
     this.title = 'Platform Status',
-    this.badgeText = 'All Systems Operational',
+    this.badgeText = 'Checking...',
     this.isAllOperational = true,
-    this.services = const [
-      PlatformServiceItem(name: 'Database'),
-      PlatformServiceItem(name: 'API Services'),
-      PlatformServiceItem(name: 'Live Quiz Server'),
-      PlatformServiceItem(name: 'Payment Gateway'),
-      PlatformServiceItem(name: 'Notifications'),
-      PlatformServiceItem(name: 'File Storage'),
-    ],
-    this.metrics = const [
-      PlatformMetricItem(
-        icon: Icons.speed_rounded,
-        label: 'Uptime',
-        value: '99.9%',
-      ),
-      PlatformMetricItem(
-        icon: Icons.schedule_rounded,
-        label: 'Response Time',
-        value: '120ms',
-      ),
-      PlatformMetricItem(
-        icon: Icons.history_rounded,
-        label: 'Last Updated',
-        value: 'Oct 18, 2026 10:24 AM',
-      ),
-    ],
+    this.services = const [],
+    this.metrics = const [],
     this.height = 300,
     this.fillHeight = false,
     this.padding,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isExpandedMode = fillHeight || height != null;
+
+    Widget content;
+    if (isLoading && services.isEmpty) {
+      content = const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.2,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+          ),
+        ),
+      );
+    } else if (services.isEmpty && metrics.isEmpty) {
+      content = Center(
+        child: Text(
+          'No telemetry checks available',
+          style: TextStyle(
+            fontFamily: AppTypography.fontHeading,
+            fontSize: 12,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      );
+    } else {
+      final servicesColumn = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: services.map((svc) {
+          final isHealthy = svc.isHealthy;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(
+                        isHealthy ? Icons.check_circle_rounded : Icons.error_rounded,
+                        color: isHealthy ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                        size: 15.5,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          svc.name,
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontHeading,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  svc.status,
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontHeading,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isHealthy ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      );
+
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: isExpandedMode ? MainAxisSize.max : MainAxisSize.min,
+        children: [
+          if (isExpandedMode)
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: servicesColumn,
+              ),
+            )
+          else
+            servicesColumn,
+          if (metrics.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Divider(color: AppColors.borderSubtle, height: 1),
+            ),
+            ...metrics.map((metric) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            metric.icon,
+                            size: 14,
+                            color: AppColors.textMuted,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              metric.label,
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontHeading,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      metric.value,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontHeading,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ],
+      );
+    }
+
     return Container(
       height: height,
       padding: padding ?? const EdgeInsets.all(16),
@@ -92,7 +213,7 @@ class AppPlatformStatusCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: (fillHeight || height != null) ? MainAxisSize.max : MainAxisSize.min,
+        mainAxisSize: isExpandedMode ? MainAxisSize.max : MainAxisSize.min,
         children: [
           // ── Header Bar ──
           Row(
@@ -142,106 +263,7 @@ class AppPlatformStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // ── Services Status List ──
-          ...services.map((svc) {
-            final isHealthy = svc.isHealthy;
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          isHealthy
-                              ? Icons.check_circle_rounded
-                              : Icons.error_rounded,
-                          color: isHealthy
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFFEF4444),
-                          size: 15.5,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            svc.name,
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontHeading,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    svc.status,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontHeading,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isHealthy
-                          ? const Color(0xFF10B981)
-                          : const Color(0xFFEF4444),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 6),
-            child: Divider(color: AppColors.borderSubtle, height: 1),
-          ),
-
-          // ── Platform Metrics ──
-          ...metrics.map((metric) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          metric.icon,
-                          size: 14,
-                          color: AppColors.textMuted,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          metric.label,
-                          style: TextStyle(
-                            fontFamily: AppTypography.fontHeading,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    metric.value,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontHeading,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+          if (isExpandedMode) Expanded(child: content) else content,
         ],
       ),
     );

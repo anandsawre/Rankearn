@@ -32,8 +32,8 @@ class SubjectWiseChartCard extends StatelessWidget {
           : slices,
       height: height,
       fillHeight: fillHeight,
-      chartSize: 92,
-      strokeWidth: 13.5,
+      chartSize: 100,
+      strokeWidth: 15.0,
       strokeCap: StrokeCap.round,
     );
   }
