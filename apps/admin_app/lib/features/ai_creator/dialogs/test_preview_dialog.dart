@@ -130,29 +130,24 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
           '${widget.test.displaySubject} • ${_questions.isNotEmpty ? _questions.length : widget.test.questionCount} Questions • ${widget.test.durationMinutes} min • ${widget.test.difficulty.label}',
       maxWidth: 740,
       maxHeight: 680,
-      footerLeft: OutlinedButton.icon(
+      footerLeft: AppModalDialog.secondaryButton(
         onPressed: _isPushingToBattle || _questions.isEmpty ? null : _pushToBattlePool,
         icon: _isPushingToBattle
             ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFF59E0B)),
-        label: Text(
+            : const Icon(Icons.bolt_rounded, size: 16, color: AppModalDialog.defaultPrimaryColor),
+        borderColor: AppModalDialog.defaultPrimaryColor.withAlpha(110),
+        foregroundColor: AppModalDialog.defaultPrimaryColor,
+        child: Text(
           _isPushingToBattle ? 'Pushing...' : 'Push to Battle Pool',
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFD97706)),
-        ),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFFFDE68A)),
-          backgroundColor: const Color(0xFFFFFBEB),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         ),
       ),
       actions: [
-        TextButton(
+        AppModalDialog.secondaryButton(
           onPressed: widget.onExport,
-          child: const Text('Export Paper'),
+          child: const Text('Export Paper', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton.icon(
+        AppModalDialog.primaryButton(
           onPressed: _isPublishing ? null : _publishTest,
           icon: _isPublishing
               ? const SizedBox(
@@ -161,13 +156,9 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
               : const Icon(Icons.publish_rounded, size: 16),
-          label: Text(_isPublishing ? 'Publishing...' : 'Publish Test'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF10B981),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Text(
+            _isPublishing ? 'Publishing...' : 'Publish Test',
+            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
           ),
         ),
       ],

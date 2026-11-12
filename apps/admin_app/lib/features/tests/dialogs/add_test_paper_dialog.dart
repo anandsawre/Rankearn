@@ -208,196 +208,167 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Target Exam', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<String>(
-                        value: _examList.any((e) => e.id == _examCategoryId) ? _examCategoryId : null,
-                        hint: _isLoadingMeta
-                            ? 'Loading exams...'
-                            : (_examList.isEmpty
-                                ? 'No exams found (Optional)'
-                                : 'Select Exam (Optional)...'),
-                        items: _examList
-                            .map((e) => AppDropdownItem(
-                                  value: e.id,
-                                  label: e.name,
-                                  leading: buildExamIconWidget(e.iconUrl, size: 16),
-                                ))
-                            .toList(),
-                        onChanged: (val) => setState(() => _examCategoryId = val),
-                      ),
-                    ],
+                  child: AppDropdown<String>(
+                    value: _examList.any((e) => e.id == _examCategoryId) ? _examCategoryId : null,
+                    inlineLabel: true,
+                    hint: _isLoadingMeta
+                        ? 'Loading exams...'
+                        : (_examList.isEmpty
+                            ? 'No exams found (Optional)'
+                            : 'Select Target Exam (Optional)...'),
+                    items: _examList
+                        .map((e) => AppDropdownItem(
+                              value: e.id,
+                              label: e.name,
+                              leading: buildExamIconWidget(e.iconUrl, size: 16),
+                            ))
+                        .toList(),
+                    onChanged: (val) => setState(() => _examCategoryId = val),
                   ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Test Paper Mode *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<String>(
-                        value: _testMode,
-                        items: _modes
-                            .map((m) => AppDropdownItem(value: m['value']!, label: m['label']!))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _testMode = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown<String>(
+                    value: _testMode,
+                    inlineLabel: true,
+                    hint: 'Test Paper Mode *',
+                    items: _modes
+                        .map((m) => AppDropdownItem(value: m['value']!, label: m['label']!))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _testMode = val);
+                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Paper Title & Description
-            const Text('Test Paper Title *', style: _labelStyle),
-            const SizedBox(height: 6),
             TextFormField(
               controller: _titleController,
-              decoration: _inputDecoration('e.g. RRB Technician Grade 3 - Full Mock Test 01'),
+              decoration: AppModalDialog.inputDecoration(
+                'Test Paper Title * (e.g. RRB Technician Mock 01)',
+                prefixIcon: const Icon(Icons.description_outlined, size: 17, color: Color(0xFF94A3B8)),
+              ),
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500),
               validator: (v) => v == null || v.trim().isEmpty ? 'Title is required' : null,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
-            const Text('Syllabus / Description', style: _labelStyle),
-            const SizedBox(height: 6),
             TextFormField(
               controller: _descController,
               maxLines: 2,
-              decoration: _inputDecoration('Enter test coverage and instructions...'),
+              decoration: AppModalDialog.inputDecoration(
+                'Syllabus / Description (coverage & instructions)...',
+                isMultiline: true,
+              ),
+              style: const TextStyle(fontSize: 12.5),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Row 2: Subject & Topic
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Subject', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<String>(
-                        value: _subjects.contains(_selectedSubject) ? _selectedSubject : null,
-                        hint: _isLoadingMeta ? 'Loading...' : 'Select Subject...',
-                        items: _subjects.map((s) => AppDropdownItem(value: s, label: s)).toList(),
-                        onChanged: (val) => setState(() => _selectedSubject = val),
-                      ),
-                    ],
+                  child: AppDropdown<String>(
+                    value: _subjects.contains(_selectedSubject) ? _selectedSubject : null,
+                    inlineLabel: true,
+                    hint: _isLoadingMeta ? 'Loading subjects...' : 'Select Subject...',
+                    items: _subjects.map((s) => AppDropdownItem(value: s, label: s)).toList(),
+                    onChanged: (val) => setState(() => _selectedSubject = val),
                   ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Topic / Coverage', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _topicController,
-                        decoration: _inputDecoration('e.g. Motion & Energy'),
-                      ),
-                    ],
+                  child: TextFormField(
+                    controller: _topicController,
+                    decoration: AppModalDialog.inputDecoration(
+                      'Topic / Coverage (e.g. Motion)',
+                      prefixIcon: const Icon(Icons.topic_outlined, size: 16, color: Color(0xFF94A3B8)),
+                    ),
+                    style: const TextStyle(fontSize: 12.5),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Row 3: Duration, Questions & Negative Marking
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Duration (Minutes) *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _durationController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('60'),
-                        validator: (v) => int.tryParse(v ?? '') == null ? 'Valid number' : null,
-                      ),
-                    ],
+                  child: TextFormField(
+                    controller: _durationController,
+                    keyboardType: TextInputType.number,
+                    decoration: AppModalDialog.inputDecoration(
+                      'Duration *',
+                      suffixText: 'min',
+                      suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                    ),
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                    validator: (v) => int.tryParse(v ?? '') == null ? 'Valid number' : null,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Total Questions *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _questionsCountController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('50'),
-                        validator: (v) => int.tryParse(v ?? '') == null ? 'Valid number' : null,
-                      ),
-                    ],
+                  child: TextFormField(
+                    controller: _questionsCountController,
+                    keyboardType: TextInputType.number,
+                    decoration: AppModalDialog.inputDecoration(
+                      'Questions *',
+                      suffixText: 'Qs',
+                      suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                    ),
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                    validator: (v) => int.tryParse(v ?? '') == null ? 'Valid number' : null,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Negative Marking', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _negativeMarkingController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        decoration: _inputDecoration('0.25'),
-                      ),
-                    ],
+                  child: TextFormField(
+                    controller: _negativeMarkingController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: AppModalDialog.inputDecoration(
+                      'Negative',
+                      suffixText: 'neg',
+                      suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                    ),
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Row 4: Status & Pricing
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Publish Status *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<TestSeriesStatus>(
-                        value: _status,
-                        items: TestSeriesStatus.values
-                            .map((s) => AppDropdownItem(value: s, label: s.label))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _status = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown<TestSeriesStatus>(
+                    value: _status,
+                    inlineLabel: true,
+                    hint: 'Publish Status *',
+                    items: TestSeriesStatus.values
+                        .map((s) => AppDropdownItem(value: s, label: s.label))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _status = val);
+                    },
                   ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Unlock Coins / Price', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _priceCoinsController,
-                        enabled: _isPremium,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration(_isPremium ? 'Coins required' : 'Free (0)'),
-                      ),
-                    ],
+                  child: TextFormField(
+                    controller: _priceCoinsController,
+                    enabled: _isPremium,
+                    keyboardType: TextInputType.number,
+                    decoration: AppModalDialog.inputDecoration(
+                      _isPremium ? 'Unlock Coins *' : 'Unlock Coins (Free)',
+                      suffixText: 'coins',
+                      suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                    ),
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -438,13 +409,4 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
       ),
     );
   }
-
-  static const TextStyle _labelStyle = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    color: Color(0xFF334155),
-  );
-
-  static InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFFFF9500));
 }

@@ -252,28 +252,30 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
       title: 'Import Questions',
       subtitle: 'Bulk upload MCQs from Excel, CSV, or formatted JSON',
       iconData: Icons.cloud_upload_outlined,
-      gradientColors: const [Color(0xFFEA580C), Color(0xFFF97316)],
       maxWidth: 740,
       maxHeight: 740,
       actions: [
-        OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        AppModalDialog.cancelButton(context),
+        AppModalDialog.secondaryButton(
+          onPressed: _parseData,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.analytics_outlined, size: 15, color: AppModalDialog.defaultPrimaryColor),
+              SizedBox(width: 6),
+              Text(
+                'Validate & Parse Data',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppModalDialog.defaultPrimaryColor,
+                ),
+              ),
+            ],
           ),
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFEA580C),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            elevation: 0,
-          ),
+        AppModalDialog.primaryButton(
           onPressed: _validQuestions.isNotEmpty && !_isImporting ? _confirmImport : null,
           child: _isImporting
               ? const SizedBox(
@@ -285,7 +287,11 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                   _validQuestions.isNotEmpty
                       ? 'Confirm Import (${_validQuestions.length} Items)'
                       : 'Confirm Import',
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                  style: const TextStyle(
+                    fontFamily: AppTypography.fontHeading,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                  ),
                 ),
         ),
       ],
@@ -305,24 +311,28 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
             spacing: 10,
             runSpacing: 10,
             children: [
-              const Text(
+              Text(
                 'File Format:',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                style: AppTypography.labelSmall.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                ),
               ),
               SegmentedButton<String>(
                 showSelectedIcon: false,
                 style: SegmentedButton.styleFrom(
-                  selectedBackgroundColor: const Color(0xFFEA580C),
+                  selectedBackgroundColor: AppModalDialog.defaultPrimaryColor,
                   selectedForegroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF475569),
-                  backgroundColor: Colors.white,
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  foregroundColor: AppColors.textSecondary,
+                  backgroundColor: AppColors.surface,
+                  side: const BorderSide(color: AppColors.border),
+                  shape: RoundedRectangleBorder(borderRadius: AppRadii.button),
                 ),
                 segments: const [
-                  ButtonSegment(value: 'Excel', label: Text('Excel', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
-                  ButtonSegment(value: 'CSV', label: Text('CSV', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
-                  ButtonSegment(value: 'JSON', label: Text('JSON', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
+                  ButtonSegment(value: 'Excel', label: Text('Excel', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600))),
+                  ButtonSegment(value: 'CSV', label: Text('CSV', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600))),
+                  ButtonSegment(value: 'JSON', label: Text('JSON', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600))),
                 ],
                 selected: {_selectedFormat},
                 onSelectionChanged: (set) {
@@ -331,64 +341,51 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                   });
                 },
               ),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                icon: const Icon(Icons.description_outlined, size: 14, color: Color(0xFFEA580C)),
-                label: const Text(
-                  'Insert Example Format',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFEA580C)),
-                ),
+              AppModalDialog.secondaryButton(
                 onPressed: _loadSampleTemplate,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.description_outlined, size: 14, color: AppModalDialog.defaultPrimaryColor),
+                    SizedBox(width: 6),
+                    Text(
+                      'Insert Example Format',
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontHeading,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppModalDialog.defaultPrimaryColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 14),
 
           // Input Textarea
-          Text(
-            'Paste $_selectedFormat Data',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
-          ),
-          const SizedBox(height: 6),
-          TextField(
+          AppModalDialog.textField(
             controller: _rawInputController,
             minLines: 8,
             maxLines: 14,
-            style: const TextStyle(fontSize: 11.5, fontFamily: 'monospace', height: 1.4),
-            decoration: AppModalDialog.inputDecoration(
-              _selectedFormat == 'Excel'
-                  ? 'Paste Excel spreadsheet rows here (columns: question_text, subject, difficulty, option_a, option_b, option_c, option_d, correct_answer, explanation)'
-                  : (_selectedFormat == 'CSV'
-                      ? 'Paste CSV content here with header: question_text,subject,difficulty,option_a,option_b,option_c,option_d,correct_answer,explanation'
-                      : 'Paste JSON array of questions here...'),
-              hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-              focusColor: const Color(0xFFEA580C),
-              isMultiline: true,
-              contentPadding: const EdgeInsets.all(12),
+            style: const TextStyle(
+              fontSize: 12,
+              fontFamily: 'monospace',
+              height: 1.45,
+              color: AppColors.textPrimary,
             ),
-          ),
-          const SizedBox(height: 12),
-
-          // Parse Button
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEA580C),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            icon: const Icon(Icons.analytics_outlined, size: 16),
-            label: const Text('Validate & Parse Data', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-            onPressed: _parseData,
+            contentPadding: const EdgeInsets.all(14),
+            hint: _selectedFormat == 'Excel'
+                ? 'Paste Excel spreadsheet rows here (columns: question_text, subject, difficulty, option_a, option_b, option_c, option_d, correct_answer, explanation)'
+                : (_selectedFormat == 'CSV'
+                    ? 'Paste CSV content here with header: question_text,subject,difficulty,option_a,option_b,option_c,option_d,correct_answer,explanation'
+                    : 'Paste JSON array of questions here...'),
           ),
 
           if (_isParsed) ...[
             const SizedBox(height: 16),
-            const Divider(color: Color(0xFFE2E8F0)),
+            const Divider(color: AppColors.border),
             const SizedBox(height: 10),
 
             // Validation Summary
@@ -397,12 +394,12 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.brandGreenLight,
+                    borderRadius: AppRadii.badge,
                   ),
                   child: Text(
                     '${_validQuestions.length} Valid Records',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF16A34A)),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.brandGreenDark),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -410,12 +407,12 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFE4E6),
-                      borderRadius: BorderRadius.circular(6),
+                      color: AppColors.liveRedSubtle,
+                      borderRadius: AppRadii.badge,
                     ),
                     child: Text(
                       '${_errors.length} Errors Found',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFE11D48)),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.liveRedDark),
                     ),
                   ),
               ],
@@ -427,9 +424,9 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1F2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFFECDD3)),
+                  color: AppColors.liveRedLight,
+                  borderRadius: AppRadii.button,
+                  border: Border.all(color: AppColors.liveRedBorder),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,12 +436,12 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.error_outline, size: 13, color: Colors.red),
+                                const Icon(Icons.error_outline, size: 13, color: AppColors.liveRed),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     e,
-                                    style: const TextStyle(fontSize: 10.5, color: Color(0xFF9F1239)),
+                                    style: const TextStyle(fontSize: 10.5, color: AppColors.liveRedDark),
                                   ),
                                 ),
                               ],
@@ -460,7 +457,7 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
               const SizedBox(height: 12),
               const Text(
                 'Previewing Valid Records:',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 6),
               for (int i = 0; i < _validQuestions.length; i++) ...[
@@ -468,18 +465,18 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                   margin: const EdgeInsets.only(bottom: 6),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    color: AppColors.surfaceSubtle,
+                    borderRadius: AppRadii.button,
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Row(
                     children: [
-                      Text('${i + 1}.', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF101A3A))),
+                      Text('${i + 1}.', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _validQuestions[i].questionText,
-                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -487,18 +484,18 @@ class _ImportQuestionsDialogState extends State<ImportQuestionsDialog> {
                       const SizedBox(width: 8),
                       Text(
                         _validQuestions[i].subject,
-                        style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                       ),
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(4),
+                          color: AppColors.brandGreenLight,
+                          borderRadius: AppRadii.badge,
                         ),
                         child: Text(
                           'Ans: ${_validQuestions[i].correctAnswerChar}',
-                          style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: Color(0xFF16A34A)),
+                          style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: AppColors.brandGreenDark),
                         ),
                       ),
                     ],

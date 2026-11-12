@@ -78,27 +78,19 @@ class _ExportTestDialogState extends State<ExportTestDialog> {
 
     return AppModalDialog(
       iconData: Icons.ios_share_rounded,
-      gradientColors: const [Color(0xFFE11D48), Color(0xFFF43F5E)],
       title: 'Export AI Test',
       subtitle: 'Copy test schema, answer key & solutions to clipboard',
       maxWidth: 540,
       scrollable: true,
       actions: [
-        TextButton(
+        AppModalDialog.secondaryButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: const Text('Cancel', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
         ),
-        ElevatedButton.icon(
+        AppModalDialog.primaryButton(
           onPressed: test == null ? null : _performExport,
           icon: const Icon(Icons.copy_rounded, size: 16),
-          label: Text('Copy $_exportFormat'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
+          child: Text('Copy $_exportFormat', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
         ),
       ],
       child: test == null
@@ -116,6 +108,7 @@ class _ExportTestDialogState extends State<ExportTestDialog> {
               children: [
                 AppDropdown.simple(
                   label: 'Select Test to Export',
+                  inlineLabel: true,
                   value: test,
                   items: widget.allTests.isNotEmpty ? widget.allTests : [test],
                   itemLabel: (t) => t.title,
@@ -128,9 +121,9 @@ class _ExportTestDialogState extends State<ExportTestDialog> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    _buildFormatTile('JSON', 'Rankearn Schema', Icons.code_rounded, const Color(0xFF5636F5)),
+                    _buildFormatTile('JSON', 'Rankearn Schema', Icons.code_rounded, AppModalDialog.defaultPrimaryColor),
                     const SizedBox(width: 8),
-                    _buildFormatTile('CSV', 'Excel Spreadsheet', Icons.table_chart_rounded, const Color(0xFF10B981)),
+                    _buildFormatTile('CSV', 'Excel Spreadsheet', Icons.table_chart_rounded, AppModalDialog.defaultPrimaryColor),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -141,7 +134,7 @@ class _ExportTestDialogState extends State<ExportTestDialog> {
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  activeColor: const Color(0xFF5636F5),
+                  activeColor: AppModalDialog.defaultPrimaryColor,
                 ),
                 CheckboxListTile(
                   title: const Text('Include Hindi bilingual translations', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
@@ -150,7 +143,7 @@ class _ExportTestDialogState extends State<ExportTestDialog> {
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  activeColor: const Color(0xFF5636F5),
+                  activeColor: AppModalDialog.defaultPrimaryColor,
                 ),
               ],
             ),

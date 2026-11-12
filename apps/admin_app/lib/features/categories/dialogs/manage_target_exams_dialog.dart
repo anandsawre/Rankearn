@@ -695,12 +695,13 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
             // Exam Name
-            const Text('Exam Name', style: _labelStyle),
-            const SizedBox(height: 4),
             TextFormField(
               controller: _nameCtrl,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-              decoration: _inputDecoration('e.g. 70th BPSC Prelims, SSC CGL 2026, Railway NTPC'),
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
+              decoration: AppModalDialog.inputDecoration(
+                'Exam Name * (e.g. 70th BPSC Prelims, SSC CGL)',
+                prefixIcon: const Icon(Icons.school_outlined, size: 17, color: Color(0xFF94A3B8)),
+              ),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Exam name is required' : null,
             ),
             const SizedBox(height: 12),
@@ -710,36 +711,29 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
               children: [
                 Expanded(
                   flex: 65,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Unique ID / Slug (used in URL)', style: _labelStyle),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        controller: _slugCtrl,
-                        enabled: !isEditing, // Immutable ID when editing
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-                        decoration: _inputDecoration('e.g. bpsc-70th, ssc-cgl, railway-ntpc'),
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'ID is required' : null,
-                      ),
-                    ],
+                  child: TextFormField(
+                    controller: _slugCtrl,
+                    enabled: !isEditing, // Immutable ID when editing
+                    style: const TextStyle(fontSize: 12.5, color: Color(0xFF1E293B)),
+                    decoration: AppModalDialog.inputDecoration(
+                      'Unique ID / Slug * (e.g. bpsc-70th)',
+                      prefixIcon: const Icon(Icons.link_rounded, size: 16, color: Color(0xFF94A3B8)),
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'ID is required' : null,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 35,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Display Order', style: _labelStyle),
-                      const SizedBox(height: 4),
-                      TextFormField(
-                        controller: _orderCtrl,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-                        decoration: _inputDecoration('1'),
-                      ),
-                    ],
+                  child: TextFormField(
+                    controller: _orderCtrl,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                    decoration: AppModalDialog.inputDecoration(
+                      'Order (1)',
+                      suffixText: 'order',
+                      suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
               ],
@@ -806,10 +800,10 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
             const SizedBox(height: 12),
 
             // Visibility Status Dropdown
-            const Text('Publication Status', style: _labelStyle),
-            const SizedBox(height: 4),
             AppDropdown<bool>(
               value: _isPublished,
+              inlineLabel: true,
+              hint: 'Publication Status',
               isDense: true,
               fillColor: Colors.white,
               borderColor: const Color(0xFFE2E8F0),
@@ -979,32 +973,26 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
                 const SizedBox(height: 8),
 
                 // Subject Name
-                const Text('Subject Name', style: _labelStyle),
-                const SizedBox(height: 4),
                 TextFormField(
                   controller: draft.nameCtrl,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-                  decoration: _inputDecoration('e.g. General Science, Indian History, Mathematics'),
+                  style: const TextStyle(fontSize: 12.5, color: Color(0xFF1E293B)),
+                  decoration: _inputDecoration('Subject Name (e.g. General Science, Mathematics)'),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
                 // Chapters / Subcategories
-                const Text('Chapters / Units (Comma Separated)', style: _labelStyle),
-                const SizedBox(height: 4),
                 TextFormField(
                   controller: draft.chaptersCtrl,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-                  decoration: _inputDecoration('e.g. Physics, Chemistry, Biology'),
+                  style: const TextStyle(fontSize: 12.5, color: Color(0xFF1E293B)),
+                  decoration: _inputDecoration('Chapters / Units, comma separated (e.g. Physics, Chemistry)'),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
                 // Topics (Optional)
-                const Text('Topics (Comma Separated - Optional)', style: _labelStyle),
-                const SizedBox(height: 4),
                 TextFormField(
                   controller: draft.topicsCtrl,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-                  decoration: _inputDecoration('e.g. Laws of Motion, Optics, Periodic Table'),
+                  style: const TextStyle(fontSize: 12.5, color: Color(0xFF1E293B)),
+                  decoration: _inputDecoration('Topics (optional, comma separated e.g. Optics, Motion)'),
                 ),
               ],
             ),

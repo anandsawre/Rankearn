@@ -59,11 +59,11 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
       maxWidth: 640,
       scrollable: true,
       actions: [
-        TextButton(
+        AppModalDialog.secondaryButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: const Text('Cancel', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
         ),
-        ElevatedButton(
+        AppModalDialog.primaryButton(
           onPressed: () {
             AiCreatorService().setApiKey(_apiKeyController.text.trim());
             AiCreatorService().setSystemPrompt(_systemPromptController.text.trim());
@@ -76,14 +76,7 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
               ),
             );
           },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-          child: const Text('Save Configuration'),
+          child: const Text('Save Configuration', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
         ),
       ],
       child: Column(
@@ -114,8 +107,7 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             decoration: AppModalDialog.inputDecoration(
               'AIzaSy... (Paste Google AI Studio Key for direct 0-delay generation)',
               hintStyle: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-              prefixIcon: const Icon(Icons.key_rounded, size: 16, color: Color(0xFF2587F8)),
-              focusColor: const Color(0xFF2587F8),
+              prefixIcon: const Icon(Icons.key_rounded, size: 16, color: AppModalDialog.defaultPrimaryColor),
             ),
             style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
             onChanged: (_) => setState(() {}),
@@ -131,7 +123,6 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             maxLines: 6,
             decoration: AppModalDialog.inputDecoration(
               '',
-              focusColor: const Color(0xFF2587F8),
               isMultiline: true,
               contentPadding: const EdgeInsets.all(12),
             ),
@@ -151,7 +142,14 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(_temperature.toStringAsFixed(2), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF5636F5))),
+              Text(
+                _temperature.toStringAsFixed(2),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppModalDialog.defaultPrimaryColor,
+                ),
+              ),
             ],
           ),
           Slider(
@@ -159,7 +157,7 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             min: 0.0,
             max: 1.0,
             divisions: 20,
-            activeColor: const Color(0xFF5636F5),
+            activeColor: AppModalDialog.defaultPrimaryColor,
             onChanged: (val) => setState(() => _temperature = val),
           ),
           const SizedBox(height: 10),
@@ -183,7 +181,7 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
             maxLines: 3,
             decoration: AppModalDialog.inputDecoration(
               '',
-              focusColor: const Color(0xFF2587F8),
+              isMultiline: true,
               contentPadding: const EdgeInsets.all(12),
             ),
             style: const TextStyle(fontSize: 11.5, fontFamily: 'monospace'),

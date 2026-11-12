@@ -202,22 +202,30 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
       title: 'Manage Question Sets',
       subtitle: '${_sets.length} live test series question pools in Supabase',
       iconData: Icons.folder_outlined,
-      gradientColors: const [Color(0xFFD97706), Color(0xFFF59E0B)],
       maxWidth: 640,
       maxHeight: 700,
       scrollable: true,
       actions: [
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD97706),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            elevation: 0,
+        AppModalDialog.cancelButton(context, label: 'Close'),
+        if (!_isCreating)
+          AppModalDialog.primaryButton(
+            onPressed: () => setState(() => _isCreating = true),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add, size: 16),
+                SizedBox(width: 6),
+                Text(
+                  'Create New Question Set',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontHeading,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
           ),
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        ),
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,18 +235,18 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
               padding: const EdgeInsets.all(10),
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF1F2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFFDA4AF)),
+                color: AppColors.liveRedLight,
+                borderRadius: AppRadii.button,
+                border: Border.all(color: AppColors.liveRedBorder),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Color(0xFFE11D48), size: 16),
+                  const Icon(Icons.error_outline, color: AppColors.liveRed, size: 16),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(fontSize: 11.5, color: Color(0xFF9F1239), fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontSize: 11.5, color: AppColors.liveRedDark, fontWeight: FontWeight.w600),
                     ),
                   ),
                   TextButton(
@@ -249,86 +257,55 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
               ),
             ),
           ],
-          if (!_isCreating)
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF59E0B),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                elevation: 0,
-              ),
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('Create New Question Set', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5)),
-              onPressed: () => setState(() => _isCreating = true),
-            )
-          else
+          if (_isCreating)
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFBEB),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFFDE68A)),
+                color: AppColors.brandOrangeLight,
+                borderRadius: AppRadii.cardSubtle,
+                border: Border.all(color: AppModalDialog.defaultPrimaryColor.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'New Question Set Details',
-                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF92400E)),
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontHeading,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 10),
-                  TextField(
+                  AppModalDialog.textField(
                     controller: _nameController,
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-                    decoration: AppModalDialog.inputDecoration(
-                      'Enter question set name...',
-                      focusColor: const Color(0xFFF59E0B),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    ),
+                    hint: 'Enter question set name...',
                   ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Subject',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
-                            ),
-                            const SizedBox(height: 4),
-                            AppDropdown<String>(
-                              value: activeSubj,
-                              items: subjOptions.map((s) => AppDropdownItem(value: s, label: s)).toList(),
-                              onChanged: (val) {
-                                if (val != null) setState(() => _selectedSubject = val);
-                              },
-                            ),
-                          ],
+                        child: AppDropdown<String>(
+                          hint: 'Subject',
+                          value: activeSubj,
+                          items: subjOptions.map((s) => AppDropdownItem(value: s, label: s)).toList(),
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedSubject = val);
+                          },
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Difficulty Target',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
-                            ),
-                            const SizedBox(height: 4),
-                            AppDropdown<String>(
-                              value: _selectedDifficulty,
-                              items: ['Easy', 'Medium', 'Hard']
-                                  .map((d) => AppDropdownItem(value: d, label: d))
-                                  .toList(),
-                              onChanged: (val) {
-                                if (val != null) setState(() => _selectedDifficulty = val);
-                              },
-                            ),
-                          ],
+                        child: AppDropdown<String>(
+                          hint: 'Difficulty Target',
+                          value: _selectedDifficulty,
+                          items: ['Easy', 'Medium', 'Hard']
+                              .map((d) => AppDropdownItem(value: d, label: d))
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedDifficulty = val);
+                          },
                         ),
                       ),
                     ],
@@ -337,21 +314,28 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
+                      AppModalDialog.secondaryButton(
                         onPressed: _isSaving ? null : () => setState(() => _isCreating = false),
-                        child: const Text('Cancel', style: TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontHeading,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF59E0B),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          elevation: 0,
-                        ),
+                      AppModalDialog.primaryButton(
                         onPressed: _isSaving ? null : _addNewSet,
-                        child: Text(_isSaving ? 'Saving...' : 'Save Set', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                        child: Text(
+                          _isSaving ? 'Saving...' : 'Save Set',
+                          style: const TextStyle(
+                            fontFamily: AppTypography.fontHeading,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -359,7 +343,7 @@ class _ManageQuestionSetsDialogState extends State<ManageQuestionSetsDialog> {
               ),
             ),
 
-          const SizedBox(height: 18),
+          if (_isCreating || _errorMessage != null) const SizedBox(height: 18),
           const Text(
             'EXISTING QUESTION SETS',
             style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF94A3B8), letterSpacing: 0.8),

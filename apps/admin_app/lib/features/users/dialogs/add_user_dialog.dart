@@ -66,13 +66,6 @@ class _AddUserDialogState extends State<AddUserDialog> {
     Navigator.of(context).pop();
   }
 
-  InputDecoration _inputDec({required String hintText, required IconData prefixIcon}) =>
-      AppModalDialog.inputDecoration(
-        hintText,
-        prefixIcon: Icon(prefixIcon, size: 18, color: const Color(0xFF64748B)),
-        focusColor: const Color(0xFFFF9500),
-      );
-
   @override
   Widget build(BuildContext context) {
     return AppModalDialog(
@@ -84,26 +77,13 @@ class _AddUserDialogState extends State<AddUserDialog> {
       gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 500,
       actions: [
-        OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
+        AppModalDialog.secondaryButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
+          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFF9500),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            elevation: 0,
-          ),
+        AppModalDialog.primaryButton(
           onPressed: _submit,
-          child: Text(_isEditing ? 'Save Changes' : 'Create User', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+          child: Text(_isEditing ? 'Save Changes' : 'Create User', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
         ),
       ],
       child: Form(
@@ -112,95 +92,77 @@ class _AddUserDialogState extends State<AddUserDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Full Name
-            const Text('Full Name *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
-            const SizedBox(height: 6),
-            TextFormField(
+            AppModalDialog.textField(
               controller: _nameCtrl,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-              decoration: _inputDec(hintText: 'Enter full name', prefixIcon: Icons.badge_outlined),
+              hint: 'Full Name *',
+              prefixIcon: const Icon(Icons.badge_outlined, size: 17, color: Color(0xFF94A3B8)),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a name' : null,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Email
-            const Text('Email Address *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
-            const SizedBox(height: 6),
-            TextFormField(
+            AppModalDialog.textField(
               controller: _emailCtrl,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-              decoration: _inputDec(hintText: 'user@example.com', prefixIcon: Icons.email_outlined),
+              hint: 'Email Address * (user@example.com)',
+              prefixIcon: const Icon(Icons.email_outlined, size: 17, color: Color(0xFF94A3B8)),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Please enter an email';
                 if (!v.contains('@') || !v.contains('.')) return 'Invalid email address';
                 return null;
               },
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Phone
-            const Text('Phone Number (Optional)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
-            const SizedBox(height: 6),
-            TextFormField(
+            AppModalDialog.textField(
               controller: _phoneCtrl,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-              decoration: _inputDec(hintText: 'e.g. +91 98765 43210', prefixIcon: Icons.phone_outlined),
+              hint: 'Phone Number (Optional)',
+              prefixIcon: const Icon(Icons.phone_outlined, size: 17, color: Color(0xFF94A3B8)),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Role & Status Dropdowns
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Role', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
-                      const SizedBox(height: 6),
-                      AppDropdown<UserRole>(
-                        value: _selectedRole,
-                        items: UserRole.values.map((r) {
-                          return AppDropdownItem<UserRole>(
-                            value: r,
-                            label: r.label,
-                            leading: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(color: r.color, shape: BoxShape.circle),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedRole = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown<UserRole>(
+                    hint: 'Role',
+                    value: _selectedRole,
+                    items: UserRole.values.map((r) {
+                      return AppDropdownItem<UserRole>(
+                        value: r,
+                        label: r.label,
+                        leading: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(color: r.color, shape: BoxShape.circle),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedRole = val);
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
-                      const SizedBox(height: 6),
-                      AppDropdown<UserStatus>(
-                        value: _selectedStatus,
-                        items: UserStatus.values.map((s) {
-                          return AppDropdownItem<UserStatus>(
-                            value: s,
-                            label: s.label,
-                            leading: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedStatus = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown<UserStatus>(
+                    hint: 'Status',
+                    value: _selectedStatus,
+                    items: UserStatus.values.map((s) {
+                      return AppDropdownItem<UserStatus>(
+                        value: s,
+                        label: s.label,
+                        leading: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedStatus = val);
+                    },
                   ),
                 ),
               ],

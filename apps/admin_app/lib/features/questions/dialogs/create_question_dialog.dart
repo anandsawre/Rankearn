@@ -341,70 +341,42 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
       footerLeft: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
+          AppModalDialog.secondaryButton(
+            onPressed: () => setState(() => _showPreview = !_showPreview),
             icon: Icon(
               _showPreview ? Icons.edit_note_rounded : Icons.visibility_outlined,
               size: 15,
-              color: const Color(0xFFFF9500),
+              color: AppModalDialog.defaultPrimaryColor,
             ),
-            label: Text(
+            borderColor: AppModalDialog.defaultPrimaryColor.withAlpha(110),
+            foregroundColor: AppModalDialog.defaultPrimaryColor,
+            child: Text(
               _showPreview ? 'Edit Form' : 'Live Preview',
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFFF9500)),
+              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
             ),
-            onPressed: () => setState(() => _showPreview = !_showPreview),
           ),
-          const SizedBox(width: 6),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            icon: const Icon(
-              Icons.cloud_upload_outlined,
-              size: 15,
-              color: Color(0xFF0284C7),
-            ),
-            label: const Text(
-              'Import',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF0284C7),
-              ),
-            ),
+          const SizedBox(width: 8),
+          AppModalDialog.secondaryButton(
             onPressed: _openImportDialog,
+            icon: const Icon(Icons.cloud_upload_outlined, size: 15, color: Color(0xFF0284C7)),
+            foregroundColor: const Color(0xFF0284C7),
+            child: const Text(
+              'Import',
+              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
       actions: [
-        OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
+        AppModalDialog.secondaryButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12)),
+          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFF9500),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            elevation: 0,
-          ),
+        AppModalDialog.primaryButton(
           onPressed: _submit,
           child: Text(
             isEdit ? 'Save Changes' : 'Create Question',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
           ),
         ),
       ],
@@ -424,34 +396,30 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
             Row(
               children: [
                 Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Subject',
-                    child: AppDropdown<String>(
-                      value: _subjects.contains(_selectedSubject) ? _selectedSubject : _subjects.first,
-                      items: _subjects
-                          .map((s) => AppDropdownItem(value: s, label: s))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedSubject = val);
-                      },
-                    ),
+                  child: AppDropdown<String>(
+                    hint: 'Select Subject',
+                    value: _subjects.contains(_selectedSubject) ? _selectedSubject : _subjects.first,
+                    items: _subjects
+                        .map((s) => AppDropdownItem(value: s, label: s))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedSubject = val);
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Test Series',
-                    child: AppDropdown<String>(
-                      value: _testSeriesList.contains(_selectedTestSeries)
-                          ? _selectedTestSeries
-                          : (_testSeriesList.isNotEmpty ? _testSeriesList.first : null),
-                      items: _testSeriesList
-                          .map((t) => AppDropdownItem(value: t, label: t))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedTestSeries = val);
-                      },
-                    ),
+                  child: AppDropdown<String>(
+                    hint: 'Select Test Series',
+                    value: _testSeriesList.contains(_selectedTestSeries)
+                        ? _selectedTestSeries
+                        : (_testSeriesList.isNotEmpty ? _testSeriesList.first : null),
+                    items: _testSeriesList
+                        .map((t) => AppDropdownItem(value: t, label: t))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedTestSeries = val);
+                    },
                   ),
                 ),
               ],
@@ -462,77 +430,64 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
             Row(
               children: [
                 Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Question Type',
-                    child: AppDropdown<String>(
-                      value: _selectedType,
-                      items: _questionTypes
-                          .map((t) => AppDropdownItem(value: t, label: t))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedType = val);
-                      },
-                    ),
+                  child: AppDropdown<String>(
+                    hint: 'Question Type',
+                    value: _selectedType,
+                    items: _questionTypes
+                        .map((t) => AppDropdownItem(value: t, label: t))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedType = val);
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Difficulty Level',
-                    child: AppDropdown<QuestionDifficulty>(
-                      value: _selectedDifficulty,
-                      items: QuestionDifficulty.values
-                          .map((d) => AppDropdownItem(value: d, label: d.label))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedDifficulty = val);
-                      },
-                    ),
+                  child: AppDropdown<QuestionDifficulty>(
+                    hint: 'Difficulty Level',
+                    value: _selectedDifficulty,
+                    items: QuestionDifficulty.values
+                        .map((d) => AppDropdownItem(value: d, label: d.label))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedDifficulty = val);
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Status',
-                    child: AppDropdown<QuestionStatus>(
-                      value: _selectedStatus,
-                      items: QuestionStatus.values
-                          .map((s) => AppDropdownItem(value: s, label: s.label))
-                          .toList(),
-                      onChanged: (val) {
-                        if (val != null) setState(() => _selectedStatus = val);
-                      },
-                    ),
+                  child: AppDropdown<QuestionStatus>(
+                    hint: 'Status',
+                    value: _selectedStatus,
+                    items: QuestionStatus.values
+                        .map((s) => AppDropdownItem(value: s, label: s.label))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedStatus = val);
+                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Question Text (English)
-            _buildFormFieldLabel(
-              label: 'Question Text (English) *',
-              child: TextFormField(
-                controller: _questionTextController,
-                maxLines: 2,
-                style: const TextStyle(fontSize: 12.5),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Please enter question text' : null,
-                decoration: _inputDecoration(hint: 'e.g. What is the SI unit of force?'),
-              ),
+            AppModalDialog.textField(
+              controller: _questionTextController,
+              maxLines: 2,
+              hint: 'Question Text (English) * (e.g. What is the SI unit of force?)',
+              validator: (val) => val == null || val.trim().isEmpty ? 'Please enter question text' : null,
             ),
             const SizedBox(height: 12),
 
             // Question Text (Hindi - Optional)
-            _buildFormFieldLabel(
-              label: 'Question Text (Hindi - Optional)',
-              child: TextFormField(
-                controller: _questionTextHindiController,
-                maxLines: 1,
-                style: const TextStyle(fontSize: 12),
-                decoration: _inputDecoration(hint: 'उदा. बल का SI मात्रक क्या है?'),
-              ),
+            AppModalDialog.textField(
+              controller: _questionTextHindiController,
+              maxLines: 1,
+              hint: 'Question Text (Hindi - Optional) (उदा. बल का SI मात्रक क्या है?)',
+              prefixIcon: const Icon(Icons.translate_rounded, size: 16, color: Color(0xFF94A3B8)),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
             // Options A, B, C, D with Radio Button to choose Correct Answer
             const Text(
@@ -546,17 +501,13 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
               if (i < 3) const SizedBox(height: 8),
             ],
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
             // Explanation
-            _buildFormFieldLabel(
-              label: 'Solution / Explanation',
-              child: TextFormField(
-                controller: _explanationController,
-                maxLines: 2,
-                style: const TextStyle(fontSize: 12),
-                decoration: _inputDecoration(hint: 'Provide detailed step-by-step reasoning...'),
-              ),
+            AppModalDialog.textField(
+              controller: _explanationController,
+              maxLines: 2,
+              hint: 'Solution / Explanation (step-by-step reasoning)...',
             ),
             const SizedBox(height: 12),
 
@@ -564,26 +515,20 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
             Row(
               children: [
                 Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Positive Marks (+)',
-                    child: TextFormField(
-                      controller: _marksController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: const TextStyle(fontSize: 12),
-                      decoration: _inputDecoration(hint: '1.0'),
-                    ),
+                  child: AppModalDialog.textField(
+                    controller: _marksController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    hint: 'Positive Marks (1.0)',
+                    suffixText: '+ marks',
                   ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: _buildFormFieldLabel(
-                    label: 'Negative Marks (-)',
-                    child: TextFormField(
-                      controller: _negativeMarksController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: const TextStyle(fontSize: 12),
-                      decoration: _inputDecoration(hint: '0.25'),
-                    ),
+                  child: AppModalDialog.textField(
+                    controller: _negativeMarksController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    hint: 'Negative Marks (0.25)',
+                    suffixText: '- marks',
                   ),
                 ),
               ],
@@ -608,10 +553,10 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: isCorrect ? const Color(0xFF5636F5) : const Color(0xFFF1F5F9),
+              color: isCorrect ? AppModalDialog.defaultPrimaryColor : const Color(0xFFF1F5F9),
               shape: BoxShape.circle,
               border: Border.all(
-                color: isCorrect ? const Color(0xFF5636F5) : const Color(0xFFCBD5E1),
+                color: isCorrect ? AppModalDialog.defaultPrimaryColor : const Color(0xFFCBD5E1),
                 width: 1.5,
               ),
             ),
@@ -632,14 +577,13 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
         Expanded(
           child: TextFormField(
             controller: _optionControllers[index],
-            style: const TextStyle(fontSize: 12),
+            style: const TextStyle(fontSize: 12.5),
             decoration: AppModalDialog.inputDecoration(
               'Enter Option ${labels[index]} text...',
-              hintStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-              fillColor: isCorrect ? const Color(0xFFF5F3FF) : Colors.white,
-              borderColor: isCorrect ? const Color(0xFF5636F5) : const Color(0xFFCBD5E1),
-              focusColor: const Color(0xFF5636F5),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              hintStyle: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
+              fillColor: isCorrect ? const Color(0xFFFFF7ED) : Colors.white,
+              borderColor: isCorrect ? AppModalDialog.defaultPrimaryColor : const Color(0xFFE2E8F0),
+              focusColor: AppModalDialog.defaultPrimaryColor,
             ),
           ),
         ),
@@ -774,21 +718,4 @@ class _CreateQuestionDialogState extends State<CreateQuestionDialog> {
       ),
     );
   }
-
-  Widget _buildFormFieldLabel({required String label, required Widget child}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
-        ),
-        const SizedBox(height: 4),
-        child,
-      ],
-    );
-  }
-
-  InputDecoration _inputDecoration({String? hint}) =>
-      AppModalDialog.inputDecoration(hint ?? '', focusColor: const Color(0xFFFF9500));
 }

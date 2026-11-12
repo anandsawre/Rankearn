@@ -60,6 +60,7 @@ class AppDropdown<T> extends StatefulWidget {
   final double height;
   final Color? selectedItemColor;
   final Color? selectedItemBackgroundColor;
+  final bool inlineLabel;
 
   const AppDropdown({
     super.key,
@@ -81,7 +82,7 @@ class AppDropdown<T> extends StatefulWidget {
     this.isExpanded = true,
     this.isDense = false,
     this.contentPadding,
-    this.height = 40.0,
+    this.height = 42.0,
     this.fillColor,
     this.borderColor,
     this.focusedBorderColor,
@@ -94,6 +95,7 @@ class AppDropdown<T> extends StatefulWidget {
     this.enabled = true,
     this.selectedItemColor,
     this.selectedItemBackgroundColor,
+    this.inlineLabel = true,
   });
 
   /// Convenience factory for simple lists of items with optional label mapping
@@ -118,7 +120,7 @@ class AppDropdown<T> extends StatefulWidget {
     bool isExpanded = true,
     bool isDense = false,
     EdgeInsetsGeometry? contentPadding,
-    double height = 40.0,
+    double height = 42.0,
     Color? fillColor,
     Color? borderColor,
     Color? focusedBorderColor,
@@ -129,6 +131,7 @@ class AppDropdown<T> extends StatefulWidget {
     double? menuMaxHeight = 240,
     int elevation = 4,
     bool enabled = true,
+    bool inlineLabel = true,
   }) {
     return AppDropdown<T>(
       key: key,
@@ -164,6 +167,7 @@ class AppDropdown<T> extends StatefulWidget {
       menuMaxHeight: menuMaxHeight,
       elevation: elevation,
       enabled: enabled,
+      inlineLabel: inlineLabel,
     );
   }
 
@@ -188,7 +192,7 @@ class AppDropdown<T> extends StatefulWidget {
     bool isExpanded = true,
     bool isDense = false,
     EdgeInsetsGeometry? contentPadding,
-    double height = 40.0,
+    double height = 42.0,
     Color? fillColor,
     Color? borderColor,
     Color? focusedBorderColor,
@@ -199,6 +203,7 @@ class AppDropdown<T> extends StatefulWidget {
     double? menuMaxHeight = 240,
     int elevation = 4,
     bool enabled = true,
+    bool inlineLabel = true,
   }) {
     return AppDropdown<String>.simple(
       key: key,
@@ -232,6 +237,7 @@ class AppDropdown<T> extends StatefulWidget {
       menuMaxHeight: menuMaxHeight,
       elevation: elevation,
       enabled: enabled,
+      inlineLabel: inlineLabel,
     );
   }
 
@@ -462,15 +468,15 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBorderRadius = widget.borderRadius ?? AppRadii.borderSm;
+    final effectiveBorderRadius = widget.borderRadius ?? BorderRadius.circular(10);
     final effectiveFillColor =
         widget.fillColor ??
-        (widget.enabled ? Colors.white : AppColors.surfaceMuted);
+        (widget.enabled ? Colors.white : const Color(0xFFF8FAFC));
     final effectiveBorderColor = _isOpen
         ? (widget.focusedBorderColor ?? const Color(0xFFFF9500))
         : _isHovered
-        ? (widget.borderColor ?? const Color(0xFFCBD5E1)).withValues(alpha: 0.8)
-        : (widget.borderColor ?? const Color(0xFFCBD5E1));
+        ? (widget.borderColor ?? const Color(0xFFCBD5E1))
+        : (widget.borderColor ?? const Color(0xFFE2E8F0));
 
     final effectiveTextStyle =
         widget.style ??
@@ -535,7 +541,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
               borderRadius: effectiveBorderRadius,
               border: Border.all(
                 color: _isOpen
-                    ? (widget.focusedBorderColor ?? AppColors.brandPrimary)
+                    ? (widget.focusedBorderColor ?? const Color(0xFFFF9500))
                     : (widget.errorText != null)
                     ? (widget.errorBorderColor ?? AppColors.errorRose)
                     : effectiveBorderColor,
@@ -546,13 +552,19 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                       BoxShadow(
                         color:
                             (widget.focusedBorderColor ??
-                                    AppColors.brandPrimary)
-                                .withValues(alpha: 0.15),
-                        blurRadius: 6,
+                                    const Color(0xFFFF9500))
+                                .withValues(alpha: 0.14),
+                        blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
                     ]
-                  : null,
+                  : const [
+                      BoxShadow(
+                        color: Color(0x0B0F172A),
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
             ),
             child: Row(
               children: [
@@ -580,7 +592,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                         )
                       : widget.hintWidget ??
                             Text(
-                              widget.hint ?? '',
+                              widget.hint ?? (widget.inlineLabel ? (widget.label ?? '') : ''),
                               style: effectiveHintStyle,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -592,7 +604,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                       widget.suffixIcon ??
                       const Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        color: AppColors.textSecondary,
+                        color: Color(0xFF94A3B8),
                         size: 18,
                       ),
                 ),
@@ -603,9 +615,8 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
       ),
     );
 
-    if (widget.labelWidget == null &&
-        widget.label == null &&
-        widget.errorText == null) {
+    final showOuterLabel = !widget.inlineLabel && (widget.labelWidget != null || widget.label != null);
+    if (!showOuterLabel && widget.errorText == null) {
       return dropdownField;
     }
 
@@ -613,10 +624,10 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (widget.labelWidget != null) ...[
+        if (!widget.inlineLabel && widget.labelWidget != null) ...[
           widget.labelWidget!,
           const SizedBox(height: AppSpacing.xs),
-        ] else if (widget.label != null) ...[
+        ] else if (!widget.inlineLabel && widget.label != null) ...[
           Text(
             widget.label!,
             style:
@@ -985,7 +996,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
     final effectiveRadius = widget.borderRadius ?? BorderRadius.circular(8);
     final effectiveBgColor = widget.backgroundColor ?? AppColors.surfaceSubtle;
     final effectiveBorderColor = _isOpen
-        ? AppColors.brandPrimary
+        ? const Color(0xFFFF9500)
         : (widget.borderColor ?? AppColors.borderSubtle);
     final effectiveTextStyle =
         widget.textStyle ??
@@ -1030,7 +1041,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
               boxShadow: _isOpen
                   ? [
                       BoxShadow(
-                        color: AppColors.brandPrimary.withValues(alpha: 0.12),
+                        color: const Color(0xFFFF9500).withValues(alpha: 0.12),
                         blurRadius: 4,
                         offset: const Offset(0, 1),
                       ),

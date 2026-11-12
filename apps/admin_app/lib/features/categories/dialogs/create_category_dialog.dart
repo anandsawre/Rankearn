@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import '../models/category_item.dart';
+import '../models/exam_icon_helper.dart';
 import 'manage_target_exams_dialog.dart';
 
 class CreateCategoryDialog extends StatefulWidget {
@@ -153,28 +154,15 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
       maxHeight: 740,
       scrollable: true,
       actions: [
-        OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
+        AppModalDialog.secondaryButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
+          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFF9500),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            elevation: 0,
-          ),
+        AppModalDialog.primaryButton(
           onPressed: _submit,
           child: Text(
             isEditing ? 'Save Changes' : 'Create Subject',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
           ),
         ),
       ],
@@ -193,24 +181,19 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
         const SizedBox(height: 4),
 
         // Subject Name
-        const Text('Subject Name *', style: _labelStyle),
-        const SizedBox(height: 4),
-        TextFormField(
+        AppModalDialog.textField(
           controller: _nameCtrl,
+          hint: 'Subject Name * (e.g. Indian History, Mathematics)',
+          prefixIcon: const Icon(Icons.menu_book_outlined, size: 17, color: Color(0xFF94A3B8)),
           validator: (v) => v == null || v.trim().isEmpty ? 'Subject name is required' : null,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-          decoration: _inputDecoration('e.g. Indian History, General Science, Mathematics'),
         ),
         const SizedBox(height: 12),
 
         // Description
-        const Text('Description / Overview', style: _labelStyle),
-        const SizedBox(height: 4),
-        TextFormField(
+        AppModalDialog.textField(
           controller: _descCtrl,
           maxLines: 2,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-          decoration: _inputDecoration('e.g. Complete syllabus tests with detailed solutions'),
+          hint: 'Description / Overview (syllabus & instructions)...',
         ),
         const SizedBox(height: 12),
 
@@ -235,34 +218,21 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
           children: [
             Expanded(
               flex: 65,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Slug (URL Identifier)', style: _labelStyle),
-                  const SizedBox(height: 4),
-                  TextFormField(
-                    controller: _slugCtrl,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-                    decoration: _inputDecoration('e.g. general-science'),
-                  ),
-                ],
+              child: AppModalDialog.textField(
+                controller: _slugCtrl,
+                hint: 'Slug / URL ID (e.g. general-science)',
+                prefixIcon: const Icon(Icons.link_rounded, size: 16, color: Color(0xFF94A3B8)),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               flex: 35,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Display Order', style: _labelStyle),
-                  const SizedBox(height: 4),
-                  TextFormField(
-                    controller: _orderCtrl,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-                    keyboardType: TextInputType.number,
-                    decoration: _inputDecoration('1'),
-                  ),
-                ],
+              child: AppModalDialog.textField(
+                controller: _orderCtrl,
+                hint: 'Order (1)',
+                keyboardType: TextInputType.number,
+                suffixText: 'order',
+                suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -337,91 +307,72 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
   }
 
   Widget _buildTargetExamField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Target Exam', style: _labelStyle),
-            InkWell(
-              onTap: _openTargetExamsManager,
-              child: const Text(
-                '+ Manage',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFFF9500),
-                ),
+        Expanded(
+          child: AppDropdown<String?>(
+            value: _examList.any((e) => e.id == _selectedExamId) ? _selectedExamId : null,
+            hint: 'All Exams / General',
+            isDense: true,
+            items: [
+              const AppDropdownItem<String?>(
+                value: null,
+                label: 'All Exams / General',
+                icon: Icons.public_rounded,
               ),
-            ),
-          ],
+              ..._examList.map((exam) => AppDropdownItem<String?>(
+                value: exam.id,
+                label: exam.name,
+                leading: buildExamIconWidget(exam.iconUrl, size: 16),
+              )),
+            ],
+            onChanged: (val) {
+              setState(() {
+                _selectedExamId = val;
+              });
+            },
+          ),
         ),
-        const SizedBox(height: 4),
-        AppDropdown<String?>(
-          value: _examList.any((e) => e.id == _selectedExamId) ? _selectedExamId : null,
-          hint: 'All Exams / General',
-          isDense: true,
-          fillColor: Colors.white,
-          borderColor: const Color(0xFFCBD5E1),
-          focusedBorderColor: const Color(0xFFFF9500),
-          selectedItemColor: const Color(0xFFFF9500),
-          selectedItemBackgroundColor: const Color(0xFFFFFBEB),
-          borderRadius: BorderRadius.circular(8),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-          hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-          items: [
-            const AppDropdownItem<String?>(
-              value: null,
-              label: 'All Exams / General',
-              icon: Icons.public_rounded,
+        const SizedBox(width: 6),
+        Tooltip(
+          message: 'Manage Target Exams',
+          child: InkWell(
+            onTap: _openTargetExamsManager,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              height: 42,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFFF9500).withAlpha(90)),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.settings_outlined, size: 16, color: Color(0xFFFF9500)),
             ),
-            ..._examList.map((exam) => AppDropdownItem<String?>(
-              value: exam.id,
-              label: exam.name,
-              leading: Text(exam.iconUrl ?? '🎯', style: const TextStyle(fontSize: 14)),
-            )),
-          ],
-          onChanged: (val) {
-            setState(() {
-              _selectedExamId = val;
-            });
-          },
+          ),
         ),
       ],
     );
   }
 
   Widget _buildStatusField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Publication Status', style: _labelStyle),
-        const SizedBox(height: 4),
-        AppDropdown<CategoryStatus>(
-          value: _status,
-          isDense: true,
-          fillColor: Colors.white,
-          borderColor: const Color(0xFFCBD5E1),
-          focusedBorderColor: const Color(0xFFFF9500),
-          selectedItemColor: const Color(0xFFFF9500),
-          selectedItemBackgroundColor: const Color(0xFFFFFBEB),
-          borderRadius: BorderRadius.circular(8),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-          items: CategoryStatus.values.map((s) => AppDropdownItem<CategoryStatus>(
-            value: s,
-            label: s.label,
-            leading: Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
-            ),
-          )).toList(),
-          onChanged: (val) {
-            if (val != null) setState(() => _status = val);
-          },
+    return AppDropdown<CategoryStatus>(
+      value: _status,
+      hint: 'Publication Status',
+      isDense: true,
+      items: CategoryStatus.values.map((s) => AppDropdownItem<CategoryStatus>(
+        value: s,
+        label: s.label,
+        leading: Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
         ),
-      ],
+      )).toList(),
+      onChanged: (val) {
+        if (val != null) setState(() => _status = val);
+      },
     );
   }
 
@@ -430,7 +381,4 @@ class _CreateCategoryDialogState extends State<CreateCategoryDialog> {
     fontWeight: FontWeight.w700,
     color: Color(0xFF101A3A),
   );
-
-  InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFFFF9500));
 }

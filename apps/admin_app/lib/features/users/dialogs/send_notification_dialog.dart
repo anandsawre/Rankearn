@@ -116,29 +116,16 @@ class _SendNotificationDialogState extends State<SendNotificationDialog> {
       maxWidth: 520,
       scrollable: true,
       actions: [
-        OutlinedButton(
+        AppModalDialog.secondaryButton(
           onPressed: () => Navigator.of(context).pop(),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-          ),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton.icon(
+        AppModalDialog.primaryButton(
           onPressed: _isSending ? null : _send,
           icon: _isSending
               ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : const Icon(Icons.send_rounded, size: 16),
-          label: const Text('Send Broadcast', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFD97706),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            elevation: 0,
-          ),
+          child: const Text('Send Broadcast', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
         ),
       ],
       child: Form(
@@ -161,10 +148,9 @@ class _SendNotificationDialogState extends State<SendNotificationDialog> {
                 ),
               ),
             ],
-            const Text('Target Audience *', style: _labelStyle),
-            const SizedBox(height: 6),
             AppDropdown<String>(
               value: _targetAudience,
+              hint: 'Target Audience *',
               items: [
                 AppDropdownItem(value: 'all', label: 'All Platform Users (${widget.totalUsersCount})'),
                 AppDropdownItem(value: 'students', label: 'Students (${widget.studentsCount})'),
@@ -176,24 +162,21 @@ class _SendNotificationDialogState extends State<SendNotificationDialog> {
                 if (val != null) setState(() => _targetAudience = val);
               },
             ),
-            const SizedBox(height: 14),
-            const Text('Notification Title *', style: _labelStyle),
-            const SizedBox(height: 6),
-            TextFormField(
+            const SizedBox(height: 12),
+            AppModalDialog.textField(
               controller: _titleCtrl,
-              decoration: _inputDecoration('Enter notification title...'),
+              hint: 'Notification Title *',
+              prefixIcon: const Icon(Icons.notifications_none_rounded, size: 17, color: Color(0xFF94A3B8)),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a title' : null,
             ),
-            const SizedBox(height: 14),
-            const Text('Message Body *', style: _labelStyle),
-            const SizedBox(height: 6),
-            TextFormField(
+            const SizedBox(height: 12),
+            AppModalDialog.textField(
               controller: _messageCtrl,
               maxLines: 3,
-              decoration: _inputDecoration('Enter notification announcement details...'),
+              hint: 'Message Body * (announcement details)...',
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a message' : null,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Row(
               children: [
                 const Text('Type: ', style: _labelStyle),
@@ -202,14 +185,14 @@ class _SendNotificationDialogState extends State<SendNotificationDialog> {
                   label: const Text('In-App Push', style: TextStyle(fontSize: 11)),
                   selected: _channel == 'in_app',
                   onSelected: (s) => setState(() => _channel = 'in_app'),
-                  selectedColor: const Color(0xFFFEF3C7),
+                  selectedColor: const Color(0xFFFFF7ED),
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('Announcement', style: TextStyle(fontSize: 11)),
                   selected: _channel == 'email',
                   onSelected: (s) => setState(() => _channel = 'email'),
-                  selectedColor: const Color(0xFFFEF3C7),
+                  selectedColor: const Color(0xFFFFF7ED),
                 ),
               ],
             ),
@@ -224,7 +207,4 @@ class _SendNotificationDialogState extends State<SendNotificationDialog> {
     fontWeight: FontWeight.w600,
     color: Color(0xFF334155),
   );
-
-  static InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFFD97706));
 }

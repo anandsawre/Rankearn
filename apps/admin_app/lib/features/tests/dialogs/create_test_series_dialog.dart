@@ -239,24 +239,11 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
       maxWidth: 640,
       scrollable: true,
       actions: [
-        OutlinedButton(
+        AppModalDialog.secondaryButton(
           onPressed: () => Navigator.pop(context),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-          ),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
+          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
-        const SizedBox(width: 10),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFF9500),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
-            elevation: 0,
-          ),
+        AppModalDialog.primaryButton(
           onPressed: _submit,
           child: Text(
             isEditing ? 'Save Changes' : 'Create Test Series',
@@ -275,61 +262,49 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Target Exam *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<String>(
-                        value: _examList.any((e) => e.id == _examCategoryId)
-                            ? _examCategoryId
-                            : (_examList.isNotEmpty ? _examList.first.id : null),
-                        items: _examList.map((e) => AppDropdownItem(
-                          value: e.id,
-                          label: '${e.iconUrl ?? "🎯"}  ${e.name}',
-                        )).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() {
-                              _examCategoryId = val;
-                              _selectedSubject = null;
-                              _selectedTopic = null;
-                              _updateAvailableTopics();
-                            });
-                          }
-                        },
-                      ),
-                    ],
+                  child: AppDropdown<String>(
+                    hint: 'Target Exam *',
+                    value: _examList.any((e) => e.id == _examCategoryId)
+                        ? _examCategoryId
+                        : (_examList.isNotEmpty ? _examList.first.id : null),
+                    items: _examList.map((e) => AppDropdownItem(
+                      value: e.id,
+                      label: e.name,
+                    )).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _examCategoryId = val;
+                          _selectedSubject = null;
+                          _selectedTopic = null;
+                          _updateAvailableTopics();
+                        });
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Test Mode *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<String>(
-                        value: _testMode,
-                        items: const [
-                          AppDropdownItem(value: 'mock', label: '📝 Mock Test (Full Length)'),
-                          AppDropdownItem(value: 'sectional', label: '📖 Sectional Test (Subject/Topic)'),
-                          AppDropdownItem(value: 'previous-year', label: '⏳ Previous Year Paper'),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() {
-                              _testMode = val;
-                            });
-                          }
-                        },
-                      ),
+                  child: AppDropdown<String>(
+                    hint: 'Test Mode *',
+                    value: _testMode,
+                    items: const [
+                      AppDropdownItem(value: 'mock', label: 'Mock Test (Full Length)'),
+                      AppDropdownItem(value: 'sectional', label: 'Sectional Test (Subject/Topic)'),
+                      AppDropdownItem(value: 'previous-year', label: 'Previous Year Paper'),
                     ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _testMode = val;
+                        });
+                      }
+                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // ==========================================
             // CONDITIONAL: SUBJECT & TOPIC (FOR SECTIONAL TEST)
@@ -340,7 +315,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -351,11 +326,11 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2563EB).withAlpha(25),
+                            color: AppModalDialog.defaultPrimaryColor.withAlpha(25),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           alignment: Alignment.center,
-                          child: const Icon(Icons.account_tree_outlined, size: 14, color: Color(0xFF2563EB)),
+                          child: const Icon(Icons.account_tree_outlined, size: 14, color: AppModalDialog.defaultPrimaryColor),
                         ),
                         const SizedBox(width: 8),
                         const Text(
@@ -368,37 +343,25 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                     Row(
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Subject *', style: _labelStyle),
-                              const SizedBox(height: 6),
-                              AppDropdown<String>(
-                                value: subjects.contains(_selectedSubject) ? _selectedSubject : null,
-                                hint: 'Select Subject...',
-                                items: subjects.map((s) => AppDropdownItem(value: s, label: s)).toList(),
-                                onChanged: (val) {
-                                  setState(() {
-                                    _selectedSubject = val;
-                                    _selectedTopic = null;
-                                    _updateAvailableTopics();
-                                  });
-                                },
-                              ),
-                            ],
+                          child: AppDropdown<String>(
+                            value: subjects.contains(_selectedSubject) ? _selectedSubject : null,
+                            hint: 'Select Subject *',
+                            items: subjects.map((s) => AppDropdownItem(value: s, label: s)).toList(),
+                            onChanged: (val) {
+                              setState(() {
+                                _selectedSubject = val;
+                                _selectedTopic = null;
+                                _updateAvailableTopics();
+                              });
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Topic / Chapter (Optional)', style: _labelStyle),
-                              const SizedBox(height: 6),
-                              if (_availableTopics.isNotEmpty)
-                                AppDropdown<String>(
+                          child: _availableTopics.isNotEmpty
+                              ? AppDropdown<String>(
                                   value: _availableTopics.contains(_selectedTopic) ? _selectedTopic : null,
-                                  hint: 'Select Topic...',
+                                  hint: 'Select Topic (Optional)',
                                   items: _availableTopics.map((t) => AppDropdownItem(value: t, label: t)).toList(),
                                   onChanged: (val) {
                                     setState(() {
@@ -407,46 +370,37 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                                     });
                                   },
                                 )
-                              else
-                                TextFormField(
+                              : AppModalDialog.textField(
                                   controller: _topicController,
-                                  style: const TextStyle(fontSize: 12.5),
-                                  decoration: _inputDecoration('e.g. Ancient India, Thermodynamics'),
+                                  hint: 'Topic / Chapter (e.g. Thermodynamics)',
                                   onChanged: (v) => _selectedTopic = v,
                                 ),
-                            ],
-                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
             ],
 
             // ==========================================
             // SECTION 2: TEST TITLE & SYLLABUS
             // ==========================================
-            const Text('Test Title *', style: _labelStyle),
-            const SizedBox(height: 6),
-            TextFormField(
+            AppModalDialog.textField(
               controller: _titleController,
+              hint: 'Test Title * (e.g. Railway ALP Stage 1 Full Mock 01)',
+              prefixIcon: const Icon(Icons.library_books_outlined, size: 17, color: Color(0xFF94A3B8)),
               validator: (v) => v == null || v.trim().isEmpty ? 'Test Title is required' : null,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              decoration: _inputDecoration('e.g. Railway ALP Stage 1 Full Mock Test 01'),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
-            const Text('Test Description & Syllabus Overview', style: _labelStyle),
-            const SizedBox(height: 6),
-            TextFormField(
+            AppModalDialog.textField(
               controller: _descController,
               maxLines: 2,
-              style: const TextStyle(fontSize: 12.5),
-              decoration: _inputDecoration('e.g. Complete CBT-1 full mock test based on 2026 latest exam pattern.'),
+              hint: 'Test Description & Syllabus Overview...',
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // ==========================================
             // SECTION 3: EXAM ENGINE PARAMETERS
@@ -454,159 +408,117 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Duration (Minutes) *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _durationController,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
-                        decoration: _inputDecoration('60'),
-                      ),
-                    ],
+                  child: AppModalDialog.textField(
+                    controller: _durationController,
+                    keyboardType: TextInputType.number,
+                    hint: 'Duration (60)',
+                    suffixText: 'min',
+                    suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Total Questions *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _questionsCountController,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
-                        decoration: _inputDecoration('100'),
-                      ),
-                    ],
+                  child: AppModalDialog.textField(
+                    controller: _questionsCountController,
+                    keyboardType: TextInputType.number,
+                    hint: 'Questions (100)',
+                    suffixText: 'Qs',
+                    suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Negative Marking', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _negativeMarkingController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
-                        decoration: _inputDecoration('0.25'),
-                      ),
-                    ],
+                  child: AppModalDialog.textField(
+                    controller: _negativeMarkingController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    hint: 'Negative (0.25)',
+                    suffixText: 'neg',
+                    suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Publication Status
-            const Text('Publication Status', style: _labelStyle),
-            const SizedBox(height: 6),
             AppDropdown<TestSeriesStatus>(
+              hint: 'Publication Status',
               value: _status,
               items: const [
-                AppDropdownItem(value: TestSeriesStatus.published, label: '🟢 Published (Visible to Students)'),
-                AppDropdownItem(value: TestSeriesStatus.draft, label: '🟡 Draft / Unpublished (Hidden)'),
-                AppDropdownItem(value: TestSeriesStatus.archived, label: '⚪ Archived'),
+                AppDropdownItem(value: TestSeriesStatus.published, label: 'Published (Visible to Students)'),
+                AppDropdownItem(value: TestSeriesStatus.draft, label: 'Draft / Unpublished (Hidden)'),
+                AppDropdownItem(value: TestSeriesStatus.archived, label: 'Archived'),
               ],
               onChanged: (val) {
                 if (val != null) setState(() => _status = val);
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
             // ==========================================
             // SECTION 4: MONETIZATION & CONTEST CONFIG
             // ==========================================
-            Material(
-              color: const Color(0xFFF5F3FF),
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFDDD6FE)),
-                ),
-                child: Column(
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBF5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                     value: _isPremium,
-                    activeColor: const Color(0xFFFF9500),
+                    activeColor: AppModalDialog.defaultPrimaryColor,
                     onChanged: (val) => setState(() => _isPremium = val ?? false),
                     title: const Text('Exclusive / Premium Test (Coin Unlock)', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                     subtitle: const Text('Students spend coins to unlock this test', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                   ),
                   if (_isPremium) ...[
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Text('Unlock Price (Coins):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 12),
-                        SizedBox(
-                          width: 120,
-                          child: TextFormField(
-                            controller: _priceCoinsController,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFFF9500)),
-                            decoration: _inputDecoration('50'),
-                          ),
-                        ),
-                      ],
+                    SizedBox(
+                      width: 180,
+                      child: AppModalDialog.textField(
+                        controller: _priceCoinsController,
+                        keyboardType: TextInputType.number,
+                        hint: 'Unlock Price (50)',
+                        suffixText: 'coins',
+                        suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ],
-                  const Divider(height: 18, color: Color(0xFFFED7AA)),
+                  const Divider(height: 18, color: Color(0xFFFDE68A)),
                   CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                     value: _isTournament,
-                    activeColor: const Color(0xFFFF9500),
+                    activeColor: AppModalDialog.defaultPrimaryColor,
                     onChanged: (val) => setState(() => _isTournament = val ?? false),
                     title: const Text('Run as Live Paid Contest / Tournament', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
                     subtitle: const Text('Leaderboard-based live battle with prize distribution', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                   ),
                   if (_isTournament) ...[
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Text('Entry Fee (Coins):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 12),
-                        SizedBox(
-                          width: 120,
-                          child: TextFormField(
-                            controller: _entryFeeController,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF10B981)),
-                            decoration: _inputDecoration('20'),
-                          ),
-                        ),
-                      ],
+                    SizedBox(
+                      width: 180,
+                      child: AppModalDialog.textField(
+                        controller: _entryFeeController,
+                        keyboardType: TextInputType.number,
+                        hint: 'Entry Fee (20)',
+                        suffixText: 'coins',
+                        suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ],
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
-
-  static const _labelStyle = TextStyle(
-    fontSize: 11.5,
-    fontWeight: FontWeight.w700,
-    color: Color(0xFF1E293B),
-  );
-
-  InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFFFF9500));
 }

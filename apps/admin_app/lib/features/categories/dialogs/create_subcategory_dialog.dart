@@ -146,22 +146,11 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 4),
-
         // Parent Subject / Category (Level 2)
-        const Text('Parent Subject / Category (Level 2) *', style: _labelStyle),
-        const SizedBox(height: 4),
         AppDropdown<String>(
           value: _selectedCategoryId,
-          hint: 'Select Parent Category',
+          hint: 'Select Parent Subject *',
           isDense: true,
-          fillColor: Colors.white,
-          borderColor: const Color(0xFFCBD5E1),
-          focusedBorderColor: const Color(0xFFFF9500),
-          selectedItemColor: const Color(0xFFFF9500),
-          selectedItemBackgroundColor: const Color(0xFFFFFBEB),
-          borderRadius: BorderRadius.circular(8),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
           items: widget.categories.map((c) {
             return AppDropdownItem<String>(
               value: c.id,
@@ -176,13 +165,11 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
         const SizedBox(height: 12),
 
         // Subcategory Name
-        const Text('Subcategory Name (Level 3) *', style: _labelStyle),
-        const SizedBox(height: 4),
-        TextFormField(
+        AppModalDialog.textField(
           controller: _nameCtrl,
+          hint: 'Subcategory Name * (e.g. Ancient History, Optics & Waves)',
+          prefixIcon: const Icon(Icons.account_tree_outlined, size: 17, color: Color(0xFF94A3B8)),
           validator: (v) => v == null || v.trim().isEmpty ? 'Subcategory name is required' : null,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-          decoration: _inputDecoration('e.g. Ancient History, Optics & Waves, Organic Chemistry'),
         ),
         const SizedBox(height: 12),
 
@@ -191,34 +178,21 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
           children: [
             Expanded(
               flex: 65,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Slug (URL Identifier)', style: _labelStyle),
-                  const SizedBox(height: 4),
-                  TextFormField(
-                    controller: _slugCtrl,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-                    decoration: _inputDecoration('e.g. ancient-history'),
-                  ),
-                ],
+              child: AppModalDialog.textField(
+                controller: _slugCtrl,
+                hint: 'Slug / URL ID (e.g. ancient-history)',
+                prefixIcon: const Icon(Icons.link_rounded, size: 16, color: Color(0xFF94A3B8)),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               flex: 35,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Display Order', style: _labelStyle),
-                  const SizedBox(height: 4),
-                  TextFormField(
-                    controller: _orderCtrl,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-                    keyboardType: TextInputType.number,
-                    decoration: _inputDecoration('1'),
-                  ),
-                ],
+              child: AppModalDialog.textField(
+                controller: _orderCtrl,
+                hint: 'Order (1)',
+                keyboardType: TextInputType.number,
+                suffixText: 'order',
+                suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
               ),
             ),
           ],
@@ -226,29 +200,18 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
         const SizedBox(height: 12),
 
         // Description
-        const Text('Description / Overview', style: _labelStyle),
-        const SizedBox(height: 4),
-        TextFormField(
+        AppModalDialog.textField(
           controller: _descCtrl,
           maxLines: 2,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
-          decoration: _inputDecoration('e.g. Chapters and tests for ancient Indian history and culture'),
+          hint: 'Description / Overview (chapters & syllabus)...',
         ),
         const SizedBox(height: 12),
 
         // Status
-        const Text('Status', style: _labelStyle),
-        const SizedBox(height: 4),
         AppDropdown<String>(
           value: _status,
+          hint: 'Status',
           isDense: true,
-          fillColor: Colors.white,
-          borderColor: const Color(0xFFCBD5E1),
-          focusedBorderColor: const Color(0xFFFF9500),
-          selectedItemColor: const Color(0xFFFF9500),
-          selectedItemBackgroundColor: const Color(0xFFFFFBEB),
-          borderRadius: BorderRadius.circular(8),
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
           items: const [
             AppDropdownItem<String>(
               value: 'active',
@@ -273,13 +236,4 @@ class _CreateSubcategoryDialogState extends State<CreateSubcategoryDialog> {
       ],
     );
   }
-
-  static const _labelStyle = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-    color: Color(0xFF1E293B),
-  );
-
-  InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFFFF9500));
 }

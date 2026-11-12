@@ -395,27 +395,14 @@ Return ONLY the JSON array.
       title: 'AI Question Generator',
       subtitle: 'Generate syllabus-aligned questions using Gemini / Supabase Edge Proxy',
       iconData: Icons.auto_awesome_rounded,
-      gradientColors: const [Color(0xFF059669), Color(0xFF10B981)],
       maxWidth: 680,
       scrollable: true,
       actions: [
-        TextButton(
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFF64748B),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          ),
+        AppModalDialog.secondaryButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5)),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF10B981),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            elevation: 0,
-          ),
+        AppModalDialog.primaryButton(
           onPressed: _generatedQuestions.isNotEmpty ? _confirmSave : null,
           child: Text(
             _generatedQuestions.isNotEmpty
@@ -447,114 +434,92 @@ Return ONLY the JSON array.
             children: [
               Expanded(
                 flex: 4,
-                child: _buildField(
-                  label: 'Subject',
-                  child: AppDropdown<String>(
-                    value: subjValue,
-                    items: _subjects.map((s) => AppDropdownItem(value: s, label: s)).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedSubject = val);
-                    },
-                  ),
+                child: AppDropdown<String>(
+                  hint: 'Select Subject',
+                  value: subjValue,
+                  items: _subjects.map((s) => AppDropdownItem(value: s, label: s)).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedSubject = val);
+                  },
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 flex: 6,
-                child: _buildField(
-                  label: 'Target Test Series',
-                  child: AppDropdown<String>(
-                    value: testValue,
-                    items: _testTitles.map((t) => AppDropdownItem(value: t, label: t)).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedTestTitle = val);
-                    },
-                  ),
+                child: AppDropdown<String>(
+                  hint: 'Target Test Series',
+                  value: testValue,
+                  items: _testTitles.map((t) => AppDropdownItem(value: t, label: t)).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedTestTitle = val);
+                  },
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          _buildField(
-            label: 'Topic / Syllabus Area *',
-            child: TextFormField(
-              controller: _topicController,
-              style: const TextStyle(fontSize: 12.5),
-              decoration: _inputDecoration(hint: 'Enter topic or syllabus area...'),
-            ),
+          AppModalDialog.textField(
+            controller: _topicController,
+            hint: 'Topic / Syllabus Area * (e.g. Modern History, Optics)',
+            prefixIcon: const Icon(Icons.topic_outlined, size: 17, color: Color(0xFF94A3B8)),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: _buildField(
-                  label: 'Difficulty',
-                  child: AppDropdown<QuestionDifficulty>(
-                    value: _selectedDifficulty,
-                    items: [
-                      QuestionDifficulty.easy,
-                      QuestionDifficulty.medium,
-                      QuestionDifficulty.hard,
-                    ].map((d) => AppDropdownItem(value: d, label: d.label)).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedDifficulty = val);
-                    },
-                  ),
+                child: AppDropdown<QuestionDifficulty>(
+                  hint: 'Difficulty',
+                  value: _selectedDifficulty,
+                  items: [
+                    QuestionDifficulty.easy,
+                    QuestionDifficulty.medium,
+                    QuestionDifficulty.hard,
+                  ].map((d) => AppDropdownItem(value: d, label: d.label)).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedDifficulty = val);
+                  },
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildField(
-                  label: 'Questions Count',
-                  child: AppDropdown<int>(
-                    value: _questionCount,
-                    items: const [3, 5, 10, 20]
-                        .map((c) => AppDropdownItem(value: c, label: '$c Questions'))
-                        .toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _questionCount = val);
-                    },
-                  ),
+                child: AppDropdown<int>(
+                  hint: 'Questions Count',
+                  value: _questionCount,
+                  items: const [3, 5, 10, 20]
+                      .map((c) => AppDropdownItem(value: c, label: '$c Questions'))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _questionCount = val);
+                  },
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildField(
-                  label: 'Language',
-                  child: AppDropdown<String>(
-                    value: _language,
-                    items: const ['English', 'Hindi', 'Bilingual']
-                        .map((l) => AppDropdownItem(value: l, label: l))
-                        .toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _language = val);
-                    },
-                  ),
+                child: AppDropdown<String>(
+                  hint: 'Language',
+                  value: _language,
+                  items: const ['English', 'Hindi', 'Bilingual']
+                      .map((l) => AppDropdownItem(value: l, label: l))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _language = val);
+                  },
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          _buildField(
-            label: 'Gemini API Key (optional if Supabase Edge Proxy is active)',
-            child: TextFormField(
-              controller: _apiKeyController,
-              obscureText: true,
-              style: const TextStyle(fontSize: 12.5),
-              decoration: _inputDecoration(hint: 'AIza...'),
-            ),
+          AppModalDialog.textField(
+            controller: _apiKeyController,
+            obscureText: true,
+            hint: 'Gemini API Key (optional if Edge Proxy is active)',
+            prefixIcon: const Icon(Icons.key_rounded, size: 16, color: Color(0xFF94A3B8)),
           ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                elevation: 0,
-              ),
+            child: AppModalDialog.primaryButton(
+              onPressed: _isGenerating ? null : _generateQuestions,
               icon: _isGenerating
                   ? const SizedBox(
                       width: 16,
@@ -562,11 +527,10 @@ Return ONLY the JSON array.
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
                   : const Icon(Icons.auto_awesome, size: 16),
-              label: Text(
+              child: Text(
                 _isGenerating ? 'Generating Questions...' : 'Generate Questions with AI',
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
-              onPressed: _isGenerating ? null : _generateQuestions,
             ),
           ),
           if (_generatedQuestions.isNotEmpty) ...[
@@ -660,18 +624,4 @@ Return ONLY the JSON array.
       ),
     );
   }
-
-  Widget _buildField({required String label, required Widget child}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569))),
-        const SizedBox(height: 5),
-        child,
-      ],
-    );
-  }
-
-  InputDecoration _inputDecoration({String? hint}) =>
-      AppModalDialog.inputDecoration(hint ?? '', focusColor: const Color(0xFF10B981));
 }

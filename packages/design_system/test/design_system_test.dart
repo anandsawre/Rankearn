@@ -112,5 +112,47 @@ void main() {
       await tester.tap(find.text('Mock Tests'));
       expect(tapped, isTrue);
     });
+
+    testWidgets('AppModalDialog.textField single-line and multiline start at identical 42px height', (WidgetTester tester) async {
+      final multilineKey = GlobalKey();
+      final hindiKey = GlobalKey();
+      final singleKey = GlobalKey();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Column(
+              children: [
+                AppModalDialog.textField(
+                  key: multilineKey,
+                  maxLines: 2,
+                  hint: 'Question Text (English)',
+                ),
+                AppModalDialog.textField(
+                  key: hindiKey,
+                  maxLines: 1,
+                  prefixIcon: const Icon(Icons.translate_rounded, size: 16),
+                  hint: 'Question Text (Hindi)',
+                ),
+                AppModalDialog.textField(
+                  key: singleKey,
+                  maxLines: 1,
+                  hint: 'Simple',
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final multiH = tester.getSize(find.byKey(multilineKey)).height;
+      final hindiH = tester.getSize(find.byKey(hindiKey)).height;
+      final singleH = tester.getSize(find.byKey(singleKey)).height;
+
+      expect(multiH, 42.0);
+      expect(hindiH, 42.0);
+      expect(singleH, 42.0);
+    });
   });
 }

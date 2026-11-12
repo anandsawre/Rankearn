@@ -154,16 +154,16 @@ class _ManageTemplatesDialogState extends State<ManageTemplatesDialog> {
       maxWidth: 620,
       scrollable: true,
       actions: [
+        AppModalDialog.secondaryButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Close', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+        ),
         if (!_isCreating)
-          OutlinedButton.icon(
+          AppModalDialog.primaryButton(
             onPressed: () => setState(() => _isCreating = true),
             icon: const Icon(Icons.add_rounded, size: 16),
-            label: const Text('New Template'),
+            child: const Text('New Template', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
           ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
-        ),
       ],
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -199,23 +199,23 @@ class _ManageTemplatesDialogState extends State<ManageTemplatesDialog> {
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFECFDF5),
+                color: const Color(0xFFFFFBF5),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFA7F3D0)),
+                border: Border.all(color: const Color(0xFFFDE68A)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
+                  AppModalDialog.textField(
                     controller: _titleCtrl,
-                    decoration: AppModalDialog.inputDecoration('Template Title *', focusColor: const Color(0xFF10B981)),
-                    style: const TextStyle(fontSize: 12.5),
+                    hint: 'Template Title *',
+                    prefixIcon: const Icon(Icons.bookmark_add_outlined, size: 16, color: Color(0xFF94A3B8)),
                   ),
                   const SizedBox(height: 8),
-                  TextField(
+                  AppModalDialog.textField(
                     controller: _examCtrl,
-                    decoration: AppModalDialog.inputDecoration('Target Exam (e.g. SSC CGL)', focusColor: const Color(0xFF10B981)),
-                    style: const TextStyle(fontSize: 12.5),
+                    hint: 'Target Exam (e.g. SSC CGL)',
+                    prefixIcon: const Icon(Icons.school_outlined, size: 16, color: Color(0xFF94A3B8)),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -261,19 +261,17 @@ class _ManageTemplatesDialogState extends State<ManageTemplatesDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
+                      AppModalDialog.secondaryButton(
                         onPressed: _isSaving ? null : () => setState(() => _isCreating = false),
-                        child: const Text('Cancel'),
+                        child: const Text('Cancel', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
                       ),
                       const SizedBox(width: 8),
-                      ElevatedButton(
+                      AppModalDialog.primaryButton(
                         onPressed: _isSaving ? null : _createTemplate,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
+                        child: Text(
+                          _isSaving ? 'Saving...' : 'Save Template',
+                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
                         ),
-                        child: Text(_isSaving ? 'Saving...' : 'Save Template'),
                       ),
                     ],
                   ),

@@ -456,12 +456,13 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               ),
             ),
           ],
-          const Text('Test Title *', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-          const SizedBox(height: 4),
           TextFormField(
             controller: _titleController,
-            decoration: AppModalDialog.inputDecoration('Enter test title...'),
-            style: const TextStyle(fontSize: 12.5),
+            decoration: AppModalDialog.inputDecoration(
+              'E.G. Modern History Mock Test *',
+              prefixIcon: const Icon(Icons.description_outlined, size: 17, color: Color(0xFF94A3B8)),
+            ),
+            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500),
             validator: (val) => val == null || val.trim().isEmpty ? 'Enter a test title' : null,
           ),
           const SizedBox(height: 12),
@@ -469,7 +470,8 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             children: [
               Expanded(
                 child: AppDropdown.simple(
-                  label: 'Subject *',
+                  label: 'Select Subject *',
+                  inlineLabel: true,
                   value: _subjectOptions.contains(_selectedSubjectName)
                       ? _selectedSubjectName
                       : _subjectOptions.first,
@@ -488,6 +490,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               Expanded(
                 child: AppDropdown.simple(
                   label: 'Difficulty Level *',
+                  inlineLabel: true,
                   value: _selectedDifficulty,
                   items: AiTestDifficulty.values,
                   itemLabel: (d) => d.label,
@@ -504,6 +507,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               Expanded(
                 child: AppDropdown.simple(
                   label: 'Sub-Subject / Chapter',
+                  inlineLabel: true,
                   value: _subSubjectOptions.contains(_selectedSubSubject)
                       ? _selectedSubSubject
                       : _allSubSubjects,
@@ -523,6 +527,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               Expanded(
                 child: AppDropdown.simple(
                   label: 'Curriculum Topic',
+                  inlineLabel: true,
                   value: _topicOptions.contains(_selectedTopicName)
                       ? _selectedTopicName
                       : _allTopics,
@@ -545,6 +550,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               Expanded(
                 child: AppDropdown.simple(
                   label: 'Number of Questions',
+                  inlineLabel: true,
                   value: _questionCount,
                   items: const [10, 25, 40, 50, 75, 100],
                   itemLabel: (n) => '$n Questions',
@@ -557,6 +563,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               Expanded(
                 child: AppDropdown.simple(
                   label: 'Duration (Minutes)',
+                  inlineLabel: true,
                   value: _durationMinutes,
                   items: const [20, 30, 45, 60, 90, 120],
                   itemLabel: (n) => '$n Minutes',
@@ -573,6 +580,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               Expanded(
                 child: AppDropdown.simple(
                   label: 'Target Exam / Pattern',
+                  inlineLabel: true,
                   value: activeExam,
                   items: _examOptions,
                   onChanged: (val) {
@@ -589,6 +597,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               Expanded(
                 child: AppDropdown.simple(
                   label: 'Language Mode',
+                  inlineLabel: true,
                   value: _selectedLanguage,
                   items: _languageOptions,
                   onChanged: (val) {
@@ -599,13 +608,11 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             ],
           ),
           const SizedBox(height: 12),
-          const Text('Topics / Syllabus Focus', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-          const SizedBox(height: 4),
           TextFormField(
             controller: _topicController,
             maxLines: 2,
             decoration: AppModalDialog.inputDecoration(
-              'Enter syllabus topics...',
+              'Topics / Syllabus Focus (optional)...',
               isMultiline: true,
             ),
             style: const TextStyle(fontSize: 12.5),

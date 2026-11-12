@@ -211,39 +211,50 @@ class AppModalDialog extends StatelessWidget {
     bool isMultiline = false,
   }) {
     final activeFocus = focusColor ?? defaultPrimaryColor;
-    final effectiveRadius = borderRadius ?? AppRadii.borderSm;
-    final effectiveBorderColor = borderColor ?? const Color(0xFFCBD5E1);
+    final effectiveRadius = borderRadius ?? BorderRadius.circular(10);
+    final effectiveBorderColor = borderColor ?? AppColors.border;
 
     final isActuallyMultiline = isMultiline ||
-        (constraints != null && (constraints.maxHeight > 40.0 || constraints.minHeight > 40.0));
+        (constraints != null && (constraints.maxHeight > 42.0 || constraints.minHeight > 42.0));
 
     final effectiveConstraints = constraints ??
-        (isActuallyMultiline ? null : const BoxConstraints(minHeight: 40.0, maxHeight: 40.0));
+        (isActuallyMultiline
+            ? const BoxConstraints(minHeight: 42.0)
+            : const BoxConstraints(minHeight: 42.0, maxHeight: 42.0));
 
-    final effectiveSuffixConstraints = isActuallyMultiline
-        ? (suffixIcon != null ? const BoxConstraints(minWidth: 36, minHeight: 36) : null)
-        : (suffixIcon != null
-            ? const BoxConstraints(minWidth: 36, minHeight: 40, maxHeight: 40)
-            : const BoxConstraints(minWidth: 0, maxWidth: 0, minHeight: 40, maxHeight: 40));
+    final double emptySuffixWidth = suffixText != null ? 14.0 : 0.0;
 
-    final effectiveSuffix = suffixIcon ??
-        (isActuallyMultiline ? null : const SizedBox(width: 0, height: 40));
+    final effectiveSuffixConstraints = suffixIcon != null
+        ? const BoxConstraints(minWidth: 36, minHeight: 40, maxHeight: 40)
+        : BoxConstraints(
+            minWidth: emptySuffixWidth,
+            maxWidth: emptySuffixWidth,
+            minHeight: 40,
+            maxHeight: 40,
+          );
+
+    final effectiveSuffix = suffixIcon ?? SizedBox(width: emptySuffixWidth, height: 40);
 
     final effectiveContentPadding = contentPadding ??
         (isActuallyMultiline
-            ? const EdgeInsets.symmetric(horizontal: 14, vertical: 12)
+            ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
             : const EdgeInsets.symmetric(horizontal: 14, vertical: 0));
 
     return InputDecoration(
       labelText: labelText,
       hintText: hint.isEmpty ? null : hint,
-      hintStyle: hintStyle ?? const TextStyle(fontSize: 12, color: AppColors.textMuted),
+      hintStyle: hintStyle ?? AppTypography.formHint.copyWith(color: AppColors.textMuted),
+      errorStyle: AppTypography.formError,
       prefixText: prefixText,
       prefixStyle: prefixStyle,
       suffixText: suffixText,
-      suffixStyle: suffixStyle,
+      suffixStyle: suffixStyle ??
+          AppTypography.formHint.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
       filled: true,
-      fillColor: fillColor ?? Colors.white,
+      fillColor: fillColor ?? AppColors.surface,
       isDense: isDense ?? true,
       contentPadding: effectiveContentPadding,
       constraints: effectiveConstraints,
@@ -268,6 +279,81 @@ class AppModalDialog extends StatelessWidget {
       focusedBorder: OutlineInputBorder(
         borderRadius: effectiveRadius,
         borderSide: BorderSide(color: activeFocus, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: effectiveRadius,
+        borderSide: const BorderSide(color: AppColors.error, width: 1.0),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: effectiveRadius,
+        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+      ),
+    );
+  }
+
+  /// Centralized tokenized modal text field with inline hint, optional leading icon,
+  /// soft ambient card shadow, and unified orange focus ring.
+  static Widget textField({
+    Key? key,
+    TextEditingController? controller,
+    required String hint,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    String? suffixText,
+    TextStyle? suffixStyle,
+    FormFieldValidator<String>? validator,
+    TextInputType? keyboardType,
+    int? maxLines = 1,
+    int? minLines,
+    bool enabled = true,
+    bool obscureText = false,
+    ValueChanged<String>? onChanged,
+    Color? focusColor,
+    EdgeInsetsGeometry? contentPadding,
+    TextStyle? style,
+  }) {
+    final multiline = (maxLines != null && maxLines > 1) || (minLines != null && minLines > 1);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0B0F172A),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        key: key,
+        controller: controller,
+        validator: validator,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        minLines: minLines ?? 1,
+        textAlignVertical: (minLines != null && minLines > 1)
+            ? TextAlignVertical.top
+            : TextAlignVertical.center,
+        enabled: enabled,
+        obscureText: obscureText,
+        onChanged: onChanged,
+        style: style ??
+            AppTypography.formInput.copyWith(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+              color: enabled ? AppColors.textPrimary : AppColors.textMuted,
+            ),
+        decoration: inputDecoration(
+          hint,
+          prefixIcon: prefixIcon,
+          suffixIcon: suffixIcon,
+          suffixText: suffixText,
+          suffixStyle: suffixStyle,
+          focusColor: focusColor,
+          fillColor: enabled ? AppColors.surface : AppColors.surfaceSubtle,
+          contentPadding: contentPadding,
+          isMultiline: multiline,
+        ),
       ),
     );
   }
@@ -662,20 +748,17 @@ class AppModalDialog extends StatelessWidget {
     required Color accentColor,
     required Widget child,
   }) {
-    return ColoredBox(
-      color: Colors.white,
-      child: Stack(
-        children: [
-          const Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(
-                painter: _ModalBodyBackdropPainter(),
-              ),
+    return Stack(
+      children: [
+        const Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: _ModalBodyBackdropPainter(),
             ),
           ),
-          child,
-        ],
-      ),
+        ),
+        child,
+      ],
     );
   }
 }

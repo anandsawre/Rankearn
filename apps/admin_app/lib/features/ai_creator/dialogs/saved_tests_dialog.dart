@@ -24,9 +24,9 @@ class SavedTestsDialog extends StatelessWidget {
       maxWidth: 620,
       scrollable: true,
       actions: [
-        TextButton(
+        AppModalDialog.secondaryButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: const Text('Close', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
         ),
       ],
       child: Column(
@@ -99,7 +99,11 @@ class SavedTestsDialog extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF5636F5)),
+            icon: const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppModalDialog.defaultPrimaryColor,
+            ),
             tooltip: 'Inspect / Resume',
             onPressed: () {
               Navigator.of(context).pop();
