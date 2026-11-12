@@ -72,38 +72,30 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
         title: 'End Live Quiz Session?',
         subtitle: 'Final score computation & leaderboard publication',
         iconData: Icons.stop_circle_outlined,
-        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        gradientColors: const [AppColors.liveRedDark, AppColors.liveRed],
         maxWidth: 440,
         actions: [
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              elevation: 0,
-            ),
+          AppModalDialog.cancelButton(ctx),
+          AppModalDialog.primaryButton(
+            backgroundColor: AppColors.liveRedDark,
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.pop(context);
               widget.onSessionEnded?.call();
             },
-            child: const Text('Confirm End', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Confirm End',
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontWeight: FontWeight.w700,
+                fontSize: 12.5,
+              ),
+            ),
           ),
         ],
-        child: const Text(
+        child: Text(
           'Ending the session will calculate final scores and publish the leaderboard to all participants.',
-          style: TextStyle(fontSize: 13, color: Color(0xFF334155), height: 1.45),
+          style: AppTypography.bodySmall.copyWith(fontSize: 13, color: AppColors.textSecondary, height: 1.45),
         ),
       ),
     );
@@ -124,44 +116,67 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
       title: widget.item.title,
       subtitle: 'LIVE NOW • Real-time Session Monitor (${widget.item.category})',
       iconData: Icons.podcasts_rounded,
-      gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
       maxWidth: 680,
       scrollable: true,
       actions: [
-        OutlinedButton.icon(
+        AppModalDialog.secondaryButton(
           onPressed: _endSession,
-          icon: const Icon(Icons.stop_circle_outlined, size: 16, color: Color(0xFFEF4444)),
-          label: const Text('End Session', style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w700, fontSize: 12.5)),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFFCA5A5)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.stop_circle_outlined, size: 16, color: AppColors.liveRed),
+              SizedBox(width: 6),
+              Text(
+                'End Session',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  color: AppColors.liveRed,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton.icon(
+        AppModalDialog.secondaryButton(
           onPressed: _togglePause,
-          icon: Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded, size: 16),
-          label: Text(_isPaused ? 'Resume' : 'Pause', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _isPaused ? const Color(0xFF10B981) : const Color(0xFFFF9F0A),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            elevation: 0,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                size: 16,
+                color: _isPaused ? AppColors.brandGreen : AppModalDialog.defaultPrimaryColor,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _isPaused ? 'Resume' : 'Pause',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  color: _isPaused ? AppColors.brandGreen : AppModalDialog.defaultPrimaryColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 8),
-        ElevatedButton.icon(
+        AppModalDialog.primaryButton(
           onPressed: _currentQ < totalQ ? _nextQuestion : null,
-          icon: const Icon(Icons.skip_next_rounded, size: 16),
-          label: const Text('Next Question', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            elevation: 0,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.skip_next_rounded, size: 16),
+              SizedBox(width: 6),
+              Text(
+                'Next Question',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -176,7 +191,7 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
                   label: 'Connected Users',
                   value: _connectedUsers.toString(),
                   icon: Icons.people_alt_rounded,
-                  color: const Color(0xFF2587F8),
+                  color: AppColors.brandBlue,
                 ),
               ),
               const SizedBox(width: 10),
@@ -185,7 +200,7 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
                   label: 'Serving Question',
                   value: '$_currentQ / $totalQ',
                   icon: Icons.help_outline_rounded,
-                  color: const Color(0xFF5636F5),
+                  color: AppModalDialog.defaultPrimaryColor,
                 ),
               ),
               const SizedBox(width: 10),
@@ -194,7 +209,7 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
                   label: 'Question Timer',
                   value: '${_secondsLeft}s',
                   icon: Icons.timer_outlined,
-                  color: _secondsLeft < 10 ? const Color(0xFFEF4444) : const Color(0xFFFF9F0A),
+                  color: _secondsLeft < 10 ? AppColors.liveRed : AppColors.brandOrange,
                 ),
               ),
             ],
@@ -210,11 +225,11 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
                 children: [
                   Text(
                     'Session Progress (Question $_currentQ of $totalQ)',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
                   ),
                   Text(
                     '${(progress * 100).toInt()}%',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -223,8 +238,8 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
                 value: progress,
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(4),
-                backgroundColor: const Color(0xFFE2E8F0),
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5636F5)),
+                backgroundColor: AppColors.border,
+                valueColor: const AlwaysStoppedAnimation<Color>(AppModalDialog.defaultPrimaryColor),
               ),
             ],
           ),
@@ -234,9 +249,9 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
+              color: AppColors.surfaceSubtle,
+              borderRadius: AppRadii.cardSubtle,
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
@@ -247,18 +262,18 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
                         width: 28,
                         height: 28,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFDCFCE7),
+                          color: AppColors.brandGreenLight,
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
-                        child: const Icon(Icons.check_rounded, color: Color(0xFF16A34A), size: 16),
+                        child: const Icon(Icons.check_rounded, color: AppColors.brandGreenDark, size: 16),
                       ),
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('$_correctAnswers Correct', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF16A34A))),
-                          const Text('Submitted answers', style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B))),
+                          Text('$_correctAnswers Correct', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.brandGreenDark)),
+                          const Text('Submitted answers', style: TextStyle(fontSize: 9.5, color: AppColors.textMuted)),
                         ],
                       ),
                     ],
@@ -271,18 +286,18 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
                         width: 28,
                         height: 28,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFFEE2E2),
+                          color: AppColors.liveRedSubtle,
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
-                        child: const Icon(Icons.close_rounded, color: Color(0xFFDC2626), size: 16),
+                        child: const Icon(Icons.close_rounded, color: AppColors.liveRedDark, size: 16),
                       ),
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('$_incorrectAnswers Incorrect', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFDC2626))),
-                          const Text('Submitted answers', style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B))),
+                          Text('$_incorrectAnswers Incorrect', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.liveRedDark)),
+                          const Text('Submitted answers', style: TextStyle(fontSize: 9.5, color: AppColors.textMuted)),
                         ],
                       ),
                     ],
@@ -305,9 +320,9 @@ class _LiveNowDashboardDialogState extends State<LiveNowDashboardDialog> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFCBD5E1)),
+        color: AppColors.surfaceSubtle,
+        borderRadius: AppRadii.cardSubtle,
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [

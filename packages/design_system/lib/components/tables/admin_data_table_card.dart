@@ -5,6 +5,7 @@ import '../../tokens/radii.dart';
 import '../../tokens/shadows.dart';
 import '../../tokens/typography.dart';
 import '../inputs/app_dropdown.dart';
+import '../inputs/app_date_range_picker.dart';
 
 /// Reusable centralized Admin Data Table Card component.
 ///
@@ -809,16 +810,9 @@ class AdminTableDateRangeButton extends StatelessWidget {
       onTap: onTap ??
           () async {
             if (onDateRangeChanged == null) return;
-            final initial = dateRange ??
-                DateTimeRange(
-                  start: DateTime.now().subtract(const Duration(days: 30)),
-                  end: DateTime.now(),
-                );
-            final picked = await showDateRangePicker(
+            final picked = await AppDateRangePicker.show(
               context: context,
-              firstDate: DateTime(2024),
-              lastDate: DateTime(2030),
-              initialDateRange: initial,
+              initialDateRange: dateRange,
             );
             if (picked != null) {
               onDateRangeChanged!(picked);

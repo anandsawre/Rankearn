@@ -123,32 +123,19 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
       title: isEdit ? 'Edit Live Quiz' : 'Create Live Quiz',
       subtitle: 'Scheduled Fast Live Quiz • Instant Coin Rewards',
       iconData: Icons.podcasts_rounded,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
       maxWidth: 600,
       scrollable: true,
       actions: [
-        OutlinedButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-          ),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton(
+        AppModalDialog.cancelButton(context),
+        AppModalDialog.primaryButton(
           onPressed: _submit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            elevation: 0,
-          ),
           child: Text(
             isEdit ? 'Save Changes' : 'Create Live Quiz',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+            style: const TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
           ),
         ),
       ],
@@ -158,237 +145,137 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Quiz Title
-            const Text('Quiz Title *', style: _labelStyle),
-            const SizedBox(height: 6),
-            TextFormField(
+            AppModalDialog.textField(
               controller: _titleController,
-              decoration: _inputDecoration('e.g. RRB Technician Mega Live Showdown 01'),
+              hint: 'Quiz Title * (e.g. RRB Technician Mega Live Showdown 01)',
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a title' : null,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Description
-            const Text('Description', style: _labelStyle),
-            const SizedBox(height: 6),
-            TextFormField(
+            AppModalDialog.textField(
               controller: _descController,
               maxLines: 2,
-              decoration: _inputDecoration('Short description and rules of the live quiz showdown'),
+              hint: 'Description (Short description and rules of the live quiz showdown)',
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Category & Status
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Category *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<String>(
-                        value: selectedCategory,
-                        items: availableCategories
-                            .map((c) => AppDropdownItem(value: c, label: c))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _category = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown<String>(
+                    hint: 'Category *',
+                    value: selectedCategory,
+                    items: availableCategories
+                        .map((c) => AppDropdownItem(value: c, label: c))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _category = val);
+                    },
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Status *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<LiveQuizStatus>(
-                        value: _status,
-                        items: const [
-                          AppDropdownItem(value: LiveQuizStatus.scheduled, label: 'Scheduled'),
-                          AppDropdownItem(value: LiveQuizStatus.liveNow, label: 'Live Now'),
-                          AppDropdownItem(value: LiveQuizStatus.ongoing, label: 'Ongoing'),
-                          AppDropdownItem(value: LiveQuizStatus.completed, label: 'Completed'),
-                          AppDropdownItem(value: LiveQuizStatus.draft, label: 'Draft'),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) setState(() => _status = val);
-                        },
-                      ),
+                  child: AppDropdown<LiveQuizStatus>(
+                    hint: 'Status *',
+                    value: _status,
+                    items: const [
+                      AppDropdownItem(value: LiveQuizStatus.scheduled, label: 'Scheduled'),
+                      AppDropdownItem(value: LiveQuizStatus.liveNow, label: 'Live Now'),
+                      AppDropdownItem(value: LiveQuizStatus.ongoing, label: 'Ongoing'),
+                      AppDropdownItem(value: LiveQuizStatus.completed, label: 'Completed'),
+                      AppDropdownItem(value: LiveQuizStatus.draft, label: 'Draft'),
                     ],
+                    onChanged: (val) {
+                      if (val != null) setState(() => _status = val);
+                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Start Date & Time
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Start Date *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () async {
-                          final d = await showDatePicker(
-                            context: context,
-                            initialDate: _startTime,
-                            firstDate: DateTime(2025),
-                            lastDate: DateTime(2030),
-                          );
-                          if (d != null) {
-                            setState(() {
-                              _startTime = DateTime(
-                                d.year,
-                                d.month,
-                                d.day,
-                                _startTime.hour,
-                                _startTime.minute,
-                              );
-                            });
-                          }
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF5636F5)),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${_startTime.year}-${_startTime.month.toString().padLeft(2, '0')}-${_startTime.day.toString().padLeft(2, '0')}',
-                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppDatePicker(
+                    label: 'Date',
+                    value: _startTime,
+                    firstDate: DateTime(2025),
+                    lastDate: DateTime(2030),
+                    onChanged: (d) {
+                      setState(() {
+                        _startTime = DateTime(
+                          d.year,
+                          d.month,
+                          d.day,
+                          _startTime.hour,
+                          _startTime.minute,
+                        );
+                      });
+                    },
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Start Time *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () async {
-                          final t = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.fromDateTime(_startTime),
-                          );
-                          if (t != null) {
-                            setState(() {
-                              _startTime = DateTime(
-                                _startTime.year,
-                                _startTime.month,
-                                _startTime.day,
-                                t.hour,
-                                t.minute,
-                              );
-                            });
-                          }
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF5636F5)),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}',
-                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppTimePicker(
+                    label: 'Time',
+                    value: TimeOfDay.fromDateTime(_startTime),
+                    onChanged: (t) {
+                      setState(() {
+                        _startTime = DateTime(
+                          _startTime.year,
+                          _startTime.month,
+                          _startTime.day,
+                          t.hour,
+                          t.minute,
+                        );
+                      });
+                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Duration, Questions, Entry & Reward Coins
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Duration (min)', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _durationController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('45'),
-                      ),
-                    ],
+                  child: AppModalDialog.textField(
+                    controller: _durationController,
+                    keyboardType: TextInputType.number,
+                    hint: 'Duration (45)',
+                    suffixText: 'min',
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Questions', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _questionsController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('25'),
-                      ),
-                    ],
+                  child: AppModalDialog.textField(
+                    controller: _questionsController,
+                    keyboardType: TextInputType.number,
+                    hint: 'Questions (25)',
+                    suffixText: 'Qs',
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Entry (Coins)', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _entryFeeController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('0=Free'),
-                      ),
-                    ],
+                  child: AppModalDialog.textField(
+                    controller: _entryFeeController,
+                    keyboardType: TextInputType.number,
+                    hint: 'Entry (0=Free)',
+                    suffixText: 'Entry',
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Reward Coins', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _rewardsController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('1500'),
-                      ),
-                    ],
+                  child: AppModalDialog.textField(
+                    controller: _rewardsController,
+                    keyboardType: TextInputType.number,
+                    hint: 'Reward (1500)',
+                    suffixText: 'Coins',
                   ),
                 ),
               ],
@@ -398,13 +285,4 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
       ),
     );
   }
-
-  static const TextStyle _labelStyle = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    color: Color(0xFF334155),
-  );
-
-  static InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFF5636F5));
 }

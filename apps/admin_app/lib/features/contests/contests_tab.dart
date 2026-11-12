@@ -472,27 +472,10 @@ class _ContestsTabState extends State<ContestsTab> {
         title: 'Broadcast Announcement',
         subtitle: 'Push alert to students enrolled in live quizzes',
         iconData: Icons.campaign_outlined,
-        gradientColors: const [Color(0xFFF04483), Color(0xFFEC4899)],
         maxWidth: 500,
         actions: [
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF04483),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              elevation: 0,
-            ),
+          AppModalDialog.cancelButton(ctx),
+          AppModalDialog.primaryButton(
             onPressed: () async {
               final text = textController.text.trim();
               Navigator.pop(ctx);
@@ -519,45 +502,36 @@ class _ContestsTabState extends State<ContestsTab> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Push notification broadcasted successfully to all users!'),
-                    backgroundColor: Color(0xFF10B981),
+                    backgroundColor: AppColors.brandGreen,
                   ),
                 );
               }
             },
-            child: const Text('Send Broadcast', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+            child: const Text(
+              'Send Broadcast',
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontWeight: FontWeight.w700,
+                fontSize: 12.5,
+              ),
+            ),
           ),
         ],
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Compose and send instant push notifications to all enrolled students for upcoming live quizzes.',
-              style: TextStyle(fontSize: 12.5, color: Color(0xFF475569)),
+              style: AppTypography.bodySmall.copyWith(fontSize: 12.5, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 12),
-            TextField(
+            AppModalDialog.textField(
               controller: textController,
-              decoration: InputDecoration(
-                hintText: 'e.g. Current Affairs Live Quiz starts in 10 minutes! Join now to win rewards.',
-                hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                contentPadding: const EdgeInsets.all(12),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFF04483), width: 1.5),
-                ),
-              ),
               maxLines: 3,
+              minLines: 3,
+              hint: 'e.g. Current Affairs Live Quiz starts in 10 minutes! Join now to win rewards.',
+              contentPadding: const EdgeInsets.all(14),
             ),
           ],
         ),

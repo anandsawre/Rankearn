@@ -320,164 +320,44 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Start Date *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () async {
-                          final d = await showDatePicker(
-                            context: context,
-                            initialDate: _startDate,
-                            firstDate: DateTime(2025),
-                            lastDate: DateTime(2030),
-                          );
-                          if (d != null) setState(() => _startDate = d);
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF5636F5)),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${_startDate.year}-${_startDate.month.toString().padLeft(2, '0')}-${_startDate.day.toString().padLeft(2, '0')}',
-                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppDatePicker(
+                    label: 'Start Date',
+                    value: _startDate,
+                    firstDate: DateTime(2025),
+                    lastDate: DateTime(2030),
+                    onChanged: (d) => setState(() => _startDate = d),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Start Time *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () async {
-                          final t = await showTimePicker(
-                            context: context,
-                            initialTime: _startTime,
-                          );
-                          if (t != null) setState(() => _startTime = t);
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF5636F5)),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}',
-                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppTimePicker(
+                    label: 'Start Time',
+                    value: _startTime,
+                    onChanged: (t) => setState(() => _startTime = t),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // End Date & Time
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('End Date *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () async {
-                          final d = await showDatePicker(
-                            context: context,
-                            initialDate: _endDate,
-                            firstDate: DateTime(2025),
-                            lastDate: DateTime(2030),
-                          );
-                          if (d != null) setState(() => _endDate = d);
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF5636F5)),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${_endDate.year}-${_endDate.month.toString().padLeft(2, '0')}-${_endDate.day.toString().padLeft(2, '0')}',
-                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppDatePicker(
+                    label: 'End Date',
+                    value: _endDate,
+                    firstDate: DateTime(2025),
+                    lastDate: DateTime(2030),
+                    onChanged: (d) => setState(() => _endDate = d),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('End Time *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () async {
-                          final t = await showTimePicker(
-                            context: context,
-                            initialTime: _endTime,
-                          );
-                          if (t != null) setState(() => _endTime = t);
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF5636F5)),
-                              const SizedBox(width: 8),
-                              Text(
-                                '${_endTime.hour.toString().padLeft(2, '0')}:${_endTime.minute.toString().padLeft(2, '0')}',
-                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppTimePicker(
+                    label: 'End Time',
+                    value: _endTime,
+                    onChanged: (t) => setState(() => _endTime = t),
                   ),
                 ),
               ],

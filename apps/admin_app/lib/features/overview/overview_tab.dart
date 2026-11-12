@@ -202,23 +202,9 @@ class _OverviewTabState extends State<OverviewTab> {
   }
 
   Future<void> _pickAttemptsDateRange() async {
-    final now = DateTime.now();
-    final picked = await showDateRangePicker(
+    final picked = await AppDateRangePicker.show(
       context: context,
-      firstDate: DateTime(2024, 1, 1),
-      lastDate: DateTime(now.year + 1, 12, 31),
       initialDateRange: _attemptsDateRange,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppColors.brandPurple,
-              onPrimary: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (picked != null && mounted) {

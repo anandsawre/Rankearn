@@ -270,80 +270,22 @@ class _CreateLuckyWheelDialogState extends State<CreateLuckyWheelDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Start Date',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF101A3A)),
-                      ),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _startDate,
-                            firstDate: DateTime(2025),
-                            lastDate: DateTime(2030),
-                          );
-                          if (picked != null) setState(() => _startDate = picked);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textSecondary),
-                              const SizedBox(width: 8),
-                              Text('${_startDate.day}/${_startDate.month}/${_startDate.year}'),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppDatePicker(
+                    label: 'Start Date',
+                    value: _startDate,
+                    firstDate: DateTime(2025),
+                    lastDate: DateTime(2030),
+                    onChanged: (picked) => setState(() => _startDate = picked),
                   ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'End Date',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF101A3A)),
-                      ),
-                      const SizedBox(height: 6),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _endDate,
-                            firstDate: DateTime(2025),
-                            lastDate: DateTime(2030),
-                          );
-                          if (picked != null) setState(() => _endDate = picked);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textSecondary),
-                              const SizedBox(width: 8),
-                              Text('${_endDate.day}/${_endDate.month}/${_endDate.year}'),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppDatePicker(
+                    label: 'End Date',
+                    value: _endDate,
+                    firstDate: DateTime(2025),
+                    lastDate: DateTime(2030),
+                    onChanged: (picked) => setState(() => _endDate = picked),
                   ),
                 ),
               ],

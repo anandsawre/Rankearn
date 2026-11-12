@@ -221,11 +221,8 @@ class _PaymentsTableCardState extends State<PaymentsTableCard> {
           ? '${_formatShortDate(widget.dateRange!.start)} - ${_formatShortDate(widget.dateRange!.end)}'
           : 'Oct 1, 2026 - Oct 31, 2026',
       onDateRangeTap: () async {
-        final now = DateTime.now();
-        final res = await showDateRangePicker(
+        final res = await AppDateRangePicker.show(
           context: context,
-          firstDate: DateTime(now.year - 1),
-          lastDate: DateTime(now.year + 1),
           initialDateRange: widget.dateRange ??
               DateTimeRange(
                 start: DateTime(2026, 10, 1),
