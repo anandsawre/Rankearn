@@ -182,32 +182,19 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
       title: isEdit ? 'Edit Tournament' : 'Create Tournament',
       subtitle: 'Configure tournament parameters, prize pool & schedule',
       iconData: Icons.emoji_events_rounded,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
       maxWidth: 620,
       scrollable: true,
       actions: [
-        OutlinedButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-          ),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton(
+        AppModalDialog.cancelButton(context),
+        AppModalDialog.primaryButton(
           onPressed: _submit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            elevation: 0,
-          ),
           child: Text(
             isEdit ? 'Save Changes' : 'Create Tournament',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+            style: const TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
           ),
         ),
       ],
@@ -217,104 +204,76 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Title
-            const Text('Tournament Title *', style: _labelStyle),
-            const SizedBox(height: 6),
-            TextFormField(
+            AppModalDialog.textField(
               controller: _titleController,
-              decoration: _inputDecoration('e.g. RRB Technician Grand Championship'),
+              hint: 'Tournament Title * (e.g. RRB Technician Grand Championship)',
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a title' : null,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Subtitle
-            const Text('Subtitle / Description', style: _labelStyle),
-            const SizedBox(height: 6),
-            TextFormField(
+            AppModalDialog.textField(
               controller: _subtitleController,
-              decoration: _inputDecoration('e.g. All India Live Quiz Tournament & Leaderboard'),
+              hint: 'Subtitle / Description (e.g. All India Live Quiz Tournament & Leaderboard)',
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Category & Status Row
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Category *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<String>(
-                        value: selectedCategory,
-                        items: availableCategories
-                            .map((c) => AppDropdownItem(value: c, label: c))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _category = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown<String>(
+                    hint: 'Category *',
+                    value: selectedCategory,
+                    items: availableCategories
+                        .map((c) => AppDropdownItem(value: c, label: c))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _category = val);
+                    },
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Status *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      AppDropdown<TournamentStatus>(
-                        value: _status,
-                        items: TournamentStatus.values
-                            .map((s) => AppDropdownItem(value: s, label: s.label))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _status = val);
-                        },
-                      ),
-                    ],
+                  child: AppDropdown<TournamentStatus>(
+                    hint: 'Status *',
+                    value: _status,
+                    items: TournamentStatus.values
+                        .map((s) => AppDropdownItem(value: s, label: s.label))
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _status = val);
+                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Entry Fee & Prize Pool Row
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Entry Fee (Coins / ₹)', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _entryFeeController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('0 for free'),
-                      ),
-                    ],
+                  child: AppModalDialog.textField(
+                    controller: _entryFeeController,
+                    keyboardType: TextInputType.number,
+                    hint: 'Entry Fee (0 for free)',
+                    suffixText: 'Coins / ₹',
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Prize Pool (Coins / ₹) *', style: _labelStyle),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _prizePoolController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration('50000'),
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter prize pool' : null,
-                      ),
-                    ],
+                  child: AppModalDialog.textField(
+                    controller: _prizePoolController,
+                    keyboardType: TextInputType.number,
+                    hint: 'Prize Pool * (50000)',
+                    suffixText: 'Coins / ₹',
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter prize pool' : null,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
             // Start Date & Time
             Row(
@@ -365,33 +324,37 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
 
             // Optional: Copy Questions From Existing Test
             if (!isEdit) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                  color: AppColors.surfaceSubtle,
+                  borderRadius: AppRadii.cardSubtle,
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.copy_all_rounded, size: 16, color: Color(0xFF5636F5)),
-                        SizedBox(width: 6),
+                        const Icon(Icons.copy_all_rounded, size: 16, color: AppModalDialog.defaultPrimaryColor),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             'Copy Questions from Existing Test (Optional)',
-                            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                            style: AppTypography.titleSmall.copyWith(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Select an existing test or mock set to automatically populate questions for this tournament.',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                      style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textMuted),
                     ),
                     const SizedBox(height: 10),
                     AppDropdown<String?>(
@@ -423,13 +386,4 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
       ),
     );
   }
-
-  static const TextStyle _labelStyle = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    color: Color(0xFF334155),
-  );
-
-  static InputDecoration _inputDecoration(String hint) =>
-      AppModalDialog.inputDecoration(hint, focusColor: const Color(0xFF5636F5));
 }

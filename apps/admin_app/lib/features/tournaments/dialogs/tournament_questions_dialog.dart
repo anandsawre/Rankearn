@@ -275,27 +275,10 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
             title: 'Add from Existing Test',
             subtitle: 'Bulk clone questions from another mock test or category',
             iconData: Icons.copy_all_rounded,
-            gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
             maxWidth: 520,
             actions: [
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFCBD5E1)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                ),
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5636F5),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  elevation: 0,
-                ),
+              AppModalDialog.cancelButton(ctx),
+              AppModalDialog.primaryButton(
                 onPressed: () async {
                   Navigator.pop(ctx);
                   await _copyQuestionsFromTest(
@@ -304,7 +287,7 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
                     replaceExisting: replaceExisting,
                   );
                 },
-                child: const Text('Copy Questions Now', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
+                child: const Text('Copy Questions Now', style: TextStyle(fontFamily: AppTypography.fontHeading, fontWeight: FontWeight.w700, fontSize: 12.5)),
               ),
             ],
             child: Column(
@@ -476,27 +459,12 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
         title: 'Delete Question',
         subtitle: 'Question #${question.questionNumber}',
         iconData: Icons.delete_outline_rounded,
-        gradientColors: const [Color(0xFFDC2626), Color(0xFFEF4444)],
+        gradientColors: const [AppColors.liveRedDark, AppColors.liveRed],
         maxWidth: 420,
         actions: [
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              elevation: 0,
-            ),
+          AppModalDialog.cancelButton(ctx),
+          AppModalDialog.primaryButton(
+            backgroundColor: AppColors.liveRedDark,
             onPressed: () async {
               Navigator.pop(ctx);
               setState(() {
@@ -521,17 +489,17 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Question #${question.questionNumber} deleted.'),
-                    backgroundColor: const Color(0xFFEF4444),
+                    backgroundColor: AppColors.liveRed,
                   ),
                 );
               }
             },
-            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text('Delete', style: TextStyle(fontFamily: AppTypography.fontHeading, fontWeight: FontWeight.w700)),
           ),
         ],
         child: Text(
           'Are you sure you want to delete Question #${question.questionNumber}? This action cannot be undone.',
-          style: const TextStyle(fontSize: 13, color: Color(0xFF334155), height: 1.45),
+          style: AppTypography.bodySmall.copyWith(fontSize: 13, color: AppColors.textSecondary, height: 1.45),
         ),
       ),
     );
@@ -549,46 +517,21 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
       maxWidth: 960,
       scrollable: false,
       actions: [
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5636F5),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            elevation: 0,
-          ),
-          icon: const Icon(Icons.copy_all_rounded, size: 16),
-          label: const Text('Add Existing Test', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-          onPressed: _openImportFromExistingTestDialog,
-        ),
-        const SizedBox(width: 8),
-        OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF5636F5),
-            side: const BorderSide(color: Color(0xFF5636F5)),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          icon: const Icon(Icons.add_rounded, size: 16),
-          label: const Text('New Question', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-          onPressed: () => _openAddQuestionDialog(),
-        ),
-        const SizedBox(width: 8),
-        OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF475569),
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          icon: const Icon(Icons.upload_file_rounded, size: 16),
-          label: const Text('Import CSV', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        AppModalDialog.cancelButton(context, label: 'Close'),
+        AppModalDialog.secondaryButton(
           onPressed: _openImportQuestionsDialog,
+          icon: const Icon(Icons.upload_file_rounded, size: 16),
+          child: const Text('Import CSV', style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 12, fontWeight: FontWeight.w600)),
         ),
-        const SizedBox(width: 8),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+        AppModalDialog.secondaryButton(
+          onPressed: () => _openAddQuestionDialog(),
+          icon: const Icon(Icons.add_rounded, size: 16, color: AppModalDialog.defaultPrimaryColor),
+          child: const Text('New Question', style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 12, fontWeight: FontWeight.w600, color: AppModalDialog.defaultPrimaryColor)),
+        ),
+        AppModalDialog.primaryButton(
+          onPressed: _openImportFromExistingTestDialog,
+          icon: const Icon(Icons.copy_all_rounded, size: 16),
+          child: const Text('Add Existing Test', style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 12, fontWeight: FontWeight.w700)),
         ),
       ],
       child: Column(

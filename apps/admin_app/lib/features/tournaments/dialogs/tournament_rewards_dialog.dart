@@ -21,21 +21,10 @@ class TournamentRewardsDialog extends StatelessWidget {
       title: 'Prize Pool & Rewards',
       subtitle: 'Total Reward Pool: ₹$pool • Leaderboard payouts',
       iconData: Icons.card_giftcard_rounded,
-      gradientColors: const [Color(0xFF00B368), Color(0xFF10B981)],
       maxWidth: 520,
       scrollable: true,
       actions: [
-        ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF00B368),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-            elevation: 0,
-          ),
-          child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
-        ),
+        AppModalDialog.cancelButton(context, label: 'Close'),
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -43,15 +32,15 @@ class TournamentRewardsDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
+              color: AppColors.surfaceSubtle,
+              borderRadius: AppRadii.cardSubtle,
+              border: Border.all(color: AppColors.border),
             ),
             child: ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: tiers.length,
-              separatorBuilder: (_, index) => const Divider(height: 18, color: Color(0xFFE2E8F0)),
+              separatorBuilder: (_, index) => const Divider(height: 18, color: AppColors.border),
               itemBuilder: (context, i) {
                 final tier = tiers[i];
                 return Row(
@@ -70,17 +59,17 @@ class TournamentRewardsDialog extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           tier['rank'] as String,
-                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                          style: AppTypography.bodySmall.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                         ),
                       ],
                     ),
                     Text(
                       tier['percentage'] as String,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                      style: AppTypography.bodySmall.copyWith(fontSize: 12, color: AppColors.textMuted),
                     ),
                     Text(
                       tier['amount'] as String,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF10B981)),
+                      style: AppTypography.bodySmall.copyWith(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.brandGreen),
                     ),
                   ],
                 );

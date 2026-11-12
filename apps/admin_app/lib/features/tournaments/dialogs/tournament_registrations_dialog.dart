@@ -89,38 +89,27 @@ class _TournamentRegistrationsDialogState extends State<TournamentRegistrationsD
       title: title,
       subtitle: '${_participants.length} verified registrations and entry records',
       iconData: Icons.group_outlined,
-      gradientColors: const [Color(0xFFFF9F0A), Color(0xFFF59E0B)],
       maxWidth: 720,
       scrollable: true,
       actions: [
-        ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFF9F0A),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-            elevation: 0,
-          ),
-          child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
-        ),
+        AppModalDialog.cancelButton(context, label: 'Close'),
       ],
       child: _isLoading
           ? const SizedBox(
               height: 250,
-              child: Center(child: CircularProgressIndicator(color: Color(0xFF5636F5))),
+              child: Center(child: CircularProgressIndicator(color: AppModalDialog.defaultPrimaryColor)),
             )
           : Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFCBD5E1)),
+                color: AppColors.surface,
+                borderRadius: AppRadii.button,
+                border: Border.all(color: AppColors.border),
               ),
               child: ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _participants.length,
-                separatorBuilder: (_, index) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                separatorBuilder: (_, index) => const Divider(height: 1, color: AppColors.borderSubtle),
                 itemBuilder: (context, i) {
                   final p = _participants[i];
                   return Padding(
@@ -146,18 +135,18 @@ class _TournamentRegistrationsDialogState extends State<TournamentRegistrationsD
                             children: [
                               Text(
                                 p['name'].toString(),
-                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                                style: AppTypography.bodySmall.copyWith(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                               ),
                               Text(
                                 p['email'].toString(),
-                                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                                style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textMuted),
                               ),
                             ],
                           ),
                         ),
                         Text(
                           p['joined'].toString(),
-                          style: const TextStyle(fontSize: 11.5, color: Color(0xFF475569)),
+                          style: AppTypography.bodySmall.copyWith(fontSize: 11.5, color: AppColors.textSecondary),
                         ),
                         const SizedBox(width: 16),
                         Container(

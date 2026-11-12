@@ -18,37 +18,26 @@ class TournamentDetailsDialog extends StatelessWidget {
       title: item.title,
       subtitle: '${item.category} • ${item.status.label}',
       iconData: Icons.emoji_events_rounded,
-      gradientColors: const [Color(0xFF5636F5), Color(0xFF2587F8)],
       maxWidth: 520,
       scrollable: true,
       actions: [
-        OutlinedButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-          ),
-          child: const Text('Close', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12.5)),
-        ),
-        if (onEdit != null) ...[
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
+        AppModalDialog.cancelButton(context, label: 'Close'),
+        if (onEdit != null)
+          AppModalDialog.primaryButton(
             onPressed: () {
               Navigator.of(context).pop();
               onEdit!();
             },
             icon: const Icon(Icons.edit_rounded, size: 14),
-            label: const Text('Edit Tournament', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5636F5),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            child: const Text(
+              'Edit Tournament',
+              style: TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontWeight: FontWeight.w700,
+                fontSize: 12.5,
+              ),
             ),
           ),
-        ],
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -56,7 +45,7 @@ class TournamentDetailsDialog extends StatelessWidget {
           if (item.subtitle.isNotEmpty) ...[
             Text(
               item.subtitle,
-              style: const TextStyle(fontSize: 12.5, color: Color(0xFF475569), height: 1.4),
+              style: AppTypography.bodySmall.copyWith(fontSize: 12.5, color: AppColors.textSecondary, height: 1.4),
             ),
             const SizedBox(height: 14),
           ],
@@ -65,24 +54,24 @@ class TournamentDetailsDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
+              color: AppColors.surfaceSubtle,
+              borderRadius: AppRadii.cardSubtle,
+              border: Border.all(color: AppColors.border),
             ),
             child: Column(
               children: [
                 _buildInfoRow('Category', item.category),
-                const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                const Divider(height: 16, color: AppColors.border),
                 _buildInfoRow('Status', item.status.label, badgeColor: item.status.color, badgeBg: item.status.backgroundColor),
-                const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                const Divider(height: 16, color: AppColors.border),
                 _buildInfoRow('Prize Pool', '₹${_formatNumber(item.prizePool)}', isBold: true),
-                const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                const Divider(height: 16, color: AppColors.border),
                 _buildInfoRow('Entry Fee', item.entryFee == 0 ? 'Free (₹0)' : '₹${item.entryFee}'),
-                const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                const Divider(height: 16, color: AppColors.border),
                 _buildInfoRow('Participants', '${_formatNumber(item.participants)} registered'),
-                const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                const Divider(height: 16, color: AppColors.border),
                 _buildInfoRow('Start Date/Time', '${_formatDate(item.startDate)} at ${_formatTime(item.startDate)}'),
-                const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                const Divider(height: 16, color: AppColors.border),
                 _buildInfoRow('End Date/Time', '${_formatDate(item.endDate)} at ${_formatTime(item.endDate)}'),
               ],
             ),
