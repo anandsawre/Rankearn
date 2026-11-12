@@ -1,16 +1,19 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
+import '../models/user_management_item.dart';
 
 class ExportUsersDialog extends StatefulWidget {
-  final int totalCount;
-  final int filteredCount;
-  final int selectedCount;
+  final List<UserManagementItem> allUsers;
+  final List<UserManagementItem> filteredUsers;
+  final Set<String> selectedIds;
 
   const ExportUsersDialog({
     super.key,
-    required this.totalCount,
-    required this.filteredCount,
-    required this.selectedCount,
+    required this.allUsers,
+    required this.filteredUsers,
+    required this.selectedIds,
   });
 
   @override
@@ -25,32 +28,101 @@ class _ExportUsersDialogState extends State<ExportUsersDialog> {
   @override
   void initState() {
     super.initState();
-    if (widget.selectedCount > 0) {
+    if (widget.selectedIds.isNotEmpty) {
       _scope = 'selected';
-    } else if (widget.filteredCount < widget.totalCount) {
+    } else if (widget.filteredUsers.length < widget.allUsers.length) {
       _scope = 'filtered';
     }
   }
 
-  void _export() {
-    setState(() => _isExporting = true);
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
+  List<UserManagementItem> get _targetRecords {
+    switch (_scope) {
+      case 'selected':
+        return widget.allUsers.where((u) => widget.selectedIds.contains(u.id)).toList();
+      case 'filtered':
+        return widget.filteredUsers;
+      case 'all':
+      default:
+        return widget.allUsers;
+    }
+  }
+
+  String _escapeCsv(String value) {
+    final clean = value.replaceAll('"', '""');
+    return '"$clean"';
+  }
+
+  Future<void> _export() async {
+    final records = _targetRecords;
+    if (records.isEmpty) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Successfully exported users dataset in ${_format.toUpperCase()} format!'),
-          backgroundColor: const Color(0xFF10B981),
+        const SnackBar(
+          content: Text('No user records available in the selected scope.'),
+          backgroundColor: Color(0xFFF59E0B),
         ),
       );
-    });
+      return;
+    }
+
+    setState(() => _isExporting = true);
+
+    late final String payload;
+    if (_format == 'json') {
+      payload = const JsonEncoder.withIndent('  ').convert(
+        records
+            .map(
+              (u) => {
+                'id': u.id,
+                'name': u.name,
+                'email': u.email,
+                'phone': u.phone,
+                'role': u.role.label,
+                'status': u.status.label,
+                'coins': u.coins,
+                'enrollments': u.enrollmentsCount,
+                'tests_attempted': u.testsAttemptedCount,
+                'joined_at': u.joinedAt.toIso8601String(),
+              },
+            )
+            .toList(),
+      );
+    } else {
+      final buffer = StringBuffer()
+        ..writeln('id,name,email,phone,role,status,coins,enrollments,tests_attempted,joined_at');
+      for (final u in records) {
+        buffer.writeln([
+          _escapeCsv(u.id),
+          _escapeCsv(u.name),
+          _escapeCsv(u.email),
+          _escapeCsv(u.phone ?? ''),
+          _escapeCsv(u.role.label),
+          _escapeCsv(u.status.label),
+          u.coins,
+          u.enrollmentsCount,
+          u.testsAttemptedCount,
+          _escapeCsv(u.joinedAt.toIso8601String()),
+        ].join(','));
+      }
+      payload = buffer.toString();
+    }
+
+    await Clipboard.setData(ClipboardData(text: payload));
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Copied ${records.length} user(s) as ${_format.toUpperCase()} to clipboard!'),
+        backgroundColor: const Color(0xFF10B981),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return AppModalDialog(
       title: 'Export Users Dataset',
-      subtitle: 'Select format and scope to download authorized user records',
+      subtitle: 'Copy live Supabase user records in CSV or JSON format',
       iconData: Icons.file_download_outlined,
       gradientColors: const [Color(0xFFE11D48), Color(0xFFF43F5E)],
       maxWidth: 480,
@@ -69,8 +141,8 @@ class _ExportUsersDialogState extends State<ExportUsersDialog> {
           onPressed: _isExporting ? null : _export,
           icon: _isExporting
               ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Icon(Icons.download_rounded, size: 16),
-          label: const Text('Download Dataset', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              : const Icon(Icons.copy_rounded, size: 16),
+          label: const Text('Copy Dataset', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFE11D48),
             foregroundColor: Colors.white,
@@ -84,7 +156,6 @@ class _ExportUsersDialogState extends State<ExportUsersDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Export Format
           const Text('File Format:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
           const SizedBox(height: 8),
           Wrap(
@@ -93,22 +164,17 @@ class _ExportUsersDialogState extends State<ExportUsersDialog> {
             children: [
               _buildFormatChip('CSV (.csv)', 'csv'),
               _buildFormatChip('JSON (.json)', 'json'),
-              _buildFormatChip('Excel (.xlsx)', 'xlsx'),
             ],
           ),
           const SizedBox(height: 16),
-
-          // Export Scope
           const Text('Data Scope:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF334155))),
           const SizedBox(height: 8),
-          _buildScopeOption('All Users (${widget.totalCount} records)', 'all'),
-          if (widget.filteredCount < widget.totalCount)
-            _buildScopeOption('Current Filtered View (${widget.filteredCount} records)', 'filtered'),
-          if (widget.selectedCount > 0)
-            _buildScopeOption('Selected Users Only (${widget.selectedCount} records)', 'selected'),
+          _buildScopeOption('All Users (${widget.allUsers.length} records)', 'all'),
+          if (widget.filteredUsers.length < widget.allUsers.length)
+            _buildScopeOption('Current Filtered View (${widget.filteredUsers.length} records)', 'filtered'),
+          if (widget.selectedIds.isNotEmpty)
+            _buildScopeOption('Selected Users Only (${widget.selectedIds.length} records)', 'selected'),
           const SizedBox(height: 14),
-
-          // Security notice
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -122,7 +188,7 @@ class _ExportUsersDialogState extends State<ExportUsersDialog> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Exports contain authorized columns only. Password hashes and auth tokens are excluded.',
+                    'Exports contain authorized profile columns only. Password hashes and auth tokens are excluded.',
                     style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                   ),
                 ),

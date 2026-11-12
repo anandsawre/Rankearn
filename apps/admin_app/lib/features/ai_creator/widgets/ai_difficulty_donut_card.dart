@@ -9,18 +9,16 @@ class AiDifficultyDonutCard extends StatelessWidget {
   final List<DonutSlice> slices;
   final double? height;
   final bool fillHeight;
+  final bool isLoading;
 
   const AiDifficultyDonutCard({
     super.key,
-    this.totalCount = 124,
+    this.totalCount = 0,
     this.onViewAll,
     this.height,
     this.fillHeight = false,
-    this.slices = const [
-      DonutSlice(label: 'Easy', percentage: 32, color: Color(0xFF10B981), count: 40),
-      DonutSlice(label: 'Medium', percentage: 48, color: Color(0xFFFF9F0A), count: 60),
-      DonutSlice(label: 'Hard', percentage: 20, color: Color(0xFFF0445F), count: 24),
-    ],
+    this.slices = const [],
+    this.isLoading = false,
   });
 
   @override
@@ -32,25 +30,28 @@ class AiDifficultyDonutCard extends StatelessWidget {
       totalCount: totalCount,
       totalLabel: 'Total',
       slices: slices,
-      height: height ?? (fillHeight ? null : 185),
+      isLoading: isLoading,
+      height: height ?? (fillHeight ? null : 195),
       fillHeight: fillHeight,
       chartSize: 92,
       strokeWidth: 13.5,
       strokeCap: StrokeCap.round,
-      trailingHeader: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onViewAll,
-          child: const Text(
-            'View All',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2587F8),
+      trailingHeader: onViewAll == null
+          ? null
+          : MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: onViewAll,
+                child: const Text(
+                  'View All',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2587F8),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -15,7 +15,8 @@ class AiCreatorService {
   String _geminiWorkerUrl = 'https://testkarlo.alleduupdated.workers.dev';
   String _geminiApiKey = '';
   double _temperature = 0.7;
-  String _systemPrompt = 'You are an expert Indian Competitive Examination paper setter specializing in Railway RRB, SSC, and State PSC test series.';
+  String _systemPrompt =
+      'You are an expert Indian Competitive Examination paper setter specializing in Railway RRB, SSC, and State PSC test series.';
 
   String get workerUrl => _geminiWorkerUrl;
   String get apiKey => _geminiApiKey;
@@ -68,7 +69,7 @@ class AiCreatorService {
     }
   }
 
-  /// Generate AI Competitive Questions based on user parameters
+  /// Generate AI Competitive Questions strictly via live AI backends (no fake offline synthesis).
   Future<List<AiTestQuestion>> generateQuestions({
     required String title,
     required String topic,
@@ -80,9 +81,10 @@ class AiCreatorService {
     String? customInstructions,
     void Function(double progress, String status)? onProgress,
   }) async {
-    onProgress?.call(0.15, 'Connecting to Gemini AI Engine...');
+    onProgress?.call(0.15, 'Connecting to AI Engine...');
 
     List<AiTestQuestion> generated = [];
+    String? lastError;
 
     final prompt = '''
 $_systemPrompt
@@ -101,17 +103,17 @@ Output STRICTLY a JSON array of objects with keys:
 - "correctOptionIndex": Integer 0 to 3
 - "explanation": Detailed explanation
 - "explanationHi": Hindi explanation
-Do not wrap in markdown quotes if possible, output pure JSON.
+Return pure JSON array only.
 ''';
 
-    // Attempt 1: Official Google Gemini 2.0 / 1.5 API directly if API key is configured
+    // Attempt 1: Google Gemini API directly when API key is configured
     if (_geminiApiKey.isNotEmpty) {
       try {
-        onProgress?.call(0.35, 'Generating $count verified questions via Google Gemini API...');
+        onProgress?.call(0.35, 'Generating $count questions via Google Gemini API...');
         final directUri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$_geminiApiKey',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$_geminiApiKey',
         );
-        
+
         final directResp = await http
             .post(
               directUri,
@@ -119,17 +121,19 @@ Do not wrap in markdown quotes if possible, output pure JSON.
               body: jsonEncode({
                 'contents': [
                   {
-                    'parts': [{'text': prompt}]
+                    'parts': [
+                      {'text': prompt}
+                    ]
                   }
                 ],
                 'generationConfig': {
                   'temperature': _temperature,
-                  'maxOutputTokens': 4000,
+                  'maxOutputTokens': 8192,
                   'responseMimeType': 'application/json',
                 }
               }),
             )
-            .timeout(const Duration(seconds: 15));
+            .timeout(const Duration(seconds: 45));
 
         if (directResp.statusCode == 200) {
           final resJson = jsonDecode(directResp.body);
@@ -141,18 +145,75 @@ Do not wrap in markdown quotes if possible, output pure JSON.
               generated = _parseJsonQuestions(clean, subject, difficulty);
             }
           }
+        } else {
+          lastError = 'Gemini API returned HTTP ${directResp.statusCode}.';
         }
       } catch (e) {
-        debugPrint('Direct Gemini API note: $e');
+        lastError = 'Gemini API request failed: $e';
+        debugPrint(lastError);
       }
     }
 
-    // Attempt 2: Call Gemini Edge Worker API
-    if (generated.isEmpty) {
+    // Attempt 2: Supabase Edge Function `gemini-proxy` (if signed in as Admin)
+    final client = SupabaseConfig.clientSafe;
+    final currentSession = client?.auth.currentSession;
+    if (generated.isEmpty && client != null && currentSession != null) {
       try {
-        onProgress?.call(0.40, 'Generating $count verified questions via Gemini Edge Gateway...');
+        var accessToken = currentSession.accessToken;
+        if (currentSession.isExpired) {
+          try {
+            final refreshed = await client.auth.refreshSession();
+            accessToken = refreshed.session?.accessToken ?? accessToken;
+          } catch (_) {}
+        }
+        onProgress?.call(0.55, 'Generating $count questions via Supabase Edge Proxy...');
+        final edgeResp = await client.functions.invoke(
+          'gemini-proxy',
+          headers: {'Authorization': 'Bearer $accessToken'},
+          body: {
+            'model': 'gemini-3.8-flash',
+            'contents': [
+              {
+                'parts': [
+                  {'text': prompt}
+                ]
+              }
+            ],
+            'generationConfig': {
+              'temperature': _temperature,
+              'maxOutputTokens': 8192,
+              'responseMimeType': 'application/json',
+            },
+          },
+        );
+        if (edgeResp.status == 200 && edgeResp.data != null) {
+          final data = edgeResp.data is String
+              ? jsonDecode(edgeResp.data as String)
+              : edgeResp.data;
+          if (data is Map) {
+            final candidates = data['candidates'] as List<dynamic>?;
+            if (candidates != null && candidates.isNotEmpty) {
+              final text = candidates[0]['content']?['parts']?[0]?['text'] ?? '';
+              final clean = _extractJson(text.toString());
+              if (clean.isNotEmpty) {
+                generated = _parseJsonQuestions(clean, subject, difficulty);
+              }
+            }
+          }
+        } else {
+          lastError = 'Supabase gemini-proxy returned status ${edgeResp.status}.';
+        }
+      } catch (e) {
+        lastError = 'Supabase gemini-proxy error: $e';
+        debugPrint(lastError);
+      }
+    }
+
+    // Attempt 3: Configured Gemini Edge Worker
+    if (generated.isEmpty && _geminiWorkerUrl.trim().isNotEmpty) {
+      try {
+        onProgress?.call(0.75, 'Requesting questions from Edge Gateway...');
         final uri = Uri.parse('$_geminiWorkerUrl/api/generate');
-        
         final response = await http
             .post(
               uri,
@@ -160,10 +221,10 @@ Do not wrap in markdown quotes if possible, output pure JSON.
               body: jsonEncode({
                 'prompt': prompt,
                 'temperature': _temperature,
-                'maxTokens': 4000,
+                'maxTokens': 8192,
               }),
             )
-            .timeout(const Duration(seconds: 12));
+            .timeout(const Duration(seconds: 45));
 
         if (response.statusCode == 200) {
           final body = jsonDecode(response.body);
@@ -172,100 +233,150 @@ Do not wrap in markdown quotes if possible, output pure JSON.
           if (cleanJson.isNotEmpty) {
             generated = _parseJsonQuestions(cleanJson, subject, difficulty);
           }
+        } else {
+          lastError = 'Edge Gateway returned HTTP ${response.statusCode}.';
         }
       } catch (e) {
-        debugPrint('Gemini Edge Gateway notice: $e (Falling back to intelligent curriculum engine)');
+        lastError = 'Edge Gateway unreachable: $e';
+        debugPrint(lastError);
       }
     }
 
-    // Attempt 3: Intelligent curriculum generator fallback
     if (generated.isEmpty) {
-      onProgress?.call(0.65, 'Synthesizing verified competitive questions from curriculum syllabus...');
-      generated = _generateCurriculumQuestions(
-        subject: subject,
-        topic: topic,
-        difficulty: difficulty,
-        count: count,
-        language: language,
+      throw Exception(
+        lastError ??
+            'AI generation failed. Configure a Gemini API key in Custom Prompt or verify your Supabase gemini-proxy / Worker Gateway.',
       );
     }
 
-    onProgress?.call(0.95, 'Formatting bilingual options and validating answer keys...');
-    await Future.delayed(const Duration(milliseconds: 300));
-    onProgress?.call(1.0, 'Complete! Test synthesized.');
-
+    onProgress?.call(1.0, 'Generated ${generated.length} verified questions.');
     return generated;
   }
 
-  /// Push generated questions directly into the Battle Pool (for 1v1 and multiplayer arenas)
+  /// Push generated questions directly into the Battle Pool (`battle_questions` table).
   Future<int> pushToBattlePool({
     required List<AiTestQuestion> questions,
     required String subjectName,
   }) async {
     final client = SupabaseConfig.clientSafe;
-    int pushedCount = 0;
+    if (client == null) {
+      throw Exception('Database connection is not initialized.');
+    }
+    if (questions.isEmpty) {
+      throw Exception('No questions available to push to Battle Pool.');
+    }
 
-    for (final q in questions) {
-      final payload = {
-        'id': 'bq_${DateTime.now().millisecondsSinceEpoch}_$pushedCount',
+    final now = DateTime.now().toUtc();
+    final payload = questions.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final q = entry.value;
+      return {
+        'id': 'bq_${now.millisecondsSinceEpoch}_$idx',
         'subject': subjectName,
         'question_text': q.questionText,
         'options': q.options,
-        'correct_answer': q.correctOptionIndex,
+        'correct_answer': q.correctOptionIndex.clamp(0, 3),
         'time_limit_seconds': 15,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'created_at': now.toIso8601String(),
       };
+    }).toList();
 
-      if (client != null) {
-        try {
-          await client.from('battle_questions').insert(payload);
-          pushedCount++;
-        } catch (_) {
-          // If battle_questions table requires different schema, attempt 'questions' table
-          try {
-            await client.from('questions').insert({
-              'id': 'q_${DateTime.now().millisecondsSinceEpoch}_$pushedCount',
-              'subject': subjectName,
-              'question_text': q.questionText,
-              'options': q.options,
-              'correct_answer': q.correctOptionIndex,
-              'explanation': q.explanation,
-            });
-            pushedCount++;
-          } catch (_) {}
-        }
-      } else {
-        pushedCount++;
-      }
-    }
-
-    return pushedCount;
+    await client.from('battle_questions').insert(payload);
+    return payload.length;
   }
 
-  /// Publish the test into the Mock Tests table
-  Future<bool> publishTestToApp({
+  /// Persist AI generated test into `ai_generated_tests`, `ai_test_questions`, `tests`, and `questions`.
+  Future<void> publishTestToApp({
     required AiGeneratedTestItem testItem,
   }) async {
     final client = SupabaseConfig.clientSafe;
-    if (client == null) return true;
+    if (client == null) {
+      throw Exception('Database connection is not initialized.');
+    }
 
-    try {
-      await client.from('ai_generated_tests').upsert(testItem.toJson());
-      // Also insert into 'tests' table
-      await client.from('tests').insert({
-        'id': testItem.id,
-        'title': testItem.title,
-        'subject': testItem.subject.label,
-        'difficulty': testItem.difficulty.label,
-        'total_questions': testItem.questionCount,
-        'duration_minutes': testItem.durationMinutes,
-        'status': 'published',
-        'created_at': testItem.createdOn.toIso8601String(),
-      });
-      return true;
-    } catch (e) {
-      debugPrint('Publish notice: $e');
-      return true;
+    // 1. Insert/upsert into `ai_generated_tests`
+    final aiRow = Map<String, dynamic>.from(testItem.toJson());
+    // Ensure UUID validity or let DB insert; if id isn't UUID format, omit `id` on insert or pass UUID.
+    final isUuid = RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(testItem.id);
+    if (!isUuid) {
+      aiRow.remove('id');
+    }
+
+    final savedAiRows = await client
+        .from('ai_generated_tests')
+        .upsert(aiRow)
+        .select('id')
+        .limit(1);
+    final persistedAiId = (savedAiRows as List).isNotEmpty
+        ? savedAiRows.first['id']?.toString() ?? testItem.id
+        : testItem.id;
+
+    // 2. Insert into `ai_test_questions` if questions exist
+    if (testItem.questions.isNotEmpty) {
+      final aiQRows = testItem.questions.map((q) {
+        return {
+          'test_id': persistedAiId,
+          'question_number': q.questionNumber,
+          'question_text': q.questionText,
+          'question_text_hi': q.questionTextHi,
+          'options': q.options,
+          'correct_option_index': q.correctOptionIndex.clamp(0, 3),
+          'explanation': q.explanation,
+          'explanation_hi': q.explanationHi,
+          'subject': q.subject,
+          'difficulty': q.difficulty,
+        };
+      }).toList();
+      await client.from('ai_test_questions').insert(aiQRows);
+    }
+
+    // 3. Publish cleanly into `tests` & `questions` tables using exact SQL schema columns
+    final publicTestId = 'test_${persistedAiId.replaceAll('-', '_')}';
+    await client.from('tests').upsert({
+      'id': publicTestId,
+      'title': testItem.title,
+      'category_id': testItem.subject.label,
+      'test_mode': 'mock',
+      'duration_minutes': testItem.durationMinutes,
+      'total_questions': testItem.questionCount,
+      'status': testItem.status == AiTestStatus.published ? 'published' : 'draft',
+      'created_at': testItem.createdOn.toUtc().toIso8601String(),
+    });
+
+    if (testItem.questions.isNotEmpty) {
+      final diffStr = testItem.difficulty.label.toLowerCase();
+      final qPayload = testItem.questions.asMap().entries.map((entry) {
+        final idx = entry.key;
+        final q = entry.value;
+        final optLabels = ['A', 'B', 'C', 'D'];
+        final formattedOpts = q.options.asMap().entries.map((o) {
+          final lbl = o.key < optLabels.length ? optLabels[o.key] : '${o.key}';
+          return {'label': lbl, 'text': o.value, 'textEnglish': o.value};
+        }).toList();
+
+        return {
+          'id': '${publicTestId}_q_${idx + 1}',
+          'test_id': publicTestId,
+          'question_number': idx + 1,
+          'question_text_english': q.questionText,
+          if (q.questionTextHi != null && q.questionTextHi!.isNotEmpty)
+            'question_text_hindi': q.questionTextHi,
+          'options': formattedOpts,
+          'correct_answer': q.correctOptionIndex.clamp(0, 3),
+          if (q.explanation.isNotEmpty) 'explanation_english': q.explanation,
+          if (q.explanationHi != null && q.explanationHi!.isNotEmpty)
+            'explanation_hindi': q.explanationHi,
+          'difficulty_level':
+              (diffStr == 'easy' || diffStr == 'medium' || diffStr == 'hard')
+                  ? diffStr
+                  : 'medium',
+          'subject': q.subject,
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+        };
+      }).toList();
+      await client.from('questions').upsert(qPayload);
     }
   }
 
@@ -278,7 +389,11 @@ Do not wrap in markdown quotes if possible, output pure JSON.
     return '';
   }
 
-  List<AiTestQuestion> _parseJsonQuestions(String cleanJson, AiTestSubject subject, AiTestDifficulty difficulty) {
+  List<AiTestQuestion> _parseJsonQuestions(
+    String cleanJson,
+    AiTestSubject subject,
+    AiTestDifficulty difficulty,
+  ) {
     try {
       final list = jsonDecode(cleanJson) as List<dynamic>;
       final result = <AiTestQuestion>[];
@@ -290,10 +405,12 @@ Do not wrap in markdown quotes if possible, output pure JSON.
             questionNumber: i + 1,
             questionText: qJson['questionText']?.toString() ?? 'Question ${i + 1}',
             questionTextHi: qJson['questionTextHi']?.toString(),
-            options: (qJson['options'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+            options: (qJson['options'] as List<dynamic>?)
+                    ?.map((e) => e.toString())
+                    .toList() ??
                 ['Option A', 'Option B', 'Option C', 'Option D'],
             correctOptionIndex: (qJson['correctOptionIndex'] as num?)?.toInt() ?? 0,
-            explanation: qJson['explanation']?.toString() ?? 'Standard competitive explanation.',
+            explanation: qJson['explanation']?.toString() ?? '',
             explanationHi: qJson['explanationHi']?.toString(),
             subject: subject.label,
             difficulty: difficulty.label,
@@ -303,154 +420,6 @@ Do not wrap in markdown quotes if possible, output pure JSON.
       return result;
     } catch (_) {
       return [];
-    }
-  }
-
-  List<AiTestQuestion> _generateCurriculumQuestions({
-    required AiTestSubject subject,
-    required String topic,
-    required AiTestDifficulty difficulty,
-    required int count,
-    required String language,
-  }) {
-    final templates = _getSubjectCurriculumTemplates(subject, topic);
-    final result = <AiTestQuestion>[];
-
-    for (int i = 0; i < count; i++) {
-      final t = templates[i % templates.length];
-      result.add(
-        AiTestQuestion(
-          id: 'gen_q_${DateTime.now().millisecondsSinceEpoch}_$i',
-          questionNumber: i + 1,
-          questionText: t['q_en'] as String,
-          questionTextHi: t['q_hi'] as String?,
-          options: List<String>.from(t['options'] as List),
-          correctOptionIndex: t['correct'] as int,
-          explanation: t['explanation'] as String,
-          explanationHi: t['explanation_hi'] as String?,
-          subject: subject.label,
-          difficulty: difficulty.label,
-        ),
-      );
-    }
-
-    return result;
-  }
-
-  List<Map<String, dynamic>> _getSubjectCurriculumTemplates(AiTestSubject subject, String topic) {
-    switch (subject) {
-      case AiTestSubject.generalScience:
-        return [
-          {
-            'q_en': 'Which electromagnetic wave has the shortest wavelength and highest frequency?',
-            'q_hi': 'किस विद्युतचुंबकीय तरंग की तरंग दैर्ध्य सबसे छोटी और आवृत्ति सबसे अधिक होती है?',
-            'options': ['Gamma Rays (गामा किरणें)', 'X-Rays (एक्स-किरणें)', 'Ultraviolet', 'Infrared'],
-            'correct': 0,
-            'explanation': 'Gamma rays have the shortest wavelength (< 10 picometers) and highest photon energy.',
-            'explanation_hi': 'गामा किरणों की तरंग दैर्ध्य सबसे छोटी और फोटॉन ऊर्जा सबसे अधिक होती है।',
-          },
-          {
-            'q_en': 'What is the escape velocity from the surface of Earth approximately?',
-            'q_hi': 'पृथ्वी की सतह से पलायन वेग लगभग कितना होता है?',
-            'options': ['9.8 km/s', '11.2 km/s', '14.5 km/s', '25.0 km/s'],
-            'correct': 1,
-            'explanation': 'The escape velocity from Earth surface is approximately 11.2 km/s (v_e = sqrt(2GM/R)).',
-            'explanation_hi': 'पृथ्वी की सतह से पलायन वेग लगभग 11.2 किमी/सेकंड होता है।',
-          },
-          {
-            'q_en': 'Which gas is responsible for the green colour flame in fireworks?',
-            'q_hi': 'आतिशबाजी में हरे रंग की लौ के लिए कौन सा तत्व जिम्मेदार है?',
-            'options': ['Barium (बेरियम)', 'Strontium (स्ट्रोंटियम)', 'Sodium (सोडियम)', 'Copper (कॉपर)'],
-            'correct': 0,
-            'explanation': 'Barium compounds produce a vibrant green flame in pyrotechnics.',
-            'explanation_hi': 'बेरियम यौगिक आतिशबाजी में चमकीला हरा रंग प्रदान करते हैं।',
-          },
-          {
-            'q_en': 'Which organ in the human body is primarily responsible for filtering urea from the blood?',
-            'q_hi': 'मानव शरीर में रक्त से यूरिया को छानने के लिए मुख्य रूप से कौन सा अंग जिम्मेदार है?',
-            'options': ['Kidneys (वृक्क/गुर्दे)', 'Liver (यकृत)', 'Spleen (प्लीहा)', 'Lungs (फेफड़े)'],
-            'correct': 0,
-            'explanation': 'The nephrons inside the kidneys filter urea and metabolic wastes from blood to form urine.',
-            'explanation_hi': 'गुर्दे के नेफ्रॉन रक्त से यूरिया और चयापचय अपशिष्ट को छानते हैं।',
-          },
-          {
-            'q_en': 'What is the SI unit of electric potential difference (Voltage)?',
-            'q_hi': 'विद्युत विभवांतर (वोल्टेज) की SI इकाई क्या है?',
-            'options': ['Ampere', 'Volt (वोल्ट)', 'Ohm', 'Joule'],
-            'correct': 1,
-            'explanation': 'One Volt is defined as the potential difference between two points when 1 Joule of work is done per Coulomb.',
-            'explanation_hi': 'एक वोल्ट वह विभवांतर है जब 1 कूलॉम आवेश ले जाने में 1 जूल कार्य होता है।',
-          },
-        ];
-
-      case AiTestSubject.mathematics:
-        return [
-          {
-            'q_en': 'If the selling price of 12 articles equals the cost price of 15 articles, find the profit percentage.',
-            'q_hi': 'यदि 12 वस्तुओं का विक्रय मूल्य 15 वस्तुओं के क्रय मूल्य के बराबर है, तो लाभ प्रतिशत ज्ञात कीजिए।',
-            'options': ['20%', '25%', '30%', '15%'],
-            'correct': 1,
-            'explanation': 'Gain% = ((15 - 12) / 12) * 100 = (3/12) * 100 = 25%.',
-            'explanation_hi': 'लाभ% = ((15 - 12) / 12) * 100 = 25%.',
-          },
-          {
-            'q_en': 'A train 180 metres long is running at 72 km/h. How many seconds will it take to pass a pole?',
-            'q_hi': '180 मीटर लंबी एक ट्रेन 72 किमी/घंटा की गति से चल रही है। एक खंभे को पार करने में इसे कितने सेकंड लगेंगे?',
-            'options': ['7 seconds', '9 seconds', '12 seconds', '15 seconds'],
-            'correct': 1,
-            'explanation': 'Speed = 72 * (5/18) = 20 m/s. Time = Distance / Speed = 180 / 20 = 9 seconds.',
-            'explanation_hi': 'गति = 72 * (5/18) = 20 मीटर/सेकंड। समय = 180 / 20 = 9 सेकंड।',
-          },
-          {
-            'q_en': 'Find the compound interest on ₹10,000 for 2 years at 10% per annum compounded annually.',
-            'q_hi': '₹10,000 पर 10% वार्षिक दर से 2 वर्ष का चक्रवृद्धि ब्याज ज्ञात कीजिए।',
-            'options': ['₹2,000', '₹2,100', '₹2,200', '₹1,900'],
-            'correct': 1,
-            'explanation': 'Amount = 10,000 * (1.1)^2 = ₹12,100. CI = ₹12,100 - ₹10,000 = ₹2,100.',
-            'explanation_hi': 'मिश्रधन = ₹12,100। चक्रवृद्धि ब्याज = ₹12,100 - ₹10,000 = ₹2,100.',
-          },
-        ];
-
-      case AiTestSubject.reasoning:
-        return [
-          {
-            'q_en': 'Complete the series: 3, 7, 15, 31, 63, ?',
-            'q_hi': 'श्रृंखला को पूरा करें: 3, 7, 15, 31, 63, ?',
-            'options': ['125', '127', '129', '131'],
-            'correct': 1,
-            'explanation': 'Pattern is (n * 2) + 1. 63 * 2 + 1 = 127.',
-            'explanation_hi': 'पैटर्न है (n * 2) + 1। 63 * 2 + 1 = 127।',
-          },
-          {
-            'q_en': 'Pointing to a gentleman, Deepak said, "His only brother is the father of my daughter\'s father." How is the gentleman related to Deepak?',
-            'q_hi': 'एक सज्जन की ओर इशारा करते हुए दीपक ने कहा, "उसका इकलौता भाई मेरी बेटी के पिता का पिता है।" वह सज्जन दीपक से किस प्रकार संबंधित है?',
-            'options': ['Father', 'Uncle (चाचा/ताऊ)', 'Brother', 'Grandfather'],
-            'correct': 1,
-            'explanation': 'Daughter\'s father = Deepak. His father\'s only brother = Deepak\'s uncle.',
-            'explanation_hi': 'बेटी का पिता = दीपक। दीपक के पिता का भाई = चाचा।',
-          },
-        ];
-
-      case AiTestSubject.currentAffairs:
-      default:
-        return [
-          {
-            'q_en': 'Which Article of the Indian Constitution guarantees the Right to Equality before Law?',
-            'q_hi': 'भारतीय संविधान का कौन सा अनुच्छेद कानून के समक्ष समानता के अधिकार की गारंटी देता है?',
-            'options': ['Article 14 (अनुच्छेद 14)', 'Article 19', 'Article 21', 'Article 32'],
-            'correct': 0,
-            'explanation': 'Article 14 states that the State shall not deny to any person equality before the law.',
-            'explanation_hi': 'अनुच्छेद 14 विधि के समक्ष समानता और विधियों के समान संरक्षण की गारंटी देता है।',
-          },
-          {
-            'q_en': 'Where is the headquarters of ISRO (Indian Space Research Organisation) located?',
-            'q_hi': 'इसरो (भारतीय अंतरिक्ष अनुसंधान संगठन) का मुख्यालय कहाँ स्थित है?',
-            'options': ['Bengaluru (बेंगलुरु)', 'New Delhi', 'Hyderabad', 'Thiruvananthapuram'],
-            'correct': 0,
-            'explanation': 'ISRO headquarters is located at Antariksh Bhavan in Bengaluru, Karnataka.',
-            'explanation_hi': 'इसरो का मुख्यालय अंतरिक्ष भवन, बेंगलुरु में स्थित है।',
-          },
-        ];
     }
   }
 }

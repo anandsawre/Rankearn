@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 import '../models/ai_test_item.dart';
 import '../services/ai_creator_service.dart';
@@ -21,80 +22,101 @@ class TestPreviewDialog extends StatefulWidget {
 
 class _TestPreviewDialogState extends State<TestPreviewDialog> {
   late List<AiTestQuestion> _questions;
+  bool _isLoadingQuestions = false;
   bool _isPushingToBattle = false;
   bool _isPublishing = false;
-
-  Future<void> _pushToBattlePool() async {
-    setState(() => _isPushingToBattle = true);
-    final count = await AiCreatorService().pushToBattlePool(
-      questions: _questions,
-      subjectName: widget.test.subject.label,
-    );
-    if (!mounted) return;
-    setState(() => _isPushingToBattle = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('⚡ Successfully pushed $count questions to the Live Battle Pool!'),
-        backgroundColor: const Color(0xFF10B981),
-      ),
-    );
-  }
-
-  Future<void> _publishTest() async {
-    setState(() => _isPublishing = true);
-    final updatedTest = widget.test.copyWith(questions: _questions);
-    await AiCreatorService().publishTestToApp(testItem: updatedTest);
-    if (!mounted) return;
-    setState(() => _isPublishing = false);
-    Navigator.of(context).pop();
-    widget.onPublish(updatedTest);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Test "${widget.test.title}" published successfully to student mobile app!'),
-        backgroundColor: const Color(0xFF10B981),
-      ),
-    );
-  }
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _questions = List.from(widget.test.questions);
     if (_questions.isEmpty) {
-      _questions = [
-        AiTestQuestion(
-          id: 'q_preview_1',
-          questionNumber: 1,
-          questionText: 'Which law of thermodynamics states that the entropy of an isolated system always increases over time?',
-          questionTextHi: 'ऊष्मागतिकी का कौन सा नियम कहता है कि एक पृथक प्रणाली की एन्ट्रापी हमेशा समय के साथ बढ़ती है?',
-          options: [
-            'Zeroth Law of Thermodynamics',
-            'First Law of Thermodynamics',
-            'Second Law of Thermodynamics (द्वितीय नियम)',
-            'Third Law of Thermodynamics',
-          ],
-          correctOptionIndex: 2,
-          explanation: 'The Second Law of Thermodynamics establishes that the total entropy of an isolated system can never decrease over time.',
-          subject: widget.test.subject.label,
-          difficulty: widget.test.difficulty.label,
+      _loadQuestionsFromSupabase();
+    }
+  }
+
+  Future<void> _loadQuestionsFromSupabase() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+
+    setState(() => _isLoadingQuestions = true);
+    try {
+      final rows = await client
+          .from('ai_test_questions')
+          .select()
+          .eq('test_id', widget.test.id)
+          .order('question_number', ascending: true);
+
+      if (mounted) {
+        setState(() {
+          _questions = (rows as List)
+              .map((r) => AiTestQuestion.fromJson(Map<String, dynamic>.from(r as Map)))
+              .toList();
+          _isLoadingQuestions = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingQuestions = false);
+    }
+  }
+
+  Future<void> _pushToBattlePool() async {
+    setState(() {
+      _isPushingToBattle = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final count = await AiCreatorService().pushToBattlePool(
+        questions: _questions,
+        subjectName: widget.test.subject.label,
+      );
+      if (!mounted) return;
+      setState(() => _isPushingToBattle = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pushed $count questions to the Live Battle Pool!'),
+          backgroundColor: const Color(0xFF10B981),
         ),
-        AiTestQuestion(
-          id: 'q_preview_2',
-          questionNumber: 2,
-          questionText: 'What is the escape velocity from the surface of the Earth approximately?',
-          questionTextHi: 'पृथ्वी की सतह से पलायन वेग लगभग कितना है?',
-          options: [
-            '9.8 km/s',
-            '11.2 km/s',
-            '14.5 km/s',
-            '25.0 km/s',
-          ],
-          correctOptionIndex: 1,
-          explanation: 'The escape velocity from the Earth surface is approximately 11.2 km/s (or ~40,270 km/h), derived from v_e = sqrt(2GM/R).',
-          subject: widget.test.subject.label,
-          difficulty: widget.test.difficulty.label,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isPushingToBattle = false;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  Future<void> _publishTest() async {
+    setState(() {
+      _isPublishing = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final updatedTest = widget.test.copyWith(
+        questions: _questions,
+        status: AiTestStatus.published,
+      );
+      await AiCreatorService().publishTestToApp(testItem: updatedTest);
+      if (!mounted) return;
+      setState(() => _isPublishing = false);
+      Navigator.of(context).pop();
+      widget.onPublish(updatedTest);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Test "${widget.test.title}" published to Supabase!'),
+          backgroundColor: const Color(0xFF10B981),
         ),
-      ];
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isPublishing = false;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
     }
   }
 
@@ -102,45 +124,34 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
   Widget build(BuildContext context) {
     return AppModalDialog(
       iconData: widget.test.icon,
-      gradientColors: const [Color(0xFF1E1B4B), Color(0xFF4338CA)],
+      gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
       title: widget.test.title,
       subtitle:
-          '${widget.test.subject.label} • ${widget.test.difficulty.label} • ${widget.test.questionCount} Questions • ${widget.test.durationMinutes} min',
+          '${widget.test.subject.label} • ${_questions.isNotEmpty ? _questions.length : widget.test.questionCount} Questions • ${widget.test.durationMinutes} min • ${widget.test.difficulty.label}',
       maxWidth: 740,
-      footerLeft: Text(
-        '${_questions.length} questions ready for publishing',
-        style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+      maxHeight: 680,
+      footerLeft: OutlinedButton.icon(
+        onPressed: _isPushingToBattle || _questions.isEmpty ? null : _pushToBattlePool,
+        icon: _isPushingToBattle
+            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFFF59E0B)),
+        label: Text(
+          _isPushingToBattle ? 'Pushing...' : 'Push to Battle Pool',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFD97706)),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFFDE68A)),
+          backgroundColor: const Color(0xFFFFFBEB),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        ),
       ),
       actions: [
-        OutlinedButton.icon(
+        TextButton(
           onPressed: widget.onExport,
-          icon: const Icon(Icons.ios_share_rounded, size: 15),
-          label: const Text('Export'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF5636F5),
-            side: const BorderSide(color: Color(0xFFC7D2FE)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
+          child: const Text('Export Paper'),
         ),
-        ElevatedButton.icon(
-          onPressed: _isPushingToBattle ? null : _pushToBattlePool,
-          icon: _isPushingToBattle
-              ? const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                )
-              : const Icon(Icons.bolt_rounded, size: 16),
-          label: Text(_isPushingToBattle ? 'Pushing...' : 'Push to Battle Pool'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFF59E0B),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          ),
-        ),
+        const SizedBox(width: 8),
         ElevatedButton.icon(
           onPressed: _isPublishing ? null : _publishTest,
           icon: _isPublishing
@@ -160,10 +171,40 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
           ),
         ),
       ],
-      child: ListView.separated(
-        itemCount: _questions.length,
-        separatorBuilder: (ctx, idx) => const SizedBox(height: 14),
-        itemBuilder: (ctx, idx) => _buildQuestionItem(_questions[idx], idx),
+      child: Column(
+        children: [
+          if (_errorMessage != null) ...[
+            Container(
+              padding: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF1F2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFDA4AF)),
+              ),
+              child: Text(
+                _errorMessage!,
+                style: const TextStyle(fontSize: 11.5, color: Color(0xFF9F1239), fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+          Expanded(
+            child: _isLoadingQuestions
+                ? const Center(child: CircularProgressIndicator())
+                : _questions.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No questions stored in `ai_test_questions` for this test.',
+                          style: TextStyle(fontSize: 12.5, color: AppColors.textMuted),
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: _questions.length,
+                        separatorBuilder: (ctx, idx) => const SizedBox(height: 14),
+                        itemBuilder: (ctx, idx) => _buildQuestionItem(_questions[idx], idx),
+                      ),
+          ),
+        ],
       ),
     );
   }
@@ -179,7 +220,6 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Question text & header
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -216,8 +256,6 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
             ],
           ),
           const SizedBox(height: 10),
-
-          // Options Grid
           ...List.generate(q.options.length, (optIdx) {
             final isCorrect = optIdx == q.correctOptionIndex;
             return Container(
@@ -257,40 +295,39 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: isCorrect ? FontWeight.w600 : FontWeight.w400,
-                        color: isCorrect ? const Color(0xFF065F46) : const Color(0xFF1E293B),
+                        color: isCorrect ? const Color(0xFF047857) : AppColors.textPrimary,
                       ),
                     ),
                   ),
-                  if (isCorrect) ...[
-                    const Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF10B981)),
-                  ],
+                  if (isCorrect)
+                    const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF10B981)),
                 ],
               ),
             );
           }),
-
-          // Solution / Explanation
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF0FF),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.lightbulb_outline_rounded, size: 14, color: Color(0xFF5636F5)),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Solution: ${q.explanation}',
-                    style: const TextStyle(fontSize: 10.5, color: Color(0xFF3730A3), height: 1.3),
+          if (q.explanation.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEF0FF),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF5636F5)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      q.explanation,
+                      style: const TextStyle(fontSize: 11, color: Color(0xFF1E293B)),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

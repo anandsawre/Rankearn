@@ -1,22 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
-/// Users Metrics Row displaying 5 horizontal metric cards powered by the unified
-/// [AdminMetricCard] from the Rankearn design system.
+/// Users Metrics Row displaying 5 live statistics cards powered by [AdminMetricCard].
 class UsersMetricsRow extends StatelessWidget {
   final int totalUsers;
   final int activeUsers;
   final int newUsersThisMonth;
   final int inactiveUsers;
   final int premiumUsers;
+  final bool isLoading;
+
+  final String totalGrowth;
+  final bool totalPositive;
+  final List<double>? totalSparkline;
+
+  final String activeGrowth;
+  final bool activePositive;
+  final List<double>? activeSparkline;
+
+  final String newUsersGrowth;
+  final bool newUsersPositive;
+  final List<double>? newUsersSparkline;
+
+  final String inactiveGrowth;
+  final bool inactivePositive;
+  final List<double>? inactiveSparkline;
+
+  final String premiumGrowth;
+  final bool premiumPositive;
+  final List<double>? premiumSparkline;
 
   const UsersMetricsRow({
     super.key,
-    this.totalUsers = 12458,
-    this.activeUsers = 9836,
-    this.newUsersThisMonth = 1324,
-    this.inactiveUsers = 1298,
-    this.premiumUsers = 3842,
+    this.totalUsers = 0,
+    this.activeUsers = 0,
+    this.newUsersThisMonth = 0,
+    this.inactiveUsers = 0,
+    this.premiumUsers = 0,
+    this.isLoading = false,
+    this.totalGrowth = '',
+    this.totalPositive = true,
+    this.totalSparkline,
+    this.activeGrowth = '',
+    this.activePositive = true,
+    this.activeSparkline,
+    this.newUsersGrowth = '',
+    this.newUsersPositive = true,
+    this.newUsersSparkline,
+    this.inactiveGrowth = '',
+    this.inactivePositive = false,
+    this.inactiveSparkline,
+    this.premiumGrowth = '',
+    this.premiumPositive = true,
+    this.premiumSparkline,
   });
 
   String _formatNumber(int number) {
@@ -39,53 +75,53 @@ class UsersMetricsRow extends StatelessWidget {
     final metrics = [
       (
         title: 'Total Users',
-        value: _formatNumber(totalUsers),
-        growth: '+22%',
-        isGrowthPositive: true,
-        subtitle: '+2,248 this month',
+        value: isLoading ? '—' : _formatNumber(totalUsers),
+        growth: isLoading ? '' : totalGrowth,
+        isGrowthPositive: totalPositive,
+        subtitle: isLoading ? 'Loading profiles...' : 'Registered profiles',
         icon: Icons.person_rounded,
         color: const Color(0xFF3B82F6),
-        sparklineData: const [20.0, 24.0, 22.0, 28.0, 35.0, 42.0, 48.0],
+        sparklineData: totalSparkline,
       ),
       (
         title: 'Active Users',
-        value: _formatNumber(activeUsers),
-        growth: '+18%',
-        isGrowthPositive: true,
-        subtitle: '+1,524 this month',
+        value: isLoading ? '—' : _formatNumber(activeUsers),
+        growth: isLoading ? '' : activeGrowth,
+        isGrowthPositive: activePositive,
+        subtitle: isLoading ? 'Loading status...' : 'Active accounts',
         icon: Icons.how_to_reg_rounded,
         color: const Color(0xFF10B981),
-        sparklineData: const [18.0, 22.0, 26.0, 30.0, 36.0, 40.0, 42.0],
+        sparklineData: activeSparkline,
       ),
       (
         title: 'New Users (This Month)',
-        value: _formatNumber(newUsersThisMonth),
-        growth: '+40%',
-        isGrowthPositive: true,
-        subtitle: '+378 this month',
+        value: isLoading ? '—' : _formatNumber(newUsersThisMonth),
+        growth: isLoading ? '' : newUsersGrowth,
+        isGrowthPositive: newUsersPositive,
+        subtitle: isLoading ? 'Loading signups...' : 'Joined in current month',
         icon: Icons.person_add_alt_1_rounded,
         color: const Color(0xFFF59E0B),
-        sparklineData: const [10.0, 14.0, 18.0, 22.0, 28.0, 32.0, 40.0],
+        sparklineData: newUsersSparkline,
       ),
       (
-        title: 'Inactive Users',
-        value: _formatNumber(inactiveUsers),
-        growth: '-8%',
-        isGrowthPositive: false,
-        subtitle: '-92 this month',
+        title: 'Inactive / Blocked',
+        value: isLoading ? '—' : _formatNumber(inactiveUsers),
+        growth: isLoading ? '' : inactiveGrowth,
+        isGrowthPositive: inactivePositive,
+        subtitle: isLoading ? 'Loading restricted...' : 'Suspended or banned',
         icon: Icons.person_off_rounded,
         color: const Color(0xFF8B5CF6),
-        sparklineData: const [14.0, 12.0, 15.0, 11.0, 9.0, 8.0, 6.0],
+        sparklineData: inactiveSparkline,
       ),
       (
         title: 'Premium Users',
-        value: _formatNumber(premiumUsers),
-        growth: '+15%',
-        isGrowthPositive: true,
-        subtitle: '+412 this month',
+        value: isLoading ? '—' : _formatNumber(premiumUsers),
+        growth: isLoading ? '' : premiumGrowth,
+        isGrowthPositive: premiumPositive,
+        subtitle: isLoading ? 'Loading plans...' : 'Active premium status',
         icon: Icons.workspace_premium_rounded,
         color: const Color(0xFFEF4444),
-        sparklineData: const [16.0, 18.0, 20.0, 24.0, 26.0, 30.0, 35.0],
+        sparklineData: premiumSparkline,
       ),
     ];
 

@@ -16,33 +16,38 @@ serve(async (req: Request) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const jwt = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!jwt) {
       return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Initialize Supabase client to verify that caller is an admin
+    // Initialize Supabase Admin client to verify caller JWT and Admin role reliably
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    const { data: { user }, error: userError } = await adminClient.auth.getUser(jwt);
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized user" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized user",
+          details: userError?.message || "Invalid or expired access token",
+        }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Verify Admin status in database
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const { data: adminRole } = await adminClient
       .from("user_roles")
       .select("role")
@@ -66,8 +71,17 @@ serve(async (req: Request) => {
     }
 
     const body = await req.json();
-    const model = body.model || "gemini-1.5-flash";
-    const upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const retiredModels = new Set([
+      "gemini-1.5-flash",
+      "gemini-2.0-flash",
+      "gemini-2.5-flash",
+    ]);
+    const requestedModel = typeof body.model === "string" && body.model.trim()
+      ? body.model.trim()
+      : "gemini-3.8-flash";
+    const primaryModel = retiredModels.has(requestedModel)
+      ? "gemini-3.8-flash"
+      : requestedModel;
 
     const upstreamPayload = {
       contents: body.contents,
@@ -82,16 +96,27 @@ serve(async (req: Request) => {
       safetySettings: body.safetySettings,
     };
 
-    const response = await fetch(upstreamUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(upstreamPayload),
-    });
+    const modelsToTry = primaryModel === "gemini-flash-lite-latest"
+      ? [primaryModel]
+      : [primaryModel, "gemini-flash-lite-latest"];
 
-    if (!response.ok) {
-      const errText = await response.text();
+    let response: Response | null = null;
+    for (const model of modelsToTry) {
+      const upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      response = await fetch(upstreamUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(upstreamPayload),
+      });
+      if (response.ok || (response.status !== 404 && response.status !== 503)) {
+        break;
+      }
+    }
+
+    if (!response || !response.ok) {
+      const errText = response ? await response.text() : "No response";
       return new Response(JSON.stringify({ error: `Upstream AI provider error: ${errText}` }), {
-        status: response.status,
+        status: response ? response.status : 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

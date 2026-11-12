@@ -90,12 +90,15 @@ class _CustomPromptDialogState extends State<CustomPromptDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Google Gemini API Key
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
             children: [
               const Text('Google Gemini API Key (Direct Cloud AI)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
               Text(
-                _apiKeyController.text.isNotEmpty ? '● Key Active' : 'Optional (Fallback Gateway)',
+                _apiKeyController.text.isNotEmpty ? '● Key Active' : 'Optional (Server Edge Proxy)',
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w600,

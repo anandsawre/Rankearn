@@ -188,18 +188,9 @@ class AdminDashboardRepository {
       }
     }();
 
-    // 4. Optional Secondary Probes (Audit logs, Notifications, App Configs)
+    // 4. Optional Secondary Probes (Notifications, App Configs)
+    // Note: Activity feed is built directly from tests, profiles, and attempts below.
     final optionalFuture = () async {
-      try {
-        final logsRes = await client
-            .from('user_activity_logs')
-            .select('*')
-            .order('created_at', ascending: false)
-            .limit(8);
-        activityLogRows = List<Map<String, dynamic>>.from(logsRes as List);
-      } catch (_) {
-        // Optional migration table may not be applied
-      }
 
       try {
         await client.from('notifications').select('id').limit(1);

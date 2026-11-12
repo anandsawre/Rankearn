@@ -160,7 +160,7 @@ Do not wrap in markdown code fences. Return pure JSON only.
               'Generating $_questionCount unique questions via Google Gemini API...';
         });
         final directUri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$apiKey',
         );
         final resp = await http
             .post(

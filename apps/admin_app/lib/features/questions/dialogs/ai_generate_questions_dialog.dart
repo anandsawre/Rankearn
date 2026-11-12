@@ -144,7 +144,7 @@ Return ONLY the JSON array.
         await prefs.setString('gemini_api_key', apiKey);
 
         final directUri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$apiKey',
         );
         final resp = await http
             .post(
@@ -184,12 +184,21 @@ Return ONLY the JSON array.
 
     // 2. Try Supabase Edge Function gemini-proxy when authenticated
     final client = SupabaseConfig.clientSafe;
-    if (rawResponseText.isEmpty && client != null && client.auth.currentSession != null) {
+    final currentSession = client?.auth.currentSession;
+    if (rawResponseText.isEmpty && client != null && currentSession != null) {
       try {
+        var accessToken = currentSession.accessToken;
+        if (currentSession.isExpired) {
+          try {
+            final refreshed = await client.auth.refreshSession();
+            accessToken = refreshed.session?.accessToken ?? accessToken;
+          } catch (_) {}
+        }
         final edgeResp = await client.functions.invoke(
           'gemini-proxy',
+          headers: {'Authorization': 'Bearer $accessToken'},
           body: {
-            'model': 'gemini-1.5-flash',
+            'model': 'gemini-3.8-flash',
             'contents': [
               {
                 'parts': [
@@ -197,6 +206,11 @@ Return ONLY the JSON array.
                 ]
               }
             ],
+            'generationConfig': {
+              'temperature': 0.7,
+              'maxOutputTokens': 8192,
+              'responseMimeType': 'application/json',
+            },
           },
         );
         if (edgeResp.status == 200 && edgeResp.data != null) {

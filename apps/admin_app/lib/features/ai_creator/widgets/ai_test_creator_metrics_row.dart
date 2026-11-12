@@ -2,22 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
 /// AI Test Creator Metrics Row
-/// Displays 5 responsive statistics cards powered by the unified [AdminMetricCard]
-/// from the Rankearn design system.
+/// Displays 5 responsive live KPI cards powered by [AdminMetricCard].
 class AiTestCreatorMetricsRow extends StatelessWidget {
   final int testsGenerated;
   final int questionsCreated;
   final int savedTests;
   final int timesUsed;
   final String avgCreationTime;
+  final bool isLoading;
+
+  final String testsGrowth;
+  final bool testsPositive;
+  final List<double>? testsSparkline;
+
+  final String questionsGrowth;
+  final bool questionsPositive;
+  final List<double>? questionsSparkline;
+
+  final String savedGrowth;
+  final bool savedPositive;
+  final List<double>? savedSparkline;
+
+  final String usageGrowth;
+  final bool usagePositive;
+  final List<double>? usageSparkline;
+
+  final List<double>? speedSparkline;
 
   const AiTestCreatorMetricsRow({
     super.key,
-    this.testsGenerated = 124,
-    this.questionsCreated = 12580,
-    this.savedTests = 68,
-    this.timesUsed = 3245,
-    this.avgCreationTime = '34 sec',
+    this.testsGenerated = 0,
+    this.questionsCreated = 0,
+    this.savedTests = 0,
+    this.timesUsed = 0,
+    this.avgCreationTime = '—',
+    this.isLoading = false,
+    this.testsGrowth = '',
+    this.testsPositive = true,
+    this.testsSparkline,
+    this.questionsGrowth = '',
+    this.questionsPositive = true,
+    this.questionsSparkline,
+    this.savedGrowth = '',
+    this.savedPositive = true,
+    this.savedSparkline,
+    this.usageGrowth = '',
+    this.usagePositive = true,
+    this.usageSparkline,
+    this.speedSparkline,
   });
 
   String _formatNumber(int number) {
@@ -40,53 +72,53 @@ class AiTestCreatorMetricsRow extends StatelessWidget {
     final metrics = [
       (
         title: 'Tests Generated',
-        value: _formatNumber(testsGenerated),
-        growth: '+28%',
-        isGrowthPositive: true,
-        subtitle: '+27 this month',
+        value: isLoading ? '—' : _formatNumber(testsGenerated),
+        growth: isLoading ? '' : testsGrowth,
+        isGrowthPositive: testsPositive,
+        subtitle: isLoading ? 'Loading tests...' : 'AI generated tests',
         icon: Icons.description_rounded,
         color: const Color(0xFF3B82F6),
-        sparklineData: const [20.0, 40.0, 35.0, 65.0, 50.0, 85.0, 100.0],
+        sparklineData: testsSparkline,
       ),
       (
         title: 'Questions Created',
-        value: _formatNumber(questionsCreated),
-        growth: '+18%',
-        isGrowthPositive: true,
-        subtitle: '+2,458 this month',
+        value: isLoading ? '—' : _formatNumber(questionsCreated),
+        growth: isLoading ? '' : questionsGrowth,
+        isGrowthPositive: questionsPositive,
+        subtitle: isLoading ? 'Counting questions...' : 'Total generated questions',
         icon: Icons.check_circle_rounded,
         color: const Color(0xFF10B981),
-        sparklineData: const [15.0, 35.0, 30.0, 60.0, 55.0, 80.0, 100.0],
+        sparklineData: questionsSparkline,
       ),
       (
         title: 'Saved Tests',
-        value: _formatNumber(savedTests),
-        growth: '+32%',
-        isGrowthPositive: true,
-        subtitle: '+17 this month',
+        value: isLoading ? '—' : _formatNumber(savedTests),
+        growth: isLoading ? '' : savedGrowth,
+        isGrowthPositive: savedPositive,
+        subtitle: isLoading ? 'Loading saved...' : 'Published or saved papers',
         icon: Icons.folder_rounded,
         color: const Color(0xFFF59E0B),
-        sparklineData: const [30.0, 40.0, 50.0, 45.0, 70.0, 85.0, 100.0],
+        sparklineData: savedSparkline,
       ),
       (
         title: 'Times Used',
-        value: _formatNumber(timesUsed),
-        growth: '+22%',
-        isGrowthPositive: true,
-        subtitle: '+582 this month',
+        value: isLoading ? '—' : _formatNumber(timesUsed),
+        growth: isLoading ? '' : usageGrowth,
+        isGrowthPositive: usagePositive,
+        subtitle: isLoading ? 'Loading usage...' : 'Student attempts recorded',
         icon: Icons.auto_awesome_rounded,
         color: const Color(0xFF8B5CF6),
-        sparklineData: const [20.0, 30.0, 45.0, 60.0, 50.0, 80.0, 100.0],
+        sparklineData: usageSparkline,
       ),
       (
-        title: 'Avg Creation Time',
-        value: avgCreationTime,
-        growth: '-8%',
-        isGrowthPositive: true, // Faster time is positive
-        subtitle: '-3 sec faster',
+        title: 'Avg. Creation Time (AI Speed)',
+        value: isLoading ? '—' : avgCreationTime,
+        growth: '',
+        isGrowthPositive: true,
+        subtitle: isLoading ? 'Measuring latency...' : 'Average generation duration',
         icon: Icons.timer_rounded,
         color: const Color(0xFFEF4444),
-        sparklineData: const [100.0, 85.0, 90.0, 70.0, 60.0, 50.0, 40.0],
+        sparklineData: speedSparkline,
       ),
     ];
 

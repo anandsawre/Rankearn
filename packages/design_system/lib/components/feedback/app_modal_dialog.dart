@@ -417,9 +417,14 @@ class AppModalDialog extends StatelessWidget {
                   side: const BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
                 ),
           clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: LayoutBuilder(
+            builder: (context, layoutConstraints) {
+              if (layoutConstraints.maxWidth < 120 || layoutConstraints.maxHeight < 140) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Rich Gradient Hero Header
               Container(
@@ -620,6 +625,8 @@ class AppModalDialog extends StatelessWidget {
                 ),
               ],
             ],
+          );
+            },
           ),
         ),
       ),

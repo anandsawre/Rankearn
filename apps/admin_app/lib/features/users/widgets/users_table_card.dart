@@ -27,6 +27,7 @@ class UsersTableCard extends StatefulWidget {
   final ValueChanged<UserManagementItem> onToggleStatus;
   final ValueChanged<UserManagementItem> onDelete;
   final ValueChanged<UserManagementItem> onSendNotification;
+  final bool isLoading;
 
   const UsersTableCard({
     super.key,
@@ -52,6 +53,7 @@ class UsersTableCard extends StatefulWidget {
     required this.onToggleStatus,
     required this.onDelete,
     required this.onSendNotification,
+    this.isLoading = false,
   });
 
   @override
@@ -183,6 +185,7 @@ class _UsersTableCardState extends State<UsersTableCard> {
       onPageChanged: widget.onPageChanged,
       onRowsPerPageChanged: widget.onPageSizeChanged,
       itemLabel: 'users',
+      isLoading: widget.isLoading,
       customBody: _isGridView ? _buildGridView() : null,
       filterControls: [
         _buildRoleDropdown(),

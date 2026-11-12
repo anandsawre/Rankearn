@@ -25,11 +25,13 @@ class AiTestCreatorTableCard extends StatefulWidget {
   final ValueChanged<AiGeneratedTestItem> onEditTest;
   final ValueChanged<AiGeneratedTestItem> onDeleteTest;
   final VoidCallback? onFiltersTap;
+  final bool isLoading;
 
   const AiTestCreatorTableCard({
     super.key,
     required this.items,
-    this.totalCount = 124,
+    this.totalCount = 0,
+    this.isLoading = false,
     this.currentPage = 1,
     this.rowsPerPage = 10,
     this.searchQuery = '',
@@ -145,6 +147,7 @@ class _AiTestCreatorTableCardState extends State<AiTestCreatorTableCard>
       onPageChanged: widget.onPageChanged,
       onRowsPerPageChanged: widget.onRowsPerPageChanged,
       itemLabel: 'tests',
+      isLoading: widget.isLoading,
       filterControls: [
         AdminTableDropdown(
           value: widget.selectedSubject,

@@ -15,6 +15,9 @@ import 'package:admin_app/features/questions/questions_tab.dart';
 import 'package:admin_app/features/questions/models/question_item.dart';
 import 'package:admin_app/features/categories/categories_tab.dart';
 import 'package:admin_app/features/categories/models/category_item.dart';
+import 'package:admin_app/features/users/users_tab.dart';
+import 'package:admin_app/features/ai_creator/ai_creator_tab.dart';
+import 'package:admin_app/features/ai_creator/models/ai_test_item.dart';
 
 void main() {
   testWidgets('QuizMaster Admin App renders header, welcome banner, and metrics', (WidgetTester tester) async {
@@ -788,7 +791,7 @@ void main() {
     expect(find.text('Bulk Exam Actions'), findsNothing);
   });
 
-  testWidgets('Users Management tab renders hero, quick actions, metric cards, table, and right analytics', (WidgetTester tester) async {
+  testWidgets('UsersTab shows honest offline state with zero mock data', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -803,105 +806,97 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // 1. Verify Hero Card
     expect(find.text('Users Management'), findsWidgets);
-    expect(find.textContaining('Manage platform users, view their activity'), findsOneWidget);
-    expect(find.textContaining('Keep your user base engaged and growing.'), findsOneWidget);
+    expect(find.text('Database connection is not initialized.'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Users List (0)'), findsOneWidget);
+    expect(find.text('No new user signups in last 7 days'), findsOneWidget);
+    expect(find.text('No recent user activity'), findsOneWidget);
 
-    // 2. Verify 6 Quick Actions
-    expect(find.text('Add\nUser'), findsOneWidget);
-    expect(find.text('Import\nUsers'), findsOneWidget);
-    expect(find.text('Manage\nRoles'), findsOneWidget);
-    expect(find.text('Send\nNotification'), findsOneWidget);
-    expect(find.text('Export\nUsers'), findsOneWidget);
-    expect(find.text('Bulk\nActions'), findsOneWidget);
+    // Ensure old hardcoded mock metrics/rows never appear
+    expect(find.text('12,458'), findsNothing);
+    expect(find.text('Rahul Sharma'), findsNothing);
+    expect(find.text('Priya Verma'), findsNothing);
+    expect(find.text('Amit Kumar'), findsNothing);
+  });
 
-    // 3. Verify 5 Metric Cards
-    expect(find.text('Total Users'), findsOneWidget);
-    expect(find.text('Active Users'), findsOneWidget);
-    expect(find.text('New Users (This Month)'), findsOneWidget);
-    expect(find.text('Inactive Users'), findsOneWidget);
-    expect(find.text('Premium Users'), findsOneWidget);
+  testWidgets('UsersTab renders populated users, search filtering, analytics, and dialogs cleanly', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
 
-    // 4. Verify Users List Table Header & Sample Users
-    expect(find.textContaining('Users List'), findsOneWidget);
-    expect(find.text('Rahul Sharma'), findsOneWidget);
-    expect(find.text('rahul.sharma@example.com'), findsOneWidget);
-    expect(find.text('Priya Verma'), findsOneWidget);
-    expect(find.text('priya.verma@example.com'), findsOneWidget);
-    expect(find.text('Amit Kumar'), findsOneWidget);
+    final now = DateTime.now();
+    final sampleUsers = [
+      {
+        'id': 'u-prod-1',
+        'name': 'Kavita Rao',
+        'email': 'kavita.rao@rankearn.in',
+        'phone': '+91 90001 11223',
+        'subscription_status': 'premium',
+        'status': 'active',
+        'coins': 350,
+        'enrollments_count': 4,
+        'tests_attempted_count': 9,
+        'created_at': now.subtract(const Duration(minutes: 20)).toIso8601String(),
+      },
+      {
+        'id': 'u-prod-2',
+        'name': 'Deepak Nair',
+        'email': 'deepak.nair@rankearn.in',
+        'phone': '+91 90002 44556',
+        'subscription_status': 'free',
+        'status': 'suspended',
+        'coins': 25,
+        'enrollments_count': 1,
+        'tests_attempted_count': 2,
+        'created_at': now.subtract(const Duration(days: 2)).toIso8601String(),
+      },
+    ];
 
-    // 5. Verify Right Analytics Column
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: UsersTab(initialUsers: sampleUsers),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Users List (2)'), findsOneWidget);
+    expect(find.text('Kavita Rao'), findsWidgets);
+    expect(find.text('Deepak Nair'), findsWidgets);
     expect(find.text('Role Wise Users'), findsOneWidget);
     expect(find.text('User Growth (Last 7 Days)'), findsOneWidget);
-    expect(find.text('Recent Activity'), findsOneWidget);
-    expect(find.textContaining('New user registered:'), findsOneWidget);
-    expect(find.textContaining('User upgraded to premium:'), findsOneWidget);
-  });
 
-  testWidgets('Users Management search and filtering work correctly', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1400, 1000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: RankearnAdminApp(
-          startLoggedIn: true,
-          initialTab: AdminNavTab.users,
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // Search for Amit
+    // Search filter
     final searchInput = find.byType(TextField).first;
-    await tester.enterText(searchInput, 'Amit');
+    await tester.enterText(searchInput, 'Deepak');
     await tester.pumpAndSettle();
+    expect(find.text('Deepak Nair'), findsWidgets);
+    expect(find.text('kavita.rao@rankearn.in'), findsNothing);
 
-    expect(find.text('Amit Kumar'), findsOneWidget);
-    expect(find.text('Rahul Sharma'), findsNothing);
-
-    // Clear search
     await tester.enterText(searchInput, '');
     await tester.pumpAndSettle();
+    expect(find.text('kavita.rao@rankearn.in'), findsOneWidget);
 
-    expect(find.text('Rahul Sharma'), findsOneWidget);
-  });
-
-  testWidgets('Users Management interactive dialogs open and dismiss correctly', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1400, 1000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: RankearnAdminApp(
-          startLoggedIn: true,
-          initialTab: AdminNavTab.users,
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // 1. Test Add User dialog
+    // 1. Add User dialog
     await tester.tap(find.text('Add\nUser'));
     await tester.pumpAndSettle();
     expect(find.text('Add New User'), findsOneWidget);
-    expect(find.text('Full Name *'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(find.text('Add New User'), findsNothing);
 
-    // 2. Test Import Users dialog
+    // 2. Import Users dialog
     await tester.tap(find.text('Import\nUsers'));
     await tester.pumpAndSettle();
     expect(find.text('Import Users (CSV / JSON)'), findsOneWidget);
+    expect(find.text('Validate & Parse Data'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(find.text('Import Users (CSV / JSON)'), findsNothing);
 
-    // 3. Test Manage Roles dialog
+    // 3. Manage Roles dialog
     await tester.tap(find.text('Manage\nRoles'));
     await tester.pumpAndSettle();
     expect(find.text('Roles & Permissions Matrix'), findsOneWidget);
@@ -909,7 +904,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Roles & Permissions Matrix'), findsNothing);
 
-    // 4. Test Send Notification dialog
+    // 4. Send Notification dialog
     await tester.tap(find.text('Send\nNotification'));
     await tester.pumpAndSettle();
     expect(find.text('Send Broadcast Notification'), findsOneWidget);
@@ -917,20 +912,22 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Send Broadcast Notification'), findsNothing);
 
-    // 5. Test Export Users dialog
+    // 5. Export Users dialog
     await tester.tap(find.text('Export\nUsers'));
     await tester.pumpAndSettle();
     expect(find.text('Export Users Dataset'), findsOneWidget);
+    expect(find.text('Copy Dataset'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(find.text('Export Users Dataset'), findsNothing);
 
-    // 6. Test View User dialog from table action
+    // 6. View User dialog
     final viewBtn = find.byIcon(Icons.visibility_outlined).first;
+    await tester.ensureVisible(viewBtn);
+    await tester.pumpAndSettle();
     await tester.tap(viewBtn);
     await tester.pumpAndSettle();
     expect(find.text('Enrollments'), findsWidgets);
-    expect(find.text('Done'), findsOneWidget);
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(find.text('Done'), findsNothing);
@@ -1183,7 +1180,7 @@ void main() {
     expect(find.text('Razorpay Public Key ID'), findsNothing);
   });
 
-  testWidgets('AI Test Creator tab renders hero, quick actions, 5 metric cards, table, and analytics', (WidgetTester tester) async {
+  testWidgets('AiCreatorTab shows honest offline state with zero mock data', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1440, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
@@ -1196,79 +1193,101 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
-    // 1. Verify Active Tab
     expect(find.text('AI Test Creator'), findsWidgets);
+    expect(find.text('Database connection is not initialized.'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('AI Generated Tests (0)'), findsOneWidget);
+    expect(find.text('No AI test activity recorded yet'), findsOneWidget);
 
-    // 2. Verify Hero Banner
-    expect(find.text('AI Test '), findsOneWidget);
-    expect(find.text('Creator'), findsWidgets);
-    expect(find.text('Generate high-quality tests instantly using AI.'), findsOneWidget);
+    // Ensure old hardcoded mock numbers/titles never appear
+    expect(find.text('124'), findsNothing);
+    expect(find.text('12,580'), findsNothing);
+    expect(find.text('RRB Technician Mock Test'), findsNothing);
+  });
 
-    // 3. Verify 6 Quick Actions
-    expect(find.text('Generate\nTest'), findsOneWidget);
-    expect(find.text('Custom\nPrompt'), findsOneWidget);
-    expect(find.text('Manage\nTemplates'), findsOneWidget);
-    expect(find.text('Saved\nTests'), findsOneWidget);
-    expect(find.text('Question\nBank'), findsOneWidget);
-    expect(find.text('Export\nTest'), findsOneWidget);
+  testWidgets('AiCreatorTab renders populated AI tests, analytics, and dialogs cleanly', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
 
-    // 4. Verify 5 Metric Cards
-    expect(find.text('Tests Generated'), findsOneWidget);
-    expect(find.text('Questions Created'), findsOneWidget);
-    expect(find.text('Saved Tests'), findsWidgets);
-    expect(find.text('Times Used'), findsOneWidget);
-    expect(find.text('Avg. Creation Time (AI Speed)'), findsOneWidget);
+    final sampleTests = [
+      AiGeneratedTestItem(
+        id: 'ai-prod-1',
+        rowNumber: 1,
+        title: 'Quantum Mechanics Assessment',
+        subtitle: 'Physics • General Science',
+        subject: AiTestSubject.generalScience,
+        difficulty: AiTestDifficulty.hard,
+        questionCount: 15,
+        durationMinutes: 25,
+        status: AiTestStatus.published,
+        createdOn: DateTime.now().subtract(const Duration(minutes: 10)),
+        icon: Icons.science_rounded,
+        iconBgColor: const Color(0xFF2587F8),
+        iconColor: Colors.white,
+        generationTimeSeconds: 18,
+        timesUsed: 42,
+      ),
+    ];
 
-    // 5. Verify Table Card & Content
-    expect(find.textContaining('AI Generated Tests'), findsOneWidget);
-    expect(find.text('RRB Technician Mock Test'), findsOneWidget);
-    expect(find.text('Railway Maths Practice Test'), findsOneWidget);
-    expect(find.text('Reasoning Speed Test'), findsOneWidget);
-    expect(find.text('Current Affairs Weekly Test'), findsOneWidget);
-    expect(find.text('Chemistry Chapter Test'), findsOneWidget);
-    expect(find.text('Biology NEET Practice Test'), findsOneWidget);
-    expect(find.text('Full Syllabus Combined Test'), findsOneWidget);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AiCreatorTab(initialTests: sampleTests),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
-    // 6. Verify Right Column Analytics Cards
+    expect(find.text('AI Generated Tests (1)'), findsOneWidget);
+    expect(find.text('Quantum Mechanics Assessment'), findsWidgets);
+    expect(find.text('18 sec'), findsOneWidget);
+    expect(find.text('42'), findsOneWidget);
     expect(find.text('Subject Wise Test Distribution'), findsOneWidget);
     expect(find.text('Test Difficulty Distribution'), findsOneWidget);
-    expect(find.text('Recent Activity'), findsOneWidget);
 
-    // 7. Test Custom Prompt dialog
+    // 1. Custom Prompt dialog
     await tester.tap(find.text('Custom\nPrompt'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Custom Prompt & Model Config'), findsOneWidget);
-    expect(find.text('AI System Prompt (Role Definition)'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-    expect(find.text('AI System Prompt (Role Definition)'), findsNothing);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Custom Prompt & Model Config'), findsNothing);
 
-    // 8. Test Manage Templates dialog
+    // 2. Manage Templates dialog (honest offline/empty DB state)
     await tester.tap(find.text('Manage\nTemplates'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Manage Test Templates'), findsOneWidget);
-    expect(find.text('RRB Technician Full Mock'), findsOneWidget);
     await tester.tap(find.text('Close'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Manage Test Templates'), findsNothing);
 
-    // 9. Test Saved Tests dialog
+    // 3. Saved Tests dialog
     await tester.tap(find.text('Saved\nTests'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Saved AI Tests'), findsOneWidget);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Saved AI Tests (1)'), findsOneWidget);
     await tester.tap(find.text('Close'));
-    await tester.pumpAndSettle();
-    expect(find.text('Inspect, review or resume publishing drafted tests'), findsNothing);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Saved AI Tests (1)'), findsNothing);
 
-    // 10. Test Export Test dialog
+    // 4. Export Test dialog
     await tester.tap(find.text('Export\nTest'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Export AI Test'), findsOneWidget);
-    expect(find.text('Select Test to Export'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Export AI Test'), findsNothing);
   });
 

@@ -55,7 +55,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
       role: _selectedRole,
       status: _selectedStatus,
-      coins: widget.initialUser?.coins ?? 100,
+      coins: widget.initialUser?.coins ?? 0,
       enrollmentsCount: widget.initialUser?.enrollmentsCount ?? 0,
       testsAttemptedCount: widget.initialUser?.testsAttemptedCount ?? 0,
       lastActive: widget.initialUser?.lastActive ?? 'Just now',
@@ -117,7 +117,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
             TextFormField(
               controller: _nameCtrl,
               style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-              decoration: _inputDec(hintText: 'e.g. Rahul Sharma', prefixIcon: Icons.badge_outlined),
+              decoration: _inputDec(hintText: 'Enter full name', prefixIcon: Icons.badge_outlined),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter a name' : null,
             ),
             const SizedBox(height: 14),
@@ -128,7 +128,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
             TextFormField(
               controller: _emailCtrl,
               style: const TextStyle(fontSize: 13, color: Color(0xFF1E293B)),
-              decoration: _inputDec(hintText: 'e.g. rahul.sharma@example.com', prefixIcon: Icons.email_outlined),
+              decoration: _inputDec(hintText: 'user@example.com', prefixIcon: Icons.email_outlined),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Please enter an email';
                 if (!v.contains('@') || !v.contains('.')) return 'Invalid email address';
