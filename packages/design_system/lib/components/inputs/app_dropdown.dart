@@ -375,44 +375,58 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                         ),
                         child: ClipRRect(
                           borderRadius: effectiveRadius,
-                          child: RawScrollbar(
-                            controller: _scrollController,
-                            thumbVisibility: true,
-                            thickness: 4,
-                            radius: const Radius.circular(4),
-                            thumbColor: AppColors.textMuted.withValues(
-                              alpha: 0.35,
-                            ),
-                            child: ListView.separated(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              shrinkWrap: true,
-                              itemCount: widget.items.length,
-                              separatorBuilder: (_, _) => Divider(
-                                height: 1,
-                                thickness: 0.5,
-                                color: AppColors.borderSubtle.withValues(
-                                  alpha: 0.6,
-                                ),
-                              ),
-                              itemBuilder: (context, index) {
-                                final item = widget.items[index];
-                                final isSelected = item.value == widget.value;
+                          child: widget.items.isEmpty
+                              ? Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
+                                  child: Text(
+                                    'No options available',
+                                    style: effectiveTextStyle.copyWith(
+                                      color: AppColors.textMuted,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                )
+                              : RawScrollbar(
+                                  controller: _scrollController,
+                                  thumbVisibility: true,
+                                  thickness: 4,
+                                  radius: const Radius.circular(4),
+                                  thumbColor: AppColors.textMuted.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                  child: ListView.separated(
+                                    controller: _scrollController,
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    shrinkWrap: true,
+                                    itemCount: widget.items.length,
+                                    separatorBuilder: (_, _) => Divider(
+                                      height: 1,
+                                      thickness: 0.5,
+                                      color: AppColors.borderSubtle.withValues(
+                                        alpha: 0.6,
+                                      ),
+                                    ),
+                                    itemBuilder: (context, index) {
+                                      final item = widget.items[index];
+                                      final isSelected = item.value == widget.value;
 
-                                return _AppDropdownItemWidget<T>(
-                                  item: item,
-                                  isSelected: isSelected,
-                                  textStyle: effectiveTextStyle,
-                                  selectedColor: widget.selectedItemColor,
-                                  selectedBackgroundColor: widget.selectedItemBackgroundColor,
-                                  onTap: () {
-                                    _closeDropdown();
-                                    widget.onChanged?.call(item.value);
-                                  },
-                                );
-                              },
-                            ),
-                          ),
+                                      return _AppDropdownItemWidget<T>(
+                                        item: item,
+                                        isSelected: isSelected,
+                                        textStyle: effectiveTextStyle,
+                                        selectedColor: widget.selectedItemColor,
+                                        selectedBackgroundColor: widget.selectedItemBackgroundColor,
+                                        onTap: () {
+                                          _closeDropdown();
+                                          widget.onChanged?.call(item.value);
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
                         ),
                       ),
                     ),
@@ -453,7 +467,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
         widget.fillColor ??
         (widget.enabled ? Colors.white : AppColors.surfaceMuted);
     final effectiveBorderColor = _isOpen
-        ? (widget.focusedBorderColor ?? AppColors.brandPurple)
+        ? (widget.focusedBorderColor ?? const Color(0xFFFF9500))
         : _isHovered
         ? (widget.borderColor ?? const Color(0xFFCBD5E1)).withValues(alpha: 0.8)
         : (widget.borderColor ?? const Color(0xFFCBD5E1));
@@ -663,8 +677,8 @@ class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
     final isSelected = widget.isSelected;
     final isEnabled = widget.item.enabled;
 
-    final primaryAccent = widget.selectedColor ?? const Color(0xFF00B96B);
-    final primaryAccentBg = widget.selectedBackgroundColor ?? const Color(0xFFECFDF5);
+    final primaryAccent = widget.selectedColor ?? const Color(0xFFFF9500);
+    final primaryAccentBg = widget.selectedBackgroundColor ?? const Color(0xFFFFF7ED);
 
     final bgColor = isSelected
         ? primaryAccentBg
@@ -905,7 +919,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                                   vertical: 8,
                                 ),
                                 color: isSelected
-                                    ? const Color(0xFFECFDF5)
+                                    ? const Color(0xFFFFF7ED)
                                     : Colors.transparent,
                                 child: Row(
                                   children: [
@@ -914,7 +928,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                                         label,
                                         style: effectiveTextStyle.copyWith(
                                           color: isSelected
-                                              ? const Color(0xFF00B96B)
+                                              ? const Color(0xFFFF9500)
                                               : AppColors.textPrimary,
                                           fontWeight: isSelected
                                               ? FontWeight.w700
@@ -926,7 +940,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                                       const Icon(
                                         Icons.check_rounded,
                                         size: 14,
-                                        color: Color(0xFF00B96B),
+                                        color: Color(0xFFFF9500),
                                       ),
                                   ],
                                 ),

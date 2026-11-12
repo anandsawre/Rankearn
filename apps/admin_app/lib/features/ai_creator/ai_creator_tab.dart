@@ -116,11 +116,11 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
         final q = _searchQuery.toLowerCase();
         final match = item.title.toLowerCase().contains(q) ||
             item.subtitle.toLowerCase().contains(q) ||
-            item.subject.label.toLowerCase().contains(q);
+            item.displaySubject.toLowerCase().contains(q);
         if (!match) return false;
       }
       if (_selectedSubject != 'All Subjects' &&
-          item.subject.label.toLowerCase() != _selectedSubject.toLowerCase()) {
+          item.displaySubject.toLowerCase() != _selectedSubject.toLowerCase()) {
         return false;
       }
       if (_selectedDifficulty != 'All Difficulty' &&
@@ -185,17 +185,23 @@ class _AiCreatorTabState extends State<AiCreatorTab> {
 
   List<DonutSlice> get _subjectSlices {
     if (_allTests.isEmpty) return const [];
-    final counts = <AiTestSubject, int>{};
+    final counts = <String, ({int count, Color color})>{};
     for (final t in _allTests) {
-      counts[t.subject] = (counts[t.subject] ?? 0) + 1;
+      final label = t.displaySubject;
+      final existing = counts[label];
+      counts[label] = (
+        count: (existing?.count ?? 0) + 1,
+        color: existing?.color ?? t.subject.color,
+      );
     }
-    final sorted = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.count.compareTo(a.value.count));
     return sorted.map((e) {
       return DonutSlice(
-        label: e.key.label,
-        percentage: (e.value / _allTests.length) * 100,
-        color: e.key.color,
-        count: e.value,
+        label: e.key,
+        percentage: (e.value.count / _allTests.length) * 100,
+        color: e.value.color,
+        count: e.value.count,
       );
     }).toList();
   }

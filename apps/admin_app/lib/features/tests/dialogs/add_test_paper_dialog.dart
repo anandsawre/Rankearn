@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
+import '../../categories/models/exam_icon_helper.dart';
 import '../models/test_series_item.dart';
 
 class AddTestPaperDialog extends StatefulWidget {
@@ -79,43 +80,42 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
       return;
     }
 
+    List<ExamCategoryModel> exams = [];
     try {
-      final results = await Future.wait<dynamic>([
-        TestsRepository().getExamCategoryList(),
-        client.from('categories').select('name').order('display_order'),
-      ]);
+      final examRows = await client
+          .from('exam_categories')
+          .select()
+          .order('display_order', ascending: true);
+      exams = (examRows as List)
+          .map((m) => ExamCategoryModel.fromMap(Map<String, dynamic>.from(m as Map)))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching exam_categories for AddTestPaperDialog: $e');
+    }
 
-      final examsRes = results[0] as Result<List<ExamCategoryModel>>;
-      final catRows = List<Map<String, dynamic>>.from(results[1] as List);
-
-      final exams = examsRes is Success<List<ExamCategoryModel>>
-          ? examsRes.data
-          : <ExamCategoryModel>[];
-      final dbSubjects = <String>{
+    var dbSubjects = <String>[...existingSubjects];
+    try {
+      final catRows = List<Map<String, dynamic>>.from(
+        await client.from('categories').select('name').order('display_order') as List,
+      );
+      dbSubjects = <String>{
         ...catRows
             .map((r) => r['name']?.toString().trim() ?? '')
             .where((n) => n.isNotEmpty),
         ...existingSubjects,
       }.toList();
-
-      if (!mounted) return;
-      setState(() {
-        _examList = exams;
-        _examCategoryId = _examList.isNotEmpty ? _examList.first.id : null;
-        _subjects = dbSubjects;
-        _selectedSubject = _subjects.isNotEmpty ? _subjects.first : null;
-        _isLoadingMeta = false;
-      });
     } catch (e) {
-      debugPrint('Error fetching metadata for AddTestPaperDialog: $e');
-      if (mounted) {
-        setState(() {
-          _subjects = existingSubjects;
-          _selectedSubject = _subjects.isNotEmpty ? _subjects.first : null;
-          _isLoadingMeta = false;
-        });
-      }
+      debugPrint('Error fetching categories for AddTestPaperDialog: $e');
     }
+
+    if (!mounted) return;
+    setState(() {
+      _examList = exams;
+      _examCategoryId = _examList.isNotEmpty ? _examList.first.id : null;
+      _subjects = dbSubjects;
+      _selectedSubject = _subjects.isNotEmpty ? _subjects.first : null;
+      _isLoadingMeta = false;
+    });
   }
 
   @override
@@ -215,11 +215,16 @@ class _AddTestPaperDialogState extends State<AddTestPaperDialog> {
                       const SizedBox(height: 6),
                       AppDropdown<String>(
                         value: _examList.any((e) => e.id == _examCategoryId) ? _examCategoryId : null,
-                        hint: _isLoadingMeta ? 'Loading exams...' : 'Select Exam (Optional)...',
+                        hint: _isLoadingMeta
+                            ? 'Loading exams...'
+                            : (_examList.isEmpty
+                                ? 'No exams found (Optional)'
+                                : 'Select Exam (Optional)...'),
                         items: _examList
                             .map((e) => AppDropdownItem(
                                   value: e.id,
-                                  label: '${e.iconUrl ?? "🎯"} ${e.name}',
+                                  label: e.name,
+                                  leading: buildExamIconWidget(e.iconUrl, size: 16),
                                 ))
                             .toList(),
                         onChanged: (val) => setState(() => _examCategoryId = val),

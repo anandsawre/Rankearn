@@ -70,7 +70,7 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
     try {
       final count = await AiCreatorService().pushToBattlePool(
         questions: _questions,
-        subjectName: widget.test.subject.label,
+        subjectName: widget.test.displaySubject,
       );
       if (!mounted) return;
       setState(() => _isPushingToBattle = false);
@@ -127,7 +127,7 @@ class _TestPreviewDialogState extends State<TestPreviewDialog> {
       gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
       title: widget.test.title,
       subtitle:
-          '${widget.test.subject.label} • ${_questions.isNotEmpty ? _questions.length : widget.test.questionCount} Questions • ${widget.test.durationMinutes} min • ${widget.test.difficulty.label}',
+          '${widget.test.displaySubject} • ${_questions.isNotEmpty ? _questions.length : widget.test.questionCount} Questions • ${widget.test.durationMinutes} min • ${widget.test.difficulty.label}',
       maxWidth: 740,
       maxHeight: 680,
       footerLeft: OutlinedButton.icon(

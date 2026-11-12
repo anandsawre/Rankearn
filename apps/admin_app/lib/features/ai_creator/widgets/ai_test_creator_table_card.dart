@@ -379,7 +379,7 @@ class _AiTestCreatorTableCardState extends State<AiTestCreatorTableCard>
             ),
             DataCell(
               AdminTableStatusBadge(
-                label: item.subject.label,
+                label: item.displaySubject,
                 backgroundColor: item.subject.backgroundColor,
                 textColor: item.subject.color,
               ),

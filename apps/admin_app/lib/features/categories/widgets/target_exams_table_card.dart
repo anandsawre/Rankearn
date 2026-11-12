@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 import '../models/category_item.dart';
+import '../models/exam_icon_helper.dart';
 
 /// Target Exams Table Card powered by unified [AdminDataTableCard].
 class TargetExamsTableCard extends StatefulWidget {
@@ -87,25 +88,7 @@ class _TargetExamsTableCardState extends State<TargetExamsTableCard> {
         .toList();
   }
 
-  Widget _buildExamIcon(String? iconUrl) {
-    if (iconUrl == null || iconUrl.trim().isEmpty) {
-      return const Text('🎯', style: TextStyle(fontSize: 18));
-    }
-    final clean = iconUrl.trim();
-    if (clean.startsWith('http://') || clean.startsWith('https://')) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: Image.network(
-          clean,
-          width: 22,
-          height: 22,
-          fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => const Text('🎯', style: TextStyle(fontSize: 18)),
-        ),
-      );
-    }
-    return Text(clean, style: const TextStyle(fontSize: 18));
-  }
+  Widget _buildExamIcon(String? iconUrl) => buildExamIconWidget(iconUrl, size: 20);
 
   void _showCurriculumDialog(ExamCategoryModel exam) {
     final subjects = _getSubjectsForExam(exam.id);

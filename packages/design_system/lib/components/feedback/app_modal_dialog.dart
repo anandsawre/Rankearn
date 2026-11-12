@@ -426,128 +426,153 @@ class AppModalDialog extends StatelessWidget {
                 mainAxisSize: isMobile ? MainAxisSize.max : MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Rich Gradient Hero Header
-              Container(
-                padding: EdgeInsets.fromLTRB(
-                  isMobile ? 16 : 22,
-                  (isMobile ? 12 : 18) + topPadding,
-                  isMobile ? 12 : 16,
-                  isMobile ? 14 : 18,
-                ),
-                decoration: BoxDecoration(
-                  gradient: resolvedGradient,
-                  borderRadius: isMobile
-                      ? BorderRadius.zero
-                      : const BorderRadius.vertical(top: Radius.circular(15)),
-                ),
-                child: Row(
-                  children: [
-                    // Glassmorphic Icon Pod
-                    if (icon != null)
-                      icon!
-                    else if (iconData != null)
-                      Container(
-                        width: isMobile ? 36 : 40,
-                        height: isMobile ? 36 : 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(45),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white.withAlpha(60), width: 1.2),
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(iconData, color: Colors.white, size: isMobile ? 20 : 22),
-                      ),
-                    if (icon != null || iconData != null) SizedBox(width: isMobile ? 10 : 14),
-
-                    // Title & Subtitle in crisp white
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: TextStyle(
-                              fontFamily: AppTypography.fontHeading,
-                              fontSize: isMobile ? 16 : 16.5,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+              // Rich Gradient Hero Header with subtle geometric ambient design
+              ClipRRect(
+                borderRadius: isMobile
+                    ? BorderRadius.zero
+                    : const BorderRadius.vertical(top: Radius.circular(15)),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(gradient: resolvedGradient),
+                  child: Stack(
+                    children: [
+                      const Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: _ModalHeaderPatternPainter(),
                           ),
-                          if (subtitle != null && subtitle!.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              subtitle!,
-                              style: TextStyle(
-                                fontFamily: AppTypography.fontHeading,
-                                fontSize: isMobile ? 11 : 11.5,
-                                color: Colors.white.withAlpha(210),
-                                height: 1.25,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          isMobile ? 16 : 22,
+                          (isMobile ? 12 : 18) + topPadding,
+                          isMobile ? 12 : 16,
+                          isMobile ? 14 : 18,
+                        ),
+                        child: Row(
+                          children: [
+                            // Glassmorphic Icon Pod
+                            if (icon != null)
+                              icon!
+                            else if (iconData != null)
+                              Container(
+                                width: isMobile ? 36 : 40,
+                                height: isMobile ? 36 : 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withAlpha(45),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.white.withAlpha(65), width: 1.2),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(iconData, color: Colors.white, size: isMobile ? 20 : 22),
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            if (icon != null || iconData != null) SizedBox(width: isMobile ? 10 : 14),
+
+                            // Title & Subtitle in crisp white
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: TextStyle(
+                                      fontFamily: AppTypography.fontHeading,
+                                      fontSize: isMobile ? 16 : 16.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: -0.2,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (subtitle != null && subtitle!.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      subtitle!,
+                                      style: TextStyle(
+                                        fontFamily: AppTypography.fontHeading,
+                                        fontSize: isMobile ? 11 : 11.5,
+                                        color: Colors.white.withAlpha(215),
+                                        height: 1.25,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ),
+
+                            // Trailing widget or badge
+                            if (headerTrailing != null) ...[
+                              const SizedBox(width: 8),
+                              headerTrailing!,
+                            ],
+
+                            // Glass Close Button
+                            if (showCloseButton) ...[
+                              const SizedBox(width: 6),
+                              Material(
+                                color: Colors.white.withAlpha(32),
+                                borderRadius: BorderRadius.circular(8),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(8),
+                                  hoverColor: Colors.white.withAlpha(64),
+                                  onTap: onClose ?? () => Navigator.of(context).pop(),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(isMobile ? 8 : 6),
+                                    child: Icon(Icons.close_rounded, size: isMobile ? 20 : 18, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                    ),
-
-                    // Trailing widget or badge
-                    if (headerTrailing != null) ...[
-                      const SizedBox(width: 8),
-                      headerTrailing!,
-                    ],
-
-                    // Glass Close Button
-                    if (showCloseButton) ...[
-                      const SizedBox(width: 6),
-                      Material(
-                        color: Colors.white.withAlpha(30),
-                        borderRadius: BorderRadius.circular(8),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          hoverColor: Colors.white.withAlpha(60),
-                          onTap: onClose ?? () => Navigator.of(context).pop(),
-                          child: Padding(
-                            padding: EdgeInsets.all(isMobile ? 8 : 6),
-                            child: Icon(Icons.close_rounded, size: isMobile ? 20 : 18, color: Colors.white),
-                          ),
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
               ),
 
-              // Body Content
+              // Body Content with subtle executive ambient backdrop
               if (scrollable)
                 isMobile
                     ? Expanded(
-                        child: SingleChildScrollView(
-                          padding: effectiveContentPadding,
-                          child: child,
+                        child: _buildBodyBackdrop(
+                          accentColor: effectiveGradientColors.first,
+                          child: SingleChildScrollView(
+                            padding: effectiveContentPadding,
+                            child: child,
+                          ),
                         ),
                       )
                     : Flexible(
-                        child: SingleChildScrollView(
-                          padding: effectiveContentPadding,
-                          child: child,
+                        child: _buildBodyBackdrop(
+                          accentColor: effectiveGradientColors.first,
+                          child: SingleChildScrollView(
+                            padding: effectiveContentPadding,
+                            child: child,
+                          ),
                         ),
                       )
               else
                 isMobile
                     ? Expanded(
-                        child: Padding(
-                          padding: effectiveContentPadding,
-                          child: child,
+                        child: _buildBodyBackdrop(
+                          accentColor: effectiveGradientColors.first,
+                          child: Padding(
+                            padding: effectiveContentPadding,
+                            child: child,
+                          ),
                         ),
                       )
                     : Flexible(
-                        child: Padding(
-                          padding: effectiveContentPadding,
-                          child: child,
+                        child: _buildBodyBackdrop(
+                          accentColor: effectiveGradientColors.first,
+                          child: Padding(
+                            padding: effectiveContentPadding,
+                            child: child,
+                          ),
                         ),
                       ),
 
@@ -632,4 +657,76 @@ class AppModalDialog extends StatelessWidget {
       ),
     );
   }
+
+  static Widget _buildBodyBackdrop({
+    required Color accentColor,
+    required Widget child,
+  }) {
+    return ColoredBox(
+      color: Colors.white,
+      child: Stack(
+        children: [
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: _ModalBodyBackdropPainter(),
+              ),
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _ModalHeaderPatternPainter extends CustomPainter {
+  const _ModalHeaderPatternPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final orbPaint = Paint()
+      ..color = Colors.white.withAlpha(24)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(size.width * 0.88, size.height * 0.12), 46, orbPaint);
+
+    final smallOrbPaint = Paint()
+      ..color = Colors.white.withAlpha(16)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(size.width * 0.72, size.height * 0.95), 30, smallOrbPaint);
+
+    final ringPaint = Paint()
+      ..color = Colors.white.withAlpha(28)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    canvas.drawCircle(Offset(size.width * 0.92, size.height * 0.75), 54, ringPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ModalHeaderPatternPainter oldDelegate) => false;
+}
+
+class _ModalBodyBackdropPainter extends CustomPainter {
+  const _ModalBodyBackdropPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Crisp, clean architectural dot-matrix accent (no muddy gradients)
+    final dotPaint = Paint()
+      ..color = const Color(0xFF94A3B8).withAlpha(22)
+      ..style = PaintingStyle.fill;
+    const spacing = 14.0;
+    for (int row = 0; row < 4; row++) {
+      for (int col = 0; col < 6; col++) {
+        final x = size.width - 18 - (col * spacing);
+        final y = 16.0 + (row * spacing);
+        if (x > 0 && y < size.height) {
+          canvas.drawCircle(Offset(x, y), 1.1, dotPaint);
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ModalBodyBackdropPainter oldDelegate) => false;
 }

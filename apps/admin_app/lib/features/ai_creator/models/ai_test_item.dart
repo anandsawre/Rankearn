@@ -63,12 +63,25 @@ enum AiTestSubject {
   });
 
   static AiTestSubject fromString(String val) {
+    final clean = val.trim().toLowerCase();
     for (final s in AiTestSubject.values) {
-      if (s.label.toLowerCase() == val.toLowerCase() || s.name.toLowerCase() == val.toLowerCase()) {
+      if (s.label.toLowerCase() == clean || s.name.toLowerCase() == clean) {
         return s;
       }
     }
-    return AiTestSubject.generalScience;
+    if (clean.contains('math')) return AiTestSubject.mathematics;
+    if (clean.contains('science') || clean.contains('physics')) {
+      return AiTestSubject.generalScience;
+    }
+    if (clean.contains('reason')) return AiTestSubject.reasoning;
+    if (clean.contains('affair') || clean == 'gk' || clean == 'gs') {
+      return AiTestSubject.currentAffairs;
+    }
+    if (clean.contains('chem')) return AiTestSubject.chemistry;
+    if (clean.contains('bio')) return AiTestSubject.biology;
+    if (clean.contains('mix')) return AiTestSubject.mixed;
+    if (clean.isEmpty) return AiTestSubject.generalScience;
+    return AiTestSubject.others;
   }
 }
 
@@ -206,6 +219,7 @@ class AiGeneratedTestItem {
   final String title;
   final String subtitle;
   final AiTestSubject subject;
+  final String? customSubject;
   final AiTestDifficulty difficulty;
   final int questionCount;
   final int durationMinutes;
@@ -225,6 +239,7 @@ class AiGeneratedTestItem {
     required this.title,
     required this.subtitle,
     required this.subject,
+    this.customSubject,
     required this.difficulty,
     required this.questionCount,
     required this.durationMinutes,
@@ -239,12 +254,17 @@ class AiGeneratedTestItem {
     this.timesUsed = 0,
   });
 
+  String get displaySubject =>
+      (customSubject != null && customSubject!.trim().isNotEmpty)
+          ? customSubject!.trim()
+          : subject.label;
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'row_number': rowNumber,
     'title': title,
     'subtitle': subtitle,
-    'subject': subject.label,
+    'subject': displaySubject,
     'difficulty': difficulty.label,
     'question_count': questionCount,
     'duration_minutes': durationMinutes,
@@ -258,9 +278,15 @@ class AiGeneratedTestItem {
   };
 
   factory AiGeneratedTestItem.fromJson(Map<String, dynamic> json, int index) {
-    final sub = AiTestSubject.fromString(
-      (json['subject'] ?? json['category_id'] ?? 'General Science').toString(),
-    );
+    final subtitleStr = json['subtitle']?.toString() ?? '';
+    var rawSubject =
+        (json['subject'] ?? json['category_id'] ?? 'General Science').toString().trim();
+    if ((rawSubject.isEmpty || rawSubject == 'General Science') &&
+        subtitleStr.contains(' • ')) {
+      final fromSub = subtitleStr.split(' • ').last.trim();
+      if (fromSub.isNotEmpty) rawSubject = fromSub;
+    }
+    final sub = AiTestSubject.fromString(rawSubject);
     final diff = AiTestDifficulty.fromString(
       (json['difficulty'] ?? 'Medium').toString(),
     );
@@ -273,10 +299,11 @@ class AiGeneratedTestItem {
 
     return AiGeneratedTestItem(
       id: json['id']?.toString() ?? 'ait_${index + 1}',
-      rowNumber: (json['row_number'] as num?)?.toInt() ?? (index + 1),
+      rowNumber: index + 1,
       title: json['title']?.toString() ?? 'AI Generated Test',
-      subtitle: json['subtitle']?.toString() ?? '',
+      subtitle: subtitleStr,
       subject: sub,
+      customSubject: rawSubject.isNotEmpty ? rawSubject : null,
       difficulty: diff,
       questionCount: (json['question_count'] as num?)?.toInt() ??
           (json['total_questions'] as num?)?.toInt() ??
@@ -306,6 +333,7 @@ class AiGeneratedTestItem {
     String? title,
     String? subtitle,
     AiTestSubject? subject,
+    String? customSubject,
     AiTestDifficulty? difficulty,
     int? questionCount,
     int? durationMinutes,
@@ -325,6 +353,7 @@ class AiGeneratedTestItem {
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
       subject: subject ?? this.subject,
+      customSubject: customSubject ?? this.customSubject,
       difficulty: difficulty ?? this.difficulty,
       questionCount: questionCount ?? this.questionCount,
       durationMinutes: durationMinutes ?? this.durationMinutes,

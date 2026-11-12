@@ -69,33 +69,31 @@ class AiCreatorService {
     }
   }
 
-  /// Generate AI Competitive Questions strictly via live AI backends (no fake offline synthesis).
-  Future<List<AiTestQuestion>> generateQuestions({
-    required String title,
-    required String topic,
-    required AiTestSubject subject,
-    required AiTestDifficulty difficulty,
-    required int count,
+  String _buildPrompt({
+    required int chunkCount,
     required String exam,
+    required String effectiveSubject,
+    required String topic,
+    required AiTestDifficulty difficulty,
     required String language,
     String? customInstructions,
-    void Function(double progress, String status)? onProgress,
-  }) async {
-    onProgress?.call(0.15, 'Connecting to AI Engine...');
-
-    List<AiTestQuestion> generated = [];
-    String? lastError;
-
-    final prompt = '''
+    int chunkIndex = 0,
+    List<String> existingStems = const [],
+  }) {
+    final avoidBlock = existingStems.isEmpty
+        ? ''
+        : '\nDo NOT repeat or paraphrase any of these already generated questions:\n- ${existingStems.take(15).join('\n- ')}';
+    return '''
 $_systemPrompt
 
-Generate $count multiple choice questions for the competitive exam "$exam".
-Subject: ${subject.label}
+Generate EXACTLY $chunkCount unique multiple choice questions for the competitive exam "$exam"${chunkIndex > 0 ? " (Batch ${chunkIndex + 1})" : ""}.
+Subject: $effectiveSubject
 Topic: $topic
 Difficulty: ${difficulty.label}
 Language requirement: $language.
-${customInstructions != null && customInstructions.isNotEmpty ? "Additional Instructions: $customInstructions" : ""}
+${customInstructions != null && customInstructions.isNotEmpty ? "Additional Instructions: $customInstructions" : ""}$avoidBlock
 
+CRITICAL: You MUST return EXACTLY $chunkCount objects in the JSON array — no more, no less.
 Output STRICTLY a JSON array of objects with keys:
 - "questionText": English question text
 - "questionTextHi": Hindi translation of question text
@@ -105,152 +103,280 @@ Output STRICTLY a JSON array of objects with keys:
 - "explanationHi": Hindi explanation
 Return pure JSON array only.
 ''';
+  }
 
-    // Attempt 1: Google Gemini API directly when API key is configured
-    if (_geminiApiKey.isNotEmpty) {
-      try {
-        onProgress?.call(0.35, 'Generating $count questions via Google Gemini API...');
-        final directUri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$_geminiApiKey',
-        );
+  /// Generate AI Competitive Questions strictly via live AI backends (no fake offline synthesis).
+  Future<List<AiTestQuestion>> generateQuestions({
+    required String title,
+    required String topic,
+    required AiTestSubject subject,
+    String? subjectLabel,
+    required AiTestDifficulty difficulty,
+    required int count,
+    required String exam,
+    required String language,
+    String? customInstructions,
+    void Function(double progress, String status)? onProgress,
+  }) async {
+    onProgress?.call(0.10, 'Connecting to AI Engine...');
 
-        final directResp = await http
-            .post(
-              directUri,
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'contents': [
-                  {
-                    'parts': [
-                      {'text': prompt}
-                    ]
+    final effectiveSubject = (subjectLabel != null && subjectLabel.trim().isNotEmpty)
+        ? subjectLabel.trim()
+        : subject.label;
+
+    const int chunkSize = 20;
+    final maxBatches = ((count / chunkSize).ceil() + 3).clamp(3, 12);
+    final allGenerated = <AiTestQuestion>[];
+    final seenStems = <String>{};
+    String? lastError;
+
+    for (int chunkIdx = 0; chunkIdx < maxBatches && allGenerated.length < count; chunkIdx++) {
+      final remaining = count - allGenerated.length;
+      final currentChunkCount = remaining > chunkSize ? chunkSize : remaining;
+      if (currentChunkCount <= 0) break;
+
+      final prompt = _buildPrompt(
+        chunkCount: currentChunkCount,
+        exam: exam,
+        effectiveSubject: effectiveSubject,
+        topic: topic,
+        difficulty: difficulty,
+        language: language,
+        customInstructions: customInstructions,
+        chunkIndex: chunkIdx,
+        existingStems: allGenerated
+            .map((q) => q.questionText.replaceAll('\n', ' ').trim())
+            .map((s) => s.length > 90 ? '${s.substring(0, 90)}...' : s)
+            .toList(),
+      );
+
+      List<AiTestQuestion> chunkQuestions = [];
+      final baseProgress = 0.12 + (allGenerated.length / count) * 0.78;
+
+      // Attempt 1: Google Gemini API directly when API key is configured
+      if (_geminiApiKey.isNotEmpty) {
+        try {
+          onProgress?.call(
+            baseProgress,
+            'Generating ${allGenerated.length + 1}-${(allGenerated.length + currentChunkCount).clamp(1, count)} of $count questions via Gemini API...',
+          );
+          final directUri = Uri.parse(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=$_geminiApiKey',
+          );
+
+          final directResp = await http
+              .post(
+                directUri,
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({
+                  'contents': [
+                    {
+                      'role': 'user',
+                      'parts': [
+                        {'text': prompt}
+                      ]
+                    }
+                  ],
+                  'generationConfig': {
+                    'temperature': _temperature,
+                    'maxOutputTokens': 8192,
+                    'responseMimeType': 'application/json',
                   }
-                ],
-                'generationConfig': {
-                  'temperature': _temperature,
-                  'maxOutputTokens': 8192,
-                  'responseMimeType': 'application/json',
-                }
-              }),
-            )
-            .timeout(const Duration(seconds: 45));
+                }),
+              )
+              .timeout(const Duration(seconds: 60));
 
-        if (directResp.statusCode == 200) {
-          final resJson = jsonDecode(directResp.body);
-          final candidates = resJson['candidates'] as List<dynamic>?;
-          if (candidates != null && candidates.isNotEmpty) {
-            final text = candidates[0]['content']?['parts']?[0]?['text'] ?? '';
-            final clean = _extractJson(text.toString());
-            if (clean.isNotEmpty) {
-              generated = _parseJsonQuestions(clean, subject, difficulty);
-            }
-          }
-        } else {
-          lastError = 'Gemini API returned HTTP ${directResp.statusCode}.';
-        }
-      } catch (e) {
-        lastError = 'Gemini API request failed: $e';
-        debugPrint(lastError);
-      }
-    }
-
-    // Attempt 2: Supabase Edge Function `gemini-proxy` (if signed in as Admin)
-    final client = SupabaseConfig.clientSafe;
-    final currentSession = client?.auth.currentSession;
-    if (generated.isEmpty && client != null && currentSession != null) {
-      try {
-        var accessToken = currentSession.accessToken;
-        if (currentSession.isExpired) {
-          try {
-            final refreshed = await client.auth.refreshSession();
-            accessToken = refreshed.session?.accessToken ?? accessToken;
-          } catch (_) {}
-        }
-        onProgress?.call(0.55, 'Generating $count questions via Supabase Edge Proxy...');
-        final edgeResp = await client.functions.invoke(
-          'gemini-proxy',
-          headers: {'Authorization': 'Bearer $accessToken'},
-          body: {
-            'model': 'gemini-3.8-flash',
-            'contents': [
-              {
-                'parts': [
-                  {'text': prompt}
-                ]
-              }
-            ],
-            'generationConfig': {
-              'temperature': _temperature,
-              'maxOutputTokens': 8192,
-              'responseMimeType': 'application/json',
-            },
-          },
-        );
-        if (edgeResp.status == 200 && edgeResp.data != null) {
-          final data = edgeResp.data is String
-              ? jsonDecode(edgeResp.data as String)
-              : edgeResp.data;
-          if (data is Map) {
-            final candidates = data['candidates'] as List<dynamic>?;
+          if (directResp.statusCode == 200) {
+            final resJson = jsonDecode(directResp.body);
+            final candidates = resJson['candidates'] as List<dynamic>?;
             if (candidates != null && candidates.isNotEmpty) {
-              final text = candidates[0]['content']?['parts']?[0]?['text'] ?? '';
-              final clean = _extractJson(text.toString());
+              final text = (candidates[0]['content']?['parts']?[0]?['text'] ?? '').toString();
+              final clean = _extractJson(text);
               if (clean.isNotEmpty) {
-                generated = _parseJsonQuestions(clean, subject, difficulty);
+                chunkQuestions = _parseJsonQuestions(clean, subject, difficulty);
               }
             }
+          } else {
+            lastError = 'Gemini API returned HTTP ${directResp.statusCode}.';
           }
-        } else {
-          lastError = 'Supabase gemini-proxy returned status ${edgeResp.status}.';
+        } catch (e) {
+          lastError = 'Gemini API request failed: $e';
+          debugPrint(lastError);
         }
-      } catch (e) {
-        lastError = 'Supabase gemini-proxy error: $e';
-        debugPrint(lastError);
       }
-    }
 
-    // Attempt 3: Configured Gemini Edge Worker
-    if (generated.isEmpty && _geminiWorkerUrl.trim().isNotEmpty) {
-      try {
-        onProgress?.call(0.75, 'Requesting questions from Edge Gateway...');
-        final uri = Uri.parse('$_geminiWorkerUrl/api/generate');
-        final response = await http
-            .post(
-              uri,
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'prompt': prompt,
+      // Attempt 2: Cloudflare Edge Worker (matches React Admin protocol)
+      if (chunkQuestions.isEmpty && _geminiWorkerUrl.trim().isNotEmpty) {
+        try {
+          onProgress?.call(
+            baseProgress + 0.08,
+            'Generating ${allGenerated.length + 1}-${(allGenerated.length + currentChunkCount).clamp(1, count)} of $count questions via Edge Gateway...',
+          );
+          final workerUri = Uri.parse(_geminiWorkerUrl.trim());
+          final response = await http
+              .post(
+                workerUri,
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({
+                  'model': 'gemini-2.5-flash',
+                  'contents': [
+                    {
+                      'role': 'user',
+                      'parts': [
+                        {'text': prompt}
+                      ]
+                    }
+                  ],
+                  'generationConfig': {
+                    'temperature': _temperature,
+                    'maxOutputTokens': 8192,
+                    'responseMimeType': 'application/json',
+                  },
+                }),
+              )
+              .timeout(const Duration(seconds: 60));
+
+          if (response.statusCode == 200) {
+            final body = jsonDecode(response.body);
+            String rawText = '';
+            if (body is Map) {
+              final candidates = body['candidates'] as List<dynamic>?;
+              if (candidates != null && candidates.isNotEmpty) {
+                rawText = (candidates[0]['content']?['parts']?[0]?['text'] ?? '').toString();
+              } else {
+                rawText = (body['text'] ?? body['content'] ?? body['result'] ?? '').toString();
+              }
+              if (rawText.isEmpty && body['error'] != null) {
+                lastError = 'Edge Gateway Gemini error: ${body['error']}';
+              }
+            }
+            final cleanJson = _extractJson(rawText);
+            if (cleanJson.isNotEmpty) {
+              chunkQuestions = _parseJsonQuestions(cleanJson, subject, difficulty);
+            }
+            if (chunkQuestions.isEmpty) {
+              lastError ??= 'Edge Gateway returned 200 but no valid questions were parsed.';
+            }
+          } else {
+            lastError = 'Edge Gateway returned HTTP ${response.statusCode}: ${response.body}';
+          }
+        } catch (e) {
+          lastError = 'Edge Gateway unreachable: $e';
+          debugPrint(lastError);
+        }
+      }
+
+      // Attempt 3: Supabase Edge Function `gemini-proxy` fallback (if signed in as Admin)
+      final client = SupabaseConfig.clientSafe;
+      final currentSession = client?.auth.currentSession;
+      if (chunkQuestions.isEmpty && client != null && currentSession != null) {
+        try {
+          var accessToken = currentSession.accessToken;
+          if (currentSession.isExpired) {
+            try {
+              final refreshed = await client.auth.refreshSession();
+              accessToken = refreshed.session?.accessToken ?? accessToken;
+            } catch (_) {}
+          }
+          onProgress?.call(
+            baseProgress + 0.12,
+            'Generating ${allGenerated.length + 1}-${(allGenerated.length + currentChunkCount).clamp(1, count)} of $count questions via Supabase Edge Proxy...',
+          );
+          final edgeResp = await client.functions.invoke(
+            'gemini-proxy',
+            headers: {'Authorization': 'Bearer $accessToken'},
+            body: {
+              'model': 'gemini-flash-lite-latest',
+              'contents': [
+                {
+                  'role': 'user',
+                  'parts': [
+                    {'text': prompt}
+                  ]
+                }
+              ],
+              'generationConfig': {
                 'temperature': _temperature,
-                'maxTokens': 8192,
-              }),
-            )
-            .timeout(const Duration(seconds: 45));
-
-        if (response.statusCode == 200) {
-          final body = jsonDecode(response.body);
-          final rawText = body['text'] ?? body['content'] ?? body['result'] ?? '';
-          final cleanJson = _extractJson(rawText.toString());
-          if (cleanJson.isNotEmpty) {
-            generated = _parseJsonQuestions(cleanJson, subject, difficulty);
+                'maxOutputTokens': 8192,
+                'responseMimeType': 'application/json',
+              },
+            },
+          );
+          if (edgeResp.status == 200 && edgeResp.data != null) {
+            final data = edgeResp.data is String
+                ? jsonDecode(edgeResp.data as String)
+                : edgeResp.data;
+            if (data is Map) {
+              final candidates = data['candidates'] as List<dynamic>?;
+              if (candidates != null && candidates.isNotEmpty) {
+                final text = (candidates[0]['content']?['parts']?[0]?['text'] ?? '').toString();
+                final finishReason = candidates[0]['finishReason']?.toString() ?? '';
+                final clean = _extractJson(text);
+                if (clean.isNotEmpty) {
+                  chunkQuestions = _parseJsonQuestions(clean, subject, difficulty);
+                }
+                if (chunkQuestions.isEmpty) {
+                  lastError =
+                      'Supabase gemini-proxy returned ${text.length} chars (finishReason: $finishReason), but no valid MCQ JSON could be parsed.';
+                }
+              } else {
+                lastError = 'Supabase gemini-proxy returned 200 with no candidates: ${data['error'] ?? data}';
+              }
+            }
+          } else {
+            lastError = 'Supabase gemini-proxy returned status ${edgeResp.status}.';
           }
-        } else {
-          lastError = 'Edge Gateway returned HTTP ${response.statusCode}.';
+        } catch (e) {
+          lastError = 'Supabase gemini-proxy error: $e';
+          debugPrint(lastError);
         }
-      } catch (e) {
-        lastError = 'Edge Gateway unreachable: $e';
-        debugPrint(lastError);
+      }
+
+      if (chunkQuestions.isEmpty) {
+        if (allGenerated.isEmpty) {
+          throw Exception(
+            lastError ??
+                'AI generation failed. Configure a Gemini API key in Custom Prompt or verify your Edge Gateway / Supabase gemini-proxy.',
+          );
+        }
+        continue;
+      }
+
+      for (final q in chunkQuestions) {
+        if (allGenerated.length >= count) break;
+        final stemKey = q.questionText.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+        if (stemKey.isEmpty || seenStems.contains(stemKey)) continue;
+        seenStems.add(stemKey);
+        allGenerated.add(q);
       }
     }
 
-    if (generated.isEmpty) {
+    if (allGenerated.length < count) {
       throw Exception(
-        lastError ??
-            'AI generation failed. Configure a Gemini API key in Custom Prompt or verify your Supabase gemini-proxy / Worker Gateway.',
+        'Generated ${allGenerated.length}/$count unique questions. ${lastError ?? "Please retry to complete all $count questions."}',
       );
     }
 
-    onProgress?.call(1.0, 'Generated ${generated.length} verified questions.');
-    return generated;
+    // Renumber sequentially (guaranteed exact count)
+    final numbered = allGenerated.take(count).toList().asMap().entries.map((entry) {
+      final idx = entry.key;
+      final q = entry.value;
+      return AiTestQuestion(
+        id: 'ai_q_${DateTime.now().millisecondsSinceEpoch}_$idx',
+        questionNumber: idx + 1,
+        questionText: q.questionText,
+        questionTextHi: q.questionTextHi,
+        options: q.options,
+        correctOptionIndex: q.correctOptionIndex,
+        explanation: q.explanation,
+        explanationHi: q.explanationHi,
+        subject: q.subject,
+        difficulty: q.difficulty,
+      );
+    }).toList();
+
+    onProgress?.call(1.0, 'Generated ${numbered.length} verified questions.');
+    return numbered;
   }
 
   /// Push generated questions directly into the Battle Pool (`battle_questions` table).
@@ -337,7 +463,7 @@ Return pure JSON array only.
     await client.from('tests').upsert({
       'id': publicTestId,
       'title': testItem.title,
-      'category_id': testItem.subject.label,
+      'category_id': testItem.displaySubject,
       'test_mode': 'mock',
       'duration_minutes': testItem.durationMinutes,
       'total_questions': testItem.questionCount,
@@ -381,12 +507,27 @@ Return pure JSON array only.
   }
 
   String _extractJson(String text) {
-    final startIndex = text.indexOf('[');
-    final endIndex = text.lastIndexOf(']');
-    if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
-      return text.substring(startIndex, endIndex + 1);
+    var trimmed = text.trim();
+    if (trimmed.startsWith('```')) {
+      trimmed = trimmed
+          .replaceFirst(RegExp(r'^```(?:json)?\s*', caseSensitive: false), '')
+          .replaceFirst(RegExp(r'\s*```$'), '')
+          .trim();
     }
-    return '';
+    final startArray = trimmed.indexOf('[');
+    final endArray = trimmed.lastIndexOf(']');
+    if (startArray != -1 && endArray != -1 && endArray > startArray) {
+      return trimmed.substring(startArray, endArray + 1);
+    }
+    if (startArray != -1) {
+      return trimmed.substring(startArray);
+    }
+    final startObj = trimmed.indexOf('{');
+    final endObj = trimmed.lastIndexOf('}');
+    if (startObj != -1 && endObj != -1 && endObj > startObj) {
+      return trimmed.substring(startObj, endObj + 1);
+    }
+    return trimmed;
   }
 
   List<AiTestQuestion> _parseJsonQuestions(
@@ -394,32 +535,86 @@ Return pure JSON array only.
     AiTestSubject subject,
     AiTestDifficulty difficulty,
   ) {
+    List<dynamic> list = [];
     try {
-      final list = jsonDecode(cleanJson) as List<dynamic>;
-      final result = <AiTestQuestion>[];
-      for (int i = 0; i < list.length; i++) {
-        final qJson = list[i] as Map<String, dynamic>;
-        result.add(
-          AiTestQuestion(
-            id: 'ai_q_${DateTime.now().millisecondsSinceEpoch}_$i',
-            questionNumber: i + 1,
-            questionText: qJson['questionText']?.toString() ?? 'Question ${i + 1}',
-            questionTextHi: qJson['questionTextHi']?.toString(),
-            options: (qJson['options'] as List<dynamic>?)
-                    ?.map((e) => e.toString())
-                    .toList() ??
-                ['Option A', 'Option B', 'Option C', 'Option D'],
-            correctOptionIndex: (qJson['correctOptionIndex'] as num?)?.toInt() ?? 0,
-            explanation: qJson['explanation']?.toString() ?? '',
-            explanationHi: qJson['explanationHi']?.toString(),
-            subject: subject.label,
-            difficulty: difficulty.label,
-          ),
-        );
+      final decoded = jsonDecode(cleanJson);
+      if (decoded is List) {
+        list = decoded;
+      } else if (decoded is Map) {
+        final nested = decoded['questions'] ?? decoded['items'] ?? decoded['data'];
+        if (nested is List) list = nested;
       }
-      return result;
     } catch (_) {
-      return [];
+      // Recover complete JSON objects even if trailing output was truncated
+      list = _recoverObjectsFromTruncatedArray(cleanJson);
     }
+
+    final result = <AiTestQuestion>[];
+    for (int i = 0; i < list.length; i++) {
+      final rawItem = list[i];
+      if (rawItem is! Map) continue;
+      final qJson = Map<String, dynamic>.from(rawItem);
+      final qText = qJson['questionText']?.toString().trim() ?? '';
+      if (qText.isEmpty) continue;
+      result.add(
+        AiTestQuestion(
+          id: 'ai_q_${DateTime.now().millisecondsSinceEpoch}_$i',
+          questionNumber: result.length + 1,
+          questionText: qText,
+          questionTextHi: qJson['questionTextHi']?.toString(),
+          options: (qJson['options'] as List<dynamic>?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              ['Option A', 'Option B', 'Option C', 'Option D'],
+          correctOptionIndex: (qJson['correctOptionIndex'] as num?)?.toInt() ?? 0,
+          explanation: qJson['explanation']?.toString() ?? '',
+          explanationHi: qJson['explanationHi']?.toString(),
+          subject: subject.label,
+          difficulty: difficulty.label,
+        ),
+      );
+    }
+    return result;
+  }
+
+  List<dynamic> _recoverObjectsFromTruncatedArray(String text) {
+    final recovered = <dynamic>[];
+    var depth = 0;
+    var inString = false;
+    var escaped = false;
+    int? objStart;
+
+    for (var i = 0; i < text.length; i++) {
+      final ch = text[i];
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (ch == r'\' && inString) {
+        escaped = true;
+        continue;
+      }
+      if (ch == '"') {
+        inString = !inString;
+        continue;
+      }
+      if (inString) continue;
+
+      if (ch == '{') {
+        if (depth == 0) objStart = i;
+        depth++;
+      } else if (ch == '}') {
+        if (depth > 0) depth--;
+        if (depth == 0 && objStart != null) {
+          final slice = text.substring(objStart, i + 1);
+          try {
+            final parsed = jsonDecode(slice);
+            if (parsed is Map) recovered.add(parsed);
+          } catch (_) {}
+          objStart = null;
+        }
+      }
+    }
+    return recovered;
   }
 }

@@ -79,7 +79,7 @@ class SavedTestsDialog extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '${t.subject.label} • ${t.questionCount} Questions • ${t.durationMinutes} min',
+                  '${t.displaySubject} • ${t.questionCount} Questions • ${t.durationMinutes} min',
                   style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
                 ),
               ],

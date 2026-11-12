@@ -22,12 +22,25 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
   final _topicController = TextEditingController();
   final _customPromptController = TextEditingController();
 
-  AiTestSubject _selectedSubject = AiTestSubject.generalScience;
+  static const String _allSubSubjects = 'All Sub-Subjects';
+  static const String _allTopics = 'All Topics';
+
+  String _selectedSubjectName = AiTestSubject.generalScience.label;
+  String _selectedSubSubject = _allSubSubjects;
+  String _selectedTopicName = _allTopics;
+  String _lastAutoTopic = '';
   AiTestDifficulty _selectedDifficulty = AiTestDifficulty.medium;
   int _questionCount = 25;
   int _durationMinutes = 30;
+  List<ExamCategoryModel> _examModels = const [];
+  List<CategoryModel> _dbCategories = const [];
+  List<SubcategoryModel> _dbSubcategories = const [];
+  List<TopicModel> _dbTopics = const [];
   List<String> _examOptions = ['General Competitive Exam'];
   String _selectedExam = 'General Competitive Exam';
+  List<String> _subjectOptions = AiTestSubject.values.map((s) => s.label).toList();
+  List<String> _subSubjectOptions = const [_allSubSubjects];
+  List<String> _topicOptions = const [_allTopics];
   String _selectedLanguage = 'Bilingual (English + Hindi)';
   bool _includeExplanations = true;
   bool _negativeMarking = true;
@@ -46,17 +59,174 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
   @override
   void initState() {
     super.initState();
-    _loadExams();
+    _loadExamsAndSubjects();
   }
 
-  Future<void> _loadExams() async {
-    final res = await CategoriesRepository().getExamCategories();
-    if (res is Success<List<ExamCategoryModel>> && res.data.isNotEmpty && mounted) {
-      setState(() {
-        _examOptions = res.data.map((e) => e.name).toSet().toList();
-        _selectedExam = _examOptions.first;
-      });
+  Future<void> _loadExamsAndSubjects() async {
+    final repo = CategoriesRepository();
+    final results = await Future.wait<dynamic>([
+      repo.getExamCategories(),
+      repo.getCategories(),
+      repo.getSubcategories(),
+      repo.getTopics(),
+    ]);
+    if (!mounted) return;
+
+    final examRes = results[0] as Result<List<ExamCategoryModel>>;
+    final catRes = results[1] as Result<List<CategoryModel>>;
+    final subRes = results[2] as Result<List<SubcategoryModel>>;
+    final topicRes = results[3] as Result<List<TopicModel>>;
+
+    final exams = examRes is Success<List<ExamCategoryModel>> ? examRes.data : <ExamCategoryModel>[];
+    final cats = catRes is Success<List<CategoryModel>> ? catRes.data : <CategoryModel>[];
+    final subs = subRes is Success<List<SubcategoryModel>> ? subRes.data : <SubcategoryModel>[];
+    final topics = topicRes is Success<List<TopicModel>> ? topicRes.data : <TopicModel>[];
+
+    setState(() {
+      _examModels = exams;
+      _dbCategories = cats;
+      _dbSubcategories = subs;
+      _dbTopics = topics;
+      if (exams.isNotEmpty) {
+        _examOptions = exams.map((e) => e.name).toSet().toList();
+        if (!_examOptions.contains(_selectedExam)) {
+          _selectedExam = _examOptions.first;
+        }
+      }
+      _syncSubjectOptionsForSelectedExam();
+    });
+  }
+
+  ExamCategoryModel? _resolveSelectedExamModel() {
+    return _examModels.cast<ExamCategoryModel?>().firstWhere(
+          (e) => e?.name == _selectedExam,
+          orElse: () => null,
+        );
+  }
+
+  CategoryModel? _resolveSelectedCategoryModel() {
+    final exam = _resolveSelectedExamModel();
+    if (exam != null) {
+      final exact = _dbCategories.cast<CategoryModel?>().firstWhere(
+            (c) =>
+                c != null &&
+                c.examCategoryId == exam.id &&
+                c.name.trim().toLowerCase() == _selectedSubjectName.trim().toLowerCase(),
+            orElse: () => null,
+          );
+      if (exact != null) return exact;
     }
+    return _dbCategories.cast<CategoryModel?>().firstWhere(
+          (c) =>
+              c != null &&
+              c.name.trim().toLowerCase() == _selectedSubjectName.trim().toLowerCase(),
+          orElse: () => null,
+        );
+  }
+
+  void _syncSubjectOptionsForSelectedExam() {
+    final matchingExam = _resolveSelectedExamModel();
+
+    final examSubjects = matchingExam != null
+        ? _dbCategories
+            .where((c) => c.examCategoryId == matchingExam.id && c.name.trim().isNotEmpty)
+            .map((c) => c.name.trim())
+            .toList()
+        : <String>[];
+
+    final allDbSubjects = _dbCategories
+        .where((c) => c.name.trim().isNotEmpty)
+        .map((c) => c.name.trim())
+        .toList();
+
+    final merged = <String>{
+      ...examSubjects,
+      ...allDbSubjects,
+      if (examSubjects.isEmpty && allDbSubjects.isEmpty)
+        ...AiTestSubject.values.map((s) => s.label),
+    }.toList();
+
+    _subjectOptions = merged;
+    if (examSubjects.isNotEmpty && !examSubjects.contains(_selectedSubjectName)) {
+      _selectedSubjectName = examSubjects.first;
+    } else if (!_subjectOptions.contains(_selectedSubjectName) && _subjectOptions.isNotEmpty) {
+      _selectedSubjectName = _subjectOptions.first;
+    }
+    _syncSubSubjectsAndTopics(resetSubSubject: true);
+  }
+
+  void _syncSubSubjectsAndTopics({bool resetSubSubject = false}) {
+    if (resetSubSubject) {
+      _selectedSubSubject = _allSubSubjects;
+      _selectedTopicName = _allTopics;
+    }
+
+    final selectedCat = _resolveSelectedCategoryModel();
+    final subNames = <String>{};
+    SubcategoryModel? selectedSubModel;
+
+    if (selectedCat != null) {
+      final matchingSubs = _dbSubcategories
+          .where((s) => s.categoryId == selectedCat.id && s.name.trim().isNotEmpty)
+          .toList();
+      for (final s in matchingSubs) {
+        subNames.add(s.name.trim());
+      }
+      // Also include chapter names saved on CategoryModel.topics when no subcategories rows exist
+      if (matchingSubs.isEmpty) {
+        for (final ch in selectedCat.topics) {
+          if (ch.trim().isNotEmpty) subNames.add(ch.trim());
+        }
+      }
+
+      if (_selectedSubSubject != _allSubSubjects) {
+        selectedSubModel = matchingSubs.cast<SubcategoryModel?>().firstWhere(
+              (s) => s != null && s.name.trim() == _selectedSubSubject,
+              orElse: () => null,
+            );
+      }
+    }
+
+    _subSubjectOptions = [_allSubSubjects, ...subNames];
+    if (!_subSubjectOptions.contains(_selectedSubSubject)) {
+      _selectedSubSubject = _allSubSubjects;
+      _selectedTopicName = _allTopics;
+    }
+
+    final topicNames = <String>{};
+    if (selectedSubModel != null) {
+      for (final t in _dbTopics) {
+        if (t.subcategoryId == selectedSubModel.id && t.name.trim().isNotEmpty) {
+          topicNames.add(t.name.trim());
+        }
+      }
+    }
+    if (topicNames.isEmpty && selectedCat != null) {
+      for (final t in _dbTopics) {
+        if (t.categoryId == selectedCat.id && t.name.trim().isNotEmpty) {
+          topicNames.add(t.name.trim());
+        }
+      }
+    }
+
+    _topicOptions = [_allTopics, ...topicNames];
+    if (!_topicOptions.contains(_selectedTopicName)) {
+      _selectedTopicName = _allTopics;
+    }
+    _syncTopicFocusText();
+  }
+
+  void _syncTopicFocusText() {
+    final parts = <String>[
+      if (_selectedSubSubject != _allSubSubjects) _selectedSubSubject,
+      if (_selectedTopicName != _allTopics) _selectedTopicName,
+    ];
+    final nextAuto = parts.join(' • ');
+    final currentText = _topicController.text.trim();
+    if (currentText.isEmpty || currentText == _lastAutoTopic) {
+      _topicController.text = nextAuto;
+    }
+    _lastAutoTopic = nextAuto;
   }
 
   @override
@@ -80,12 +250,22 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
     final sw = Stopwatch()..start();
 
     try {
+      final resolvedSubject = AiTestSubject.fromString(_selectedSubjectName);
+      final effectiveSubjectLabel = _selectedSubSubject != _allSubSubjects
+          ? '$_selectedSubjectName > $_selectedSubSubject'
+          : _selectedSubjectName;
+      final focusTopic = _topicController.text.trim().isNotEmpty
+          ? _topicController.text.trim()
+          : (_selectedTopicName != _allTopics
+              ? _selectedTopicName
+              : (_selectedSubSubject != _allSubSubjects
+                  ? _selectedSubSubject
+                  : _selectedSubjectName));
       final questions = await AiCreatorService().generateQuestions(
         title: _titleController.text.trim(),
-        topic: _topicController.text.trim().isNotEmpty
-            ? _topicController.text.trim()
-            : _selectedSubject.label,
-        subject: _selectedSubject,
+        topic: focusTopic,
+        subject: resolvedSubject,
+        subjectLabel: effectiveSubjectLabel,
         difficulty: _selectedDifficulty,
         count: _questionCount,
         exam: _selectedExam,
@@ -108,16 +288,17 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
         id: 'ait_${DateTime.now().millisecondsSinceEpoch}',
         rowNumber: 1,
         title: _titleController.text.trim(),
-        subtitle: '$_selectedExam • ${_selectedSubject.label}',
-        subject: _selectedSubject,
+        subtitle: '$_selectedExam • $_selectedSubjectName',
+        subject: resolvedSubject,
+        customSubject: _selectedSubjectName,
         difficulty: _selectedDifficulty,
         questionCount: questions.length,
         durationMinutes: _durationMinutes,
         status: AiTestStatus.published,
         createdOn: DateTime.now(),
         createdBy: 'Admin',
-        icon: _selectedSubject.icon,
-        iconBgColor: _selectedSubject.color,
+        icon: resolvedSubject.icon,
+        iconBgColor: resolvedSubject.color,
         iconColor: Colors.white,
         questions: questions,
         generationTimeSeconds: sw.elapsed.inSeconds,
@@ -163,21 +344,14 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
       actions: _isGenerating
           ? null
           : [
-              TextButton(
+              AppModalDialog.secondaryButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+                child: const Text('Cancel', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
               ),
-              ElevatedButton.icon(
+              AppModalDialog.primaryButton(
                 onPressed: _startGeneration,
                 icon: const Icon(Icons.auto_awesome_rounded, size: 16),
-                label: const Text('Generate with AI'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5636F5),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                ),
+                child: const Text('Generate with AI', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
               ),
             ],
       child: _isGenerating ? _buildGeneratingView() : _buildFormView(),
@@ -191,15 +365,37 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: const Color(0xFF5636F5).withAlpha(20),
-              shape: BoxShape.circle,
+          SizedBox(
+            width: 72,
+            height: 72,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3.0,
+                    backgroundColor: Color(0xFFFFF7ED),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppModalDialog.defaultPrimaryColor),
+                  ),
+                ),
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppModalDialog.defaultPrimaryColor.withAlpha(24),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: AppModalDialog.defaultPrimaryColor,
+                    size: 28,
+                  ),
+                ),
+              ],
             ),
-            alignment: Alignment.center,
-            child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF5636F5), size: 30),
           ),
           const SizedBox(height: 16),
           const Text(
@@ -218,14 +414,18 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             child: LinearProgressIndicator(
               value: _generationProgress,
               minHeight: 8,
-              backgroundColor: const Color(0xFFEEF0FF),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5636F5)),
+              backgroundColor: const Color(0xFFFFF7ED),
+              valueColor: const AlwaysStoppedAnimation<Color>(AppModalDialog.defaultPrimaryColor),
             ),
           ),
           const SizedBox(height: 10),
           Text(
             '${(_generationProgress * 100).toInt()}% completed',
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF5636F5)),
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppModalDialog.defaultPrimaryColor,
+            ),
           ),
         ],
       ),
@@ -260,10 +460,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
           const SizedBox(height: 4),
           TextFormField(
             controller: _titleController,
-            decoration: AppModalDialog.inputDecoration(
-              'Enter test title...',
-              focusColor: const Color(0xFF5636F5),
-            ),
+            decoration: AppModalDialog.inputDecoration('Enter test title...'),
             style: const TextStyle(fontSize: 12.5),
             validator: (val) => val == null || val.trim().isEmpty ? 'Enter a test title' : null,
           ),
@@ -273,11 +470,17 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
               Expanded(
                 child: AppDropdown.simple(
                   label: 'Subject *',
-                  value: _selectedSubject,
-                  items: AiTestSubject.values,
-                  itemLabel: (s) => s.label,
+                  value: _subjectOptions.contains(_selectedSubjectName)
+                      ? _selectedSubjectName
+                      : _subjectOptions.first,
+                  items: _subjectOptions,
                   onChanged: (val) {
-                    if (val != null) setState(() => _selectedSubject = val);
+                    if (val != null) {
+                      setState(() {
+                        _selectedSubjectName = val;
+                        _syncSubSubjectsAndTopics(resetSubSubject: true);
+                      });
+                    }
                   },
                 ),
               ),
@@ -290,6 +493,47 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
                   itemLabel: (d) => d.label,
                   onChanged: (val) {
                     if (val != null) setState(() => _selectedDifficulty = val);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: AppDropdown.simple(
+                  label: 'Sub-Subject / Chapter',
+                  value: _subSubjectOptions.contains(_selectedSubSubject)
+                      ? _selectedSubSubject
+                      : _allSubSubjects,
+                  items: _subSubjectOptions,
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        _selectedSubSubject = val;
+                        _selectedTopicName = _allTopics;
+                        _syncSubSubjectsAndTopics(resetSubSubject: false);
+                      });
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppDropdown.simple(
+                  label: 'Curriculum Topic',
+                  value: _topicOptions.contains(_selectedTopicName)
+                      ? _selectedTopicName
+                      : _allTopics,
+                  items: _topicOptions,
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        _selectedTopicName = val;
+                        _syncTopicFocusText();
+                      });
+                    }
                   },
                 ),
               ),
@@ -332,7 +576,12 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
                   value: activeExam,
                   items: _examOptions,
                   onChanged: (val) {
-                    if (val != null) setState(() => _selectedExam = val);
+                    if (val != null) {
+                      setState(() {
+                        _selectedExam = val;
+                        _syncSubjectOptionsForSelectedExam();
+                      });
+                    }
                   },
                 ),
               ),
@@ -357,7 +606,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             maxLines: 2,
             decoration: AppModalDialog.inputDecoration(
               'Enter syllabus topics...',
-              focusColor: const Color(0xFF5636F5),
+              isMultiline: true,
             ),
             style: const TextStyle(fontSize: 12.5),
           ),
@@ -367,7 +616,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
             maxLines: 2,
             decoration: AppModalDialog.inputDecoration(
               'Optional instructions for question style...',
-              focusColor: const Color(0xFF5636F5),
+              isMultiline: true,
             ),
             style: const TextStyle(fontSize: 12),
           ),
@@ -385,7 +634,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  activeColor: const Color(0xFF5636F5),
+                  activeColor: AppModalDialog.defaultPrimaryColor,
                 ),
               ),
               SizedBox(
@@ -397,7 +646,7 @@ class _GenerateTestDialogState extends State<GenerateTestDialog> {
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                   dense: true,
-                  activeColor: const Color(0xFF5636F5),
+                  activeColor: AppModalDialog.defaultPrimaryColor,
                 ),
               ),
             ],

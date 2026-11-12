@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import '../models/exam_icon_helper.dart';
 
 /// Class to hold in-memory draft state for each subject added under a target exam
 class SubjectDraft {
@@ -64,16 +65,12 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
   // Dynamic Curriculum: Multiple Subjects under this exam (Tareeqa 1)
   List<SubjectDraft> _subjectDrafts = [];
 
-  final List<String> _popularIcons = const [
-    '🏛️', '📋', '🇮🇳', '🚆', '🏦', '🎖️', '📚', '⚖️', '🎯', '🔬', '🩺', '⚡', '🏆', '🌍'
-  ];
-
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController();
     _slugCtrl = TextEditingController();
-    _iconCtrl = TextEditingController(text: '🎯');
+    _iconCtrl = TextEditingController(text: 'school');
     _orderCtrl = TextEditingController(text: '1');
 
     _nameCtrl.addListener(() {
@@ -180,7 +177,7 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
       _editingExam = null;
       _nameCtrl.clear();
       _slugCtrl.clear();
-      _iconCtrl.text = '🎯';
+      _iconCtrl.text = 'school';
       _orderCtrl.text = (_exams.length + 1).toString();
       _isPublished = true;
       _clearSubjectDrafts();
@@ -195,7 +192,9 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
     _editingExam = exam;
     _nameCtrl.text = exam.name;
     _slugCtrl.text = exam.id;
-    _iconCtrl.text = exam.iconUrl ?? '🎯';
+    _iconCtrl.text = (exam.iconUrl != null && exam.iconUrl!.trim().isNotEmpty)
+        ? exam.iconUrl!.trim()
+        : 'school';
     _orderCtrl.text = exam.displayOrder.toString();
     _isPublished = exam.isPublished;
 
@@ -207,9 +206,24 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
 
     if (cats.isNotEmpty) {
       for (final cat in cats) {
-        final chapters = cat.topics.join(', ');
+        final subsRes = await _categoriesRepo.getSubcategories(categoryId: cat.id);
+        final subs = subsRes.dataOrNull ?? [];
+        final chaptersList = subs.isNotEmpty
+            ? subs.map((s) => s.name.trim()).where((s) => s.isNotEmpty).toList()
+            : cat.topics;
+
+        final topicsRes = await _categoriesRepo.getTopics(categoryId: cat.id);
+        final topicList = (topicsRes.dataOrNull ?? [])
+            .map((t) => t.name.trim())
+            .where((t) => t.isNotEmpty)
+            .toList();
+
         _subjectDrafts.add(
-          SubjectDraft(name: cat.name, chapters: chapters, topics: ''),
+          SubjectDraft(
+            name: cat.name,
+            chapters: chaptersList.join(', '),
+            topics: topicList.join(', '),
+          ),
         );
       }
     } else {
@@ -237,7 +251,7 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
 
     final id = _slugCtrl.text.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
     final name = _nameCtrl.text.trim();
-    final icon = _iconCtrl.text.trim().isNotEmpty ? _iconCtrl.text.trim() : '🎯';
+    final icon = _iconCtrl.text.trim().isNotEmpty ? _iconCtrl.text.trim() : 'school';
     final order = int.tryParse(_orderCtrl.text.trim()) ?? (_exams.length + 1);
 
     final model = ExamCategoryModel(
@@ -278,6 +292,12 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
           .where((s) => s.isNotEmpty)
           .toList();
 
+      final rawTopics = draft.topicsCtrl.text
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+
       final catModel = CategoryModel(
         id: subjectId,
         examCategoryId: id,
@@ -293,6 +313,51 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
       final catRes = await _categoriesRepo.upsertCategory(catModel);
       if (catRes is Success<CategoryModel>) {
         validSubjectsSaved++;
+
+        // Persist Chapters/Units into `subcategories`
+        String? primarySubId;
+        final chaptersToSave = rawChapters.isNotEmpty
+            ? rawChapters
+            : (rawTopics.isNotEmpty ? ['General'] : <String>[]);
+        for (int cIdx = 0; cIdx < chaptersToSave.length; cIdx++) {
+          final chapterName = chaptersToSave[cIdx];
+          final chapterSlug = chapterName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+          final subId = 'sub-$subjectId-$chapterSlug';
+          primarySubId ??= subId;
+          await _categoriesRepo.upsertSubcategory(
+            SubcategoryModel(
+              id: subId,
+              categoryId: subjectId,
+              name: chapterName,
+              slug: chapterSlug,
+              description: '$chapterName under $subjectName',
+              displayOrder: cIdx + 1,
+              status: _isPublished ? 'active' : 'draft',
+              createdAt: DateTime.now(),
+            ),
+          );
+        }
+
+        // Persist Topics into `topics`
+        if (rawTopics.isNotEmpty && primarySubId != null) {
+          for (int tIdx = 0; tIdx < rawTopics.length; tIdx++) {
+            final topicName = rawTopics[tIdx];
+            final topicSlug = topicName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+            await _categoriesRepo.upsertTopic(
+              TopicModel(
+                id: 'top-$subjectId-$topicSlug',
+                subcategoryId: primarySubId,
+                categoryId: subjectId,
+                name: topicName,
+                slug: topicSlug,
+                description: '$topicName under $subjectName',
+                displayOrder: tIdx + 1,
+                status: _isPublished ? 'active' : 'draft',
+                createdAt: DateTime.now(),
+              ),
+            );
+          }
+        }
       }
     }
 
@@ -392,7 +457,10 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
       gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
       maxWidth: 620,
       maxHeight: 740,
-      scrollable: !_isCreatingOrEditing,
+      contentPadding: _isCreatingOrEditing
+          ? const EdgeInsets.fromLTRB(22, 14, 22, 22)
+          : null,
+      scrollable: true,
       actions: _isCreatingOrEditing
           ? [
               OutlinedButton(
@@ -615,50 +683,17 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
     );
   }
 
-  Widget _buildExamIcon(String? iconUrl) {
-    if (iconUrl == null || iconUrl.trim().isEmpty) {
-      return const Text('🎯', style: TextStyle(fontSize: 18));
-    }
-    final clean = iconUrl.trim();
-    if (clean.startsWith('http://') || clean.startsWith('https://')) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: Image.network(
-          clean,
-          width: 22,
-          height: 22,
-          fit: BoxFit.contain,
-          errorBuilder: (_, _, _) => const Text('🎯', style: TextStyle(fontSize: 18)),
-        ),
-      );
-    }
-    if (clean.startsWith('assets/')) {
-      return Image.asset(
-        clean,
-        width: 22,
-        height: 22,
-        fit: BoxFit.contain,
-        errorBuilder: (_, _, _) => const Text('🎯', style: TextStyle(fontSize: 18)),
-      );
-    }
-    return Text(
-      clean,
-      style: const TextStyle(fontSize: 18),
-    );
-  }
+  Widget _buildExamIcon(String? iconUrl) => buildExamIconWidget(iconUrl, size: 20);
 
   Widget _buildForm() {
     final isEditing = _editingExam != null;
 
     return Form(
       key: _formKey,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
             // Exam Name
             const Text('Exam Name', style: _labelStyle),
             const SizedBox(height: 4),
@@ -711,39 +746,54 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
             ),
             const SizedBox(height: 12),
 
-            // Icon / Emoji
-            const Text('Exam Icon (Emoji or Image URL)', style: _labelStyle),
-            const SizedBox(height: 4),
+            // Exam Icon Picker (Material Icons)
+            const Text('Exam Icon', style: _labelStyle),
+            const SizedBox(height: 6),
             Row(
               children: [
-                SizedBox(
-                  width: 70,
-                  child: TextFormField(
-                    controller: _iconCtrl,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 18),
-                    decoration: _inputDecoration('🎯'),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: _primaryPurple.withAlpha(20),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _primaryPurple.withAlpha(110), width: 1.4),
                   ),
+                  alignment: Alignment.center,
+                  child: buildExamIconWidget(_iconCtrl.text, size: 22, color: _primaryPurple),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: _popularIcons.map((emoji) {
+                      children: kExamIconOptions.map((option) {
+                        final isSelected = _iconCtrl.text.trim() == option.key;
                         return Padding(
                           padding: const EdgeInsets.only(right: 6),
-                          child: InkWell(
-                            onTap: () => setState(() => _iconCtrl.text = emoji),
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: _fillBg,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: _borderSubtle),
+                          child: Tooltip(
+                            message: option.label,
+                            child: InkWell(
+                              onTap: () => setState(() => _iconCtrl.text = option.key),
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: isSelected ? _primaryPurple.withAlpha(24) : _fillBg,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isSelected ? _primaryPurple : _borderSubtle,
+                                    width: isSelected ? 1.5 : 1,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  option.icon,
+                                  size: 18,
+                                  color: isSelected ? _primaryPurple : _textMuted,
+                                ),
                               ),
-                              child: Text(emoji, style: const TextStyle(fontSize: 15)),
                             ),
                           ),
                         );
@@ -800,7 +850,6 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
             _buildCurriculumSection(),
             const SizedBox(height: 12),
           ],
-        ),
       ),
     );
   }
@@ -962,16 +1011,14 @@ class _ManageTargetExamsDialogState extends State<ManageTargetExamsDialog> {
           );
         }),
 
-        // + Add Another Subject Button
-        OutlinedButton.icon(
-          icon: const Icon(Icons.add_rounded, size: 16),
-          label: const Text('Add Another Subject'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: _primaryPurple,
-            side: const BorderSide(color: Color(0xFFC7D2FE)),
-            backgroundColor: const Color(0xFFEEF2FF),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        // + Add Another Subject Button (tokenized via AppModalDialog)
+        AppModalDialog.secondaryButton(
+          icon: const Icon(Icons.add_rounded, size: 15),
+          foregroundColor: _primaryPurple,
+          borderColor: _primaryPurple.withAlpha(110),
+          child: const Text(
+            'Add Another Subject',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           onPressed: () {
             setState(() {

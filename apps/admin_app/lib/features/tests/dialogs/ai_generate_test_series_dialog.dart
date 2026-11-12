@@ -160,7 +160,7 @@ Do not wrap in markdown code fences. Return pure JSON only.
               'Generating $_questionCount unique questions via Google Gemini API...';
         });
         final directUri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$apiKey',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=$apiKey',
         );
         final resp = await http
             .post(
@@ -210,21 +210,39 @@ Do not wrap in markdown code fences. Return pure JSON only.
         }
         final resp = await http
             .post(
-              Uri.parse('$_workerUrl/api/generate'),
+              Uri.parse(_workerUrl.trim()),
               headers: {'Content-Type': 'application/json'},
               body: jsonEncode({
-                'prompt': prompt,
-                'temperature': 0.7,
-                'maxTokens': 8192,
+                'model': 'gemini-2.5-flash',
+                'contents': [
+                  {
+                    'role': 'user',
+                    'parts': [
+                      {'text': prompt}
+                    ]
+                  }
+                ],
+                'generationConfig': {
+                  'temperature': 0.7,
+                  'maxOutputTokens': 8192,
+                  'responseMimeType': 'application/json',
+                },
               }),
             )
-            .timeout(const Duration(seconds: 45));
+            .timeout(const Duration(seconds: 60));
 
         if (resp.statusCode == 200) {
           final body = jsonDecode(resp.body);
-          rawResponseText =
-              (body['text'] ?? body['content'] ?? body['result'] ?? '')
-                  .toString();
+          if (body is Map) {
+            final candidates = body['candidates'] as List<dynamic>?;
+            if (candidates != null && candidates.isNotEmpty) {
+              rawResponseText =
+                  (candidates[0]['content']?['parts']?[0]?['text'] ?? '').toString();
+            } else {
+              rawResponseText =
+                  (body['text'] ?? body['content'] ?? body['result'] ?? '').toString();
+            }
+          }
         } else {
           apiError =
               '${apiError != null ? '$apiError ' : ''}Worker gateway returned HTTP ${resp.statusCode}.';

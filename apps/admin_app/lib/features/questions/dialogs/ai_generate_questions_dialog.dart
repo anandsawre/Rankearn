@@ -144,7 +144,7 @@ Return ONLY the JSON array.
         await prefs.setString('gemini_api_key', apiKey);
 
         final directUri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=$apiKey',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=$apiKey',
         );
         final resp = await http
             .post(
@@ -198,7 +198,7 @@ Return ONLY the JSON array.
           'gemini-proxy',
           headers: {'Authorization': 'Bearer $accessToken'},
           body: {
-            'model': 'gemini-3.8-flash',
+            'model': 'gemini-flash-lite-latest',
             'contents': [
               {
                 'parts': [
@@ -234,21 +234,44 @@ Return ONLY the JSON array.
       }
     }
 
-    // 3. Try configured worker gateway if set in preferences
+    // 3. Try configured worker gateway if set in preferences (matches React Admin protocol)
     if (rawResponseText.isEmpty && _workerUrl != null && _workerUrl!.isNotEmpty) {
       try {
         final resp = await http
             .post(
-              Uri.parse('$_workerUrl/api/generate'),
+              Uri.parse(_workerUrl!.trim()),
               headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({'prompt': prompt, 'temperature': 0.7, 'maxTokens': 8192}),
+              body: jsonEncode({
+                'model': 'gemini-2.5-flash',
+                'contents': [
+                  {
+                    'role': 'user',
+                    'parts': [
+                      {'text': prompt}
+                    ]
+                  }
+                ],
+                'generationConfig': {
+                  'temperature': 0.7,
+                  'maxOutputTokens': 8192,
+                  'responseMimeType': 'application/json',
+                },
+              }),
             )
-            .timeout(const Duration(seconds: 45));
+            .timeout(const Duration(seconds: 60));
 
         if (resp.statusCode == 200) {
           final body = jsonDecode(resp.body);
-          rawResponseText =
-              (body['text'] ?? body['content'] ?? body['result'] ?? '').toString();
+          if (body is Map) {
+            final candidates = body['candidates'] as List<dynamic>?;
+            if (candidates != null && candidates.isNotEmpty) {
+              rawResponseText =
+                  (candidates[0]['content']?['parts']?[0]?['text'] ?? '').toString();
+            } else {
+              rawResponseText =
+                  (body['text'] ?? body['content'] ?? body['result'] ?? '').toString();
+            }
+          }
         } else {
           apiError =
               '${apiError != null ? '$apiError ' : ''}Worker gateway returned HTTP ${resp.statusCode}.';
