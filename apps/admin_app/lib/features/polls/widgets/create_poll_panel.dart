@@ -24,7 +24,19 @@ class _CreatePollPanelState extends State<CreatePollPanel> {
   late TextEditingController _questionController;
   final Map<String, TextEditingController> _optionControllers = {};
 
-  final List<int> _durationOptions = [15, 30, 45, 60, 120, 300];
+  final List<int> _durationOptions = [
+    30, // 30 Seconds
+    60, // 1 Minute
+    300, // 5 Minutes
+    900, // 15 Minutes
+    1800, // 30 Minutes
+    3600, // 1 Hour
+    21600, // 6 Hours
+    43200, // 12 Hours
+    86400, // 24 Hours (1 Day)
+    172800, // 48 Hours (2 Days)
+    604800, // 7 Days (1 Week)
+  ];
 
   @override
   void initState() {
@@ -110,8 +122,16 @@ class _CreatePollPanelState extends State<CreatePollPanel> {
 
   String _formatDuration(int seconds) {
     if (seconds < 60) return '$seconds Seconds';
-    final mins = seconds ~/ 60;
-    return '$mins Minute${mins > 1 ? 's' : ''}';
+    if (seconds < 3600) {
+      final mins = seconds ~/ 60;
+      return '$mins Minute${mins > 1 ? 's' : ''}';
+    }
+    if (seconds < 86400) {
+      final hours = seconds ~/ 3600;
+      return '$hours Hour${hours > 1 ? 's' : ''}';
+    }
+    final days = seconds ~/ 86400;
+    return '$days Day${days > 1 ? 's' : ''}';
   }
 
   @override

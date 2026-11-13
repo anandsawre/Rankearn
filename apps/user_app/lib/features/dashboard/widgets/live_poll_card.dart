@@ -168,6 +168,17 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
 
   String _formatTimer(int seconds) {
     if (seconds <= 0) return '00:00';
+    if (seconds >= 86400) {
+      final d = seconds ~/ 86400;
+      final h = (seconds % 86400) ~/ 3600;
+      return '${d}d ${h}h';
+    }
+    if (seconds >= 3600) {
+      final h = seconds ~/ 3600;
+      final m = (seconds % 3600) ~/ 60;
+      final s = seconds % 60;
+      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
     final m = seconds ~/ 60;
     final s = seconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
