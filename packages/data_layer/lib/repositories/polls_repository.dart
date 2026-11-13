@@ -78,7 +78,9 @@ class PollsRepository {
 
     try {
       // 1. Mark any previously active polls as inactive
-      await client.from('polls').update({'is_active': false}).eq('is_active', true);
+      try {
+        await client.from('polls').update({'is_active': false}).eq('is_active', true);
+      } catch (_) {}
 
       // 2. Prepare new poll
       final pollId = 'poll_${DateTime.now().millisecondsSinceEpoch}';
@@ -208,3 +210,4 @@ class PollsRepository {
     }
   }
 }
+
