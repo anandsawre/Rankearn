@@ -531,30 +531,17 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
 
                 const SizedBox(height: 12),
 
-                // Footer Row: Total votes count + Live indicator
+                // Footer Row: Total votes count
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.people_alt_rounded, size: 14, color: AppColors.textSecondary),
-                        const SizedBox(width: 6),
-                        Text(
-                          '$totalVotes ${totalVotes == 1 ? 'vote' : 'votes'} recorded',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
+                    const Icon(Icons.people_alt_rounded, size: 14, color: AppColors.textSecondary),
+                    const SizedBox(width: 6),
                     Text(
-                      hasVoted ? '✓ Vote submitted' : 'Tap any option to vote',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: hasVoted ? AppColors.pollLeadingGreen : AppColors.brandPurple,
+                      '$totalVotes ${totalVotes == 1 ? 'vote' : 'votes'} recorded',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
