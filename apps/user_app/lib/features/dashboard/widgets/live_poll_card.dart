@@ -216,12 +216,12 @@ class _LivePollCardState extends State<LivePollCard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // LIVE POLL Pill
+                    // LIVE POLL Badge (Square edges: roundness 0)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: isTimeUp ? const Color(0xFFF1F5F9) : const Color(0xFFFEF2F2),
-                        borderRadius: AppRadii.borderPill,
+                        borderRadius: BorderRadius.zero,
                         border: Border.all(
                           color: isTimeUp ? const Color(0xFFCBD5E1) : const Color(0xFFFECACA),
                         ),
@@ -248,12 +248,12 @@ class _LivePollCardState extends State<LivePollCard> {
                       ),
                     ),
 
-                    // Countdown Timer Pill
+                    // Countdown Timer Badge (Square edges: roundness 0)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8FAFC),
-                        borderRadius: AppRadii.borderPill,
+                        borderRadius: BorderRadius.zero,
                         border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
                       child: Row(
