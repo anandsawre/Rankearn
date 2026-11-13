@@ -190,36 +190,15 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadii.borderLg,
-        border: Border.all(
-          color: hasVoted ? const Color(0xFFE2E8F0) : AppColors.brandPurple.withAlpha(50),
-          width: hasVoted ? 1.0 : 1.5,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: AppShadows.subtle,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          // Subtle top colored banner accent
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.pollPurplePrimary, AppColors.brandBlue],
-                ),
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
                 // Top Header Row: LIVE Badge, Time Left, Total Votes
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -523,11 +502,9 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
+        );
+      }
+    }
 
 /// Custom painter for the continuous expanding wave/radar ripple animation
 class _DotWavePainter extends CustomPainter {
