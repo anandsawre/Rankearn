@@ -316,94 +316,104 @@ class _LivePollCardState extends State<LivePollCard> {
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: Stack(
+                          alignment: Alignment.centerLeft,
                           children: [
                             // Animated percentage progress fill
-                            FractionallySizedBox(
-                              widthFactor: pct > 0 ? (pct / 100.0).clamp(0.0, 1.0) : 0.0,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.pollLeadingGreen.withAlpha(35)
-                                      : accentColor.withAlpha(25),
+                            Positioned.fill(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: FractionallySizedBox(
+                                  widthFactor: pct > 0 ? (pct / 100.0).clamp(0.0, 1.0) : 0.0,
+                                  heightFactor: 1.0,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? AppColors.pollLeadingGreen.withAlpha(35)
+                                          : accentColor.withAlpha(25),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
 
-                            // Content Row
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
-                              child: Row(
-                                children: [
-                                  // Letter Badge
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: isSelected ? AppColors.pollLeadingGreen : accentColor.withAlpha(40),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      opt.label,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w900,
-                                        color: isSelected ? Colors.white : accentColor,
+                            // Content Row (Vertically centered)
+                            Positioned.fill(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Letter Badge
+                                    Container(
+                                      width: 26,
+                                      height: 26,
+                                      decoration: BoxDecoration(
+                                        color: isSelected ? AppColors.pollLeadingGreen : accentColor.withAlpha(40),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        opt.label,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w900,
+                                          color: isSelected ? Colors.white : accentColor,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 10),
+                                    const SizedBox(width: 12),
 
-                                  // Text
-                                  Expanded(
-                                    child: Text(
-                                      opt.text,
+                                    // Text
+                                    Expanded(
+                                      child: Text(
+                                        opt.text,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+
+                                    if (isSelected) ...[
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.brandGreenLight,
+                                          borderRadius: AppRadii.badge,
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.check_rounded, size: 13, color: AppColors.pollLeadingGreen),
+                                            SizedBox(width: 3),
+                                            Text(
+                                              'Your Vote',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w800,
+                                                color: AppColors.brandGreenDark,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+
+                                    // Percentage
+                                    Text(
+                                      '$pct%',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-
-                                  if (isSelected) ...[
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.brandGreenLight,
-                                        borderRadius: AppRadii.badge,
-                                      ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.check_rounded, size: 12, color: AppColors.pollLeadingGreen),
-                                          SizedBox(width: 3),
-                                          Text(
-                                            'Your Vote',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w800,
-                                              color: AppColors.brandGreenDark,
-                                            ),
-                                          ),
-                                        ],
+                                        fontWeight: FontWeight.w800,
+                                        color: isSelected ? AppColors.pollLeadingGreen : AppColors.textPrimary,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
                                   ],
-
-                                  // Percentage
-                                  Text(
-                                    '$pct%',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: isSelected ? AppColors.pollLeadingGreen : AppColors.textPrimary,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                           ],
@@ -417,6 +427,7 @@ class _LivePollCardState extends State<LivePollCard> {
                       borderRadius: AppRadii.borderMd,
                       child: Container(
                         height: 48,
+                        alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -424,6 +435,7 @@ class _LivePollCardState extends State<LivePollCard> {
                           border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             // Letter Badge
                             Container(
