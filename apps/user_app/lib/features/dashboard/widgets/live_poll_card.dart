@@ -26,9 +26,7 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
   StreamSubscription<PollModel?>? _pollSub;
   Timer? _countdownTimer;
 
-  late AnimationController _pulseController;
-  late Animation<double> _pulseScale;
-  late Animation<double> _pulseOpacity;
+  late AnimationController _waveController;
 
   static const List<Color> _optionColors = [
     AppColors.brandBlue,
@@ -42,17 +40,10 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
+    _waveController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-
-    _pulseScale = Tween<double>(begin: 0.85, end: 1.25).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-    _pulseOpacity = Tween<double>(begin: 0.45, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
 
     _subscribeToLivePoll();
   }
@@ -136,7 +127,7 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _pulseController.dispose();
+    _waveController.dispose();
     _pollSub?.cancel();
     _countdownTimer?.cancel();
     super.dispose();
@@ -233,7 +224,7 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // LIVE POLL Badge with Red Background, White Text & Pulsing Dot
+                    // LIVE POLL Badge with Red Background, White Text & Ripple Wave Dot (No shadow)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
                       decoration: BoxDecoration(
@@ -242,50 +233,46 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
                         border: Border.all(
                           color: isTimeUp ? const Color(0xFFCBD5E1) : const Color(0xFFDC2626),
                         ),
-                        boxShadow: isTimeUp
-                            ? null
-                            : [
-                                BoxShadow(
-                                  color: const Color(0xFFEF4444).withAlpha(80),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (!isTimeUp)
                             AnimatedBuilder(
-                              animation: _pulseController,
+                              animation: _waveController,
                               builder: (context, child) {
-                                return Transform.scale(
-                                  scale: _pulseScale.value,
-                                  child: Opacity(
-                                    opacity: _pulseOpacity.value,
-                                    child: Container(
-                                      width: 7,
-                                      height: 7,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.white.withAlpha(180),
-                                            blurRadius: 5,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
+                                return SizedBox(
+                                  width: 13,
+                                  height: 13,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      // Expanding ripple waves
+                                      CustomPaint(
+                                        size: const Size(13, 13),
+                                        painter: _DotWavePainter(
+                                          progress: _waveController.value,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                    ),
+                                      // Solid center dot
+                                      Container(
+                                        width: 5.5,
+                                        height: 5.5,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 );
                               },
                             )
                           else
                             Container(
-                              width: 7,
-                              height: 7,
+                              width: 6,
+                              height: 6,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Color(0xFF94A3B8),
@@ -579,4 +566,41 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
       ),
     );
   }
+}
+
+/// Custom painter for the continuous expanding wave/radar ripple animation
+class _DotWavePainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _DotWavePainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = size.width / 2;
+
+    // Wave 1
+    final radius1 = 2.8 + (maxRadius - 2.8) * progress;
+    final alpha1 = ((1.0 - progress) * 0.75 * 255).round().clamp(0, 255);
+    final paint1 = Paint()
+      ..color = color.withAlpha(alpha1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1;
+    canvas.drawCircle(center, radius1, paint1);
+
+    // Wave 2 (Phase-shifted for continuous fluid ripples)
+    final progress2 = (progress + 0.5) % 1.0;
+    final radius2 = 2.8 + (maxRadius - 2.8) * progress2;
+    final alpha2 = ((1.0 - progress2) * 0.45 * 255).round().clamp(0, 255);
+    final paint2 = Paint()
+      ..color = color.withAlpha(alpha2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.9;
+    canvas.drawCircle(center, radius2, paint2);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DotWavePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
