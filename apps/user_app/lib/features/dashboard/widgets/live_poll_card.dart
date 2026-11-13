@@ -421,32 +421,6 @@ class _LivePollCardState extends State<LivePollCard> with SingleTickerProviderSt
                                       ),
                                     ),
 
-                                    if (isSelected) ...[
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.brandGreenLight,
-                                          borderRadius: AppRadii.badge,
-                                        ),
-                                        child: const Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.check_rounded, size: 13, color: AppColors.pollLeadingGreen),
-                                            SizedBox(width: 3),
-                                            Text(
-                                              'Your Vote',
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w800,
-                                                color: AppColors.brandGreenDark,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-
                                     // Percentage
                                     Text(
                                       '$pct%',
