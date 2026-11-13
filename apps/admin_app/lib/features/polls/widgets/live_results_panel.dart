@@ -177,7 +177,7 @@ class LiveResultsPanel extends StatelessWidget {
                         // Option Text
                         Expanded(
                           child: Text(
-                            opt.text,
+                            opt.text.trim().isEmpty ? 'Option ${opt.label}' : opt.text,
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,

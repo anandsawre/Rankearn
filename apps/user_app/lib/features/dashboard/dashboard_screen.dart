@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import 'widgets/live_poll_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   final UserProfile profile;
@@ -121,6 +122,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       const SizedBox(height: 20),
+                      LivePollCard(profile: widget.profile),
                       _buildUserStatsSection(),
                       const SizedBox(height: 22),
                       _buildFeatureShortcutsSection(),
@@ -181,6 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               const SizedBox(height: 18),
+              LivePollCard(profile: widget.profile),
               _buildUserStatsSection(),
               const SizedBox(height: 20),
               _buildFeatureShortcutsSection(),

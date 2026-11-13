@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 /// Supported types of live polls
 enum LivePollType {
@@ -81,6 +82,7 @@ class LivePollOption {
 
 /// Full state of the active live poll
 class LivePollData {
+  String id;
   String question;
   LivePollType type;
   List<LivePollOption> options;
@@ -95,13 +97,14 @@ class LivePollData {
   DateTime? createdAt;
 
   LivePollData({
+    this.id = '',
     required this.question,
     this.type = LivePollType.singleChoice,
     required this.options,
     this.durationSeconds = 30,
-    this.remainingSeconds = 18,
-    this.liveViewers = 2847,
-    this.isLive = true,
+    this.remainingSeconds = 0,
+    this.liveViewers = 0,
+    this.isLive = false,
     this.isPaused = false,
     this.showLiveResult = true,
     this.allowOptionChange = false,
@@ -128,26 +131,55 @@ class LivePollData {
     return leader;
   }
 
-  /// Create default initial data exactly matching the user's reference screenshot
-  factory LivePollData.defaultLive() {
+  /// Create clean blank poll for user to create new poll with zero dummy text
+  factory LivePollData.empty() {
     return LivePollData(
-      question: 'भारत का राष्ट्रीय पशु कौन है?',
+      id: '',
+      question: '',
       type: LivePollType.singleChoice,
       durationSeconds: 30,
-      remainingSeconds: 18,
-      liveViewers: 2847,
-      isLive: true,
+      remainingSeconds: 0,
+      liveViewers: 0,
+      isLive: false,
       isPaused: false,
       showLiveResult: true,
       allowOptionChange: false,
       autoRefresh: true,
       options: [
-        LivePollOption(id: '1', label: 'A', text: 'शेर (Lion)', votes: 342, color: AppColors.brandBlue),
-        LivePollOption(id: '2', label: 'B', text: 'बाघ (Tiger)', votes: 1937, color: AppColors.brandGreen),
-        LivePollOption(id: '3', label: 'C', text: 'हाथी (Elephant)', votes: 399, color: AppColors.brandPurple),
-        LivePollOption(id: '4', label: 'D', text: 'हिरण (Deer)', votes: 169, color: AppColors.coinGold),
+        LivePollOption(id: 'opt_0', label: 'A', text: ''),
+        LivePollOption(id: 'opt_1', label: 'B', text: ''),
       ],
-      createdAt: DateTime.now(),
+      createdAt: null,
+    );
+  }
+
+  /// Factory from Supabase PollModel
+  factory LivePollData.fromPollModel(PollModel model) {
+    final duration = model.expiresAt != null && model.createdAt != null
+        ? model.expiresAt!.difference(model.createdAt!).inSeconds
+        : 30;
+
+    return LivePollData(
+      id: model.id,
+      question: model.question,
+      type: LivePollType.singleChoice,
+      durationSeconds: duration > 0 ? duration : 30,
+      remainingSeconds: model.remainingSeconds,
+      liveViewers: model.totalVotes,
+      isLive: model.isActive && !model.isExpired,
+      isPaused: false,
+      showLiveResult: true,
+      allowOptionChange: false,
+      autoRefresh: true,
+      options: model.options.map((opt) {
+        return LivePollOption(
+          id: 'opt_${opt.index}',
+          label: opt.label,
+          text: opt.text,
+          votes: opt.votes,
+        );
+      }).toList(),
+      createdAt: model.createdAt,
     );
   }
 }

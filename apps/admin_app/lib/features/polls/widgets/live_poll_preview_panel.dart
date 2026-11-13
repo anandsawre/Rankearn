@@ -216,7 +216,7 @@ class LivePollPreviewPanel extends StatelessWidget {
                                     // Option Text
                                     Expanded(
                                       child: Text(
-                                        opt.text,
+                                        opt.text.trim().isEmpty ? 'Option ${opt.label}' : opt.text,
                                         style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: isLeading ? FontWeight.w800 : FontWeight.w600,
