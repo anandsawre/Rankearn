@@ -87,3 +87,4 @@ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.poll_votes;
   END IF;
 END $$;
+

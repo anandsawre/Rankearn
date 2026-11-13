@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 
-/// Interactive, Real-Time Live Poll Card for Candidates on the User App Dashboard
+/// Interactive, Textured Purple Gradient Live Poll Card for Candidates
 class LivePollCard extends StatefulWidget {
   final UserProfile profile;
 
@@ -25,15 +25,6 @@ class _LivePollCardState extends State<LivePollCard> {
 
   StreamSubscription<PollModel?>? _pollSub;
   Timer? _countdownTimer;
-
-  static const List<Color> _optionColors = [
-    AppColors.brandBlue,
-    AppColors.brandGreen,
-    AppColors.brandPurple,
-    AppColors.coinGold,
-    AppColors.brandPink,
-    AppColors.brandOrange,
-  ];
 
   @override
   void initState() {
@@ -145,7 +136,6 @@ class _LivePollCardState extends State<LivePollCard> {
       setState(() {
         _isVoting = false;
         if (!success) {
-          // If failed, rollback
           _votedOption = null;
         }
       });
@@ -175,56 +165,56 @@ class _LivePollCardState extends State<LivePollCard> {
     final hasVoted = _votedOption != null;
     final totalVotes = poll.totalVotes;
     final isTimeUp = _remainingSeconds <= 0;
+    final leader = poll.leadingOption;
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 18),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderLg,
+        borderRadius: AppRadii.pollCanvas,
+        gradient: AppColors.pollCanvasGradient,
+        boxShadow: AppShadows.pollCanvas,
         border: Border.all(
-          color: hasVoted ? const Color(0xFFE2E8F0) : AppColors.brandPurple.withAlpha(50),
-          width: hasVoted ? 1.0 : 1.5,
+          color: Colors.white.withAlpha(35),
+          width: 1.2,
         ),
-        boxShadow: AppShadows.subtle,
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // Subtle top colored banner accent
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.pollPurplePrimary, AppColors.brandBlue],
-                ),
-              ),
+          // Background Wave Texture Painter
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _PurpleWavePainter(),
             ),
           ),
 
+          // Card Content
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Top Header Row: LIVE Badge, Time Left, Total Votes
+                // Top Header Row: LIVE Badge + Timer Pill
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // LIVE POLL Pill
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: isTimeUp ? const Color(0xFFF1F5F9) : const Color(0xFFFEF2F2),
+                        color: isTimeUp ? Colors.white.withAlpha(25) : AppColors.error,
                         borderRadius: AppRadii.borderPill,
-                        border: Border.all(
-                          color: isTimeUp ? const Color(0xFFCBD5E1) : const Color(0xFFFECACA),
-                        ),
+                        boxShadow: isTimeUp
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: AppColors.error.withAlpha(120),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -232,15 +222,15 @@ class _LivePollCardState extends State<LivePollCard> {
                           Icon(
                             Icons.circle,
                             size: 7,
-                            color: isTimeUp ? const Color(0xFF94A3B8) : const Color(0xFFEF4444),
+                            color: isTimeUp ? Colors.white.withAlpha(180) : Colors.white,
                           ),
                           const SizedBox(width: 6),
                           Text(
                             isTimeUp ? 'POLL ENDED' : 'LIVE POLL',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
-                              color: isTimeUp ? const Color(0xFF64748B) : const Color(0xFFB91C1C),
+                              color: Colors.white,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -250,23 +240,23 @@ class _LivePollCardState extends State<LivePollCard> {
 
                     // Countdown Timer Pill
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: Colors.white.withAlpha(30),
                         borderRadius: AppRadii.borderPill,
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: Colors.white.withAlpha(45)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.timer_outlined, size: 13, color: AppColors.textSecondary),
+                          const Icon(Icons.timer_outlined, size: 13, color: Colors.white),
                           const SizedBox(width: 5),
                           Text(
                             _formatTimer(_remainingSeconds),
                             style: const TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
                             ),
                           ),
                         ],
@@ -275,20 +265,21 @@ class _LivePollCardState extends State<LivePollCard> {
                   ],
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
-                // Question Text
+                // Question Text (Crisp White Bold Typography)
                 Text(
                   poll.question,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: Colors.white,
+                    letterSpacing: -0.2,
                     height: 1.35,
                   ),
                 ),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
 
                 // Options List
                 ListView.separated(
@@ -299,35 +290,47 @@ class _LivePollCardState extends State<LivePollCard> {
                   itemBuilder: (context, index) {
                     final opt = poll.options[index];
                     final pct = poll.getPercentage(opt).round();
-                    final isSelected = _votedOption == index;
-                    final accentColor = _optionColors[index % _optionColors.length];
+                    final isUserVote = _votedOption == index;
+                    final isLeading = totalVotes > 0 && opt == leader;
 
                     if (hasVoted) {
-                      // VOTED STATE: Progress bar with percentage and checkmark
+                      // VOTED STATE: Glassmorphic progress bar with percentage and badges
                       return Container(
-                        height: 48,
+                        height: 50,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: AppRadii.borderMd,
+                          color: isLeading
+                              ? AppColors.pollLeadingGreen
+                              : (isUserVote ? Colors.white.withAlpha(35) : Colors.white.withAlpha(20)),
+                          borderRadius: AppRadii.pollOption,
                           border: Border.all(
-                            color: isSelected ? AppColors.pollLeadingGreen : const Color(0xFFE2E8F0),
-                            width: isSelected ? 1.5 : 1.0,
+                            color: isLeading
+                                ? AppColors.pollLeadingGreenBorder
+                                : (isUserVote ? Colors.white : Colors.white.withAlpha(35)),
+                            width: (isLeading || isUserVote) ? 1.5 : 1.0,
                           ),
+                          boxShadow: isLeading
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.pollLeadingGreen.withAlpha(100),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ]
+                              : null,
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: Stack(
                           children: [
-                            // Animated percentage progress fill
-                            FractionallySizedBox(
-                              widthFactor: pct > 0 ? (pct / 100.0).clamp(0.0, 1.0) : 0.0,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.pollLeadingGreen.withAlpha(35)
-                                      : accentColor.withAlpha(25),
+                            // Progress bar indicator for non-leading options
+                            if (!isLeading && pct > 0)
+                              FractionallySizedBox(
+                                widthFactor: (pct / 100.0).clamp(0.0, 1.0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withAlpha(25),
+                                  ),
                                 ),
                               ),
-                            ),
 
                             // Content Row
                             Padding(
@@ -336,23 +339,23 @@ class _LivePollCardState extends State<LivePollCard> {
                                 children: [
                                   // Letter Badge
                                   Container(
-                                    width: 24,
-                                    height: 24,
+                                    width: 26,
+                                    height: 26,
                                     decoration: BoxDecoration(
-                                      color: isSelected ? AppColors.pollLeadingGreen : accentColor.withAlpha(40),
+                                      color: isLeading ? Colors.white.withAlpha(70) : Colors.white.withAlpha(35),
                                       shape: BoxShape.circle,
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
                                       opt.label,
-                                      style: TextStyle(
-                                        fontSize: 11,
+                                      style: const TextStyle(
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w900,
-                                        color: isSelected ? Colors.white : accentColor,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
+                                  const SizedBox(width: 12),
 
                                   // Text
                                   Expanded(
@@ -360,32 +363,37 @@ class _LivePollCardState extends State<LivePollCard> {
                                       opt.text,
                                       style: TextStyle(
                                         fontSize: 14,
-                                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                        color: AppColors.textPrimary,
+                                        fontWeight: (isLeading || isUserVote) ? FontWeight.w800 : FontWeight.w600,
+                                        color: Colors.white,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
 
-                                  if (isSelected) ...[
+                                  // Your Vote Badge
+                                  if (isUserVote) ...[
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: AppColors.brandGreenLight,
-                                        borderRadius: AppRadii.badge,
+                                        color: Colors.white,
+                                        borderRadius: AppRadii.borderPill,
                                       ),
-                                      child: const Row(
+                                      child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.check_rounded, size: 12, color: AppColors.pollLeadingGreen),
-                                          SizedBox(width: 3),
+                                          Icon(
+                                            Icons.check_rounded,
+                                            size: 13,
+                                            color: isLeading ? AppColors.pollLeadingGreen : AppColors.brandPurple,
+                                          ),
+                                          const SizedBox(width: 3),
                                           Text(
                                             'Your Vote',
                                             style: TextStyle(
                                               fontSize: 10,
-                                              fontWeight: FontWeight.w800,
-                                              color: AppColors.brandGreenDark,
+                                              fontWeight: FontWeight.w900,
+                                              color: isLeading ? AppColors.pollLeadingGreen : AppColors.brandPurple,
                                             ),
                                           ),
                                         ],
@@ -397,10 +405,10 @@ class _LivePollCardState extends State<LivePollCard> {
                                   // Percentage
                                   Text(
                                     '$pct%',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: isSelected ? AppColors.pollLeadingGreen : AppColors.textPrimary,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ],
@@ -411,69 +419,75 @@ class _LivePollCardState extends State<LivePollCard> {
                       );
                     }
 
-                    // NOT VOTED STATE: Interactive vote button
-                    return InkWell(
-                      onTap: (_isVoting || isTimeUp) ? null : () => _castVote(index),
-                      borderRadius: AppRadii.borderMd,
-                      child: Container(
-                        height: 48,
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: AppRadii.borderMd,
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          children: [
-                            // Letter Badge
-                            Container(
-                              width: 26,
-                              height: 26,
-                              decoration: BoxDecoration(
-                                color: accentColor.withAlpha(25),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: accentColor.withAlpha(60)),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                opt.label,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w900,
-                                  color: accentColor,
+                    // NOT VOTED STATE: Glassmorphic interactive vote buttons
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: (_isVoting || isTimeUp) ? null : () => _castVote(index),
+                        borderRadius: AppRadii.pollOption,
+                        child: Container(
+                          height: 50,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(22),
+                            borderRadius: AppRadii.pollOption,
+                            border: Border.all(
+                              color: Colors.white.withAlpha(35),
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              // Letter Badge
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withAlpha(35),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white.withAlpha(50)),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  opt.label,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
+                              const SizedBox(width: 12),
 
-                            // Option text
-                            Expanded(
-                              child: Text(
-                                opt.text,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                              // Option text
+                              Expanded(
+                                child: Text(
+                                  opt.text,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
 
-                            // Tap to vote icon
-                            Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 13,
-                              color: AppColors.textSecondary.withAlpha(120),
-                            ),
-                          ],
+                              // Interactive arrow icon
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 13,
+                                color: Colors.white.withAlpha(160),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
                   },
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
                 // Footer Row: Total votes count + Live indicator
                 Row(
@@ -481,14 +495,14 @@ class _LivePollCardState extends State<LivePollCard> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.people_alt_rounded, size: 14, color: AppColors.textSecondary),
+                        Icon(Icons.people_alt_rounded, size: 14, color: Colors.white.withAlpha(200)),
                         const SizedBox(width: 6),
                         Text(
                           '$totalVotes ${totalVotes == 1 ? 'vote' : 'votes'} recorded',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                            color: Colors.white.withAlpha(210),
                           ),
                         ),
                       ],
@@ -497,8 +511,8 @@ class _LivePollCardState extends State<LivePollCard> {
                       hasVoted ? '✓ Vote submitted' : 'Tap any option to vote',
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: hasVoted ? AppColors.pollLeadingGreen : AppColors.brandPurple,
+                        fontWeight: FontWeight.w800,
+                        color: hasVoted ? AppColors.pollLeadingGreen : Colors.white.withAlpha(220),
                       ),
                     ),
                   ],
@@ -510,4 +524,53 @@ class _LivePollCardState extends State<LivePollCard> {
       ),
     );
   }
+}
+
+/// Custom painter for the cosmic purple gradient wave texture background
+class _PurpleWavePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint1 = Paint()
+      ..color = AppColors.pollCanvasWave1.withAlpha(35)
+      ..style = PaintingStyle.fill;
+
+    final path1 = Path();
+    path1.moveTo(0, size.height * 0.7);
+    path1.quadraticBezierTo(
+      size.width * 0.35,
+      size.height * 0.55,
+      size.width * 0.65,
+      size.height * 0.85,
+    );
+    path1.quadraticBezierTo(
+      size.width * 0.85,
+      size.height * 1.0,
+      size.width,
+      size.height * 0.75,
+    );
+    path1.lineTo(size.width, size.height);
+    path1.lineTo(0, size.height);
+    path1.close();
+    canvas.drawPath(path1, paint1);
+
+    final paint2 = Paint()
+      ..color = AppColors.pollCanvasWave2.withAlpha(25)
+      ..style = PaintingStyle.fill;
+
+    final path2 = Path();
+    path2.moveTo(0, size.height * 0.85);
+    path2.quadraticBezierTo(
+      size.width * 0.4,
+      size.height * 0.95,
+      size.width,
+      size.height * 0.65,
+    );
+    path2.lineTo(size.width, size.height);
+    path2.lineTo(0, size.height);
+    path2.close();
+    canvas.drawPath(path2, paint2);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
