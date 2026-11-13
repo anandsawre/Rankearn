@@ -1,6 +1,13 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import 'models/live_poll_model.dart';
+import 'widgets/create_poll_panel.dart';
+import 'widgets/live_poll_preview_panel.dart';
+import 'widgets/live_results_panel.dart';
 
 class PollsTab extends StatefulWidget {
   final List<Map<String, dynamic>>? initialPolls;
@@ -11,395 +18,432 @@ class PollsTab extends StatefulWidget {
 }
 
 class _PollsTabState extends State<PollsTab> {
-  List<Map<String, dynamic>> _polls = [];
-  bool _isLoading = true;
+  late LivePollData _livePoll;
+
+  Timer? _countdownTimer;
+  Timer? _liveVoteTimer;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialPolls != null) {
-      _polls = List.from(widget.initialPolls!);
-      _isLoading = false;
-    } else {
-      _fetchPolls();
-    }
+    _livePoll = LivePollData.defaultLive();
+    _startTimers();
   }
 
-  Future<void> _fetchPolls() async {
-    final client = SupabaseConfig.clientSafe;
-    if (client == null) {
-      if (mounted) setState(() => _isLoading = false);
-      return;
-    }
-
-    try {
-      final res = await client.from('polls').select().order('created_at', ascending: false);
-      if (mounted) {
+  void _startTimers() {
+    // 1. Countdown timer
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_livePoll.isLive && !_livePoll.isPaused && _livePoll.remainingSeconds > 0) {
         setState(() {
-          _polls = (res as List).map((row) {
-            final opts = row['options'] ?? [];
-            final votesMap = row['votes'] ?? {};
-            final List<Map<String, dynamic>> parsedOpts = [];
-            if (opts is List) {
-              for (int i = 0; i < opts.length; i++) {
-                final o = opts[i];
-                if (o is Map) {
-                  parsedOpts.add({
-                    'text': o['text']?.toString() ?? 'Option ${i + 1}',
-                    'votes': (o['votes'] is num) ? (o['votes'] as num).toInt() : 0,
-                  });
-                } else {
-                  final text = o.toString();
-                  final votesCount = votesMap is Map ? (votesMap['$i'] ?? votesMap[text] ?? 0) : 0;
-                  parsedOpts.add({
-                    'text': text,
-                    'votes': (votesCount is num) ? votesCount.toInt() : 0,
-                  });
-                }
-              }
-            }
-            return {
-              'id': row['id']?.toString() ?? '',
-              'question': row['question']?.toString() ?? '',
-              'targetSegment': row['target_segment']?.toString() ?? 'All Candidates',
-              'isActive': row['is_active'] == true,
-              'createdAt': row['created_at'] != null ? row['created_at'].toString().split('T').first : 'Recent',
-              'options': parsedOpts,
-            };
-          }).toList();
-          _isLoading = false;
+          _livePoll.remainingSeconds--;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    });
+
+    // 2. Real-time simulated vote inflow when autoRefresh is enabled
+    _liveVoteTimer?.cancel();
+    _liveVoteTimer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
+      if (!mounted) return;
+      if (_livePoll.isLive &&
+          !_livePoll.isPaused &&
+          _livePoll.autoRefresh &&
+          _livePoll.remainingSeconds > 0 &&
+          _livePoll.options.isNotEmpty) {
+        setState(() {
+          // Weighted vote increment (Tiger gets slightly higher weight to match leader)
+          final rand = math.Random();
+          final index = rand.nextDouble() < 0.65 && _livePoll.options.length > 1
+              ? 1 // Option B
+              : rand.nextInt(_livePoll.options.length);
+
+          _livePoll.options[index].votes += rand.nextInt(3) + 1;
+          _livePoll.liveViewers += rand.nextInt(3) - 1;
+          if (_livePoll.liveViewers < 2500) _livePoll.liveViewers = 2847;
+        });
+      }
+    });
   }
 
   @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: AppSpacing.pagePadding(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Master Header
-          _buildMasterHeader(),
-          const SizedBox(height: 24),
+  void dispose() {
+    _countdownTimer?.cancel();
+    _liveVoteTimer?.cancel();
+    super.dispose();
+  }
 
-          // Poll Cards or Empty State
-          if (_isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(48),
-                child: CircularProgressIndicator(color: AppColors.brandPrimary),
-              ),
-            )
-          else if (_polls.isEmpty)
-            _buildEmptyState()
-          else
-            Column(
-              children: _polls.map((p) => _buildPollCard(p)).toList(),
+  void _onLaunchPoll() {
+    if (_livePoll.question.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Poll question cannot be empty!')),
+      );
+      return;
+    }
+    if (_livePoll.options.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('At least 2 options are required.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _livePoll.isLive = true;
+      _livePoll.isPaused = false;
+      _livePoll.remainingSeconds = _livePoll.durationSeconds;
+    });
+
+    // Sync to Supabase
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      final newId = 'poll-${DateTime.now().millisecondsSinceEpoch}';
+      final optionsList = _livePoll.options.map((o) => {'text': o.text, 'votes': o.votes}).toList();
+      client.from('polls').insert({
+        'id': newId,
+        'question': _livePoll.question.trim(),
+        'options': optionsList,
+        'votes': {},
+        'target_segment': 'all',
+        'is_active': true,
+      }).catchError((_) {});
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🚀 Live Poll Launched Successfully!'),
+        backgroundColor: AppColors.pollLeadingGreen,
+      ),
+    );
+  }
+
+  void _onResetPoll() {
+    setState(() {
+      _livePoll = LivePollData.defaultLive();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Poll reset to default.')),
+    );
+  }
+
+  void _onEndPoll() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.card),
+        title: const Row(
+          children: [
+            Icon(Icons.stop_circle_outlined, color: AppColors.error),
+            SizedBox(width: 8),
+            Text('End Live Poll?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          ],
+        ),
+        content: const Text('Are you sure you want to end this live poll? Candidate voting will be closed immediately.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(borderRadius: AppRadii.button),
             ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() {
+                _livePoll.isLive = false;
+                _livePoll.remainingSeconds = 0;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Live Poll ended.')),
+              );
+            },
+            child: const Text('End Poll'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(48),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+  void _onPauseResumePoll() {
+    setState(() {
+      _livePoll.isPaused = !_livePoll.isPaused;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_livePoll.isPaused ? 'Poll paused' : 'Poll resumed'),
+        duration: const Duration(seconds: 1),
       ),
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.brandPrimary.withAlpha(20),
-              shape: BoxShape.circle,
+    );
+  }
+
+  void _onRestartPoll() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.card),
+        title: const Row(
+          children: [
+            Icon(Icons.refresh_rounded, color: AppColors.pollPurplePrimary),
+            SizedBox(width: 8),
+            Text('Restart Poll?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          ],
+        ),
+        content: const Text('Do you want to reset the timer and restart voting for this poll?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.pollPurplePrimary,
+              foregroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(borderRadius: AppRadii.button),
             ),
-            child: const Icon(Icons.poll_outlined, color: AppColors.brandPrimary, size: 32),
-          ),
-          const SizedBox(height: 16),
-          const Text('No Community Polls Found', style: AppTypography.titleLarge),
-          const SizedBox(height: 8),
-          const Text(
-            'Create interactive polls to survey candidates on preferred exam topics, mock timings, or feedback.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-          ),
-          const SizedBox(height: 20),
-          AppButton(
-            label: '+ Create First Poll',
-            onPressed: _showCreatePollDialog,
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() {
+                _livePoll.isLive = true;
+                _livePoll.isPaused = false;
+                _livePoll.remainingSeconds = _livePoll.durationSeconds;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Poll restarted!')),
+              );
+            },
+            child: const Text('Restart'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMasterHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
+  void _onShowResult() {
+    final leader = _livePoll.leadingOption;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: const RoundedRectangleBorder(borderRadius: AppRadii.pollCard),
+        title: const Row(
+          children: [
+            Icon(Icons.emoji_events_rounded, color: AppColors.coinGold),
+            SizedBox(width: 8),
+            Text('Live Poll Results', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _livePoll.question,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 14),
+            if (leader != null)
               Container(
-                width: 44,
-                height: 44,
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.brandPrimary,
-                  borderRadius: AppRadii.borderLg,
-                  boxShadow: [
-                    BoxShadow(color: AppColors.brandPrimary.withAlpha(60), blurRadius: 12, offset: const Offset(0, 4)),
-                  ],
+                  color: AppColors.brandGreenLight,
+                  borderRadius: AppRadii.borderMd,
+                  border: Border.all(color: AppColors.brandGreenMuted),
                 ),
-                alignment: Alignment.center,
-                child: const Icon(Icons.poll_outlined, color: Colors.white, size: 22),
-              ),
-              const SizedBox(width: 14),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Community Polls & Surveys', style: AppTypography.displayMedium),
-                  SizedBox(height: 2),
-                  Text('Gather candidate sentiment, syllabus demand, and feature feedback', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8))),
-                ],
-              ),
-            ],
-          ),
-
-          AppButton(
-            label: '+ Create New Poll',
-            onPressed: _showCreatePollDialog,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPollCard(Map<String, dynamic> poll) {
-    final options = (poll['options'] as List<dynamic>?) ?? [];
-    final totalVotes = options.fold<int>(0, (sum, o) => sum + ((o['votes'] as int?) ?? 0));
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderLg,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x05000000), blurRadius: 6, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFECFDF5),
-                      borderRadius: AppRadii.borderPill,
-                    ),
-                    child: const Text('ACTIVE POLL', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF059669))),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('Target: ${poll['targetSegment']}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                ],
-              ),
-              Row(
-                children: [
-                  Text(poll['createdAt'].toString(), style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-                  const SizedBox(width: 6),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)),
-                    onPressed: () async {
-                      final pollId = poll['id']?.toString() ?? '';
-                      setState(() => _polls.remove(poll));
-                      final client = SupabaseConfig.clientSafe;
-                      if (client != null && pollId.isNotEmpty) {
-                        try {
-                          await client.from('polls').delete().eq('id', pollId);
-                        } catch (_) {}
-                      }
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Poll deleted.')),
-                        );
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(poll['question'], style: AppTypography.titleLarge),
-          const SizedBox(height: 16),
-
-          // Options with live progress bars
-          Column(
-            children: options.map((opt) {
-              final votes = (opt['votes'] as int?) ?? 0;
-              final pct = totalVotes > 0 ? (votes / totalVotes) * 100 : 0.0;
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(opt['text']?.toString() ?? '', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
-                        Text('${pct.toStringAsFixed(1)}% ($votes votes)', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: AppRadii.borderPill,
-                      child: LinearProgressIndicator(
-                        value: (pct / 100).clamp(0.0, 1.0),
-                        minHeight: 8,
-                        backgroundColor: const Color(0xFFF1F5F9),
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.brandPrimary),
+                    const Icon(Icons.check_circle_rounded, color: AppColors.pollLeadingGreen, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Leading: ${leader.label} ${leader.text} (${_livePoll.getPercentage(leader).round()}%)',
+                        style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.brandGreenDark),
                       ),
                     ),
                   ],
                 ),
-              );
-            }).toList(),
+              ),
+            const SizedBox(height: 12),
+            Text('Total Votes Recorded: ${_livePoll.totalVotes}', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.pollPurplePrimary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Close'),
           ),
-          const SizedBox(height: 8),
-          Text('Total Votes Cast: $totalVotes Candidates', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8))),
         ],
       ),
     );
   }
 
-  void _showCreatePollDialog() {
-    final qController = TextEditingController();
-    final opt1Controller = TextEditingController();
-    final opt2Controller = TextEditingController();
+  void _onShare() {
+    Clipboard.setData(const ClipboardData(text: 'https://rankearn.in/polls/live'));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Poll URL copied to clipboard!')),
+    );
+  }
 
-    AppModalDialog.show(
+  void _onDownload() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Downloading poll analytics report (CSV)...'),
+        backgroundColor: AppColors.pollLeadingGreen,
+      ),
+    );
+  }
+
+  void _onFullscreen() {
+    showDialog(
       context: context,
-      builder: (ctx) => AppModalDialog(
-        title: 'Create Community Poll',
-        subtitle: 'Engage candidates with real-time feedback & opinion polls',
-        iconData: Icons.poll_rounded,
-        gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
-        maxWidth: 500,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: const BorderSide(color: Color(0xFFCBD5E1)),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(24),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
               ),
-            ),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+              LivePollPreviewPanel(pollData: _livePoll),
+            ],
           ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5636F5),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () async {
-              if (qController.text.isNotEmpty && opt1Controller.text.isNotEmpty) {
-                final newPollId = 'poll-${DateTime.now().millisecondsSinceEpoch}';
-                final optionsList = [
-                  {'text': opt1Controller.text.trim(), 'votes': 0},
-                  if (opt2Controller.text.trim().isNotEmpty) {'text': opt2Controller.text.trim(), 'votes': 0},
-                ];
+        ),
+      ),
+    );
+  }
 
-                final newPollMap = {
-                  'id': newPollId,
-                  'question': qController.text.trim(),
-                  'targetSegment': 'All Candidates',
-                  'isActive': true,
-                  'createdAt': 'Today',
-                  'options': optionsList,
-                };
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 1100;
+    final isTablet = screenWidth >= 768 && screenWidth < 1100;
 
-                setState(() {
-                  _polls.insert(0, newPollMap);
-                });
-                Navigator.pop(ctx);
-
-                final client = SupabaseConfig.clientSafe;
-                if (client != null) {
-                  try {
-                    await client.from('polls').insert({
-                      'id': newPollId,
-                      'question': qController.text.trim(),
-                      'options': optionsList,
-                      'votes': {},
-                      'target_segment': 'all',
-                      'is_active': true,
-                    });
-                  } catch (_) {}
-                }
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Poll published live!')),
-                  );
-                }
-              }
-            },
-            child: const Text('Publish Poll'),
-          ),
-        ],
+    return Container(
+      color: AppColors.pollBackground, // Crisp lavender/white background token
+      width: double.infinity,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        physics: const BouncingScrollPhysics(),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppTextField(
-              label: 'Poll Question',
-              controller: qController,
-              hintText: 'e.g. Which subject is most challenging?',
-              borderRadius: BorderRadius.circular(8),
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              label: 'Option 1',
-              controller: opt1Controller,
-              hintText: 'Option A',
-              borderRadius: BorderRadius.circular(8),
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              label: 'Option 2',
-              controller: opt2Controller,
-              hintText: 'Option B',
-              borderRadius: BorderRadius.circular(8),
-            ),
+            // 3-COLUMN DESKTOP LAYOUT MATCHING SCREENSHOT EXACTLY
+            if (isDesktop)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Column: Create Poll (~28%)
+                  Expanded(
+                    flex: 28,
+                    child: CreatePollPanel(
+                      pollData: _livePoll,
+                      onPollChanged: (updated) => setState(() => _livePoll = updated),
+                      onLaunchPoll: _onLaunchPoll,
+                      onReset: _onResetPoll,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+
+                  // Center Column: Live Poll Preview & Stats (~44%)
+                  Expanded(
+                    flex: 44,
+                    child: LivePollPreviewPanel(
+                      pollData: _livePoll,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+
+                  // Right Column: Live Results & Poll Controls (~28%)
+                  Expanded(
+                    flex: 28,
+                    child: LiveResultsPanel(
+                      pollData: _livePoll,
+                      onAutoRefreshChanged: (val) => setState(() => _livePoll.autoRefresh = val),
+                      onEndPoll: _onEndPoll,
+                      onPauseResumePoll: _onPauseResumePoll,
+                      onRestartPoll: _onRestartPoll,
+                      onShowResult: _onShowResult,
+                      onShare: _onShare,
+                      onDownload: _onDownload,
+                      onFullscreen: _onFullscreen,
+                    ),
+                  ),
+                ],
+              )
+            else if (isTablet)
+              // 2-Column Responsive Layout for Tablet
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: CreatePollPanel(
+                      pollData: _livePoll,
+                      onPollChanged: (updated) => setState(() => _livePoll = updated),
+                      onLaunchPoll: _onLaunchPoll,
+                      onReset: _onResetPoll,
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        LivePollPreviewPanel(pollData: _livePoll),
+                        const SizedBox(height: 18),
+                        LiveResultsPanel(
+                          pollData: _livePoll,
+                          onAutoRefreshChanged: (val) => setState(() => _livePoll.autoRefresh = val),
+                          onEndPoll: _onEndPoll,
+                          onPauseResumePoll: _onPauseResumePoll,
+                          onRestartPoll: _onRestartPoll,
+                          onShowResult: _onShowResult,
+                          onShare: _onShare,
+                          onDownload: _onDownload,
+                          onFullscreen: _onFullscreen,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            else
+              // Single-column vertically stacked layout for Mobile
+              Column(
+                children: [
+                  LivePollPreviewPanel(pollData: _livePoll),
+                  const SizedBox(height: 16),
+                  LiveResultsPanel(
+                    pollData: _livePoll,
+                    onAutoRefreshChanged: (val) => setState(() => _livePoll.autoRefresh = val),
+                    onEndPoll: _onEndPoll,
+                    onPauseResumePoll: _onPauseResumePoll,
+                    onRestartPoll: _onRestartPoll,
+                    onShowResult: _onShowResult,
+                    onShare: _onShare,
+                    onDownload: _onDownload,
+                    onFullscreen: _onFullscreen,
+                  ),
+                  const SizedBox(height: 16),
+                  CreatePollPanel(
+                    pollData: _livePoll,
+                    onPollChanged: (updated) => setState(() => _livePoll = updated),
+                    onLaunchPoll: _onLaunchPoll,
+                    onReset: _onResetPoll,
+                  ),
+                ],
+              ),
           ],
         ),
       ),

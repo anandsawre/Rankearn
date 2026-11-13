@@ -35,4 +35,9 @@ class AppRadii {
   static const BorderRadius input = borderMd;
   static const BorderRadius chip = borderSm;
   static const BorderRadius badge = BorderRadius.all(Radius.circular(6.0));
+
+  // --- Live Poll Semantic Radii Tokens ---
+  static const BorderRadius pollCard = BorderRadius.all(Radius.circular(18.0));
+  static const BorderRadius pollOption = BorderRadius.all(Radius.circular(12.0));
+  static const BorderRadius pollCanvas = BorderRadius.all(Radius.circular(20.0));
 }

@@ -16,6 +16,22 @@ class AppColors {
   static const Color battleAdminPurpleLight = Color(0xFFEDE9FE);
   static const Color battleAdminDarkText = Color(0xFF10143A);
 
+  // --- Live Poll Management Dashboard Tokens ---
+  static const Color pollPurplePrimary = Color(0xFF7C3AED);
+  static const Color pollPurpleDark = Color(0xFF5B21B6);
+  static const Color pollPurpleLight = Color(0xFFEDE9FE);
+  static const Color pollPurpleBorder = Color(0xFFDDD6FE);
+  static const Color pollPurpleBg = Color(0xFFF5F3FF);
+  static const Color pollCanvasDeep1 = Color(0xFF23084C);
+  static const Color pollCanvasDeep2 = Color(0xFF45147D);
+  static const Color pollCanvasDeep3 = Color(0xFF330960);
+  static const Color pollCanvasDeep4 = Color(0xFF210645);
+  static const Color pollLeadingGreen = Color(0xFF10B981);
+  static const Color pollLeadingGreenBorder = Color(0xFF34D399);
+  static const Color pollCanvasWave1 = Color(0xFF7C3AED);
+  static const Color pollCanvasWave2 = Color(0xFF9333EA);
+  static const Color pollBackground = Color(0xFFF7F7FF);
+
   // --- Brand Green / Emerald Tokens (Earnings & Success) ---
   static const Color brandGreen = Color(0xFF10B981);
   static const Color brandGreenDark = Color(0xFF07884F);
@@ -138,6 +154,23 @@ class AppColors {
 
   static const LinearGradient darkCardGradient = LinearGradient(
     colors: [Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0C1A2E)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient pollCanvasGradient = LinearGradient(
+    colors: [
+      pollCanvasDeep1,
+      pollCanvasDeep2,
+      pollCanvasDeep3,
+      pollCanvasDeep4,
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient pollButtonGradient = LinearGradient(
+    colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

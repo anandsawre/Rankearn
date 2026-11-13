@@ -55,4 +55,21 @@ class AppShadows {
   static const List<BoxShadow> leaderboardCard = [
     BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 2)),
   ];
+
+  // --- Live Poll Semantic Shadow Tokens ---
+  static const List<BoxShadow> pollCard = [
+    BoxShadow(
+      color: Color(0x06000000),
+      blurRadius: 16,
+      offset: Offset(0, 4),
+    ),
+  ];
+
+  static const List<BoxShadow> pollCanvas = [
+    BoxShadow(
+      color: Color(0x504C1D95),
+      blurRadius: 20,
+      offset: Offset(0, 8),
+    ),
+  ];
 }
