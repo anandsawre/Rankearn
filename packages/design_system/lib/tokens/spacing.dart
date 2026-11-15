@@ -38,6 +38,10 @@ class AppSpacing {
   }
 
   // --- Admin Dashboard Semantic Spacing Tokens ---
+  /// The tokenized unified vertical height for all single-line form text inputs and dropdowns.
+  static const double adminControlHeight = 44.0;
+  static const double adminControlHeightDense = 38.0;
+
   static const EdgeInsets adminPagePadding = EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0);
   static const EdgeInsets adminCardPadding = EdgeInsets.all(24.0);
   static const EdgeInsets adminCardPaddingCompact = EdgeInsets.all(22.0);

@@ -557,7 +557,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
       label: 'Target Audience *',
       labelStyle: AppTypography.adminFieldLabel,
       value: widget.targetAudience,
-      height: 44,
+      height: AppSpacing.adminControlHeight,
       borderRadius: AppRadii.adminControl,
       items: audiences.map((a) {
         return AppDropdownItem<String>(
@@ -586,7 +586,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
       label: 'Notification Type *',
       labelStyle: AppTypography.adminFieldLabel,
       value: widget.notificationType,
-      height: 44,
+      height: AppSpacing.adminControlHeight,
       borderRadius: AppRadii.adminControl,
       items: types.map((t) {
         return AppDropdownItem<String>(

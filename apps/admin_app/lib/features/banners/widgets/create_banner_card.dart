@@ -600,7 +600,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
       label: 'Banner Type *',
       labelStyle: AppTypography.adminFieldLabel,
       value: widget.bannerType,
-      height: 44,
+      height: AppSpacing.adminControlHeight,
       borderRadius: AppRadii.adminControl,
       items: types.map((t) {
         return AppDropdownItem<String>(
@@ -628,7 +628,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
       label: 'Display Mode / Placement *',
       labelStyle: AppTypography.adminFieldLabel,
       value: widget.displayMode,
-      height: 44,
+      height: AppSpacing.adminControlHeight,
       borderRadius: AppRadii.adminControl,
       items: modes.map((m) {
         return AppDropdownItem<String>(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
+import '../../tokens/spacing.dart';
 import '../../tokens/typography.dart';
 
 /// Rankearn Reusable Form & Text Field
@@ -37,6 +38,7 @@ class AppTextField extends StatefulWidget {
   final TextStyle? hintStyle;
   final int? maxLength;
   final Iterable<String>? autofillHints;
+  final double? height;
 
   const AppTextField({
     super.key,
@@ -69,6 +71,7 @@ class AppTextField extends StatefulWidget {
     this.hintStyle,
     this.maxLength,
     this.autofillHints,
+    this.height,
   });
 
   /// Factory constructor for modern floating-label form inputs (e.g. Auth Screen).
@@ -102,6 +105,7 @@ class AppTextField extends StatefulWidget {
     this.hintStyle,
     this.maxLength,
     this.autofillHints,
+    this.height,
   })  : isFloatingLabel = true,
         floatingLabelBehavior = FloatingLabelBehavior.auto;
 
@@ -121,6 +125,7 @@ class AppTextField extends StatefulWidget {
     this.style,
     this.hintStyle,
     this.focusNode,
+    this.height = AppSpacing.adminControlHeightDense,
   })  : label = null,
         isPassword = false,
         keyboardType = TextInputType.text,
@@ -252,8 +257,9 @@ class _AppTextFieldState extends State<AppTextField> {
     final effectiveFillColor = widget.enabled
         ? (widget.fillColor ?? Colors.white)
         : (widget.fillColor ?? Colors.white).withAlpha(128);
+    final effectiveHeight = widget.height ?? (widget.maxLines == 1 ? AppSpacing.adminControlHeight : null);
 
-    final field = TextFormField(
+    Widget field = TextFormField(
       controller: widget.controller,
       focusNode: widget.focusNode,
       obscureText: _obscured,
@@ -274,6 +280,7 @@ class _AppTextFieldState extends State<AppTextField> {
         hintText: widget.hintText,
         hintStyle: effectiveHintStyle,
         prefixIcon: widget.prefixIcon,
+        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 38),
         prefixText: widget.prefixText,
         prefixStyle: widget.prefixStyle,
         suffixIcon: widget.isPassword
@@ -288,13 +295,12 @@ class _AppTextFieldState extends State<AppTextField> {
                 onPressed: () => setState(() => _obscured = !_obscured),
               )
             : widget.suffixIcon,
+        suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 38),
         filled: true,
-        isDense: widget.isDense,
+        isDense: true,
         fillColor: effectiveFillColor,
         contentPadding: widget.contentPadding ??
-            (widget.isDense
-                ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
-                : const EdgeInsets.symmetric(horizontal: 14, vertical: 12)),
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         border: OutlineInputBorder(
           borderRadius: effectiveRadius,
           borderSide: const BorderSide(color: AppColors.adminBorder),
@@ -320,6 +326,10 @@ class _AppTextFieldState extends State<AppTextField> {
         ),
       ),
     );
+
+    if (effectiveHeight != null) {
+      field = SizedBox(height: effectiveHeight, child: field);
+    }
 
     if (widget.label == null) {
       return field;
