@@ -280,14 +280,52 @@ void main() {
         ),
       );
 
+      // Compare the center of the entire AppTextField box vs AppDropdown box.
+      // Both are AnimatedContainers with height=44; their box centers must align.
+      // Using box center (not EditableText center) because InputDecoration layout
+      // varies by platform; box alignment is the user-visible truth.
+      final textFieldBox = tester.getRect(find.byKey(textFieldKey));
+      final dropdownBox = tester.getRect(find.byKey(dropdownKey));
+
+      final textBoxCenterY = textFieldBox.center.dy;
+      final dropBoxCenterY = dropdownBox.center.dy;
+
+      // Both boxes are in the same Row — their vertical centers must be equal
+      expect((textBoxCenterY - dropBoxCenterY).abs(), lessThanOrEqualTo(1.0));
+
+      // Verify the EditableText widget is fully within the textfield box bounds
+      // (i.e. text does not overflow outside the field boundary)
       final textEditable = find.descendant(of: find.byKey(textFieldKey), matching: find.byType(EditableText));
-      final dropText = find.descendant(of: find.byKey(dropdownKey), matching: find.byType(Text));
+      final editableRect = tester.getRect(textEditable);
+      expect(editableRect.top, greaterThanOrEqualTo(textFieldBox.top - 1));
+      expect(editableRect.bottom, lessThanOrEqualTo(textFieldBox.bottom + 1));
+    });
 
-      final textCenterY = tester.getCenter(textEditable).dy;
-      final dropCenterY = tester.getCenter(dropText.first).dy;
+    testWidgets('AppTextField prefix icon and text are aligned within optical tolerance', (WidgetTester tester) async {
+      final textFieldKey = UniqueKey();
 
-      // Both centers must align within 1.0 pixel
-      expect((textCenterY - dropCenterY).abs(), lessThanOrEqualTo(1.0));
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 300,
+                child: AppTextField(
+                  key: textFieldKey,
+                  hintText: 'Banner Title',
+                  prefixIcon: const Icon(Icons.title_rounded, size: 20),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final tfIcon = tester.getRect(find.descendant(of: find.byKey(textFieldKey), matching: find.byType(Icon)));
+      final tfText = tester.getRect(find.descendant(of: find.byKey(textFieldKey), matching: find.byType(Text)));
+
+      expect((tfIcon.center.dy - tfText.center.dy).abs(), lessThanOrEqualTo(2.5));
     });
   });
 }

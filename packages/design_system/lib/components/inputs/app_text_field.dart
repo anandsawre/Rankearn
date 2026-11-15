@@ -294,51 +294,49 @@ class _AppTextFieldState extends State<AppTextField> {
             ? AppColors.adminPurple.withAlpha(120)
             : AppColors.adminBorder);
 
-    final inputField = TextFormField(
-      controller: widget.controller,
-      focusNode: _focusNode,
-      obscureText: _obscured,
-      keyboardType: widget.keyboardType,
-      textCapitalization: widget.textCapitalization,
-      inputFormatters: widget.inputFormatters,
-      enabled: widget.enabled,
-      maxLength: widget.maxLength,
-      maxLines: widget.isPassword ? 1 : widget.maxLines,
-      autofillHints: widget.autofillHints,
-      onChanged: widget.onChanged,
-      onFieldSubmitted: widget.onSubmitted,
-      validator: widget.validator,
-      enableSuggestions: !widget.isPassword,
-      autocorrect: !widget.isPassword,
-      style: effectiveStyle,
-      strutStyle: isMultiline
-          ? null
-          : const StrutStyle(
-              fontSize: 13,
-              height: 1.2,
-              forceStrutHeight: true,
-              leading: 0,
-            ),
-      textAlignVertical: isMultiline ? TextAlignVertical.top : TextAlignVertical.center,
-      decoration: InputDecoration(
-        hintText: widget.hintText,
-        hintStyle: effectiveHintStyle,
-        prefixText: widget.prefixText,
-        prefixStyle: widget.prefixStyle,
-        isDense: true,
-        isCollapsed: !isMultiline,
-        filled: false,
-        border: InputBorder.none,
-        enabledBorder: InputBorder.none,
-        focusedBorder: InputBorder.none,
-        errorBorder: InputBorder.none,
-        focusedErrorBorder: InputBorder.none,
-        contentPadding: widget.contentPadding ??
-            (isMultiline
-                ? const EdgeInsets.symmetric(vertical: 10)
-                : const EdgeInsets.only(bottom: 1.5)),
-      ),
-    );
+    // ── Prefix icon inside InputDecoration ──────────────────────────────────
+    Widget? prefixIconWidget;
+    if (widget.prefixIcon != null && !isMultiline) {
+      prefixIconWidget = Padding(
+        padding: const EdgeInsets.only(left: 14, right: 8),
+        child: widget.prefixIcon,
+      );
+    }
+
+    // ── Suffix / password toggle inside InputDecoration ─────────────────────
+    Widget? suffixIconWidget;
+    if (widget.isPassword) {
+      suffixIconWidget = IconButton(
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+        icon: Icon(
+          _obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          color: AppColors.textMuted,
+          size: 20,
+        ),
+        onPressed: () => setState(() => _obscured = !_obscured),
+      );
+    } else if (widget.suffixIcon != null) {
+      suffixIconWidget = Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: widget.suffixIcon,
+      );
+    }
+
+    // ── Content padding ──────────────────────────────────────────────────────
+    // Single-line: symmetric vertical=0 so Flutter centers text naturally.
+    // When prefixIcon present, left=0 (icon padding handles it), else left=14.
+    EdgeInsetsGeometry contentPadding;
+    if (widget.contentPadding != null) {
+      contentPadding = widget.contentPadding!;
+    } else if (isMultiline) {
+      contentPadding = const EdgeInsets.symmetric(horizontal: 14, vertical: 10);
+    } else {
+      contentPadding = EdgeInsets.symmetric(
+        horizontal: widget.prefixIcon != null ? 0 : 14,
+        vertical: 0,
+      );
+    }
 
     Widget box = MouseRegion(
       cursor: widget.enabled ? SystemMouseCursors.text : SystemMouseCursors.basic,
@@ -354,8 +352,6 @@ class _AppTextFieldState extends State<AppTextField> {
         constraints: effectiveHeight != null
             ? BoxConstraints.tightFor(height: effectiveHeight)
             : const BoxConstraints(minHeight: 44.0),
-        alignment: isMultiline ? Alignment.topLeft : Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: effectiveFillColor,
           borderRadius: effectiveRadius,
@@ -379,35 +375,59 @@ class _AppTextFieldState extends State<AppTextField> {
                   ),
                 ],
         ),
-        child: Row(
-          crossAxisAlignment: isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-          children: [
-            if (widget.prefixIcon != null) ...[
-              Padding(
-                padding: isMultiline ? const EdgeInsets.only(top: 10) : EdgeInsets.zero,
-                child: widget.prefixIcon!,
-              ),
-              const SizedBox(width: 8),
-            ],
-            Expanded(child: inputField),
-            if (widget.isPassword) ...[
-              IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: Icon(
-                  _obscured
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                  color: AppColors.textMuted,
-                  size: 20,
-                ),
-                onPressed: () => setState(() => _obscured = !_obscured),
-              ),
-            ] else if (widget.suffixIcon != null) ...[
-              const SizedBox(width: 8),
-              widget.suffixIcon!,
-            ],
-          ],
+        // ── Single TextFormField fills the entire box ────────────────────────
+        // isCollapsed: false  → Flutter Web properly centers RenderEditable
+        // prefixIcon inside InputDecoration → icon shares the same baseline
+        // No outer Row, no Transform.translate hacks needed
+        child: TextFormField(
+          controller: widget.controller,
+          focusNode: _focusNode,
+          obscureText: _obscured,
+          keyboardType: widget.keyboardType,
+          textCapitalization: widget.textCapitalization,
+          inputFormatters: widget.inputFormatters,
+          enabled: widget.enabled,
+          maxLength: widget.maxLength,
+          maxLines: widget.isPassword ? 1 : widget.maxLines,
+          autofillHints: widget.autofillHints,
+          onChanged: widget.onChanged,
+          onFieldSubmitted: widget.onSubmitted,
+          validator: widget.validator,
+          enableSuggestions: !widget.isPassword,
+          autocorrect: !widget.isPassword,
+          style: effectiveStyle,
+          textAlignVertical: isMultiline ? TextAlignVertical.top : TextAlignVertical.center,
+          decoration: InputDecoration(
+            prefixIcon: prefixIconWidget,
+            prefixIconConstraints: prefixIconWidget != null
+                ? BoxConstraints(
+                    minWidth: 42,
+                    minHeight: effectiveHeight ?? AppSpacing.adminControlHeight,
+                    maxHeight: effectiveHeight ?? AppSpacing.adminControlHeight,
+                  )
+                : null,
+            suffixIcon: suffixIconWidget,
+            suffixIconConstraints: suffixIconWidget != null
+                ? BoxConstraints(
+                    minWidth: 36,
+                    minHeight: effectiveHeight ?? AppSpacing.adminControlHeight,
+                    maxHeight: effectiveHeight ?? AppSpacing.adminControlHeight,
+                  )
+                : null,
+            hintText: widget.hintText,
+            hintStyle: effectiveHintStyle,
+            prefixText: widget.prefixText,
+            prefixStyle: widget.prefixStyle,
+            isDense: true,
+            isCollapsed: false, // KEY: false = Flutter Web centers text properly
+            filled: false,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            errorBorder: InputBorder.none,
+            focusedErrorBorder: InputBorder.none,
+            contentPadding: contentPadding,
+          ),
         ),
       ),
     );
