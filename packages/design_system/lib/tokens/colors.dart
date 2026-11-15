@@ -10,6 +10,31 @@ class AppColors {
   static const Color brandPurpleDark = Color(0xFF3920C9);
   static const Color brandPurpleLight = Color(0xFFEEE9FF);
 
+  // --- Admin Redesign Dashboard Tokens (Prompt Specification) ---
+  static const Color adminPurple = Color(0xFF7628E8);
+  static const Color adminPurpleDeep = Color(0xFF4C16A8);
+  static const Color adminPurpleLight = Color(0xFFF1E8FF);
+  static const Color adminBackground = Color(0xFFF7F8FC);
+  static const Color adminCardBackground = Color(0xFFFFFFFF);
+  static const Color adminPrimaryText = Color(0xFF11133D);
+  static const Color adminSecondaryText = Color(0xFF687493);
+  static const Color adminSuccess = Color(0xFF10B981);
+  static const Color adminWarning = Color(0xFFF59E0B);
+  static const Color adminDanger = Color(0xFFF43F5E);
+  static const Color adminBorder = Color(0xFFE7E9F4);
+
+  static const LinearGradient adminPurpleGradient = LinearGradient(
+    colors: [Color(0xFF7628E8), Color(0xFF4C16A8)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient adminBannerGradient = LinearGradient(
+    colors: [Color(0xFF5636F5), Color(0xFF7628E8), Color(0xFF4C16A8)],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
   // --- Battle Management Dashboard (Admin) Tokens ---
   static const Color battleAdminPurple = Color(0xFF7C3AED);
   static const Color battleAdminPurpleSecondary = Color(0xFFA855F7);

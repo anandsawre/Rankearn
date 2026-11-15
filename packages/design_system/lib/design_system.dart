@@ -106,6 +106,7 @@ export 'components/battle/battle_leave_dialog.dart';
 // Admin Portal Components
 export 'components/tables/admin_data_table_card.dart';
 export 'components/cards/app_platform_status_card.dart';
+export 'components/display/admin_module_hero_banner.dart';
 export 'components/cards/app_recent_quizzes_card.dart';
 export 'components/cards/app_recent_users_card.dart';
 export 'components/cards/app_recent_activity_card.dart';

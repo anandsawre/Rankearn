@@ -1,0 +1,348 @@
+import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
+
+class NotificationDeliveryAnalyticsCard extends StatelessWidget {
+  final int totalReads;
+  final int totalClicks;
+  final int totalUnopened;
+  final void Function(String actionId)? onQuickAction;
+
+  const NotificationDeliveryAnalyticsCard({
+    super.key,
+    this.totalReads = 36800,
+    this.totalClicks = 12400,
+    this.totalUnopened = 7350,
+    this.onQuickAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final total = totalReads + totalClicks + totalUnopened;
+    final readPct = total > 0 ? (totalReads / total) * 100 : 65.0;
+    final clickPct = total > 0 ? (totalClicks / total) * 100 : 22.0;
+    final unopenedPct = total > 0 ? (totalUnopened / total) * 100 : 13.0;
+
+    final slices = [
+      DonutSlice(
+        label: 'Read',
+        percentage: readPct,
+        color: AppColors.adminSuccess,
+        count: totalReads,
+      ),
+      DonutSlice(
+        label: 'Clicked',
+        percentage: clickPct,
+        color: AppColors.adminPurple,
+        count: totalClicks,
+      ),
+      DonutSlice(
+        label: 'Unopened',
+        percentage: unopenedPct,
+        color: const Color(0xFFCBD5E1),
+        count: totalUnopened,
+      ),
+    ];
+
+    return Column(
+      children: [
+        // 1. Delivery Analytics Card with Donut Chart
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.adminCardBackground,
+            borderRadius: AppRadii.borderXl,
+            border: Border.all(color: AppColors.adminBorder),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0810143A),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Expanded(
+                    child: Row(
+                      children: [
+                        Icon(Icons.pie_chart_rounded, size: 20, color: AppColors.adminPurple),
+                        SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'Delivery Analytics',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.adminPrimaryText,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.adminPurpleLight,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Last 30 Days',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.adminPurple,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+
+              // Donut Chart
+              Center(
+                child: AppDonutChart(
+                  slices: slices,
+                  totalCount: total > 0 ? total : 56550,
+                  totalLabel: 'Dispatches',
+                  chartSize: 130,
+                  strokeWidth: 16,
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // Metric breakdowns
+              _buildMetricBreakdown(
+                label: 'Read Rate',
+                value: '${readPct.toStringAsFixed(1)}%',
+                count: '${(totalReads / 1000).toStringAsFixed(1)}k users',
+                color: AppColors.adminSuccess,
+              ),
+              const SizedBox(height: 10),
+              _buildMetricBreakdown(
+                label: 'Click Rate (CTR)',
+                value: '${clickPct.toStringAsFixed(1)}%',
+                count: '${(totalClicks / 1000).toStringAsFixed(1)}k clicks',
+                color: AppColors.adminPurple,
+              ),
+              const SizedBox(height: 10),
+              _buildMetricBreakdown(
+                label: 'Unopened Rate',
+                value: '${unopenedPct.toStringAsFixed(1)}%',
+                count: '${(totalUnopened / 1000).toStringAsFixed(1)}k users',
+                color: const Color(0xFF94A3B8),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // 2. Quick Actions Card
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.adminCardBackground,
+            borderRadius: AppRadii.borderXl,
+            border: Border.all(color: AppColors.adminBorder),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0810143A),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.bolt_rounded, size: 20, color: AppColors.adminWarning),
+                  SizedBox(width: 8),
+                  Text(
+                    'Quick Actions',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.adminPrimaryText,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _buildQuickActionTile(
+                icon: Icons.campaign_rounded,
+                title: 'Send to All Users',
+                subtitle: 'Immediate global push notification',
+                color: AppColors.adminPurple,
+                onTap: () => onQuickAction?.call('send_all'),
+              ),
+              _buildQuickActionTile(
+                icon: Icons.person_search_rounded,
+                title: 'Send to Specific Users',
+                subtitle: 'Target by user ID or mobile number',
+                color: const Color(0xFF2563EB),
+                onTap: () => onQuickAction?.call('send_specific'),
+              ),
+              _buildQuickActionTile(
+                icon: Icons.schedule_rounded,
+                title: 'Manage Scheduled',
+                subtitle: 'View upcoming automated queue',
+                color: const Color(0xFF0D9488),
+                onTap: () => onQuickAction?.call('manage_scheduled'),
+              ),
+              _buildQuickActionTile(
+                icon: Icons.drafts_rounded,
+                title: 'View Drafts',
+                subtitle: 'Edit pending saved notifications',
+                color: const Color(0xFFEA580C),
+                onTap: () => onQuickAction?.call('view_drafts'),
+              ),
+              _buildQuickActionTile(
+                icon: Icons.history_rounded,
+                title: 'Notification History',
+                subtitle: 'Full audit log and delivery reports',
+                color: const Color(0xFF6366F1),
+                onTap: () => onQuickAction?.call('history'),
+              ),
+              _buildQuickActionTile(
+                icon: Icons.settings_suggest_rounded,
+                title: 'Notification Settings',
+                subtitle: 'FCM keys, templates & rate limits',
+                color: const Color(0xFF475569),
+                onTap: () => onQuickAction?.call('settings'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricBreakdown({
+    required String label,
+    required String value,
+    required String count,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.adminBackground,
+        borderRadius: AppRadii.borderMd,
+        border: Border.all(color: AppColors.adminBorder),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.adminPrimaryText,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '($count)',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.adminSecondaryText,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppRadii.borderMd,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: color.withAlpha(25),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.adminPrimaryText,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.adminSecondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.adminSecondaryText),
+          ],
+        ),
+      ),
+    );
+  }
+}
