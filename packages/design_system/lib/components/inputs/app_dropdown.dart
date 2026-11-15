@@ -626,19 +626,13 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
       children: [
         if (!widget.inlineLabel && widget.labelWidget != null) ...[
           widget.labelWidget!,
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.sm),
         ] else if (!widget.inlineLabel && widget.label != null) ...[
           Text(
             widget.label!,
-            style:
-                widget.labelStyle ??
-                AppTypography.labelLarge.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  fontSize: 11.5,
-                ),
+            style: widget.labelStyle ?? AppTypography.adminFieldLabel,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.sm),
         ],
         dropdownField,
         if (widget.errorText != null) ...[

@@ -192,12 +192,8 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           const SizedBox(height: 20),
 
           // Notification Title
-          const Text(
-            'Notification Title *',
-            style: AppTypography.adminFieldLabel,
-          ),
-          const SizedBox(height: 8),
           AppTextField(
+            label: 'Notification Title *',
             controller: widget.titleController,
             hintText: 'e.g. 🏆 Mega Scholarship Test Live Now!',
             prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),

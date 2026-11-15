@@ -343,7 +343,7 @@ class _AppTextFieldState extends State<AppTextField> {
           widget.label!,
           style: effectiveLabelStyle,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.sm),
         field,
       ],
     );

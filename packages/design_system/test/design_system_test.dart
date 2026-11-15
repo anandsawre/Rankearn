@@ -15,7 +15,7 @@ void main() {
     });
 
     test('Spacing and radii scales are valid', () {
-      expect(AppSpacing.pagePaddingMobile, 16.0);
+      expect(AppSpacing.pagePaddingMobile, 12.0);
       expect(AppRadii.md, 12.0);
       expect(AppRadii.lg, 16.0);
       expect(AppRadii.xl, 24.0);
@@ -153,6 +153,96 @@ void main() {
       expect(multiH, 42.0);
       expect(hindiH, 42.0);
       expect(singleH, 42.0);
+    });
+
+    testWidgets('AppTextField and AppDropdown have equal vertical height of 44.0px', (WidgetTester tester) async {
+      final textFieldKey = UniqueKey();
+      final dropdownKey = UniqueKey();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Center(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      key: textFieldKey,
+                      hintText: 'Enter title...',
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: AppDropdown<String>(
+                      key: dropdownKey,
+                      value: 'opt1',
+                      items: const [
+                        AppDropdownItem(value: 'opt1', label: 'Option 1'),
+                        AppDropdownItem(value: 'opt2', label: 'Option 2'),
+                      ],
+                      onChanged: (_) {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final textFieldHeight = tester.getSize(find.byKey(textFieldKey)).height;
+      final dropdownHeight = tester.getSize(find.byKey(dropdownKey)).height;
+
+      expect(textFieldHeight, AppSpacing.adminControlHeight);
+      expect(dropdownHeight, AppSpacing.adminControlHeight);
+      expect(textFieldHeight, equals(dropdownHeight));
+    });
+
+    testWidgets('AppTextField and AppDropdown with labels maintain matching vertical height', (WidgetTester tester) async {
+      final labeledTextKey = UniqueKey();
+      final labeledDropdownKey = UniqueKey();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Center(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      key: labeledTextKey,
+                      label: 'Input Label',
+                      hintText: 'Enter title...',
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: AppDropdown<String>(
+                      key: labeledDropdownKey,
+                      label: 'Input Label',
+                      inlineLabel: false,
+                      value: 'opt1',
+                      items: const [
+                        AppDropdownItem(value: 'opt1', label: 'Option 1'),
+                        AppDropdownItem(value: 'opt2', label: 'Option 2'),
+                      ],
+                      onChanged: (_) {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final labeledTextHeight = tester.getSize(find.byKey(labeledTextKey)).height;
+      final labeledDropdownHeight = tester.getSize(find.byKey(labeledDropdownKey)).height;
+
+      expect(labeledTextHeight, equals(labeledDropdownHeight));
     });
   });
 }

@@ -214,21 +214,12 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Display Priority (1-10)',
-                      style: AppTypography.adminFieldLabel,
-                    ),
-                    const SizedBox(height: 8),
-                    AppTextField(
-                      controller: widget.priorityController,
-                      hintText: '1',
-                      keyboardType: TextInputType.number,
-                      prefixIcon: const Icon(Icons.sort_rounded, size: 20, color: AppColors.adminSecondaryText),
-                    ),
-                  ],
+                child: AppTextField(
+                  label: 'Display Priority (1-10)',
+                  controller: widget.priorityController,
+                  hintText: '1',
+                  keyboardType: TextInputType.number,
+                  prefixIcon: const Icon(Icons.sort_rounded, size: 20, color: AppColors.adminSecondaryText),
                 ),
               ),
               const SizedBox(width: 24),
@@ -550,38 +541,20 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
   }
 
   Widget _buildTitleField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Banner Title *',
-          style: AppTypography.adminFieldLabel,
-        ),
-        const SizedBox(height: 8),
-        AppTextField(
-          controller: widget.titleController,
-          hintText: 'e.g. 🎯 Live Mock Test Extravaganza',
-          prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),
-        ),
-      ],
+    return AppTextField(
+      label: 'Banner Title *',
+      controller: widget.titleController,
+      hintText: 'e.g. 🎯 Live Mock Test Extravaganza',
+      prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),
     );
   }
 
   Widget _buildLinkField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Target Link / Route *',
-          style: AppTypography.adminFieldLabel,
-        ),
-        const SizedBox(height: 8),
-        AppTextField(
-          controller: widget.linkController,
-          hintText: 'e.g. /tests or /contests',
-          prefixIcon: const Icon(Icons.link_rounded, size: 20, color: AppColors.adminSecondaryText),
-        ),
-      ],
+    return AppTextField(
+      label: 'Target Link / Route *',
+      controller: widget.linkController,
+      hintText: 'e.g. /tests or /contests',
+      prefixIcon: const Icon(Icons.link_rounded, size: 20, color: AppColors.adminSecondaryText),
     );
   }
 
