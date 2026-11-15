@@ -360,29 +360,13 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
   Widget _buildSearchInput() {
     return SizedBox(
       width: 240,
-      height: 38,
-      child: TextField(
+      height: 40,
+      child: AppTextField.search(
+        hintText: 'Search notifications...',
         onChanged: (v) => setState(() {
           _searchQuery = v;
           _currentPage = 1;
         }),
-        style: const TextStyle(fontSize: 12, color: AppColors.adminPrimaryText),
-        decoration: InputDecoration(
-          hintText: 'Search notifications...',
-          hintStyle: const TextStyle(fontSize: 12, color: AppColors.adminSecondaryText),
-          prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.adminSecondaryText),
-          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-          filled: true,
-          fillColor: AppColors.adminBackground,
-          enabledBorder: const OutlineInputBorder(
-            borderRadius: AppRadii.adminControl,
-            borderSide: BorderSide(color: AppColors.adminBorder),
-          ),
-          focusedBorder: const OutlineInputBorder(
-            borderRadius: AppRadii.adminControl,
-            borderSide: BorderSide(color: AppColors.adminPurple, width: 1.5),
-          ),
-        ),
       ),
     );
   }

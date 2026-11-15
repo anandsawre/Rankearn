@@ -405,29 +405,13 @@ class _BannersDataTableState extends State<BannersDataTable> {
   Widget _buildSearchInput() {
     return SizedBox(
       width: 240,
-      height: 38,
-      child: TextField(
+      height: 40,
+      child: AppTextField.search(
+        hintText: 'Search banners...',
         onChanged: (v) => setState(() {
           _searchQuery = v;
           _currentPage = 1;
         }),
-        style: AppTypography.adminTablePrimary,
-        decoration: InputDecoration(
-          hintText: 'Search banners...',
-          hintStyle: AppTypography.adminTableSecondary,
-          prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.adminSecondaryText),
-          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-          filled: true,
-          fillColor: AppColors.adminBackground,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: AppRadii.adminControl,
-            borderSide: const BorderSide(color: AppColors.adminBorder),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: AppRadii.adminControl,
-            borderSide: const BorderSide(color: AppColors.adminPurple, width: 1.5),
-          ),
-        ),
       ),
     );
   }

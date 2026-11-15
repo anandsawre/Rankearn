@@ -105,6 +105,39 @@ class AppTextField extends StatefulWidget {
   })  : isFloatingLabel = true,
         floatingLabelBehavior = FloatingLabelBehavior.auto;
 
+  /// Factory constructor for tokenized search inputs across admin data tables.
+  const AppTextField.search({
+    super.key,
+    this.hintText = 'Search...',
+    this.controller,
+    this.onChanged,
+    this.onSubmitted,
+    this.prefixIcon = const Icon(Icons.search_rounded, size: 18, color: AppColors.adminSecondaryText),
+    this.suffixIcon,
+    this.fillColor = AppColors.adminBackground,
+    this.borderRadius,
+    this.contentPadding = const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    this.isDense = true,
+    this.style,
+    this.hintStyle,
+    this.focusNode,
+  })  : label = null,
+        isPassword = false,
+        keyboardType = TextInputType.text,
+        textCapitalization = TextCapitalization.none,
+        inputFormatters = null,
+        prefixText = null,
+        prefixStyle = null,
+        validator = null,
+        enabled = true,
+        maxLines = 1,
+        isFloatingLabel = false,
+        floatingLabelBehavior = FloatingLabelBehavior.never,
+        labelStyle = null,
+        floatingLabelStyle = null,
+        maxLength = null,
+        autofillHints = null;
+
   @override
   State<AppTextField> createState() => _AppTextFieldState();
 }
@@ -128,7 +161,7 @@ class _AppTextFieldState extends State<AppTextField> {
 
   /// Modern floating-label variant with smooth border animation
   Widget _buildFloatingField(BuildContext context) {
-    final effectiveRadius = widget.borderRadius ?? BorderRadius.circular(10);
+    final effectiveRadius = widget.borderRadius ?? AppRadii.adminControl;
     final effectiveStyle = widget.style ?? AppTypography.formInput;
     final effectiveLabelStyle = widget.labelStyle ?? AppTypography.formLabel;
     final effectiveFloatingStyle = widget.floatingLabelStyle ?? AppTypography.formFloatingLabel;
@@ -179,30 +212,30 @@ class _AppTextFieldState extends State<AppTextField> {
         contentPadding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: effectiveRadius,
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: AppColors.adminBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: effectiveRadius,
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: AppColors.adminBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: effectiveRadius,
           borderSide: const BorderSide(
-            color: Color(0xFF00B96B),
+            color: AppColors.adminPurple,
             width: 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: effectiveRadius,
           borderSide: const BorderSide(
-            color: Color(0xFFEF4444),
+            color: AppColors.adminDanger,
             width: 1.2,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: effectiveRadius,
           borderSide: const BorderSide(
-            color: Color(0xFFEF4444),
+            color: AppColors.adminDanger,
             width: 1.5,
           ),
         ),
@@ -212,91 +245,96 @@ class _AppTextFieldState extends State<AppTextField> {
 
   /// Standard variant with external top label (used across Admin & Showcase)
   Widget _buildStandardField(BuildContext context) {
+    final effectiveRadius = widget.borderRadius ?? AppRadii.adminControl;
+    final effectiveStyle = widget.style ?? AppTypography.adminTablePrimary;
+    final effectiveHintStyle = widget.hintStyle ?? AppTypography.adminTableSecondary;
+    final effectiveLabelStyle = widget.labelStyle ?? AppTypography.adminFieldLabel;
+    final effectiveFillColor = widget.enabled
+        ? (widget.fillColor ?? Colors.white)
+        : (widget.fillColor ?? Colors.white).withAlpha(128);
+
+    final field = TextFormField(
+      controller: widget.controller,
+      focusNode: widget.focusNode,
+      obscureText: _obscured,
+      keyboardType: widget.keyboardType,
+      textCapitalization: widget.textCapitalization,
+      inputFormatters: widget.inputFormatters,
+      enabled: widget.enabled,
+      maxLength: widget.maxLength,
+      maxLines: widget.isPassword ? 1 : widget.maxLines,
+      autofillHints: widget.autofillHints,
+      onChanged: widget.onChanged,
+      onFieldSubmitted: widget.onSubmitted,
+      validator: widget.validator,
+      enableSuggestions: !widget.isPassword,
+      autocorrect: !widget.isPassword,
+      style: effectiveStyle,
+      decoration: InputDecoration(
+        hintText: widget.hintText,
+        hintStyle: effectiveHintStyle,
+        prefixIcon: widget.prefixIcon,
+        prefixText: widget.prefixText,
+        prefixStyle: widget.prefixStyle,
+        suffixIcon: widget.isPassword
+            ? IconButton(
+                icon: Icon(
+                  _obscured
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  color: AppColors.textMuted,
+                  size: 20,
+                ),
+                onPressed: () => setState(() => _obscured = !_obscured),
+              )
+            : widget.suffixIcon,
+        filled: true,
+        isDense: widget.isDense,
+        fillColor: effectiveFillColor,
+        contentPadding: widget.contentPadding ??
+            (widget.isDense
+                ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+                : const EdgeInsets.symmetric(horizontal: 14, vertical: 12)),
+        border: OutlineInputBorder(
+          borderRadius: effectiveRadius,
+          borderSide: const BorderSide(color: AppColors.adminBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: effectiveRadius,
+          borderSide: const BorderSide(color: AppColors.adminBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: effectiveRadius,
+          borderSide: const BorderSide(
+            color: AppColors.adminPurple,
+            width: 1.5,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: effectiveRadius,
+          borderSide: const BorderSide(color: AppColors.adminDanger, width: 1.2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: effectiveRadius,
+          borderSide: const BorderSide(color: AppColors.adminDanger, width: 1.5),
+        ),
+      ),
+    );
+
+    if (widget.label == null) {
+      return field;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (widget.label != null) ...[
-          Text(
-            widget.label!,
-            style: AppTypography.titleSmall.copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
-              letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(height: 6),
-        ],
-        TextFormField(
-          controller: widget.controller,
-          focusNode: widget.focusNode,
-          obscureText: _obscured,
-          keyboardType: widget.keyboardType,
-          textCapitalization: widget.textCapitalization,
-          inputFormatters: widget.inputFormatters,
-          enabled: widget.enabled,
-          maxLength: widget.maxLength,
-          maxLines: widget.isPassword ? 1 : widget.maxLines,
-          autofillHints: widget.autofillHints,
-          onChanged: widget.onChanged,
-          onFieldSubmitted: widget.onSubmitted,
-          validator: widget.validator,
-          enableSuggestions: !widget.isPassword,
-          autocorrect: !widget.isPassword,
-          style: widget.style ??
-              AppTypography.bodyMedium.copyWith(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-              ),
-          decoration: InputDecoration(
-            hintText: widget.hintText,
-            hintStyle: widget.hintStyle ?? AppTypography.formHint,
-            prefixIcon: widget.prefixIcon,
-            prefixText: widget.prefixText,
-            prefixStyle: widget.prefixStyle,
-            suffixIcon: widget.isPassword
-                ? IconButton(
-                    icon: Icon(
-                      _obscured
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: AppColors.textMuted,
-                      size: 20,
-                    ),
-                    onPressed: () => setState(() => _obscured = !_obscured),
-                  )
-                : widget.suffixIcon,
-            filled: true,
-            fillColor: widget.enabled
-                ? (widget.fillColor ?? AppColors.surfaceSubtle)
-                : (widget.fillColor ?? AppColors.surfaceSubtle).withValues(alpha: 0.5),
-            contentPadding: widget.contentPadding ??
-                const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-            border: OutlineInputBorder(
-              borderRadius: widget.borderRadius ?? AppRadii.borderMd,
-              borderSide: const BorderSide(color: AppColors.borderSubtle),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: widget.borderRadius ?? AppRadii.borderMd,
-              borderSide: const BorderSide(color: AppColors.borderSubtle),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: widget.borderRadius ?? AppRadii.borderMd,
-              borderSide: const BorderSide(
-                color: AppColors.brandPrimary,
-                width: 2,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: widget.borderRadius ?? AppRadii.borderMd,
-              borderSide: const BorderSide(color: AppColors.errorRose),
-            ),
-          ),
+        Text(
+          widget.label!,
+          style: effectiveLabelStyle,
         ),
+        const SizedBox(height: 6),
+        field,
       ],
     );
   }
