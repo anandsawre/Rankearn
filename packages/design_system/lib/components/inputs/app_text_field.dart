@@ -149,11 +149,37 @@ class AppTextField extends StatefulWidget {
 
 class _AppTextFieldState extends State<AppTextField> {
   late bool _obscured;
+  late FocusNode _focusNode;
+  bool _internalFocusNode = false;
+  bool _isFocused = false;
+  bool _isHovered = false;
 
   @override
   void initState() {
     super.initState();
     _obscured = widget.isPassword;
+    if (widget.focusNode != null) {
+      _focusNode = widget.focusNode!;
+    } else {
+      _focusNode = FocusNode();
+      _internalFocusNode = true;
+    }
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (_focusNode.hasFocus != _isFocused && mounted) {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChange);
+    if (_internalFocusNode) {
+      _focusNode.dispose();
+    }
+    super.dispose();
   }
 
   @override
@@ -174,7 +200,7 @@ class _AppTextFieldState extends State<AppTextField> {
 
     return TextFormField(
       controller: widget.controller,
-      focusNode: widget.focusNode,
+      focusNode: _focusNode,
       obscureText: _obscured,
       keyboardType: widget.keyboardType,
       textCapitalization: widget.textCapitalization,
@@ -204,7 +230,7 @@ class _AppTextFieldState extends State<AppTextField> {
                 icon: Icon(
                   _obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                   color: AppColors.textMuted,
-                  size: 18,
+                  size: 20,
                 ),
                 onPressed: () => setState(() => _obscured = !_obscured),
               )
@@ -249,6 +275,8 @@ class _AppTextFieldState extends State<AppTextField> {
   }
 
   /// Standard variant with external top label (used across Admin & Showcase)
+  /// Uses a matching AnimatedContainer, BoxDecoration, Border.all and BoxConstraints
+  /// identical to [AppDropdown] to guarantee 100% pixel-perfect equal height (44.0px).
   Widget _buildStandardField(BuildContext context) {
     final effectiveRadius = widget.borderRadius ?? AppRadii.adminControl;
     final effectiveStyle = widget.style ?? AppTypography.adminTablePrimary;
@@ -260,9 +288,15 @@ class _AppTextFieldState extends State<AppTextField> {
     final isMultiline = (widget.maxLines > 1);
     final effectiveHeight = widget.height ?? (isMultiline ? null : AppSpacing.adminControlHeight);
 
-    Widget field = TextFormField(
+    final borderColor = _isFocused
+        ? AppColors.adminPurple
+        : (_isHovered
+            ? AppColors.adminPurple.withAlpha(120)
+            : AppColors.adminBorder);
+
+    final inputField = TextFormField(
       controller: widget.controller,
-      focusNode: widget.focusNode,
+      focusNode: _focusNode,
       obscureText: _obscured,
       keyboardType: widget.keyboardType,
       textCapitalization: widget.textCapitalization,
@@ -281,20 +315,76 @@ class _AppTextFieldState extends State<AppTextField> {
       decoration: InputDecoration(
         hintText: widget.hintText,
         hintStyle: effectiveHintStyle,
-        constraints: effectiveHeight != null ? BoxConstraints.tightFor(height: effectiveHeight) : null,
-        prefixIcon: widget.prefixIcon,
-        prefixIconConstraints: isMultiline
-            ? null
-            : BoxConstraints(
-                minWidth: 40,
-                maxWidth: 40,
-                minHeight: (effectiveHeight ?? AppSpacing.adminControlHeight) - 4,
-                maxHeight: (effectiveHeight ?? AppSpacing.adminControlHeight) - 4,
-              ),
         prefixText: widget.prefixText,
         prefixStyle: widget.prefixStyle,
-        suffixIcon: widget.isPassword
-            ? IconButton(
+        isDense: true,
+        filled: false,
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
+        contentPadding: widget.contentPadding ??
+            (isMultiline
+                ? const EdgeInsets.symmetric(vertical: 10)
+                : const EdgeInsets.symmetric(vertical: 0)),
+      ),
+    );
+
+    Widget box = MouseRegion(
+      cursor: widget.enabled ? SystemMouseCursors.text : SystemMouseCursors.basic,
+      onEnter: (_) {
+        if (widget.enabled && !_isHovered) setState(() => _isHovered = true);
+      },
+      onExit: (_) {
+        if (widget.enabled && _isHovered) setState(() => _isHovered = false);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        height: effectiveHeight,
+        constraints: effectiveHeight != null
+            ? BoxConstraints.tightFor(height: effectiveHeight)
+            : const BoxConstraints(minHeight: 44.0),
+        alignment: isMultiline ? Alignment.topLeft : Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: effectiveFillColor,
+          borderRadius: effectiveRadius,
+          border: Border.all(
+            color: borderColor,
+            width: _isFocused ? 1.5 : 1.0,
+          ),
+          boxShadow: _isFocused
+              ? [
+                  BoxShadow(
+                    color: AppColors.adminPurple.withValues(alpha: 0.14),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : const [
+                  BoxShadow(
+                    color: Color(0x0B0F172A),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Row(
+          crossAxisAlignment: isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+          children: [
+            if (widget.prefixIcon != null) ...[
+              Padding(
+                padding: isMultiline ? const EdgeInsets.only(top: 10) : EdgeInsets.zero,
+                child: widget.prefixIcon!,
+              ),
+              const SizedBox(width: 8),
+            ],
+            Expanded(child: inputField),
+            if (widget.isPassword) ...[
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
                 icon: Icon(
                   _obscured
                       ? Icons.visibility_off_outlined
@@ -303,67 +393,18 @@ class _AppTextFieldState extends State<AppTextField> {
                   size: 20,
                 ),
                 onPressed: () => setState(() => _obscured = !_obscured),
-              )
-            : widget.suffixIcon,
-        suffixIconConstraints: isMultiline
-            ? null
-            : BoxConstraints(
-                minWidth: 40,
-                maxWidth: 40,
-                minHeight: (effectiveHeight ?? AppSpacing.adminControlHeight) - 4,
-                maxHeight: (effectiveHeight ?? AppSpacing.adminControlHeight) - 4,
               ),
-        filled: true,
-        isDense: true,
-        fillColor: effectiveFillColor,
-        contentPadding: widget.contentPadding ??
-            (isMultiline
-                ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
-                : const EdgeInsets.symmetric(horizontal: 14, vertical: 0)),
-        border: OutlineInputBorder(
-          borderRadius: effectiveRadius,
-          borderSide: const BorderSide(color: AppColors.adminBorder),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: effectiveRadius,
-          borderSide: const BorderSide(color: AppColors.adminBorder),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: effectiveRadius,
-          borderSide: const BorderSide(
-            color: AppColors.adminPurple,
-            width: 1.5,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: effectiveRadius,
-          borderSide: const BorderSide(color: AppColors.adminDanger, width: 1.2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: effectiveRadius,
-          borderSide: const BorderSide(color: AppColors.adminDanger, width: 1.5),
+            ] else if (widget.suffixIcon != null) ...[
+              const SizedBox(width: 8),
+              widget.suffixIcon!,
+            ],
+          ],
         ),
       ),
-    );
-
-    field = DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: effectiveRadius,
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0B0F172A),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: effectiveHeight != null
-          ? SizedBox(height: effectiveHeight, child: field)
-          : field,
     );
 
     if (widget.label == null) {
-      return field;
+      return box;
     }
 
     return Column(
@@ -375,7 +416,7 @@ class _AppTextFieldState extends State<AppTextField> {
           style: effectiveLabelStyle,
         ),
         const SizedBox(height: AppSpacing.sm),
-        field,
+        box,
       ],
     );
   }

@@ -55,10 +55,12 @@ void main() {
       final size = tester.getSize(field);
       debugPrint('AppTextField[$i] size: $size');
 
-      // Find the inner InputDecorator
-      final decorator = find.descendant(of: field, matching: find.byType(InputDecorator));
-      if (decorator.evaluate().isNotEmpty) {
-        debugPrint('  InputDecorator[$i] size: ${tester.getSize(decorator)}');
+      // Find the inner AnimatedContainer
+      final container = find.descendant(of: field, matching: find.byType(AnimatedContainer));
+      if (container.evaluate().isNotEmpty) {
+        final boxSize = tester.getSize(container.first);
+        debugPrint('  AppTextField AnimatedContainer[$i] size: $boxSize');
+        expect(boxSize.height, 44.0);
       }
     }
 
@@ -73,7 +75,9 @@ void main() {
       // Find the inner AnimatedContainer
       final container = find.descendant(of: drop, matching: find.byType(AnimatedContainer));
       if (container.evaluate().isNotEmpty) {
-        debugPrint('  AnimatedContainer[$i] size: ${tester.getSize(container.first)}');
+        final boxSize = tester.getSize(container.first);
+        debugPrint('  AppDropdown AnimatedContainer[$i] size: $boxSize');
+        expect(boxSize.height, 44.0);
       }
     }
   });
