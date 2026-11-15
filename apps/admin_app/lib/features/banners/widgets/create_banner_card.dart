@@ -215,42 +215,49 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
             children: [
               Expanded(
                 child: AppTextField(
-                  label: 'Display Priority (1-10)',
                   controller: widget.priorityController,
-                  hintText: '1',
+                  hintText: 'Display Priority (1-10)',
                   keyboardType: TextInputType.number,
                   prefixIcon: const Icon(Icons.sort_rounded, size: 20, color: AppColors.adminSecondaryText),
                 ),
               ),
-              const SizedBox(width: 24),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Status',
-                    style: AppTypography.adminFieldLabel,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Switch(
-                        value: widget.isActive,
-                        activeThumbColor: Colors.white,
-                        activeTrackColor: AppColors.adminSuccess,
-                        onChanged: widget.onActiveToggled,
+              const SizedBox(width: 16),
+              Container(
+                height: AppSpacing.adminControlHeight,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: AppRadii.adminControl,
+                  border: Border.all(color: AppColors.adminBorder),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Status:',
+                      style: AppTypography.adminHint.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.adminSecondaryText,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        widget.isActive ? 'Active' : 'Inactive',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: widget.isActive ? AppColors.adminSuccess : AppColors.adminSecondaryText,
-                        ),
+                    ),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: widget.isActive,
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: AppColors.adminSuccess,
+                      onChanged: widget.onActiveToggled,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      widget.isActive ? 'Active' : 'Inactive',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: widget.isActive ? AppColors.adminSuccess : AppColors.adminSecondaryText,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -264,25 +271,32 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.calendar_month_rounded, size: 20, color: AppColors.adminPurple),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Schedule Banner Campaign',
-                        style: AppTypography.adminFieldLabel,
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_month_rounded, size: 20, color: AppColors.adminPurple),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Schedule Banner Campaign',
+                            style: AppTypography.adminFieldLabel,
+                          ),
+                          Text(
+                            'Automatically publish and unpublish between specific dates',
+                            style: AppTypography.adminTableSecondary,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Automatically publish and unpublish between specific dates',
-                        style: AppTypography.adminTableSecondary,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 10),
               Switch(
                 value: widget.isScheduled,
                 activeThumbColor: Colors.white,
@@ -359,22 +373,26 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           const SizedBox(height: 24),
 
           // Bottom Action Buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               AppButton.adminGhost(
                 label: 'Reset Form',
                 leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
                 onPressed: widget.isSaving ? null : widget.onReset,
               ),
-              Row(
+              Wrap(
+                spacing: 12,
+                runSpacing: 10,
                 children: [
                   AppButton.adminSecondary(
                     label: 'Preview Banner',
                     leadingIcon: const Icon(Icons.preview_rounded, size: 16),
                     onPressed: widget.onPreview,
                   ),
-                  const SizedBox(width: 12),
                   AppButton.adminPrimary(
                     label: widget.isSaving ? 'Saving...' : 'Save Banner',
                     isLoading: widget.isSaving,
@@ -506,18 +524,16 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
 
   Widget _buildTitleField() {
     return AppTextField(
-      label: 'Banner Title *',
       controller: widget.titleController,
-      hintText: 'e.g. 🎯 Live Mock Test Extravaganza',
+      hintText: 'Banner Title * (e.g. 🎯 Live Mock Test Extravaganza)',
       prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),
     );
   }
 
   Widget _buildLinkField() {
     return AppTextField(
-      label: 'Target Link / Route *',
       controller: widget.linkController,
-      hintText: 'e.g. /tests or /contests',
+      hintText: 'Target Link / Route * (e.g. /tests or /contests)',
       prefixIcon: const Icon(Icons.link_rounded, size: 20, color: AppColors.adminSecondaryText),
     );
   }
@@ -533,9 +549,22 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
     ];
 
     return AppDropdown<String>(
-      inlineLabel: false,
-      label: 'Banner Type *',
-      labelStyle: AppTypography.adminFieldLabel,
+      inlineLabel: true,
+      hint: 'Select Banner Type *',
+      prefixIcon: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.category_rounded, size: 18, color: AppColors.adminSecondaryText),
+          const SizedBox(width: 8),
+          Text(
+            'Type:',
+            style: AppTypography.adminHint.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.adminSecondaryText,
+            ),
+          ),
+        ],
+      ),
       value: widget.bannerType,
       height: AppSpacing.adminControlHeight,
       borderRadius: AppRadii.adminControl,
@@ -561,9 +590,22 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
     ];
 
     return AppDropdown<String>(
-      inlineLabel: false,
-      label: 'Display Mode / Placement *',
-      labelStyle: AppTypography.adminFieldLabel,
+      inlineLabel: true,
+      hint: 'Select Placement *',
+      prefixIcon: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.view_carousel_rounded, size: 18, color: AppColors.adminSecondaryText),
+          const SizedBox(width: 8),
+          Text(
+            'Placement:',
+            style: AppTypography.adminHint.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.adminSecondaryText,
+            ),
+          ),
+        ],
+      ),
       value: widget.displayMode,
       height: AppSpacing.adminControlHeight,
       borderRadius: AppRadii.adminControl,

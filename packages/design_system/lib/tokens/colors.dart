@@ -35,6 +35,16 @@ class AppColors {
     end: Alignment.centerRight,
   );
 
+  static const LinearGradient adminHeroGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [
+      Color(0xFFECEFFE),
+      Color(0xFFE5E9FE),
+      Color(0xFFDCE2FD),
+    ],
+  );
+
   // --- Admin Semantic Badges & Action Tokens ---
   static const Color adminBlue = Color(0xFF2563EB);
   static const Color adminBlueLight = Color(0xFFDBEAFE);

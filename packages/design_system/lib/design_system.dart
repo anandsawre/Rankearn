@@ -40,6 +40,7 @@ export 'components/display/app_icon_box.dart';
 export 'components/display/app_donut_chart.dart';
 export 'components/display/app_line_chart.dart';
 export 'components/display/app_bar_chart.dart';
+export 'components/display/admin_hero_card.dart';
 export 'components/display/app_hero_banner.dart';
 export 'components/display/hero_promo_banner.dart';
 export 'components/display/tests_hero_banner.dart';

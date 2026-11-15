@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import 'widgets/notifications_hero_card.dart';
+import 'widgets/notifications_quick_actions.dart';
 import 'widgets/notifications_kpi_row.dart';
 import 'widgets/create_notification_card.dart';
 import 'widgets/notification_delivery_analytics_card.dart';
@@ -392,14 +394,71 @@ class _NotificationsTabState extends State<NotificationsTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Purple Gradient Header Banner
-          AdminModuleHeroBanner(
-            title: 'Notification Management',
-            subtitle: 'Create, schedule and manage cross-channel notifications for your candidates and users.',
-            icon: Icons.campaign_rounded,
-            actionLabel: 'Broadcast History',
-            actionIcon: Icons.history_rounded,
-            onAction: _fetchHistory,
+          // 1. Hero Banner (Left) + Quick Actions (Right)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final heroCard = NotificationsHeroCard(
+                onRefresh: _fetchHistory,
+              );
+              final quickActions = NotificationsQuickActions(
+                onNewBroadcast: _resetForm,
+                onPushChannel: () {
+                  setState(() => _selectedChannel = 'push');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Channel switched to Push Alert')),
+                  );
+                },
+                onInAppChannel: () {
+                  setState(() => _selectedChannel = 'inapp');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Channel switched to In-App Notice')),
+                  );
+                },
+                onSchedule: () {
+                  setState(() => _isScheduled = !_isScheduled);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(_isScheduled
+                          ? 'Scheduled broadcast mode enabled'
+                          : 'Immediate dispatch mode'),
+                    ),
+                  );
+                },
+                onTargetAll: () {
+                  setState(() => _targetAudience = 'all');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Target Audience set to All Users')),
+                  );
+                },
+                onHistorySync: _fetchHistory,
+              );
+
+              if (constraints.maxWidth > 980) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 58,
+                      child: heroCard,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 42,
+                      child: quickActions,
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    heroCard,
+                    const SizedBox(height: 16),
+                    quickActions,
+                  ],
+                );
+              }
+            },
           ),
           const SizedBox(height: AppSpacing.adminGapCard),
 

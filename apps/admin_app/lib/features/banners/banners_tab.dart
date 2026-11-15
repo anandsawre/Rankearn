@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import 'widgets/banners_hero_card.dart';
+import 'widgets/banners_quick_actions.dart';
 import 'widgets/banners_kpi_row.dart';
 import 'widgets/create_banner_card.dart';
 import 'widgets/banners_data_table.dart';
@@ -382,14 +384,64 @@ class _BannersTabState extends State<BannersTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Purple Gradient Header Banner
-          AdminModuleHeroBanner(
-            title: 'Promo Banner Management',
-            subtitle: 'Design, publish and track high-impact promotional banners across mobile and desktop applications.',
-            icon: Icons.photo_library_rounded,
-            actionLabel: 'Refresh Banners',
-            actionIcon: Icons.refresh_rounded,
-            onAction: _loadBanners,
+          // 1. Hero Banner (Left) + Quick Actions (Right)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final heroCard = BannersHeroCard(
+                onRefresh: _loadBanners,
+              );
+              final quickActions = BannersQuickActions(
+                onNewBanner: _resetForm,
+                onSelectCarousel: () {
+                  setState(() => _displayMode = 'home_carousel');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Placement set to Home Carousel')),
+                  );
+                },
+                onSchedule: () {
+                  setState(() => _isScheduled = !_isScheduled);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(_isScheduled
+                          ? 'Scheduled banner delivery enabled'
+                          : 'Always active banner delivery mode'),
+                    ),
+                  );
+                },
+                onAnalytics: () {
+                  if (_promotionalBanners.isNotEmpty) {
+                    _showBannerAnalytics(_promotionalBanners.first);
+                  }
+                },
+                onRefresh: _loadBanners,
+              );
+
+              if (constraints.maxWidth > 980) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 58,
+                      child: heroCard,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 42,
+                      child: quickActions,
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    heroCard,
+                    const SizedBox(height: 16),
+                    quickActions,
+                  ],
+                );
+              }
+            },
           ),
           const SizedBox(height: AppSpacing.adminGapCard),
 
@@ -405,40 +457,68 @@ class _BannersTabState extends State<BannersTab> {
           ),
           const SizedBox(height: AppSpacing.adminGapCard),
 
-          // 3. Create / Update Banner Form Card
-          CreateBannerCard(
-            titleController: _titleController,
-            linkController: _linkController,
-            priorityController: _priorityController,
-            imageUrl: _imageUrl,
-            onImageUrlChanged: (url) => setState(() => _imageUrl = url),
-            bannerType: _bannerType,
-            onBannerTypeChanged: (t) => setState(() => _bannerType = t),
-            displayMode: _displayMode,
-            onDisplayModeChanged: (m) => setState(() => _displayMode = m),
-            isScheduled: _isScheduled,
-            onScheduleToggled: (s) => setState(() => _isScheduled = s),
-            startDate: _startDate,
-            onStartDateChanged: (d) => setState(() => _startDate = d),
-            endDate: _endDate,
-            onEndDateChanged: (d) => setState(() => _endDate = d),
-            isActive: _isActive,
-            onActiveToggled: (a) => setState(() => _isActive = a),
-            isSaving: _isSaving,
-            onReset: _resetForm,
-            onSave: _saveBanner,
-            onPreview: _previewBanner,
-          ),
-          const SizedBox(height: AppSpacing.adminGapSection),
+          // 3. Create Banner Form Card (Left) + Banners Data Table (Right)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final createCard = CreateBannerCard(
+                titleController: _titleController,
+                linkController: _linkController,
+                priorityController: _priorityController,
+                imageUrl: _imageUrl,
+                onImageUrlChanged: (url) => setState(() => _imageUrl = url),
+                bannerType: _bannerType,
+                onBannerTypeChanged: (t) => setState(() => _bannerType = t),
+                displayMode: _displayMode,
+                onDisplayModeChanged: (m) => setState(() => _displayMode = m),
+                isScheduled: _isScheduled,
+                onScheduleToggled: (s) => setState(() => _isScheduled = s),
+                startDate: _startDate,
+                onStartDateChanged: (d) => setState(() => _startDate = d),
+                endDate: _endDate,
+                onEndDateChanged: (d) => setState(() => _endDate = d),
+                isActive: _isActive,
+                onActiveToggled: (a) => setState(() => _isActive = a),
+                isSaving: _isSaving,
+                onReset: _resetForm,
+                onSave: _saveBanner,
+                onPreview: _previewBanner,
+              );
 
-          // 4. Banners Data Table Card
-          BannersDataTable(
-            banners: _promotionalBanners,
-            isLoading: _isLoading,
-            onEdit: _editBanner,
-            onToggleStatus: _toggleStatus,
-            onAnalytics: _showBannerAnalytics,
-            onDelete: _deleteBanner,
+              final tableCard = BannersDataTable(
+                banners: _promotionalBanners,
+                isLoading: _isLoading,
+                onEdit: _editBanner,
+                onToggleStatus: _toggleStatus,
+                onAnalytics: _showBannerAnalytics,
+                onDelete: _deleteBanner,
+              );
+
+              if (constraints.maxWidth > 1080) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 48,
+                      child: createCard,
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      flex: 52,
+                      child: tableCard,
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    createCard,
+                    const SizedBox(height: 20),
+                    tableCard,
+                  ],
+                );
+              }
+            },
           ),
         ],
       ),

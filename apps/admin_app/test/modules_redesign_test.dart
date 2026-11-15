@@ -52,7 +52,7 @@ void main() {
 
     // Verify Delivery Analytics & Quick Actions
     expect(find.text('Delivery Analytics'), findsOneWidget);
-    expect(find.text('Quick Actions'), findsOneWidget);
+    expect(find.text('Quick Actions'), findsWidgets);
     expect(find.text('Send to All Users'), findsOneWidget);
 
     // Verify Table

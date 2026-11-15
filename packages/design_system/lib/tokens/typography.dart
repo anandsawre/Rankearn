@@ -440,6 +440,32 @@ class AppTypography {
   );
 
   // --- Admin Dashboard Semantic Typography Tokens ---
+  static const TextStyle adminHeroTitle = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 22,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.5,
+    color: AppColors.textPrimary,
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle adminHeroTitleAccent = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 22,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.5,
+    color: AppColors.brandPurple,
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle adminHeroSubtitle = TextStyle(
+    fontSize: 11.5,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+    height: 1.3,
+    fontFamilyFallback: fontFallbacks,
+  );
+
   static const TextStyle adminModuleTitle = TextStyle(
     fontFamily: fontHeading,
     fontSize: 22,

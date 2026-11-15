@@ -38,6 +38,9 @@ class AppSpacing {
   }
 
   // --- Admin Dashboard Semantic Spacing Tokens ---
+  /// The tokenized unified vertical height for admin hero banners across all modules.
+  static const double adminHeroHeight = 124.0;
+
   /// The tokenized unified vertical height for all single-line form text inputs and dropdowns.
   static const double adminControlHeight = 44.0;
   static const double adminControlHeightDense = 38.0;
