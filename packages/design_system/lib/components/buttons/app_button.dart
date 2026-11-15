@@ -121,11 +121,7 @@ class AppButton extends StatelessWidget {
         foregroundColor = AppColors.adminSecondaryText,
         borderColor = null,
         borderRadius = AppRadii.adminControl,
-        customTextStyle = const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: AppColors.adminSecondaryText,
-        ),
+        customTextStyle = AppTypography.adminButtonGhost,
         gradient = null,
         boxShadow = null;
 
@@ -170,7 +166,7 @@ class AppButton extends StatelessWidget {
         fg = foregroundColor!;
       }
       if (borderColor != null) {
-        border = BorderSide(color: borderColor!, width: 1.2);
+        border = BorderSide(color: borderColor!, width: 1.0);
       }
     }
 
@@ -223,7 +219,7 @@ class AppButton extends StatelessWidget {
     }
 
     if (height != null) {
-      padding = EdgeInsets.symmetric(horizontal: padding.horizontal / 2, vertical: 0);
+      padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 0);
     }
 
     final effectiveRadius = borderRadius ?? AppRadii.borderMd;

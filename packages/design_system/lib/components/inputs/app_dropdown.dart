@@ -479,20 +479,10 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
         : (widget.borderColor ?? AppColors.adminBorder);
 
     final effectiveTextStyle =
-        widget.style ??
-        AppTypography.bodyMedium.copyWith(
-          color: widget.enabled ? AppColors.textPrimary : AppColors.textMuted,
-          fontSize: 12.5,
-          fontWeight: FontWeight.w600,
-        );
+        widget.style ?? AppTypography.adminInput;
 
     final effectiveHintStyle =
-        widget.hintStyle ??
-        AppTypography.bodyMedium.copyWith(
-          color: AppColors.textMuted,
-          fontSize: 12.5,
-          fontWeight: FontWeight.w500,
-        );
+        widget.hintStyle ?? AppTypography.adminHint;
 
     final effectiveContentPadding =
         widget.contentPadding ??

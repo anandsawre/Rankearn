@@ -279,8 +279,8 @@ class _AppTextFieldState extends State<AppTextField> {
   /// identical to [AppDropdown] to guarantee 100% pixel-perfect equal height (44.0px).
   Widget _buildStandardField(BuildContext context) {
     final effectiveRadius = widget.borderRadius ?? AppRadii.adminControl;
-    final effectiveStyle = widget.style ?? AppTypography.adminTablePrimary;
-    final effectiveHintStyle = widget.hintStyle ?? AppTypography.adminTableSecondary;
+    final effectiveStyle = widget.style ?? AppTypography.adminInput;
+    final effectiveHintStyle = widget.hintStyle ?? AppTypography.adminHint;
     final effectiveLabelStyle = widget.labelStyle ?? AppTypography.adminFieldLabel;
     final effectiveFillColor = widget.enabled
         ? (widget.fillColor ?? Colors.white)
@@ -311,6 +311,14 @@ class _AppTextFieldState extends State<AppTextField> {
       enableSuggestions: !widget.isPassword,
       autocorrect: !widget.isPassword,
       style: effectiveStyle,
+      strutStyle: isMultiline
+          ? null
+          : const StrutStyle(
+              fontSize: 13,
+              height: 1.2,
+              forceStrutHeight: true,
+              leading: 0,
+            ),
       textAlignVertical: isMultiline ? TextAlignVertical.top : TextAlignVertical.center,
       decoration: InputDecoration(
         hintText: widget.hintText,
@@ -328,7 +336,7 @@ class _AppTextFieldState extends State<AppTextField> {
         contentPadding: widget.contentPadding ??
             (isMultiline
                 ? const EdgeInsets.symmetric(vertical: 10)
-                : const EdgeInsets.symmetric(vertical: 0)),
+                : const EdgeInsets.only(bottom: 1.5)),
       ),
     );
 

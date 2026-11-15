@@ -509,61 +509,21 @@ class _CreatePollPanelState extends State<CreatePollPanel> {
               // Reset Button
               Expanded(
                 flex: 1,
-                child: OutlinedButton(
+                child: AppButton.adminSecondary(
+                  label: 'Reset',
+                  height: AppSpacing.adminControlHeight,
                   onPressed: widget.onReset,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: const BorderSide(color: AppColors.borderStrong),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'Reset',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
                 ),
               ),
               const SizedBox(width: 10),
               // Launch Live Poll Button
               Expanded(
                 flex: 2,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    gradient: AppColors.pollButtonGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.pollPurplePrimary.withAlpha(100),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton.icon(
-                    onPressed: widget.onLaunchPoll,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 18),
-                    label: const Text(
-                      'Launch Live Poll',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                child: AppButton.adminPrimary(
+                  label: 'Launch Live Poll',
+                  leadingIcon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 18),
+                  height: AppSpacing.adminControlHeight,
+                  onPressed: widget.onLaunchPoll,
                 ),
               ),
             ],

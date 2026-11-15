@@ -167,22 +167,16 @@ class ReferralSharePreviewCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                ElevatedButton.icon(
+                AppButton.adminPrimary(
+                  label: 'Copy',
+                  leadingIcon: const Icon(Icons.copy_rounded, size: 14),
+                  height: 34,
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: referralLink));
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('📋 Referral link copied to clipboard!')),
                     );
                   },
-                  icon: const Icon(Icons.copy_rounded, size: 14),
-                  label: const Text('Copy'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.adminPurple,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: const RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
-                  ),
                 ),
               ],
             ),

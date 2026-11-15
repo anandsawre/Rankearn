@@ -559,6 +559,20 @@ class AppTypography {
     fontFamilyFallback: fontFallbacks,
   );
 
+  static const TextStyle adminInput = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: AppColors.adminPrimaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminHint = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: AppColors.adminSecondaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
   static const TextStyle adminButtonPrimary = TextStyle(
     fontSize: 13,
     fontWeight: FontWeight.w700,
@@ -570,6 +584,13 @@ class AppTypography {
     fontSize: 13,
     fontWeight: FontWeight.w700,
     color: AppColors.adminPrimaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminButtonGhost = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: AppColors.adminSecondaryText,
     fontFamilyFallback: fontFallbacks,
   );
 }
