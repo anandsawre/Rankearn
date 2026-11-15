@@ -278,7 +278,7 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: AppRadii.borderMd,
+      borderRadius: AppRadii.adminControl,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Row(
@@ -288,7 +288,7 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: color.withAlpha(25),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadii.adminControl,
               ),
               child: Icon(icon, color: color, size: 18),
             ),

@@ -65,7 +65,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withAlpha(45),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: AppRadii.adminBadge,
                       ),
                       child: const Text(
                         '🔥 LIMITED TIME OFFER',
@@ -104,7 +104,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.black.withAlpha(40),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadii.adminControl,
                     border: Border.all(color: Colors.white.withAlpha(50)),
                   ),
                   child: Row(
@@ -181,7 +181,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: const RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
                   ),
                 ),
               ],
@@ -247,12 +247,12 @@ class ReferralSharePreviewCard extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: AppRadii.adminControl,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
           color: color.withAlpha(20),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AppRadii.adminControl,
           border: Border.all(color: color.withAlpha(60)),
         ),
         child: Column(

@@ -595,39 +595,22 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
       {'value': 'announcement', 'label': 'System Announcement'},
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Banner Type *',
-          style: AppTypography.adminFieldLabel,
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: AppRadii.adminControl,
-            border: Border.all(color: AppColors.adminBorder),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: widget.bannerType,
-              isExpanded: true,
-              icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.adminSecondaryText),
-              items: types.map((t) {
-                return DropdownMenuItem<String>(
-                  value: t['value'],
-                  child: Text(t['label']!, style: AppTypography.adminTablePrimary),
-                );
-              }).toList(),
-              onChanged: (v) {
-                if (v != null) widget.onBannerTypeChanged(v);
-              },
-            ),
-          ),
-        ),
-      ],
+    return AppDropdown<String>(
+      inlineLabel: false,
+      label: 'Banner Type *',
+      labelStyle: AppTypography.adminFieldLabel,
+      value: widget.bannerType,
+      height: 44,
+      borderRadius: AppRadii.adminControl,
+      items: types.map((t) {
+        return AppDropdownItem<String>(
+          value: t['value']!,
+          label: t['label']!,
+        );
+      }).toList(),
+      onChanged: (v) {
+        if (v != null) widget.onBannerTypeChanged(v);
+      },
     );
   }
 
@@ -640,39 +623,22 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
       {'value': 'popup_modal', 'label': 'Pop-up Modal on Launch'},
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Display Mode / Placement *',
-          style: AppTypography.adminFieldLabel,
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: AppRadii.adminControl,
-            border: Border.all(color: AppColors.adminBorder),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: widget.displayMode,
-              isExpanded: true,
-              icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.adminSecondaryText),
-              items: modes.map((m) {
-                return DropdownMenuItem<String>(
-                  value: m['value'],
-                  child: Text(m['label']!, style: AppTypography.adminTablePrimary),
-                );
-              }).toList(),
-              onChanged: (v) {
-                if (v != null) widget.onDisplayModeChanged(v);
-              },
-            ),
-          ),
-        ),
-      ],
+    return AppDropdown<String>(
+      inlineLabel: false,
+      label: 'Display Mode / Placement *',
+      labelStyle: AppTypography.adminFieldLabel,
+      value: widget.displayMode,
+      height: 44,
+      borderRadius: AppRadii.adminControl,
+      items: modes.map((m) {
+        return AppDropdownItem<String>(
+          value: m['value']!,
+          label: m['label']!,
+        );
+      }).toList(),
+      onChanged: (v) {
+        if (v != null) widget.onDisplayModeChanged(v);
+      },
     );
   }
 }

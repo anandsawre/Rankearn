@@ -477,12 +477,12 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
       message: tooltip,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: AppRadii.adminControl,
         child: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: color.withAlpha(20),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: AppRadii.adminControl,
           ),
           child: Icon(icon, size: 15, color: color),
         ),

@@ -468,15 +468,15 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
 
   @override
   Widget build(BuildContext context) {
-    final effectiveBorderRadius = widget.borderRadius ?? BorderRadius.circular(10);
+    final effectiveBorderRadius = widget.borderRadius ?? AppRadii.adminControl;
     final effectiveFillColor =
         widget.fillColor ??
-        (widget.enabled ? Colors.white : const Color(0xFFF8FAFC));
+        (widget.enabled ? Colors.white : AppColors.adminBackground);
     final effectiveBorderColor = _isOpen
-        ? (widget.focusedBorderColor ?? const Color(0xFFFF9500))
+        ? (widget.focusedBorderColor ?? AppColors.adminPurple)
         : _isHovered
-        ? (widget.borderColor ?? const Color(0xFFCBD5E1))
-        : (widget.borderColor ?? const Color(0xFFE2E8F0));
+        ? (widget.borderColor ?? AppColors.adminPurple.withAlpha(120))
+        : (widget.borderColor ?? AppColors.adminBorder);
 
     final effectiveTextStyle =
         widget.style ??
@@ -552,7 +552,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                       BoxShadow(
                         color:
                             (widget.focusedBorderColor ??
-                                    const Color(0xFFFF9500))
+                                    AppColors.adminPurple)
                                 .withValues(alpha: 0.14),
                         blurRadius: 8,
                         offset: const Offset(0, 2),

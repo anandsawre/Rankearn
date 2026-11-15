@@ -552,50 +552,22 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
       {'value': 'specific', 'label': 'Specific Users'},
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Target Audience *',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppColors.adminPrimaryText,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: AppRadii.borderMd,
-            border: Border.all(color: AppColors.adminBorder),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: widget.targetAudience,
-              isExpanded: true,
-              icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.adminSecondaryText),
-              items: audiences.map((a) {
-                return DropdownMenuItem<String>(
-                  value: a['value'],
-                  child: Text(
-                    a['label']!,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.adminPrimaryText,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (v) {
-                if (v != null) widget.onAudienceChanged(v);
-              },
-            ),
-          ),
-        ),
-      ],
+    return AppDropdown<String>(
+      inlineLabel: false,
+      label: 'Target Audience *',
+      labelStyle: AppTypography.adminFieldLabel,
+      value: widget.targetAudience,
+      height: 44,
+      borderRadius: AppRadii.adminControl,
+      items: audiences.map((a) {
+        return AppDropdownItem<String>(
+          value: a['value']!,
+          label: a['label']!,
+        );
+      }).toList(),
+      onChanged: (v) {
+        if (v != null) widget.onAudienceChanged(v);
+      },
     );
   }
 
@@ -609,50 +581,22 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
       {'value': 'system', 'label': 'System Broadcast'},
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Notification Type *',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppColors.adminPrimaryText,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: AppRadii.borderMd,
-            border: Border.all(color: AppColors.adminBorder),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: widget.notificationType,
-              isExpanded: true,
-              icon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.adminSecondaryText),
-              items: types.map((t) {
-                return DropdownMenuItem<String>(
-                  value: t['value'],
-                  child: Text(
-                    t['label']!,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.adminPrimaryText,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (v) {
-                if (v != null) widget.onTypeChanged(v);
-              },
-            ),
-          ),
-        ),
-      ],
+    return AppDropdown<String>(
+      inlineLabel: false,
+      label: 'Notification Type *',
+      labelStyle: AppTypography.adminFieldLabel,
+      value: widget.notificationType,
+      height: 44,
+      borderRadius: AppRadii.adminControl,
+      items: types.map((t) {
+        return AppDropdownItem<String>(
+          value: t['value']!,
+          label: t['label']!,
+        );
+      }).toList(),
+      onChanged: (v) {
+        if (v != null) widget.onTypeChanged(v);
+      },
     );
   }
 }

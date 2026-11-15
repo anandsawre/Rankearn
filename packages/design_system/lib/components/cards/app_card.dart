@@ -12,6 +12,7 @@ class AppCard extends StatelessWidget {
   final Color? color;
   final Border? border;
   final List<BoxShadow>? shadows;
+  final BorderRadius? borderRadius;
   final double? width;
   final double? height;
 
@@ -23,18 +24,20 @@ class AppCard extends StatelessWidget {
     this.color,
     this.border,
     this.shadows,
+    this.borderRadius,
     this.width,
     this.height,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveRadius = borderRadius ?? AppRadii.adminCard;
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
         color: color ?? AppColors.surface,
-        borderRadius: AppRadii.borderLg,
+        borderRadius: effectiveRadius,
         border: border ?? Border.all(color: AppColors.borderSubtle, width: 1),
         boxShadow: shadows ?? AppShadows.card,
       ),
@@ -42,7 +45,7 @@ class AppCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: AppRadii.borderLg,
+          borderRadius: effectiveRadius,
           child: Padding(padding: padding, child: child),
         ),
       ),

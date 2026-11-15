@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../tokens/colors.dart';
+import '../../tokens/radii.dart';
+import '../../tokens/shadows.dart';
 import '../display/sparkline_painter.dart';
 
 /// AdminMetricCard represents a high-density, pixel-perfect KPI summary card
@@ -70,22 +73,16 @@ class AdminMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveRadius = borderRadius ?? BorderRadius.circular(16);
+    final effectiveRadius = borderRadius ?? AppRadii.adminCard;
 
     final cardContent = Container(
       width: width,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.adminCardBackground,
         borderRadius: effectiveRadius,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: AppColors.adminBorder),
+        boxShadow: AppShadows.adminCard,
       ),
       child: Row(
         children: [

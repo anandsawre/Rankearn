@@ -42,10 +42,12 @@ class AppRadii {
   static const BorderRadius pollCanvas = BorderRadius.all(Radius.circular(20.0));
 
   // --- Admin Dashboard Semantic Radii Tokens ---
-  static const BorderRadius adminCard = borderXl;
-  static const BorderRadius adminCardInner = borderLg;
-  static const BorderRadius adminControl = borderMd;
-  static const BorderRadius adminTab = borderSm;
+  /// The single source of truth for all admin dashboard card corners.
+  /// Modifying this cascades across KPI cards, form cards, data tables, dialogs, and hero banners.
+  static const BorderRadius adminCard = borderLg; // 16.0px
+  static const BorderRadius adminCardInner = borderMd; // 12.0px
+  static const BorderRadius adminControl = BorderRadius.all(Radius.circular(10.0));
+  static const BorderRadius adminTab = borderSm; // 8.0px
   static const BorderRadius adminBadge = BorderRadius.all(Radius.circular(6.0));
   static const BorderRadius adminStatusPill = BorderRadius.all(Radius.circular(12.0));
   static const BorderRadius adminRoundPill = borderPill;
