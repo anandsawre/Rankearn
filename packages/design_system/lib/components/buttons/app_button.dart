@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
+import '../../tokens/shadows.dart';
+import '../../tokens/spacing.dart';
 import '../../tokens/typography.dart';
 
 enum AppButtonVariant { primary, secondary, outlined, destructive, ghost }
@@ -50,6 +52,82 @@ class AppButton extends StatelessWidget {
     this.gradient,
     this.boxShadow,
   });
+
+  /// Factory constructor for Admin Dashboard primary purple gradient action buttons
+  const AppButton.adminPrimary({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.isLoading = false,
+    this.disabled = false,
+    this.leadingIcon,
+    this.trailingIcon,
+    this.width,
+    this.height = AppSpacing.adminControlHeight,
+    this.fullWidth = false,
+  })  : variant = AppButtonVariant.primary,
+        size = AppButtonSize.medium,
+        backgroundColor = AppColors.adminPurple,
+        foregroundColor = Colors.white,
+        borderColor = null,
+        borderRadius = AppRadii.adminControl,
+        customTextStyle = AppTypography.adminButtonPrimary,
+        gradient = AppColors.adminPurpleGradient,
+        boxShadow = AppShadows.adminPrimaryButton;
+
+  /// Factory constructor for Admin Dashboard secondary white/outlined buttons
+  const AppButton.adminSecondary({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.isLoading = false,
+    this.disabled = false,
+    this.leadingIcon,
+    this.trailingIcon,
+    this.width,
+    this.height = AppSpacing.adminControlHeight,
+    this.fullWidth = false,
+  })  : variant = AppButtonVariant.secondary,
+        size = AppButtonSize.medium,
+        backgroundColor = Colors.white,
+        foregroundColor = AppColors.adminPrimaryText,
+        borderColor = AppColors.adminBorder,
+        borderRadius = AppRadii.adminControl,
+        customTextStyle = AppTypography.adminButtonSecondary,
+        gradient = null,
+        boxShadow = const [
+          BoxShadow(
+            color: Color(0x0B0F172A),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ];
+
+  /// Factory constructor for Admin Dashboard ghost/reset buttons
+  const AppButton.adminGhost({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.isLoading = false,
+    this.disabled = false,
+    this.leadingIcon,
+    this.trailingIcon,
+    this.width,
+    this.height = AppSpacing.adminControlHeight,
+    this.fullWidth = false,
+  })  : variant = AppButtonVariant.ghost,
+        size = AppButtonSize.medium,
+        backgroundColor = Colors.transparent,
+        foregroundColor = AppColors.adminSecondaryText,
+        borderColor = null,
+        borderRadius = AppRadii.adminControl,
+        customTextStyle = const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.adminSecondaryText,
+        ),
+        gradient = null,
+        boxShadow = null;
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +220,10 @@ class AppButton extends StatelessWidget {
 
     if (customTextStyle != null) {
       textStyle = customTextStyle!;
+    }
+
+    if (height != null) {
+      padding = EdgeInsets.symmetric(horizontal: padding.horizontal / 2, vertical: 0);
     }
 
     final effectiveRadius = borderRadius ?? AppRadii.borderMd;

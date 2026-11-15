@@ -418,63 +418,31 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton.icon(
+              AppButton.adminGhost(
+                label: 'Reset Form',
+                leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
                 onPressed: widget.isSubmitting ? null : widget.onReset,
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Reset Form'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.adminSecondaryText,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
               ),
               Row(
                 children: [
-                  OutlinedButton.icon(
+                  AppButton.adminSecondary(
+                    label: 'Save Draft',
+                    leadingIcon: const Icon(Icons.drafts_outlined, size: 16),
                     onPressed: widget.isSubmitting ? null : widget.onSaveDraft,
-                    icon: const Icon(Icons.drafts_outlined, size: 16),
-                    label: const Text('Save Draft'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.adminPrimaryText,
-                      side: const BorderSide(color: AppColors.adminBorder),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                      shape: const RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
-                    ),
                   ),
                   const SizedBox(width: 12),
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: AppColors.adminPurpleGradient,
-                      borderRadius: AppRadii.adminControl,
-                      boxShadow: AppShadows.adminPrimaryButton,
+                  AppButton.adminPrimary(
+                    label: widget.isSubmitting
+                        ? 'Dispatching...'
+                        : widget.isScheduled
+                            ? 'Schedule Notification'
+                            : 'Send Now',
+                    isLoading: widget.isSubmitting,
+                    leadingIcon: Icon(
+                      widget.isScheduled ? Icons.schedule_send_rounded : Icons.send_rounded,
+                      size: 16,
                     ),
-                    child: ElevatedButton.icon(
-                      onPressed: widget.isSubmitting ? null : widget.onSendNow,
-                      icon: widget.isSubmitting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : Icon(
-                              widget.isScheduled ? Icons.schedule_send_rounded : Icons.send_rounded,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                      label: Text(
-                        widget.isSubmitting
-                            ? 'Dispatching...'
-                            : widget.isScheduled
-                                ? 'Schedule Notification'
-                                : 'Send Now',
-                        style: AppTypography.adminButtonPrimary,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        shape: const RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
-                      ),
-                    ),
+                    onPressed: widget.isSubmitting ? null : widget.onSendNow,
                   ),
                 ],
               ),

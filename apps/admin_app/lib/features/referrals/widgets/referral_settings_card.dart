@@ -141,41 +141,16 @@ class ReferralSettingsCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton.icon(
+              AppButton.adminGhost(
+                label: 'Reset Defaults',
+                leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
                 onPressed: isSaving ? null : onReset,
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Reset Defaults'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.adminSecondaryText,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
               ),
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: AppColors.adminPurpleGradient,
-                  borderRadius: AppRadii.adminControl,
-                  boxShadow: AppShadows.adminPrimaryButton,
-                ),
-                child: ElevatedButton.icon(
-                  onPressed: isSaving ? null : onSave,
-                  icon: isSaving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Icon(Icons.check_circle_outline_rounded, size: 16, color: Colors.white),
-                  label: Text(
-                    isSaving ? 'Saving...' : 'Save Settings',
-                    style: AppTypography.adminButtonPrimary,
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                    shape: const RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
-                  ),
-                ),
+              AppButton.adminPrimary(
+                label: isSaving ? 'Saving...' : 'Save Settings',
+                isLoading: isSaving,
+                leadingIcon: const Icon(Icons.check_circle_outline_rounded, size: 16),
+                onPressed: isSaving ? null : onSave,
               ),
             ],
           ),

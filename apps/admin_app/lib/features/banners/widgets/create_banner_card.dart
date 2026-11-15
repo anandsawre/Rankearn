@@ -362,55 +362,24 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton.icon(
+              AppButton.adminGhost(
+                label: 'Reset Form',
+                leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
                 onPressed: widget.isSaving ? null : widget.onReset,
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Reset Form'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.adminSecondaryText,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
               ),
               Row(
                 children: [
-                  OutlinedButton.icon(
+                  AppButton.adminSecondary(
+                    label: 'Preview Banner',
+                    leadingIcon: const Icon(Icons.preview_rounded, size: 16),
                     onPressed: widget.onPreview,
-                    icon: const Icon(Icons.preview_rounded, size: 16),
-                    label: const Text('Preview Banner'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.adminPrimaryText,
-                      side: const BorderSide(color: AppColors.adminBorder),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                      shape: RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
-                    ),
                   ),
                   const SizedBox(width: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.adminPurpleGradient,
-                      borderRadius: AppRadii.adminControl,
-                      boxShadow: AppShadows.adminPrimaryButton,
-                    ),
-                    child: ElevatedButton.icon(
-                      onPressed: widget.isSaving ? null : widget.onSave,
-                      icon: widget.isSaving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.save_rounded, size: 16, color: Colors.white),
-                      label: Text(
-                        widget.isSaving ? 'Saving...' : 'Save Banner',
-                        style: AppTypography.adminButtonPrimary,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
-                      ),
-                    ),
+                  AppButton.adminPrimary(
+                    label: widget.isSaving ? 'Saving...' : 'Save Banner',
+                    isLoading: widget.isSaving,
+                    leadingIcon: const Icon(Icons.save_rounded, size: 16),
+                    onPressed: widget.isSaving ? null : widget.onSave,
                   ),
                 ],
               ),
@@ -482,7 +451,10 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
               ),
             ),
             const SizedBox(width: 8),
-            ElevatedButton.icon(
+            AppButton.adminPrimary(
+              label: 'Apply',
+              leadingIcon: const Icon(Icons.check_rounded, size: 16),
+              height: AppSpacing.adminControlHeight,
               onPressed: () {
                 final url = _customUrlController.text.trim();
                 if (url.isNotEmpty) {
@@ -492,14 +464,6 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                   );
                 }
               },
-              icon: const Icon(Icons.check_rounded, size: 16),
-              label: const Text('Apply'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.adminPurple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
-              ),
             ),
           ],
         ),
