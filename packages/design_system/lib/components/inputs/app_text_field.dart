@@ -318,6 +318,7 @@ class _AppTextFieldState extends State<AppTextField> {
         prefixText: widget.prefixText,
         prefixStyle: widget.prefixStyle,
         isDense: true,
+        isCollapsed: !isMultiline,
         filled: false,
         border: InputBorder.none,
         enabledBorder: InputBorder.none,

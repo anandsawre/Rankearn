@@ -246,5 +246,48 @@ void main() {
 
       expect(labeledTextHeight, equals(labeledDropdownHeight));
     });
+
+    testWidgets('AppTextField and AppDropdown have vertically centered text at identical midpoint', (WidgetTester tester) async {
+      final textFieldKey = UniqueKey();
+      final dropdownKey = UniqueKey();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Center(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      key: textFieldKey,
+                      controller: TextEditingController(text: 'Sample Text'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: AppDropdown<String>(
+                      key: dropdownKey,
+                      value: 'sample',
+                      items: const [AppDropdownItem(value: 'sample', label: 'Sample Text')],
+                      onChanged: (_) {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final textEditable = find.descendant(of: find.byKey(textFieldKey), matching: find.byType(EditableText));
+      final dropText = find.descendant(of: find.byKey(dropdownKey), matching: find.byType(Text));
+
+      final textCenterY = tester.getCenter(textEditable).dy;
+      final dropCenterY = tester.getCenter(dropText.first).dy;
+
+      // Both centers must align within 1.0 pixel
+      expect((textCenterY - dropCenterY).abs(), lessThanOrEqualTo(1.0));
+    });
   });
 }
