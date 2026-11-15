@@ -34,19 +34,13 @@ class _ReferralAnalyticsCardState extends State<ReferralAnalyticsCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0810143A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
+        borderRadius: AppRadii.adminCard,
+        border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
+        boxShadow: AppShadows.adminCard,
       ),
-      padding: const EdgeInsets.all(22),
+      padding: AppSpacing.adminCardPaddingCompact,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -60,11 +54,7 @@ class _ReferralAnalyticsCardState extends State<ReferralAnalyticsCard> {
                   SizedBox(width: 8),
                   Text(
                     'Referral Performance & Trends',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.adminPrimaryText,
-                    ),
+                    style: AppTypography.adminSectionTitle,
                   ),
                 ],
               ),
@@ -92,7 +82,7 @@ class _ReferralAnalyticsCardState extends State<ReferralAnalyticsCard> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.adminBackground,
-              borderRadius: AppRadii.borderMd,
+              borderRadius: AppRadii.adminControl,
               border: Border.all(color: AppColors.adminBorder),
             ),
             child: const Row(
@@ -116,7 +106,7 @@ class _ReferralAnalyticsCardState extends State<ReferralAnalyticsCard> {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: AppColors.adminBackground,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadii.adminTab,
         border: Border.all(color: AppColors.adminBorder),
       ),
       child: Row(
@@ -125,20 +115,16 @@ class _ReferralAnalyticsCardState extends State<ReferralAnalyticsCard> {
           final isSel = _selectedRange == r;
           return InkWell(
             onTap: () => setState(() => _selectedRange = r),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: AppRadii.adminBadge,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: isSel ? AppColors.adminPurple : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: AppRadii.adminBadge,
               ),
               child: Text(
                 r,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
-                  color: isSel ? Colors.white : AppColors.adminSecondaryText,
-                ),
+                style: isSel ? AppTypography.adminBadge.copyWith(color: Colors.white) : AppTypography.adminTabInactive,
               ),
             ),
           );
@@ -160,20 +146,12 @@ class _SummaryStat extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: AppColors.adminPrimaryText,
-          ),
+          style: AppTypography.adminTableNumber,
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: AppColors.adminSecondaryText,
-          ),
+          style: AppTypography.adminTableSecondary,
         ),
       ],
     );

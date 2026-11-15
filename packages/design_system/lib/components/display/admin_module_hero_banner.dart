@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
+import '../../tokens/shadows.dart';
+import '../../tokens/typography.dart';
 
 /// Reusable purple-gradient hero banner for Admin Management modules
 /// (Notification Management, Referral & Earning, Promo Banners, etc.)
@@ -32,8 +34,8 @@ class AdminModuleHeroBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [
             Color(0xFF7628E8),
             Color(0xFF5B1EB8),
@@ -42,17 +44,11 @@ class AdminModuleHeroBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: AppRadii.borderXl,
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x334C16A8),
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
-        ],
+        borderRadius: AppRadii.adminCard,
+        boxShadow: AppShadows.adminHero,
       ),
       child: ClipRRect(
-        borderRadius: AppRadii.borderXl,
+        borderRadius: AppRadii.adminCard,
         child: Stack(
           children: [
             // Decorative background glowing circular elements
@@ -108,7 +104,7 @@ class AdminModuleHeroBanner extends StatelessWidget {
                     height: isDesktop ? 54 : 44,
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha(45),
-                      borderRadius: AppRadii.borderLg,
+                      borderRadius: AppRadii.adminCardInner,
                       border: Border.all(
                         color: Colors.white.withAlpha(60),
                         width: 1.5,
@@ -141,23 +137,16 @@ class AdminModuleHeroBanner extends StatelessWidget {
                         ],
                         Text(
                           title,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: isDesktop ? 22 : 18,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                            fontFamily: 'Plus Jakarta Sans',
-                          ),
+                          style: isDesktop
+                              ? AppTypography.adminModuleTitle
+                              : AppTypography.adminModuleTitle.copyWith(fontSize: 18),
                         ),
                         const SizedBox(height: 5),
                         Text(
                           subtitle,
-                          style: TextStyle(
-                            color: Colors.white.withAlpha(220),
-                            fontSize: isDesktop ? 13 : 12,
-                            fontWeight: FontWeight.w400,
-                            height: 1.35,
-                          ),
+                          style: isDesktop
+                              ? AppTypography.adminModuleSubtitle
+                              : AppTypography.adminModuleSubtitle.copyWith(fontSize: 12),
                         ),
                       ],
                     ),
@@ -176,19 +165,15 @@ class AdminModuleHeroBanner extends StatelessWidget {
                           : const SizedBox.shrink(),
                       label: Text(
                         actionLabel!,
-                        style: const TextStyle(
-                          color: AppColors.adminPrimaryText,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
+                        style: AppTypography.adminButtonSecondary,
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: AppColors.adminPrimaryText,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AppRadii.borderMd,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadii.adminControl,
                         ),
                       ),
                     ),

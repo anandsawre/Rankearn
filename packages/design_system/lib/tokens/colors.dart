@@ -35,6 +35,27 @@ class AppColors {
     end: Alignment.centerRight,
   );
 
+  // --- Admin Semantic Badges & Action Tokens ---
+  static const Color adminBlue = Color(0xFF2563EB);
+  static const Color adminBlueLight = Color(0xFFDBEAFE);
+  static const Color adminSky = Color(0xFF0284C7);
+  static const Color adminSkyLight = Color(0xFFE0F2FE);
+  static const Color adminAmber = Color(0xFFD97706);
+  static const Color adminAmberLight = Color(0xFFFEF3C7);
+  static const Color adminAmberDark = Color(0xFFB45309);
+  static const Color adminSuccessLight = Color(0xFFDCFCE7);
+  static const Color adminDangerLight = Color(0xFFFEE2E2);
+  static const Color adminNeutral = Color(0xFF64748B);
+  static const Color adminNeutralLight = Color(0xFFF1F5F9);
+  static const Color adminOrange = Color(0xFFF97316);
+  static const Color adminTeal = Color(0xFF0D9488);
+  static const Color adminViolet = Color(0xFF8B5CF6);
+
+  // Social Channels
+  static const Color socialWhatsApp = Color(0xFF25D366);
+  static const Color socialTelegram = Color(0xFF0088CC);
+  static const Color socialFacebook = Color(0xFF1877F2);
+
   // --- Battle Management Dashboard (Admin) Tokens ---
   static const Color battleAdminPurple = Color(0xFF7C3AED);
   static const Color battleAdminPurpleSecondary = Color(0xFFA855F7);

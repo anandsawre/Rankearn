@@ -438,4 +438,138 @@ class AppTypography {
     color: Color(0xFF94A3B8),
     fontFamilyFallback: fontFallbacks,
   );
+
+  // --- Admin Dashboard Semantic Typography Tokens ---
+  static const TextStyle adminModuleTitle = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 22,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.3,
+    color: Colors.white,
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle adminModuleSubtitle = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: Color(0xDCFFFFFF),
+    height: 1.35,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminCardTitle = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 18,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.2,
+    color: AppColors.adminPrimaryText,
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle adminCardSubtitle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: AppColors.adminSecondaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminSectionTitle = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 16,
+    fontWeight: FontWeight.w800,
+    color: AppColors.adminPrimaryText,
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle adminSectionCategory = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w800,
+    letterSpacing: 0.8,
+    color: AppColors.adminSecondaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminFieldLabel = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: AppColors.adminPrimaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminFieldLabelSmall = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    color: AppColors.adminPrimaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminTableHead = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w800,
+    letterSpacing: 0.5,
+    color: AppColors.adminSecondaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminTablePrimary = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: AppColors.adminPrimaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminTableSecondary = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    color: AppColors.adminSecondaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminTableNumber = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    color: AppColors.adminPrimaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminTableAccent = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w800,
+    color: AppColors.adminPurple,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminBadge = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w800,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminTabActive = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w800,
+    color: AppColors.adminPurple,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminTabInactive = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: AppColors.adminSecondaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminButtonPrimary = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: Colors.white,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle adminButtonSecondary = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: AppColors.adminPrimaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
 }

@@ -171,7 +171,7 @@ class _ReferralsTabState extends State<ReferralsTab> {
           children: [
             const Icon(Icons.share_rounded, color: AppColors.adminPurple),
             const SizedBox(width: 10),
-            const Text('Referral Log Details', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            Text('Referral Log Details', style: AppTypography.adminCardTitle),
           ],
         ),
         content: Column(
@@ -206,13 +206,13 @@ class _ReferralsTabState extends State<ReferralsTab> {
             width: 130,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.adminSecondaryText),
+              style: AppTypography.adminTableSecondary.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.adminPrimaryText),
+              style: AppTypography.adminTablePrimary,
             ),
           ),
         ],
@@ -226,7 +226,7 @@ class _ReferralsTabState extends State<ReferralsTab> {
     final isDesktop = screenWidth >= 1200;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: AppSpacing.adminPagePadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -239,7 +239,7 @@ class _ReferralsTabState extends State<ReferralsTab> {
             actionIcon: Icons.refresh_rounded,
             onAction: _fetchReferrals,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.adminGapCard),
 
           // 2. 5 Analytics KPI Cards
           ReferralsKpiRow(
@@ -249,7 +249,7 @@ class _ReferralsTabState extends State<ReferralsTab> {
             redeemedPaid: _referralLogs.isNotEmpty ? _referralLogs.length * 980 : 98400,
             conversionRate: 83.2,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.adminGapCard),
 
           // 3. Settings & Share Preview Section
           if (isDesktop)
@@ -273,7 +273,7 @@ class _ReferralsTabState extends State<ReferralsTab> {
                     onSave: _saveSettings,
                   ),
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: AppSpacing.adminGapCard),
                 const SizedBox(
                   width: 400,
                   child: ReferralSharePreviewCard(),
@@ -295,10 +295,10 @@ class _ReferralsTabState extends State<ReferralsTab> {
               onReset: _resetSettings,
               onSave: _saveSettings,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.adminGapCard),
             const ReferralSharePreviewCard(),
           ],
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.adminGapCard),
 
           // 4. Analytics Performance Chart & Quick Actions
           if (isDesktop)
@@ -309,7 +309,7 @@ class _ReferralsTabState extends State<ReferralsTab> {
                   flex: 5,
                   child: ReferralAnalyticsCard(),
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: AppSpacing.adminGapCard),
                 SizedBox(
                   width: 400,
                   child: ReferralQuickActionsCard(onAction: _handleQuickAction),
@@ -318,10 +318,10 @@ class _ReferralsTabState extends State<ReferralsTab> {
             )
           else ...[
             const ReferralAnalyticsCard(),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.adminGapCard),
             ReferralQuickActionsCard(onAction: _handleQuickAction),
           ],
-          const SizedBox(height: 28),
+          const SizedBox(height: AppSpacing.adminGapSection),
 
           // 5. Recent Referrals Data Table
           RecentReferralsTable(

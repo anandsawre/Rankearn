@@ -135,19 +135,13 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0810143A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
+        borderRadius: AppRadii.adminCard,
+        border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
+        boxShadow: AppShadows.adminCard,
       ),
-      padding: const EdgeInsets.all(24),
+      padding: AppSpacing.adminCardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -157,9 +151,9 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.adminPurpleLight,
-                  borderRadius: AppRadii.borderMd,
+                  borderRadius: AppRadii.adminControl,
                 ),
                 child: const Icon(
                   Icons.edit_notifications_rounded,
@@ -174,20 +168,12 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                   children: [
                     Text(
                       'Create Notification',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.adminPrimaryText,
-                        letterSpacing: -0.2,
-                      ),
+                      style: AppTypography.adminCardTitle,
                     ),
                     SizedBox(height: 2),
                     Text(
                       'Compose, target and dispatch alerts across channels',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.adminSecondaryText,
-                      ),
+                      style: AppTypography.adminCardSubtitle,
                     ),
                   ],
                 ),
@@ -199,12 +185,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           // Channel Selector
           const Text(
             'NOTIFICATION CHANNEL',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: AppColors.adminSecondaryText,
-              letterSpacing: 0.8,
-            ),
+            style: AppTypography.adminSectionCategory,
           ),
           const SizedBox(height: 10),
           _buildChannelPills(),
@@ -213,11 +194,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           // Notification Title
           const Text(
             'Notification Title *',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppColors.adminPrimaryText,
-            ),
+            style: AppTypography.adminFieldLabel,
           ),
           const SizedBox(height: 8),
           AppTextField(
@@ -233,11 +210,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
             children: [
               const Text(
                 'Notification Message *',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.adminPrimaryText,
-                ),
+                style: AppTypography.adminFieldLabel,
               ),
               Text(
                 '$_charCount/$_maxChars',
@@ -468,21 +441,15 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                       foregroundColor: AppColors.adminPrimaryText,
                       side: const BorderSide(color: AppColors.adminBorder),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                      shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+                      shape: const RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: AppColors.adminPurpleGradient,
-                      borderRadius: AppRadii.borderMd,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x407628E8),
-                          blurRadius: 10,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
+                      borderRadius: AppRadii.adminControl,
+                      boxShadow: AppShadows.adminPrimaryButton,
                     ),
                     child: ElevatedButton.icon(
                       onPressed: widget.isSubmitting ? null : widget.onSendNow,
@@ -503,17 +470,13 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                             : widget.isScheduled
                                 ? 'Schedule Notification'
                                 : 'Send Now',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
+                        style: AppTypography.adminButtonPrimary,
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+                        shape: const RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
                       ),
                     ),
                   ),
@@ -540,26 +503,18 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
         final isSelected = widget.selectedChannel == c['id'];
         return InkWell(
           onTap: () => widget.onChannelChanged(c['id'] as String),
-          borderRadius: AppRadii.borderMd,
+          borderRadius: AppRadii.adminControl,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
             decoration: BoxDecoration(
               color: isSelected ? AppColors.adminPurple : Colors.white,
-              borderRadius: AppRadii.borderMd,
+              borderRadius: AppRadii.adminControl,
               border: Border.all(
                 color: isSelected ? AppColors.adminPurple : AppColors.adminBorder,
                 width: 1.2,
               ),
-              boxShadow: isSelected
-                  ? const [
-                      BoxShadow(
-                        color: Color(0x307628E8),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ]
-                  : null,
+              boxShadow: isSelected ? AppShadows.adminSubtle : null,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

@@ -254,10 +254,10 @@ class _BannersTabState extends State<BannersTab> {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: AppRadii.borderXl),
+        shape: RoundedRectangleBorder(borderRadius: AppRadii.adminCard),
         child: Container(
           width: 520,
-          padding: const EdgeInsets.all(24),
+          padding: AppSpacing.adminCardPadding,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,7 +265,7 @@ class _BannersTabState extends State<BannersTab> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Live Banner Preview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                  Text('Live Banner Preview', style: AppTypography.adminCardTitle),
                   IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close_rounded)),
                 ],
               ),
@@ -274,7 +274,7 @@ class _BannersTabState extends State<BannersTab> {
                 width: double.infinity,
                 height: 200,
                 decoration: BoxDecoration(
-                  borderRadius: AppRadii.borderLg,
+                  borderRadius: AppRadii.adminControl,
                   color: AppColors.adminPurpleLight,
                   border: Border.all(color: AppColors.adminBorder),
                 ),
@@ -290,12 +290,15 @@ class _BannersTabState extends State<BannersTab> {
               const SizedBox(height: 16),
               Text(
                 _titleController.text.isNotEmpty ? _titleController.text : 'Promotional Headline',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.adminPrimaryText),
+                style: AppTypography.adminCardTitle,
               ),
               const SizedBox(height: 4),
               Text(
                 'Target Destination: ${_linkController.text}',
-                style: const TextStyle(fontSize: 12, color: AppColors.adminPurple, fontWeight: FontWeight.w600),
+                style: AppTypography.adminTableSecondary.copyWith(
+                  color: AppColors.adminPurple,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -314,8 +317,8 @@ class _BannersTabState extends State<BannersTab> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(6)),
-            child: const Text('PROMOTIONAL', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+            decoration: BoxDecoration(color: Colors.white24, borderRadius: AppRadii.adminStatusPill),
+            child: Text('PROMOTIONAL', style: AppTypography.adminBadge.copyWith(color: Colors.white)),
           ),
           const SizedBox(height: 10),
           Text(
@@ -335,7 +338,7 @@ class _BannersTabState extends State<BannersTab> {
           children: [
             const Icon(Icons.insights_rounded, color: AppColors.adminPurple),
             const SizedBox(width: 10),
-            Expanded(child: Text(item['title']?.toString() ?? 'Banner Analytics', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800))),
+            Expanded(child: Text(item['title']?.toString() ?? 'Banner Analytics', style: AppTypography.adminCardTitle)),
           ],
         ),
         content: Column(
@@ -361,8 +364,8 @@ class _BannersTabState extends State<BannersTab> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.adminSecondaryText)),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.adminPrimaryText)),
+          Text(label, style: AppTypography.adminTableSecondary),
+          Text(value, style: AppTypography.adminTableNumber),
         ],
       ),
     );
@@ -375,7 +378,7 @@ class _BannersTabState extends State<BannersTab> {
     final inactiveCount = _promotionalBanners.length - activeCount;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: AppSpacing.adminPagePadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -388,7 +391,7 @@ class _BannersTabState extends State<BannersTab> {
             actionIcon: Icons.refresh_rounded,
             onAction: _loadBanners,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.adminGapCard),
 
           // 2. 7 Analytics KPI Cards
           BannersKpiRow(
@@ -400,7 +403,7 @@ class _BannersTabState extends State<BannersTab> {
             totalClicks: _promotionalBanners.isNotEmpty ? _promotionalBanners.length * 1180 : 28300,
             ctr: 19.1,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.adminGapCard),
 
           // 3. Create / Update Banner Form Card
           CreateBannerCard(
@@ -426,7 +429,7 @@ class _BannersTabState extends State<BannersTab> {
             onSave: _saveBanner,
             onPreview: _previewBanner,
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: AppSpacing.adminGapSection),
 
           // 4. Banners Data Table Card
           BannersDataTable(

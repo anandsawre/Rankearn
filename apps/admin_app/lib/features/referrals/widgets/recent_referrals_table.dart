@@ -54,19 +54,13 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
         : <Map<String, dynamic>>[];
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0810143A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
+        borderRadius: AppRadii.adminCard,
+        border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
+        boxShadow: AppShadows.adminCard,
       ),
-      padding: const EdgeInsets.all(22),
+      padding: AppSpacing.adminCardPaddingCompact,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -111,12 +105,7 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
                 constraints: const BoxConstraints(minWidth: 850),
                 child: DataTable(
                   headingRowColor: WidgetStateProperty.all(AppColors.adminBackground),
-                  headingTextStyle: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.adminSecondaryText,
-                    letterSpacing: 0.5,
-                  ),
+                  headingTextStyle: AppTypography.adminTableHead,
                   dataRowMinHeight: 64,
                   dataRowMaxHeight: 70,
                   horizontalMargin: 16,
@@ -149,11 +138,7 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
                                 backgroundColor: AppColors.adminPurpleLight,
                                 child: Text(
                                   refereeName.isNotEmpty ? refereeName[0].toUpperCase() : 'U',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.adminPurple,
-                                  ),
+                                  style: AppTypography.adminTablePrimary.copyWith(color: AppColors.adminPurple),
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -163,18 +148,11 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
                                 children: [
                                   Text(
                                     refereeName,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.adminPrimaryText,
-                                    ),
+                                    style: AppTypography.adminTablePrimary,
                                   ),
                                   Text(
                                     refereeEmail,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppColors.adminSecondaryText,
-                                    ),
+                                    style: AppTypography.adminTableSecondary,
                                   ),
                                 ],
                               ),
@@ -190,26 +168,18 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
                             children: [
                               Text(
                                 referrerName,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.adminPrimaryText,
-                                ),
+                                style: AppTypography.adminTablePrimary,
                               ),
                               Container(
                                 margin: const EdgeInsets.only(top: 2),
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: AppColors.adminPurpleLight.withAlpha(90),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: AppRadii.adminBadge,
                                 ),
                                 child: Text(
                                   code,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.adminPurple,
-                                  ),
+                                  style: AppTypography.adminBadge.copyWith(color: AppColors.adminPurple),
                                 ),
                               ),
                             ],
@@ -224,10 +194,9 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
                               const SizedBox(width: 6),
                               Text(
                                 date,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.adminPrimaryText,
+                                style: AppTypography.adminTableSecondary.copyWith(
                                   fontWeight: FontWeight.w500,
+                                  color: AppColors.adminPrimaryText,
                                 ),
                               ),
                             ],
@@ -239,21 +208,17 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3C7),
-                              borderRadius: BorderRadius.circular(6),
+                              color: AppColors.adminAmberLight,
+                              borderRadius: AppRadii.adminBadge,
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.monetization_on_rounded, size: 13, color: Color(0xFFD97706)),
+                                const Icon(Icons.monetization_on_rounded, size: 13, color: AppColors.adminAmber),
                                 const SizedBox(width: 4),
                                 Text(
                                   '+$bonusCoins Coins',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFFB45309),
-                                  ),
+                                  style: AppTypography.adminBadge.copyWith(color: AppColors.adminAmberDark),
                                 ),
                               ],
                             ),
@@ -334,7 +299,7 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.adminBackground,
-        borderRadius: AppRadii.borderMd,
+        borderRadius: AppRadii.adminControl,
         border: Border.all(color: AppColors.adminBorder),
       ),
       child: Row(
@@ -346,30 +311,18 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
               _statusFilter = t['id']!;
               _currentPage = 1;
             }),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadii.adminTab,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: isSelected
-                    ? const [
-                        BoxShadow(
-                          color: Color(0x10000000),
-                          blurRadius: 4,
-                          offset: Offset(0, 1),
-                        ),
-                      ]
-                    : null,
+                borderRadius: AppRadii.adminTab,
+                boxShadow: isSelected ? AppShadows.adminSubtle : null,
               ),
               child: Text(
                 t['label']!,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? AppColors.adminPurple : AppColors.adminSecondaryText,
-                ),
+                style: isSelected ? AppTypography.adminTabActive : AppTypography.adminTabInactive,
               ),
             ),
           );
@@ -395,13 +348,13 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
           contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
           filled: true,
           fillColor: AppColors.adminBackground,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: AppRadii.borderMd,
-            borderSide: const BorderSide(color: AppColors.adminBorder),
+          enabledBorder: const OutlineInputBorder(
+            borderRadius: AppRadii.adminControl,
+            borderSide: BorderSide(color: AppColors.adminBorder),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: AppRadii.borderMd,
-            borderSide: const BorderSide(color: AppColors.adminPurple, width: 1.5),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: AppRadii.adminControl,
+            borderSide: BorderSide(color: AppColors.adminPurple, width: 1.5),
           ),
         ),
       ),
@@ -415,17 +368,17 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
 
     switch (status.toLowerCase()) {
       case 'pending':
-        bg = const Color(0xFFFEF3C7);
-        fg = const Color(0xFFD97706);
+        bg = AppColors.adminAmberLight;
+        fg = AppColors.adminAmber;
         icon = Icons.hourglass_top_rounded;
         break;
       case 'rejected':
-        bg = const Color(0xFFFEE2E2);
+        bg = AppColors.adminDangerLight;
         fg = AppColors.adminDanger;
         icon = Icons.cancel_outlined;
         break;
       default: // credited
-        bg = const Color(0xFFDCFCE7);
+        bg = AppColors.adminSuccessLight;
         fg = AppColors.adminSuccess;
         icon = Icons.check_circle_outline_rounded;
     }
@@ -434,7 +387,7 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadii.adminStatusPill,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -443,11 +396,7 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
           const SizedBox(width: 4),
           Text(
             status.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: fg,
-            ),
+            style: AppTypography.adminBadge.copyWith(color: fg),
           ),
         ],
       ),

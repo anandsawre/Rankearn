@@ -34,19 +34,13 @@ class ReferralSettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0810143A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
+        borderRadius: AppRadii.adminCard,
+        border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
+        boxShadow: AppShadows.adminCard,
       ),
-      padding: const EdgeInsets.all(24),
+      padding: AppSpacing.adminCardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -55,9 +49,9 @@ class ReferralSettingsCard extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.adminPurpleLight,
-                  borderRadius: AppRadii.borderMd,
+                  borderRadius: AppRadii.adminControl,
                 ),
                 child: const Icon(
                   Icons.tune_rounded,
@@ -72,20 +66,12 @@ class ReferralSettingsCard extends StatelessWidget {
                   children: [
                     Text(
                       'Referral Program Settings',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.adminPrimaryText,
-                        letterSpacing: -0.2,
-                      ),
+                      style: AppTypography.adminCardTitle,
                     ),
                     SizedBox(height: 2),
                     Text(
                       'Configure reward quotas, auto credit rules & payouts',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.adminSecondaryText,
-                      ),
+                      style: AppTypography.adminCardSubtitle,
                     ),
                   ],
                 ),
@@ -146,7 +132,7 @@ class ReferralSettingsCard extends StatelessWidget {
             title: 'Reward on First Transaction',
             subtitle: 'Require referee to participate in 1 test or contest before release',
             value: rewardOnFirstTx,
-            activeColor: const Color(0xFF2563EB),
+            activeColor: AppColors.adminBlue,
             onChanged: onRewardOnFirstTxChanged,
           ),
           const SizedBox(height: 24),
@@ -165,16 +151,10 @@ class ReferralSettingsCard extends StatelessWidget {
                 ),
               ),
               Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: AppColors.adminPurpleGradient,
-                  borderRadius: AppRadii.borderMd,
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x407628E8),
-                      blurRadius: 10,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
+                  borderRadius: AppRadii.adminControl,
+                  boxShadow: AppShadows.adminPrimaryButton,
                 ),
                 child: ElevatedButton.icon(
                   onPressed: isSaving ? null : onSave,
@@ -187,17 +167,13 @@ class ReferralSettingsCard extends StatelessWidget {
                       : const Icon(Icons.check_circle_outline_rounded, size: 16, color: Colors.white),
                   label: Text(
                     isSaving ? 'Saving...' : 'Save Settings',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
+                    style: AppTypography.adminButtonPrimary,
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+                    shape: const RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
                   ),
                 ),
               ),
@@ -219,11 +195,7 @@ class ReferralSettingsCard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: AppColors.adminPrimaryText,
-          ),
+          style: AppTypography.adminFieldLabelSmall,
         ),
         const SizedBox(height: 8),
         AppTextField(
@@ -234,11 +206,7 @@ class ReferralSettingsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Text(
               unit,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: AppColors.adminPurple,
-              ),
+              style: AppTypography.adminTableAccent,
             ),
           ),
         ),
@@ -262,19 +230,12 @@ class ReferralSettingsCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.adminPrimaryText,
-                ),
+                style: AppTypography.adminFieldLabel,
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.adminSecondaryText,
-                ),
+                style: AppTypography.adminTableSecondary,
               ),
             ],
           ),

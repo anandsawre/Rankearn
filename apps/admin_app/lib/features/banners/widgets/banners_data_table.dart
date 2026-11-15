@@ -62,17 +62,11 @@ class _BannersDataTableState extends State<BannersDataTable> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.borderXl,
+        borderRadius: AppRadii.adminCard,
         border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0810143A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: AppShadows.adminCard,
       ),
-      padding: const EdgeInsets.all(22),
+      padding: AppSpacing.adminCardPaddingCompact,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -117,12 +111,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
                 constraints: const BoxConstraints(minWidth: 960),
                 child: DataTable(
                   headingRowColor: WidgetStateProperty.all(AppColors.adminBackground),
-                  headingTextStyle: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.adminSecondaryText,
-                    letterSpacing: 0.5,
-                  ),
+                  headingTextStyle: AppTypography.adminTableHead,
                   dataRowMinHeight: 68,
                   dataRowMaxHeight: 76,
                   horizontalMargin: 16,
@@ -159,7 +148,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
                             height: 42,
                             decoration: BoxDecoration(
                               color: AppColors.adminBackground,
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: AppRadii.adminControl,
                               border: Border.all(color: AppColors.adminBorder),
                             ),
                             clipBehavior: Clip.antiAlias,
@@ -191,11 +180,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
                               children: [
                                 Text(
                                   title,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.adminPrimaryText,
-                                  ),
+                                  style: AppTypography.adminTablePrimary,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -207,8 +192,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
                                     Expanded(
                                       child: Text(
                                         link,
-                                        style: const TextStyle(
-                                          fontSize: 11,
+                                        style: AppTypography.adminTableSecondary.copyWith(
                                           color: AppColors.adminPurple,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -232,15 +216,14 @@ class _BannersDataTableState extends State<BannersDataTable> {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppColors.adminBackground,
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: AppRadii.adminControl,
                               border: Border.all(color: AppColors.adminBorder),
                             ),
                             child: Text(
                               display,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                              style: AppTypography.adminTableSecondary.copyWith(
                                 color: AppColors.adminPrimaryText,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -253,15 +236,13 @@ class _BannersDataTableState extends State<BannersDataTable> {
                               Icon(
                                 isScheduled ? Icons.date_range_rounded : Icons.all_inclusive_rounded,
                                 size: 13,
-                                color: isScheduled ? const Color(0xFF0284C7) : AppColors.adminSecondaryText,
+                                color: isScheduled ? AppColors.adminSky : AppColors.adminSecondaryText,
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 schedule,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: isScheduled ? const Color(0xFF0284C7) : AppColors.adminPrimaryText,
-                                  fontWeight: FontWeight.w500,
+                                style: AppTypography.adminTableSecondary.copyWith(
+                                  color: isScheduled ? AppColors.adminSky : AppColors.adminPrimaryText,
                                 ),
                               ),
                             ],
@@ -272,11 +253,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
                         DataCell(
                           Text(
                             views,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.adminPrimaryText,
-                            ),
+                            style: AppTypography.adminTableNumber,
                           ),
                         ),
 
@@ -284,11 +261,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
                         DataCell(
                           Text(
                             clicks,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.adminPrimaryText,
-                            ),
+                            style: AppTypography.adminTableNumber,
                           ),
                         ),
 
@@ -296,11 +269,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
                         DataCell(
                           Text(
                             ctr,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.adminPurple,
-                            ),
+                            style: AppTypography.adminTableAccent,
                           ),
                         ),
 
@@ -318,14 +287,14 @@ class _BannersDataTableState extends State<BannersDataTable> {
                               const SizedBox(width: 4),
                               _buildActionButton(
                                 icon: isActive ? Icons.pause_circle_outline_rounded : Icons.play_circle_outline_rounded,
-                                color: isActive ? const Color(0xFFF97316) : AppColors.adminSuccess,
+                                color: isActive ? AppColors.adminOrange : AppColors.adminSuccess,
                                 tooltip: isActive ? 'Pause Banner' : 'Activate Banner',
                                 onTap: () => widget.onToggleStatus?.call(item),
                               ),
                               const SizedBox(width: 4),
                               _buildActionButton(
                                 icon: Icons.insights_rounded,
-                                color: const Color(0xFF2563EB),
+                                color: AppColors.adminBlue,
                                 tooltip: 'Analytics',
                                 onTap: () => widget.onAnalytics?.call(item),
                               ),
@@ -401,7 +370,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.adminBackground,
-        borderRadius: AppRadii.borderMd,
+        borderRadius: AppRadii.adminTab,
         border: Border.all(color: AppColors.adminBorder),
       ),
       child: Row(
@@ -413,30 +382,18 @@ class _BannersDataTableState extends State<BannersDataTable> {
               _activeTab = t['id']!;
               _currentPage = 1;
             }),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadii.adminTab,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: isSelected
-                    ? const [
-                        BoxShadow(
-                          color: Color(0x10000000),
-                          blurRadius: 4,
-                          offset: Offset(0, 1),
-                        ),
-                      ]
-                    : null,
+                borderRadius: AppRadii.adminTab,
+                boxShadow: isSelected ? AppShadows.adminSubtle : null,
               ),
               child: Text(
                 t['label']!,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? AppColors.adminPurple : AppColors.adminSecondaryText,
-                ),
+                style: isSelected ? AppTypography.adminTabActive : AppTypography.adminTabInactive,
               ),
             ),
           );
@@ -454,20 +411,20 @@ class _BannersDataTableState extends State<BannersDataTable> {
           _searchQuery = v;
           _currentPage = 1;
         }),
-        style: const TextStyle(fontSize: 12, color: AppColors.adminPrimaryText),
+        style: AppTypography.adminTablePrimary,
         decoration: InputDecoration(
           hintText: 'Search banners...',
-          hintStyle: const TextStyle(fontSize: 12, color: AppColors.adminSecondaryText),
+          hintStyle: AppTypography.adminTableSecondary,
           prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.adminSecondaryText),
           contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
           filled: true,
           fillColor: AppColors.adminBackground,
           enabledBorder: OutlineInputBorder(
-            borderRadius: AppRadii.borderMd,
+            borderRadius: AppRadii.adminControl,
             borderSide: const BorderSide(color: AppColors.adminBorder),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: AppRadii.borderMd,
+            borderRadius: AppRadii.adminControl,
             borderSide: const BorderSide(color: AppColors.adminPurple, width: 1.5),
           ),
         ),
@@ -482,18 +439,18 @@ class _BannersDataTableState extends State<BannersDataTable> {
     String label;
 
     if (isScheduled) {
-      bg = const Color(0xFFE0F2FE);
-      fg = const Color(0xFF0284C7);
+      bg = AppColors.adminSkyLight;
+      fg = AppColors.adminSky;
       icon = Icons.schedule_rounded;
       label = 'SCHEDULED';
     } else if (isActive) {
-      bg = const Color(0xFFDCFCE7);
+      bg = AppColors.adminSuccessLight;
       fg = AppColors.adminSuccess;
       icon = Icons.check_circle_outline_rounded;
       label = 'ACTIVE';
     } else {
-      bg = const Color(0xFFF1F5F9);
-      fg = const Color(0xFF64748B);
+      bg = AppColors.adminNeutralLight;
+      fg = AppColors.adminNeutral;
       icon = Icons.pause_circle_outline_rounded;
       label = 'INACTIVE';
     }
@@ -502,7 +459,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadii.adminStatusPill,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -511,11 +468,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: fg,
-            ),
+            style: AppTypography.adminBadge.copyWith(color: fg),
           ),
         ],
       ),
@@ -532,12 +485,12 @@ class _BannersDataTableState extends State<BannersDataTable> {
       message: tooltip,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: AppRadii.adminControl,
         child: Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: color.withAlpha(20),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: AppRadii.adminControl,
           ),
           child: Icon(icon, size: 15, color: color),
         ),
@@ -561,21 +514,14 @@ class _BannersDataTableState extends State<BannersDataTable> {
               child: const Icon(Icons.photo_library_outlined, color: AppColors.adminPurple, size: 28),
             ),
             const SizedBox(height: 14),
-            const Text(
+            Text(
               'No Banners Found',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.adminPrimaryText,
-              ),
+              style: AppTypography.adminCardTitle,
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'No promotional banners match your current filter or query.',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.adminSecondaryText,
-              ),
+              style: AppTypography.adminCardSubtitle,
             ),
           ],
         ),

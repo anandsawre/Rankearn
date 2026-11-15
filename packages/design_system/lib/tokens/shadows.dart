@@ -72,4 +72,45 @@ class AppShadows {
       offset: Offset(0, 8),
     ),
   ];
+
+  // --- Admin Dashboard Shadow Tokens ---
+  static const List<BoxShadow> adminCard = [
+    BoxShadow(
+      color: Color(0x0810143A),
+      blurRadius: 14,
+      offset: Offset(0, 4),
+    ),
+  ];
+
+  static const List<BoxShadow> adminPrimaryButton = [
+    BoxShadow(
+      color: Color(0x407628E8),
+      blurRadius: 10,
+      offset: Offset(0, 3),
+    ),
+  ];
+
+  static const List<BoxShadow> adminHero = [
+    BoxShadow(
+      color: Color(0x334C16A8),
+      blurRadius: 18,
+      offset: Offset(0, 6),
+    ),
+  ];
+
+  static const List<BoxShadow> adminSubtle = [
+    BoxShadow(
+      color: Color(0x10000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
+
+  static const List<BoxShadow> adminBanner = [
+    BoxShadow(
+      color: Color(0x285636F5),
+      blurRadius: 12,
+      offset: Offset(0, 4),
+    ),
+  ];
 }

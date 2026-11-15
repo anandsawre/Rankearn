@@ -17,19 +17,13 @@ class ReferralSharePreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0810143A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
+        borderRadius: AppRadii.adminCard,
+        border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
+        boxShadow: AppShadows.adminCard,
       ),
-      padding: const EdgeInsets.all(22),
+      padding: AppSpacing.adminCardPaddingCompact,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -40,11 +34,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
               const Expanded(
                 child: Text(
                   'Referral Link & Share Preview',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.adminPrimaryText,
-                  ),
+                  style: AppTypography.adminSectionTitle,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -56,20 +46,14 @@ class ReferralSharePreviewCard extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
                 colors: [Color(0xFF5636F5), Color(0xFF7628E8), Color(0xFF9333EA)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: AppRadii.borderLg,
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x285636F5),
-                  blurRadius: 12,
-                  offset: Offset(0, 4),
-                ),
-              ],
+              borderRadius: AppRadii.adminCardInner,
+              boxShadow: AppShadows.adminBanner,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,11 +192,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
           // Social Share Buttons
           const Text(
             'Share Campaign Via',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.adminPrimaryText,
-            ),
+            style: AppTypography.adminFieldLabelSmall,
           ),
           const SizedBox(height: 10),
           Row(
@@ -221,7 +201,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
                 child: _buildShareButton(
                   icon: Icons.chat_rounded,
                   label: 'WhatsApp',
-                  color: const Color(0xFF25D366),
+                  color: AppColors.socialWhatsApp,
                   onTap: () => onSocialShare?.call('whatsapp'),
                 ),
               ),
@@ -230,7 +210,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
                 child: _buildShareButton(
                   icon: Icons.send_rounded,
                   label: 'Telegram',
-                  color: const Color(0xFF0088CC),
+                  color: AppColors.socialTelegram,
                   onTap: () => onSocialShare?.call('telegram'),
                 ),
               ),
@@ -239,7 +219,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
                 child: _buildShareButton(
                   icon: Icons.facebook_rounded,
                   label: 'Facebook',
-                  color: const Color(0xFF1877F2),
+                  color: AppColors.socialFacebook,
                   onTap: () => onSocialShare?.call('facebook'),
                 ),
               ),
@@ -248,7 +228,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
                 child: _buildShareButton(
                   icon: Icons.share_rounded,
                   label: 'Native',
-                  color: const Color(0xFF6366F1),
+                  color: AppColors.adminViolet,
                   onTap: () => onSocialShare?.call('native'),
                 ),
               ),

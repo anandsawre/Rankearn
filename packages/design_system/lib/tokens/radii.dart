@@ -40,4 +40,13 @@ class AppRadii {
   static const BorderRadius pollCard = BorderRadius.all(Radius.circular(18.0));
   static const BorderRadius pollOption = BorderRadius.all(Radius.circular(12.0));
   static const BorderRadius pollCanvas = BorderRadius.all(Radius.circular(20.0));
+
+  // --- Admin Dashboard Semantic Radii Tokens ---
+  static const BorderRadius adminCard = borderXl;
+  static const BorderRadius adminCardInner = borderLg;
+  static const BorderRadius adminControl = borderMd;
+  static const BorderRadius adminTab = borderSm;
+  static const BorderRadius adminBadge = BorderRadius.all(Radius.circular(6.0));
+  static const BorderRadius adminStatusPill = BorderRadius.all(Radius.circular(12.0));
+  static const BorderRadius adminRoundPill = borderPill;
 }

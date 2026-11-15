@@ -108,17 +108,11 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.borderXl,
+        borderRadius: AppRadii.adminCard,
         border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0810143A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: AppShadows.adminCard,
       ),
-      padding: const EdgeInsets.all(24),
+      padding: AppSpacing.adminCardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -130,7 +124,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                 height: 40,
                 decoration: BoxDecoration(
                   color: AppColors.adminPurpleLight,
-                  borderRadius: AppRadii.borderMd,
+                  borderRadius: AppRadii.adminControl,
                 ),
                 child: const Icon(
                   Icons.add_photo_alternate_rounded,
@@ -139,26 +133,18 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                 ),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Create / Update Promo Banner',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.adminPrimaryText,
-                        letterSpacing: -0.2,
-                      ),
+                      style: AppTypography.adminCardTitle,
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       'Upload banner creatives, set target links, schedule and display modes',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.adminSecondaryText,
-                      ),
+                      style: AppTypography.adminCardSubtitle,
                     ),
                   ],
                 ),
@@ -168,14 +154,9 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           const SizedBox(height: 22),
 
           // Image Upload & Preview Box
-          const Text(
+          Text(
             'BANNER IMAGE (RECOMMENDED 1200 x 500 PX) *',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: AppColors.adminSecondaryText,
-              letterSpacing: 0.8,
-            ),
+            style: AppTypography.adminSectionCategory,
           ),
           const SizedBox(height: 10),
           _buildImageUploader(),
@@ -236,9 +217,9 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Display Priority (1-10)',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.adminPrimaryText),
+                      style: AppTypography.adminFieldLabel,
                     ),
                     const SizedBox(height: 8),
                     AppTextField(
@@ -254,9 +235,9 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Status',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.adminPrimaryText),
+                    style: AppTypography.adminFieldLabel,
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -292,27 +273,20 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.calendar_month_rounded, size: 20, color: AppColors.adminPurple),
-                  SizedBox(width: 10),
+                  const Icon(Icons.calendar_month_rounded, size: 20, color: AppColors.adminPurple),
+                  const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Schedule Banner Campaign',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.adminPrimaryText,
-                        ),
+                        style: AppTypography.adminFieldLabel,
                       ),
                       Text(
                         'Automatically publish and unpublish between specific dates',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.adminSecondaryText,
-                        ),
+                        style: AppTypography.adminTableSecondary,
                       ),
                     ],
                   ),
@@ -334,12 +308,12 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                 Expanded(
                   child: InkWell(
                     onTap: () => _pickDate(true),
-                    borderRadius: AppRadii.borderMd,
+                    borderRadius: AppRadii.adminControl,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
                         color: AppColors.adminBackground,
-                        borderRadius: AppRadii.borderMd,
+                        borderRadius: AppRadii.adminControl,
                         border: Border.all(color: AppColors.adminBorder),
                       ),
                       child: Row(
@@ -351,7 +325,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                               widget.startDate != null
                                   ? 'Start: ${widget.startDate!.toLocal().toString().split(' ').first}'
                                   : 'Select Start Date',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              style: AppTypography.adminTablePrimary,
                             ),
                           ),
                         ],
@@ -363,24 +337,24 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                 Expanded(
                   child: InkWell(
                     onTap: () => _pickDate(false),
-                    borderRadius: AppRadii.borderMd,
+                    borderRadius: AppRadii.adminControl,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
                         color: AppColors.adminBackground,
-                        borderRadius: AppRadii.borderMd,
+                        borderRadius: AppRadii.adminControl,
                         border: Border.all(color: AppColors.adminBorder),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.event_busy_rounded, size: 18, color: Color(0xFFF97316)),
+                          const Icon(Icons.event_busy_rounded, size: 18, color: AppColors.adminOrange),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               widget.endDate != null
                                   ? 'End: ${widget.endDate!.toLocal().toString().split(' ').first}'
                                   : 'Select End Date',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              style: AppTypography.adminTablePrimary,
                             ),
                           ),
                         ],
@@ -416,21 +390,15 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                       foregroundColor: AppColors.adminPrimaryText,
                       side: const BorderSide(color: AppColors.adminBorder),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                      shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+                      shape: RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Container(
                     decoration: BoxDecoration(
                       gradient: AppColors.adminPurpleGradient,
-                      borderRadius: AppRadii.borderMd,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x407628E8),
-                          blurRadius: 10,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
+                      borderRadius: AppRadii.adminControl,
+                      boxShadow: AppShadows.adminPrimaryButton,
                     ),
                     child: ElevatedButton.icon(
                       onPressed: widget.isSaving ? null : widget.onSave,
@@ -443,17 +411,13 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                           : const Icon(Icons.save_rounded, size: 16, color: Colors.white),
                       label: Text(
                         widget.isSaving ? 'Saving...' : 'Save Banner',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
+                        style: AppTypography.adminButtonPrimary,
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: AppRadii.borderMd),
+                        shape: RoundedRectangleBorder(borderRadius: AppRadii.adminControl),
                       ),
                     ),
                   ),
@@ -476,7 +440,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           height: 150,
           decoration: BoxDecoration(
             color: AppColors.adminBackground,
-            borderRadius: AppRadii.borderLg,
+            borderRadius: AppRadii.adminControl,
             border: Border.all(
               color: hasImage ? AppColors.adminPurple : AppColors.adminBorder,
               width: hasImage ? 1.5 : 1,
@@ -484,7 +448,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           ),
           child: hasImage
               ? ClipRRect(
-                  borderRadius: AppRadii.borderLg,
+                  borderRadius: AppRadii.adminControl,
                   child: Stack(
                     children: [
                       Positioned.fill(
@@ -589,9 +553,9 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Banner Title *',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.adminPrimaryText),
+          style: AppTypography.adminFieldLabel,
         ),
         const SizedBox(height: 8),
         AppTextField(
@@ -607,9 +571,9 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Target Link / Route *',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.adminPrimaryText),
+          style: AppTypography.adminFieldLabel,
         ),
         const SizedBox(height: 8),
         AppTextField(
@@ -634,16 +598,16 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Banner Type *',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.adminPrimaryText),
+          style: AppTypography.adminFieldLabel,
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: AppRadii.borderMd,
+            borderRadius: AppRadii.adminControl,
             border: Border.all(color: AppColors.adminBorder),
           ),
           child: DropdownButtonHideUnderline(
@@ -654,7 +618,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
               items: types.map((t) {
                 return DropdownMenuItem<String>(
                   value: t['value'],
-                  child: Text(t['label']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                  child: Text(t['label']!, style: AppTypography.adminTablePrimary),
                 );
               }).toList(),
               onChanged: (v) {
@@ -679,16 +643,16 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Display Mode / Placement *',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.adminPrimaryText),
+          style: AppTypography.adminFieldLabel,
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: AppRadii.borderMd,
+            borderRadius: AppRadii.adminControl,
             border: Border.all(color: AppColors.adminBorder),
           ),
           child: DropdownButtonHideUnderline(
@@ -699,7 +663,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
               items: modes.map((m) {
                 return DropdownMenuItem<String>(
                   value: m['value'],
-                  child: Text(m['label']!, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                  child: Text(m['label']!, style: AppTypography.adminTablePrimary),
                 );
               }).toList(),
               onChanged: (v) {

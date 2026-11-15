@@ -11,31 +11,21 @@ class ReferralQuickActionsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.borderXl,
+        borderRadius: AppRadii.adminCard,
         border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0810143A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: AppShadows.adminCard,
       ),
-      padding: const EdgeInsets.all(22),
+      padding: AppSpacing.adminCardPaddingCompact,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.bolt_rounded, size: 20, color: AppColors.adminWarning),
-              SizedBox(width: 8),
+              const Icon(Icons.bolt_rounded, size: 20, color: AppColors.adminWarning),
+              const SizedBox(width: 8),
               Text(
                 'Quick Actions',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.adminPrimaryText,
-                ),
+                style: AppTypography.adminSectionTitle,
               ),
             ],
           ),
@@ -44,7 +34,7 @@ class ReferralQuickActionsCard extends StatelessWidget {
             icon: Icons.file_download_outlined,
             title: 'Export Referral Data',
             subtitle: 'Download CSV / Excel audit records',
-            color: const Color(0xFF0D9488),
+            color: AppColors.adminTeal,
             onTap: () => onAction?.call('export'),
           ),
           _buildActionItem(
@@ -58,28 +48,28 @@ class ReferralQuickActionsCard extends StatelessWidget {
             icon: Icons.payments_outlined,
             title: 'Payout Requests',
             subtitle: 'Review & approve pending payouts',
-            color: const Color(0xFF2563EB),
+            color: AppColors.adminBlue,
             onTap: () => onAction?.call('payouts'),
           ),
           _buildActionItem(
             icon: Icons.image_outlined,
             title: 'Referral Banners',
             subtitle: 'Update promotional share graphics',
-            color: const Color(0xFFF97316),
+            color: AppColors.adminOrange,
             onTap: () => onAction?.call('banners'),
           ),
           _buildActionItem(
             icon: Icons.add_circle_outline_rounded,
             title: 'Create Referral Campaign',
             subtitle: 'Launch targeted double-reward event',
-            color: const Color(0xFF8B5CF6),
+            color: AppColors.adminViolet,
             onTap: () => onAction?.call('campaign'),
           ),
           _buildActionItem(
             icon: Icons.send_rounded,
             title: 'Send Referral Broadcast',
             subtitle: 'Notify users about referral bonuses',
-            color: const Color(0xFF10B981),
+            color: AppColors.adminSuccess,
             onTap: () => onAction?.call('broadcast'),
           ),
         ],
@@ -96,7 +86,7 @@ class ReferralQuickActionsCard extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: AppRadii.borderMd,
+      borderRadius: AppRadii.adminControl,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         child: Row(
@@ -106,7 +96,7 @@ class ReferralQuickActionsCard extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: color.withAlpha(25),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadii.adminControl,
               ),
               child: Icon(icon, color: color, size: 18),
             ),
@@ -117,18 +107,11 @@ class ReferralQuickActionsCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.adminPrimaryText,
-                    ),
+                    style: AppTypography.adminTablePrimary,
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.adminSecondaryText,
-                    ),
+                    style: AppTypography.adminTableSecondary,
                   ),
                 ],
               ),

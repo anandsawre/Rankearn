@@ -62,19 +62,13 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
         : <Map<String, dynamic>>[];
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0810143A),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
+        borderRadius: AppRadii.adminCard,
+        border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
+        boxShadow: AppShadows.adminCard,
       ),
-      padding: const EdgeInsets.all(22),
+      padding: AppSpacing.adminCardPaddingCompact,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -120,12 +114,7 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
                 constraints: const BoxConstraints(minWidth: 900),
                 child: DataTable(
                   headingRowColor: WidgetStateProperty.all(AppColors.adminBackground),
-                  headingTextStyle: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.adminSecondaryText,
-                    letterSpacing: 0.5,
-                  ),
+                  headingTextStyle: AppTypography.adminTableHead,
                   dataRowMinHeight: 64,
                   dataRowMaxHeight: 72,
                   horizontalMargin: 16,
@@ -162,21 +151,14 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
                               children: [
                                 Text(
                                   title,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.adminPrimaryText,
-                                  ),
+                                  style: AppTypography.adminTablePrimary,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
                                   body,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.adminSecondaryText,
-                                  ),
+                                  style: AppTypography.adminTableSecondary,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -194,13 +176,12 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: AppColors.adminBackground,
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: AppRadii.adminBadge,
                               border: Border.all(color: AppColors.adminBorder),
                             ),
                             child: Text(
                               segment,
-                              style: const TextStyle(
-                                fontSize: 11,
+                              style: AppTypography.adminTableSecondary.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.adminPrimaryText,
                               ),
@@ -219,10 +200,9 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
                               const SizedBox(width: 6),
                               Text(
                                 date,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.adminPrimaryText,
+                                style: AppTypography.adminTableSecondary.copyWith(
                                   fontWeight: FontWeight.w500,
+                                  color: AppColors.adminPrimaryText,
                                 ),
                               ),
                             ],
@@ -233,11 +213,7 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
                         DataCell(
                           Text(
                             reads,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.adminPrimaryText,
-                            ),
+                            style: AppTypography.adminTableNumber,
                           ),
                         ),
 
@@ -245,11 +221,7 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
                         DataCell(
                           Text(
                             ctr,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.adminPurple,
-                            ),
+                            style: AppTypography.adminTableAccent,
                           ),
                         ),
 
@@ -353,7 +325,7 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: AppColors.adminBackground,
-        borderRadius: AppRadii.borderMd,
+        borderRadius: AppRadii.adminControl,
         border: Border.all(color: AppColors.adminBorder),
       ),
       child: Row(
@@ -365,30 +337,18 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
               _activeTab = t['id']!;
               _currentPage = 1;
             }),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadii.adminTab,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: isSelected
-                    ? const [
-                        BoxShadow(
-                          color: Color(0x10000000),
-                          blurRadius: 4,
-                          offset: Offset(0, 1),
-                        ),
-                      ]
-                    : null,
+                borderRadius: AppRadii.adminTab,
+                boxShadow: isSelected ? AppShadows.adminSubtle : null,
               ),
               child: Text(
                 t['label']!,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? AppColors.adminPurple : AppColors.adminSecondaryText,
-                ),
+                style: isSelected ? AppTypography.adminTabActive : AppTypography.adminTabInactive,
               ),
             ),
           );
@@ -414,13 +374,13 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
           contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
           filled: true,
           fillColor: AppColors.adminBackground,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: AppRadii.borderMd,
-            borderSide: const BorderSide(color: AppColors.adminBorder),
+          enabledBorder: const OutlineInputBorder(
+            borderRadius: AppRadii.adminControl,
+            borderSide: BorderSide(color: AppColors.adminBorder),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: AppRadii.borderMd,
-            borderSide: const BorderSide(color: AppColors.adminPurple, width: 1.5),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: AppRadii.adminControl,
+            borderSide: BorderSide(color: AppColors.adminPurple, width: 1.5),
           ),
         ),
       ),
@@ -432,40 +392,35 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
     Color fg;
     switch (type.toLowerCase()) {
       case 'alert':
-        bg = const Color(0xFFFEE2E2);
+        bg = AppColors.adminDangerLight;
         fg = AppColors.adminDanger;
         break;
       case 'promotional':
-        bg = const Color(0xFFFEF3C7);
-        fg = const Color(0xFFD97706);
+        bg = AppColors.adminAmberLight;
+        fg = AppColors.adminAmber;
         break;
       case 'contest':
         bg = AppColors.adminPurpleLight;
         fg = AppColors.adminPurple;
         break;
       case 'update':
-        bg = const Color(0xFFDBEAFE);
-        fg = const Color(0xFF2563EB);
+        bg = AppColors.adminBlueLight;
+        fg = AppColors.adminBlue;
         break;
       default:
-        bg = const Color(0xFFF1F5F9);
-        fg = const Color(0xFF475569);
+        bg = AppColors.adminNeutralLight;
+        fg = AppColors.adminNeutral;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: AppRadii.adminBadge,
       ),
       child: Text(
         type.toUpperCase(),
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          color: fg,
-          letterSpacing: 0.5,
-        ),
+        style: AppTypography.adminBadge.copyWith(color: fg),
       ),
     );
   }
@@ -477,17 +432,17 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
 
     switch (status.toLowerCase()) {
       case 'scheduled':
-        bg = const Color(0xFFE0F2FE);
-        fg = const Color(0xFF0284C7);
+        bg = AppColors.adminSkyLight;
+        fg = AppColors.adminSky;
         icon = Icons.schedule_rounded;
         break;
       case 'draft':
-        bg = const Color(0xFFF3F4F6);
-        fg = const Color(0xFF6B7280);
+        bg = AppColors.adminNeutralLight;
+        fg = AppColors.adminNeutral;
         icon = Icons.drafts_outlined;
         break;
       default: // sent
-        bg = const Color(0xFFDCFCE7);
+        bg = AppColors.adminSuccessLight;
         fg = AppColors.adminSuccess;
         icon = Icons.check_circle_outline_rounded;
     }
@@ -496,7 +451,7 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadii.adminStatusPill,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -505,11 +460,7 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
           const SizedBox(width: 4),
           Text(
             status.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: fg,
-            ),
+            style: AppTypography.adminBadge.copyWith(color: fg),
           ),
         ],
       ),

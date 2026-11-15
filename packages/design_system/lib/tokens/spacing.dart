@@ -36,4 +36,13 @@ class AppSpacing {
       bottom ?? (isMobile ? 18.0 : xl),
     );
   }
+
+  // --- Admin Dashboard Semantic Spacing Tokens ---
+  static const EdgeInsets adminPagePadding = EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0);
+  static const EdgeInsets adminCardPadding = EdgeInsets.all(24.0);
+  static const EdgeInsets adminCardPaddingCompact = EdgeInsets.all(22.0);
+  static const double adminGapSection = 28.0;
+  static const double adminGapCard = 24.0;
+  static const double adminGapItem = 18.0;
+  static const double adminGapSmall = 12.0;
 }

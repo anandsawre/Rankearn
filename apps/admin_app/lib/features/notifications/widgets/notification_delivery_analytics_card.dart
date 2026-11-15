@@ -47,19 +47,13 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
       children: [
         // 1. Delivery Analytics Card with Donut Chart
         Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.adminCardBackground,
-            borderRadius: AppRadii.borderXl,
-            border: Border.all(color: AppColors.adminBorder),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0810143A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
+            borderRadius: AppRadii.adminCard,
+            border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
+            boxShadow: AppShadows.adminCard,
           ),
-          padding: const EdgeInsets.all(22),
+          padding: AppSpacing.adminCardPaddingCompact,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -74,11 +68,7 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
                         Flexible(
                           child: Text(
                             'Delivery Analytics',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.adminPrimaryText,
-                            ),
+                            style: AppTypography.adminSectionTitle,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -87,17 +77,13 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.adminPurpleLight,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: AppRadii.adminRoundPill,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Last 30 Days',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.adminPurple,
-                      ),
+                      style: AppTypography.adminBadge.copyWith(color: AppColors.adminPurple),
                     ),
                   ),
                 ],
@@ -135,7 +121,7 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
                 label: 'Unopened Rate',
                 value: '${unopenedPct.toStringAsFixed(1)}%',
                 count: '${(totalUnopened / 1000).toStringAsFixed(1)}k users',
-                color: const Color(0xFF94A3B8),
+                color: AppColors.adminSecondaryText,
               ),
             ],
           ),
@@ -144,19 +130,13 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
 
         // 2. Quick Actions Card
         Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.adminCardBackground,
-            borderRadius: AppRadii.borderXl,
-            border: Border.all(color: AppColors.adminBorder),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0810143A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
+            borderRadius: AppRadii.adminCard,
+            border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
+            boxShadow: AppShadows.adminCard,
           ),
-          padding: const EdgeInsets.all(22),
+          padding: AppSpacing.adminCardPaddingCompact,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -166,11 +146,7 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
                   SizedBox(width: 8),
                   Text(
                     'Quick Actions',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.adminPrimaryText,
-                    ),
+                    style: AppTypography.adminSectionTitle,
                   ),
                 ],
               ),
@@ -186,35 +162,35 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
                 icon: Icons.person_search_rounded,
                 title: 'Send to Specific Users',
                 subtitle: 'Target by user ID or mobile number',
-                color: const Color(0xFF2563EB),
+                color: AppColors.adminBlue,
                 onTap: () => onQuickAction?.call('send_specific'),
               ),
               _buildQuickActionTile(
                 icon: Icons.schedule_rounded,
                 title: 'Manage Scheduled',
                 subtitle: 'View upcoming automated queue',
-                color: const Color(0xFF0D9488),
+                color: AppColors.adminTeal,
                 onTap: () => onQuickAction?.call('manage_scheduled'),
               ),
               _buildQuickActionTile(
                 icon: Icons.drafts_rounded,
                 title: 'View Drafts',
                 subtitle: 'Edit pending saved notifications',
-                color: const Color(0xFFEA580C),
+                color: AppColors.adminOrange,
                 onTap: () => onQuickAction?.call('view_drafts'),
               ),
               _buildQuickActionTile(
                 icon: Icons.history_rounded,
                 title: 'Notification History',
                 subtitle: 'Full audit log and delivery reports',
-                color: const Color(0xFF6366F1),
+                color: AppColors.adminViolet,
                 onTap: () => onQuickAction?.call('history'),
               ),
               _buildQuickActionTile(
                 icon: Icons.settings_suggest_rounded,
                 title: 'Notification Settings',
                 subtitle: 'FCM keys, templates & rate limits',
-                color: const Color(0xFF475569),
+                color: AppColors.adminNeutral,
                 onTap: () => onQuickAction?.call('settings'),
               ),
             ],

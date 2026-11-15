@@ -388,7 +388,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
     final isDesktop = screenWidth >= 1200;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: AppSpacing.adminPagePadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -401,7 +401,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
             actionIcon: Icons.history_rounded,
             onAction: _fetchHistory,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.adminGapCard),
 
           // 2. 5 Analytics KPI Cards Row
           NotificationsKpiRow(
@@ -411,7 +411,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
             totalClicks: _history.isNotEmpty ? _history.length * 480 : 12400,
             ctr: 33.7,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.adminGapCard),
 
           // 3. Main Composition & Analytics Split
           if (isDesktop)
