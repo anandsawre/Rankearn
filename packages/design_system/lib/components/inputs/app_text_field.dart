@@ -257,7 +257,8 @@ class _AppTextFieldState extends State<AppTextField> {
     final effectiveFillColor = widget.enabled
         ? (widget.fillColor ?? Colors.white)
         : (widget.fillColor ?? Colors.white).withAlpha(128);
-    final effectiveHeight = widget.height ?? (widget.maxLines == 1 ? AppSpacing.adminControlHeight : null);
+    final isMultiline = (widget.maxLines > 1);
+    final effectiveHeight = widget.height ?? (isMultiline ? null : AppSpacing.adminControlHeight);
 
     Widget field = TextFormField(
       controller: widget.controller,
@@ -276,11 +277,20 @@ class _AppTextFieldState extends State<AppTextField> {
       enableSuggestions: !widget.isPassword,
       autocorrect: !widget.isPassword,
       style: effectiveStyle,
+      textAlignVertical: isMultiline ? TextAlignVertical.top : TextAlignVertical.center,
       decoration: InputDecoration(
         hintText: widget.hintText,
         hintStyle: effectiveHintStyle,
+        constraints: effectiveHeight != null ? BoxConstraints.tightFor(height: effectiveHeight) : null,
         prefixIcon: widget.prefixIcon,
-        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 38),
+        prefixIconConstraints: isMultiline
+            ? null
+            : BoxConstraints(
+                minWidth: 40,
+                maxWidth: 40,
+                minHeight: (effectiveHeight ?? AppSpacing.adminControlHeight) - 4,
+                maxHeight: (effectiveHeight ?? AppSpacing.adminControlHeight) - 4,
+              ),
         prefixText: widget.prefixText,
         prefixStyle: widget.prefixStyle,
         suffixIcon: widget.isPassword
@@ -295,12 +305,21 @@ class _AppTextFieldState extends State<AppTextField> {
                 onPressed: () => setState(() => _obscured = !_obscured),
               )
             : widget.suffixIcon,
-        suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 38),
+        suffixIconConstraints: isMultiline
+            ? null
+            : BoxConstraints(
+                minWidth: 40,
+                maxWidth: 40,
+                minHeight: (effectiveHeight ?? AppSpacing.adminControlHeight) - 4,
+                maxHeight: (effectiveHeight ?? AppSpacing.adminControlHeight) - 4,
+              ),
         filled: true,
         isDense: true,
         fillColor: effectiveFillColor,
         contentPadding: widget.contentPadding ??
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            (isMultiline
+                ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
+                : const EdgeInsets.symmetric(horizontal: 14, vertical: 0)),
         border: OutlineInputBorder(
           borderRadius: effectiveRadius,
           borderSide: const BorderSide(color: AppColors.adminBorder),
@@ -327,9 +346,21 @@ class _AppTextFieldState extends State<AppTextField> {
       ),
     );
 
-    if (effectiveHeight != null) {
-      field = SizedBox(height: effectiveHeight, child: field);
-    }
+    field = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: effectiveRadius,
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0B0F172A),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: effectiveHeight != null
+          ? SizedBox(height: effectiveHeight, child: field)
+          : field,
+    );
 
     if (widget.label == null) {
       return field;

@@ -193,9 +193,11 @@ void main() {
 
       final textFieldHeight = tester.getSize(find.byKey(textFieldKey)).height;
       final dropdownHeight = tester.getSize(find.byKey(dropdownKey)).height;
+      final decoratorHeight = tester.getSize(find.descendant(of: find.byKey(textFieldKey), matching: find.byType(InputDecorator))).height;
 
       expect(textFieldHeight, AppSpacing.adminControlHeight);
       expect(dropdownHeight, AppSpacing.adminControlHeight);
+      expect(decoratorHeight, AppSpacing.adminControlHeight);
       expect(textFieldHeight, equals(dropdownHeight));
     });
 
