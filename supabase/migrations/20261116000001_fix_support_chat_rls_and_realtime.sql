@@ -1,27 +1,24 @@
 -- ====================================================================
 -- FIX SUPPORT TICKETS & MESSAGES RLS POLICIES AND ENABLE REALTIME
 -- Fixes:
--- 1. Drops old dependent policies first (fixes ERROR: 0A000)
+-- 1. Dynamically drops ALL existing policies first (prevents ERROR: 0A000)
 -- 2. Foreign key / UUID restrictions for multi-platform client compatibility
 -- 3. Enables Supabase Realtime WebSocket broadcast for live support streaming
 -- ====================================================================
 
--- STEP 1: DROP ALL OLD DEPENDENT POLICIES FIRST
-DROP POLICY IF EXISTS "Users view own support ticket" ON public.support_tickets;
-DROP POLICY IF EXISTS "Users view own tickets" ON public.support_tickets;
-DROP POLICY IF EXISTS "Users can create own support ticket" ON public.support_tickets;
-DROP POLICY IF EXISTS "Users can create own tickets" ON public.support_tickets;
-DROP POLICY IF EXISTS "Users and admins can update ticket status" ON public.support_tickets;
-DROP POLICY IF EXISTS "Users and admins can update tickets" ON public.support_tickets;
-DROP POLICY IF EXISTS "Anyone can read support tickets" ON public.support_tickets;
-DROP POLICY IF EXISTS "Anyone can manage support tickets" ON public.support_tickets;
+-- STEP 1: DYNAMICALLY DROP ALL EXISTING POLICIES ON BOTH TABLES FIRST
+DO $$
+DECLARE
+    pol record;
+BEGIN
+    FOR pol IN SELECT policyname FROM pg_policies WHERE tablename = 'support_tickets' AND schemaname = 'public' LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON public.support_tickets', pol.policyname);
+    END LOOP;
 
-DROP POLICY IF EXISTS "Users and admins can read messages in their tickets" ON public.support_messages;
-DROP POLICY IF EXISTS "Users and admins can read messages" ON public.support_messages;
-DROP POLICY IF EXISTS "Users and admins can send messages in their tickets" ON public.support_messages;
-DROP POLICY IF EXISTS "Users and admins can send messages" ON public.support_messages;
-DROP POLICY IF EXISTS "Anyone can read support messages" ON public.support_messages;
-DROP POLICY IF EXISTS "Anyone can manage support messages" ON public.support_messages;
+    FOR pol IN SELECT policyname FROM pg_policies WHERE tablename = 'support_messages' AND schemaname = 'public' LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON public.support_messages', pol.policyname);
+    END LOOP;
+END $$;
 
 -- STEP 2: REMOVE FOREIGN KEYS & ALTER COLUMN TYPES SAFELY
 ALTER TABLE public.support_tickets DROP CONSTRAINT IF EXISTS support_tickets_user_id_fkey;
