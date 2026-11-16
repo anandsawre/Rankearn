@@ -103,10 +103,13 @@ class _TicketDetailDialogState extends State<TicketDetailDialog> {
     if (text.isEmpty || _isSending) return;
 
     setState(() => _isSending = true);
-    await widget.onSendMessage(text);
-    _replyController.clear();
-    if (mounted) setState(() => _isSending = false);
-    _scrollToBottom();
+    try {
+      await widget.onSendMessage(text);
+      _replyController.clear();
+      _scrollToBottom();
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
   }
 
   @override
@@ -120,207 +123,252 @@ class _TicketDetailDialogState extends State<TicketDetailDialog> {
       title: 'Ticket #$ticketId',
       subtitle: '$name • $email',
       iconData: Icons.headset_mic_rounded,
-      maxWidth: 720,
+      maxWidth: 780,
       actions: [
-        AppButton.adminSecondary(
-          label: 'Close',
-          onPressed: () => Navigator.pop(context),
-        ),
+        AppModalDialog.cancelButton(context, label: 'Close'),
       ],
       child: SizedBox(
-        height: 520,
-        child: Row(
-          children: [
-            // Left: Conversation Stream (Expanded)
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Subject Header
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.adminBackground,
-                      borderRadius: AppRadii.adminControl,
-                      border: Border.all(color: AppColors.adminBorder),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Subject', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.adminSecondaryText)),
-                        const SizedBox(height: 2),
-                        Text(subject, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.adminPrimaryText)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+        height: 540,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 580;
 
-                  // Messages List
-                  Expanded(
-                    child: _messages.isEmpty
-                        ? const Center(
-                            child: Text('No previous messages.', style: AppTypography.adminTableSecondary),
-                          )
-                        : ListView.builder(
-                            controller: _scrollController,
-                            itemCount: _messages.length,
-                            itemBuilder: (context, idx) {
-                              final m = _messages[idx];
-                              final isUser = m['isUser'] == true;
-                              return Align(
-                                alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
-                                child: Container(
-                                  margin: const EdgeInsets.only(bottom: 10),
-                                  constraints: const BoxConstraints(maxWidth: 320),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: isUser ? AppColors.adminBackground : AppColors.adminPurple,
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: const Radius.circular(12),
-                                      topRight: const Radius.circular(12),
-                                      bottomLeft: Radius.circular(isUser ? 2 : 12),
-                                      bottomRight: Radius.circular(isUser ? 12 : 2),
-                                    ),
-                                    border: isUser ? Border.all(color: AppColors.adminBorder) : null,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        m['text']?.toString() ?? '',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: isUser ? AppColors.adminPrimaryText : Colors.white,
-                                          height: 1.35,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        m['time']?.toString() ?? '',
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          color: isUser ? AppColors.adminSecondaryText : Colors.white70,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+            final conversationPane = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Subject Header
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceSubtle,
+                    borderRadius: AppRadii.adminCardInner,
+                    border: Border.all(color: AppColors.adminBorder),
                   ),
-
-                  // Reply Input Bar
-                  const Divider(height: 1, color: AppColors.adminBorder),
-                  const SizedBox(height: 8),
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: AppTextField(
-                          controller: _replyController,
-                          hintText: 'Type response to candidate...',
+                      Text(
+                        'SUBJECT',
+                        style: AppTypography.labelSmall.copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: AppColors.adminSecondaryText,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      AppButton.adminPrimary(
-                        label: _isSending ? '...' : 'Send',
-                        leadingIcon: const Icon(Icons.send_rounded, size: 14),
-                        onPressed: _handleSend,
+                      const SizedBox(height: 3),
+                      Text(
+                        subject,
+                        style: AppTypography.adminCardTitle.copyWith(fontSize: 13, height: 1.3),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            const VerticalDivider(width: 1, color: AppColors.adminBorder),
-            const SizedBox(width: 16),
+                ),
+                const SizedBox(height: AppSpacing.sm),
 
-            // Right: Ticket Metadata & Internal Controls
-            SizedBox(
-              width: 200,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Status', style: AppTypography.adminFieldLabelSmall),
-                    const SizedBox(height: 6),
-                    AppDropdown<String>(
-                      inlineLabel: true,
-                      value: _currentStatus,
-                      items: const [
-                        AppDropdownItem(value: 'open', label: 'Open'),
-                        AppDropdownItem(value: 'in_progress', label: 'In Progress'),
-                        AppDropdownItem(value: 'resolved', label: 'Resolved'),
-                        AppDropdownItem(value: 'on_hold', label: 'On Hold'),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) {
-                          setState(() => _currentStatus = v);
-                          widget.onStatusChanged(v);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 14),
-
-                    Text('Priority', style: AppTypography.adminFieldLabelSmall),
-                    const SizedBox(height: 6),
-                    AppDropdown<String>(
-                      inlineLabel: true,
-                      value: _currentPriority.toLowerCase(),
-                      items: const [
-                        AppDropdownItem(value: 'high', label: 'High'),
-                        AppDropdownItem(value: 'medium', label: 'Medium'),
-                        AppDropdownItem(value: 'low', label: 'Low'),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) {
-                          setState(() => _currentPriority = v);
-                          widget.onPriorityChanged(v);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 14),
-
-                    Text('Assigned To', style: AppTypography.adminFieldLabelSmall),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.adminBackground,
-                        borderRadius: AppRadii.adminControl,
-                        border: Border.all(color: AppColors.adminBorder),
-                      ),
-                      child: Row(
-                        children: const [
-                          Icon(Icons.shield_rounded, size: 14, color: AppColors.adminPurple),
-                          SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              'Support Lead (Admin)',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.adminPrimaryText),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                // Messages List
+                Expanded(
+                  child: _messages.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.forum_outlined, size: 36, color: AppColors.borderStrong),
+                              const SizedBox(height: AppSpacing.xs),
+                              const Text('No previous messages.', style: AppTypography.adminTableSecondary),
+                            ],
                           ),
-                        ],
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          itemCount: _messages.length,
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          itemBuilder: (context, idx) {
+                            final m = _messages[idx];
+                            final isUser = m['isUser'] == true;
+                            return Align(
+                              alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 10),
+                                constraints: const BoxConstraints(maxWidth: 340),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isUser ? AppColors.surfaceSubtle : AppColors.adminPurple,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(AppRadii.md),
+                                    topRight: const Radius.circular(AppRadii.md),
+                                    bottomLeft: Radius.circular(isUser ? 3.0 : AppRadii.md),
+                                    bottomRight: Radius.circular(isUser ? AppRadii.md : 3.0),
+                                  ),
+                                  border: isUser ? Border.all(color: AppColors.adminBorder) : null,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: isUser ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      m['text']?.toString() ?? '',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        fontSize: 12.5,
+                                        color: isUser ? AppColors.adminPrimaryText : Colors.white,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      m['time']?.toString() ?? '',
+                                      style: AppTypography.labelSmall.copyWith(
+                                        fontSize: 9.5,
+                                        color: isUser ? AppColors.adminSecondaryText : Colors.white70,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+
+                // Reply Input Bar
+                const Divider(height: 1, color: AppColors.adminBorder),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppModalDialog.textField(
+                        controller: _replyController,
+                        hint: 'Type response to candidate...',
+                        prefixIcon: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: AppColors.adminSecondaryText),
                       ),
                     ),
-                    const SizedBox(height: 14),
-
-                    Text('Internal Notes', style: AppTypography.adminFieldLabelSmall),
-                    const SizedBox(height: 6),
-                    AppTextField(
-                      controller: _internalNotesController,
-                      hintText: 'Notes for internal staff...',
-                      maxLines: 4,
+                    const SizedBox(width: AppSpacing.sm),
+                    AppModalDialog.primaryButton(
+                      onPressed: _isSending ? null : _handleSend,
+                      icon: _isSending
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.send_rounded, size: 14),
+                      child: Text(
+                        _isSending ? '...' : 'Send',
+                        style: const TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                        ),
+                      ),
                     ),
                   ],
                 ),
+              ],
+            );
+
+            final sidebarControls = SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Ticket Status', style: AppTypography.adminFieldLabelSmall),
+                  const SizedBox(height: AppSpacing.xs),
+                  AppDropdown<String>(
+                    inlineLabel: true,
+                    value: _currentStatus,
+                    items: const [
+                      AppDropdownItem(value: 'open', label: 'Open'),
+                      AppDropdownItem(value: 'in_progress', label: 'In Progress'),
+                      AppDropdownItem(value: 'resolved', label: 'Resolved'),
+                      AppDropdownItem(value: 'on_hold', label: 'On Hold'),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() => _currentStatus = v);
+                        widget.onStatusChanged(v);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  Text('Priority Level', style: AppTypography.adminFieldLabelSmall),
+                  const SizedBox(height: AppSpacing.xs),
+                  AppDropdown<String>(
+                    inlineLabel: true,
+                    value: _currentPriority.toLowerCase(),
+                    items: const [
+                      AppDropdownItem(value: 'high', label: 'High'),
+                      AppDropdownItem(value: 'medium', label: 'Medium'),
+                      AppDropdownItem(value: 'low', label: 'Low'),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() => _currentPriority = v);
+                        widget.onPriorityChanged(v);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  Text('Assigned Agent', style: AppTypography.adminFieldLabelSmall),
+                  const SizedBox(height: AppSpacing.xs),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceSubtle,
+                      borderRadius: AppRadii.adminControl,
+                      border: Border.all(color: AppColors.adminBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.shield_rounded, size: 14, color: AppColors.adminPurple),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            'Support Lead (Admin)',
+                            style: AppTypography.adminTablePrimary.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  Text('Internal Notes', style: AppTypography.adminFieldLabelSmall),
+                  const SizedBox(height: AppSpacing.xs),
+                  AppModalDialog.textField(
+                    controller: _internalNotesController,
+                    hint: 'Staff notes & context...',
+                    maxLines: 4,
+                    minLines: 3,
+                  ),
+                ],
               ),
-            ),
-          ],
+            );
+
+            if (isNarrow) {
+              return Column(
+                children: [
+                  Expanded(child: conversationPane),
+                  const SizedBox(height: AppSpacing.sm),
+                  sidebarControls,
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(flex: 3, child: conversationPane),
+                const SizedBox(width: AppSpacing.md),
+                const VerticalDivider(width: 1, color: AppColors.adminBorder),
+                const SizedBox(width: AppSpacing.md),
+                SizedBox(width: 210, child: sidebarControls),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -26,20 +26,23 @@ class FeedbackDetailDialog extends StatelessWidget {
       title: 'Feedback Details',
       subtitle: '$uid • Submitted $date',
       iconData: Icons.rate_review_rounded,
-      maxWidth: 540,
+      maxWidth: 560,
       actions: [
-        AppButton.adminSecondary(
-          label: 'Close',
-          onPressed: () => Navigator.pop(context),
-        ),
-        const SizedBox(width: 8),
-        AppButton.adminPrimary(
-          label: 'Reply to User',
-          leadingIcon: const Icon(Icons.reply_rounded, size: 16),
+        AppModalDialog.cancelButton(context, label: 'Close'),
+        AppModalDialog.primaryButton(
           onPressed: () {
             Navigator.pop(context);
             onReply();
           },
+          icon: const Icon(Icons.reply_rounded, size: 16),
+          child: const Text(
+            'Reply to User',
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
+          ),
         ),
       ],
       child: Column(
@@ -55,7 +58,7 @@ class FeedbackDetailDialog extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.adminPurple),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,42 +80,52 @@ class FeedbackDetailDialog extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.adminPurpleLight,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: AppRadii.badge,
                 ),
-                child: Text('Type: $type', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.adminPurple)),
+                child: Text(
+                  'Type: $type',
+                  style: AppTypography.adminBadge.copyWith(color: AppColors.adminPurple),
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: AppRadii.badge,
                 ),
-                child: Text('Module: $feature', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF2563EB))),
+                child: Text(
+                  'Module: $feature',
+                  style: AppTypography.adminBadge.copyWith(color: const Color(0xFF2563EB)),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Text('Candidate Comment', style: AppTypography.adminFieldLabelSmall),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.xs),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.adminBackground,
-              borderRadius: AppRadii.adminControl,
+              color: AppColors.surfaceSubtle,
+              borderRadius: AppRadii.adminCardInner,
               border: Border.all(color: AppColors.adminBorder),
             ),
             child: Text(
               comment.isNotEmpty ? comment : 'No comment text provided.',
-              style: const TextStyle(fontSize: 13, color: AppColors.adminPrimaryText, height: 1.4),
+              style: AppTypography.bodySmall.copyWith(
+                fontSize: 13,
+                color: AppColors.adminPrimaryText,
+                height: 1.4,
+              ),
             ),
           ),
         ],

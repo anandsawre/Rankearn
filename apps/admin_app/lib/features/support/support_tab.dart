@@ -11,6 +11,8 @@ import 'widgets/support_data_table.dart';
 import 'widgets/support_analytics_panel.dart';
 import 'dialogs/ticket_detail_dialog.dart';
 import 'dialogs/create_ticket_dialog.dart';
+import 'dialogs/support_faq_dialog.dart';
+import 'dialogs/support_categories_dialog.dart';
 
 class SupportTab extends StatefulWidget {
   final List<Map<String, dynamic>>? initialTickets;
@@ -300,6 +302,20 @@ class _SupportTabState extends State<SupportTab> {
     );
   }
 
+  void _showFaqDialog() {
+    AppModalDialog.show(
+      context: context,
+      builder: (ctx) => const SupportFaqDialog(),
+    );
+  }
+
+  void _showCategoriesDialog() {
+    AppModalDialog.show(
+      context: context,
+      builder: (ctx) => const SupportCategoriesDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -359,11 +375,7 @@ class _SupportTabState extends State<SupportTab> {
                     const SnackBar(content: Text('Filtered to high priority tickets')),
                   );
                 },
-                onFaqHelp: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Opening Rankearn Help Center & FAQs...')),
-                  );
-                },
+                onFaqHelp: _showFaqDialog,
               );
 
               if (constraints.maxWidth > 980) {
@@ -445,16 +457,8 @@ class _SupportTabState extends State<SupportTab> {
                             const SnackBar(content: Text('Bulk Reply composer opened for filtered tickets.')),
                           );
                         },
-                        onManageCategories: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Manage Support Categories configuration dialog.')),
-                          );
-                        },
-                        onHelpCenter: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Help Center Knowledge Base.')),
-                          );
-                        },
+                        onManageCategories: _showCategoriesDialog,
+                        onHelpCenter: _showFaqDialog,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -520,8 +524,8 @@ class _SupportTabState extends State<SupportTab> {
                             onReset: _resetFilters,
                             onCreateTicket: _showCreateTicketDialog,
                             onBulkReply: () {},
-                            onManageCategories: () {},
-                            onHelpCenter: () {},
+                            onManageCategories: _showCategoriesDialog,
+                            onHelpCenter: _showFaqDialog,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -577,8 +581,8 @@ class _SupportTabState extends State<SupportTab> {
                       onReset: _resetFilters,
                       onCreateTicket: _showCreateTicketDialog,
                       onBulkReply: () {},
-                      onManageCategories: () {},
-                      onHelpCenter: () {},
+                      onManageCategories: _showCategoriesDialog,
+                      onHelpCenter: _showFaqDialog,
                     ),
                     const SizedBox(height: 16),
                     SupportDataTable(

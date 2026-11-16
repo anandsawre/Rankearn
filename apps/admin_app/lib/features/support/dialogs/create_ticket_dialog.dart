@@ -11,6 +11,7 @@ class CreateTicketDialog extends StatefulWidget {
 }
 
 class _CreateTicketDialogState extends State<CreateTicketDialog> {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _subjectController = TextEditingController();
@@ -29,7 +30,7 @@ class _CreateTicketDialogState extends State<CreateTicketDialog> {
   }
 
   Future<void> _submit() async {
-    if (_nameController.text.trim().isEmpty || _subjectController.text.trim().isEmpty) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isSubmitting = true);
     final newTicket = {
@@ -51,9 +52,15 @@ class _CreateTicketDialogState extends State<CreateTicketDialog> {
       ],
     };
 
-    await widget.onCreate(newTicket);
-    if (mounted) {
-      Navigator.pop(context);
+    try {
+      await widget.onCreate(newTicket);
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -63,87 +70,137 @@ class _CreateTicketDialogState extends State<CreateTicketDialog> {
       title: 'Create Ticket for User',
       subtitle: 'Open manual inquiry or support case on behalf of candidate',
       iconData: Icons.person_add_alt_1_rounded,
-      maxWidth: 520,
+      maxWidth: 560,
+      scrollable: true,
       actions: [
-        AppButton.adminSecondary(
-          label: 'Cancel',
-          onPressed: () => Navigator.pop(context),
-        ),
-        const SizedBox(width: 8),
-        AppButton.adminPrimary(
-          label: _isSubmitting ? 'Creating...' : 'Create Ticket',
-          leadingIcon: const Icon(Icons.check_rounded, size: 16),
+        AppModalDialog.cancelButton(context, label: 'Cancel'),
+        AppModalDialog.primaryButton(
           onPressed: _isSubmitting ? null : _submit,
+          icon: _isSubmitting
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Icon(Icons.check_rounded, size: 16),
+          child: Text(
+            _isSubmitting ? 'Creating...' : 'Create Ticket',
+            style: const TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
+          ),
         ),
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: AppTextField(
-                  controller: _nameController,
-                  hintText: 'Candidate Name *',
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Candidate Information', style: AppTypography.adminFieldLabelSmall),
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                Expanded(
+                  child: AppModalDialog.textField(
+                    controller: _nameController,
+                    hint: 'Candidate Name *',
+                    prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: AppColors.adminSecondaryText),
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter candidate name' : null,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppTextField(
-                  controller: _emailController,
-                  hintText: 'User Email Address *',
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: AppModalDialog.textField(
+                    controller: _emailController,
+                    hint: 'Email Address *',
+                    keyboardType: TextInputType.emailAddress,
+                    prefixIcon: const Icon(Icons.email_outlined, size: 18, color: AppColors.adminSecondaryText),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Please enter email';
+                      if (!v.contains('@') || !v.contains('.')) return 'Enter valid email address';
+                      return null;
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: AppDropdown<String>(
-                  inlineLabel: true,
-                  value: _category,
-                  items: const [
-                    AppDropdownItem(value: 'Payment', label: 'Payment & Coins'),
-                    AppDropdownItem(value: 'Verification', label: 'Verification'),
-                    AppDropdownItem(value: 'Referral', label: 'Referral'),
-                    AppDropdownItem(value: 'Technical', label: 'Technical'),
-                    AppDropdownItem(value: 'Withdrawal', label: 'Withdrawal'),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _category = v);
-                  },
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Category *', style: AppTypography.adminFieldLabelSmall),
+                      const SizedBox(height: AppSpacing.xs),
+                      AppDropdown<String>(
+                        inlineLabel: true,
+                        value: _category,
+                        items: const [
+                          AppDropdownItem(value: 'Payment', label: 'Payment & Coins'),
+                          AppDropdownItem(value: 'Verification', label: 'Verification'),
+                          AppDropdownItem(value: 'Referral', label: 'Referral'),
+                          AppDropdownItem(value: 'Technical', label: 'Technical'),
+                          AppDropdownItem(value: 'Withdrawal', label: 'Withdrawal'),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) setState(() => _category = v);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppDropdown<String>(
-                  inlineLabel: true,
-                  value: _priority,
-                  items: const [
-                    AppDropdownItem(value: 'high', label: 'High Priority'),
-                    AppDropdownItem(value: 'medium', label: 'Medium Priority'),
-                    AppDropdownItem(value: 'low', label: 'Low Priority'),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _priority = v);
-                  },
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Priority Level *', style: AppTypography.adminFieldLabelSmall),
+                      const SizedBox(height: AppSpacing.xs),
+                      AppDropdown<String>(
+                        inlineLabel: true,
+                        value: _priority,
+                        items: const [
+                          AppDropdownItem(value: 'high', label: 'High Priority'),
+                          AppDropdownItem(value: 'medium', label: 'Medium Priority'),
+                          AppDropdownItem(value: 'low', label: 'Low Priority'),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) setState(() => _priority = v);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _subjectController,
-            hintText: 'Ticket Subject Line *',
-          ),
-          const SizedBox(height: 12),
-          AppTextField(
-            controller: _messageController,
-            hintText: 'Initial query description / issue notes...',
-            maxLines: 4,
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            Text('Subject Line *', style: AppTypography.adminFieldLabelSmall),
+            const SizedBox(height: AppSpacing.xs),
+            AppModalDialog.textField(
+              controller: _subjectController,
+              hint: 'Ticket Subject (e.g. Coins not added after payment)',
+              prefixIcon: const Icon(Icons.title_rounded, size: 18, color: AppColors.adminSecondaryText),
+              validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter subject line' : null,
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            Text('Initial Query / Issue Notes *', style: AppTypography.adminFieldLabelSmall),
+            const SizedBox(height: AppSpacing.xs),
+            AppModalDialog.textField(
+              controller: _messageController,
+              hint: 'Type detailed query description or candidate issue notes...',
+              maxLines: 4,
+              minLines: 3,
+              prefixIcon: const Icon(Icons.notes_rounded, size: 18, color: AppColors.adminSecondaryText),
+              validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter issue notes' : null,
+            ),
+          ],
+        ),
       ),
     );
   }
