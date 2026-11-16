@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 // Hot reload: Matched Dashboard full width padding & removed duplicate left checkbox (2026-10-20)
@@ -46,10 +49,19 @@ void main() async {
     debugPrint('Supabase initialization: $e');
   }
 
+  // Restore authenticated admin session across browser page reloads (F5)
+  bool startLoggedIn = false;
+  try {
+    final client = SupabaseConfig.clientSafe;
+    final currentSession = client?.auth.currentSession;
+    final prefs = await SharedPreferences.getInstance();
+    final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
+    startLoggedIn = currentSession != null || (wasLoggedIn && client?.auth.currentUser != null);
+  } catch (_) {}
+
   runApp(
-    const ProviderScope(
-      // Launch Admin Login Screen with single-viewport responsive fit (no scrolling)
-      child: RankearnAdminApp(startLoggedIn: false),
+    ProviderScope(
+      child: RankearnAdminApp(startLoggedIn: startLoggedIn),
     ),
   );
 }
@@ -111,6 +123,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
   late AdminNavTab _activeTab = widget.initialTab;
   late bool _isLoggedIn = widget.startLoggedIn;
   final ScrollController _navScrollController = ScrollController();
+  StreamSubscription<AuthState>? _authSubscription;
 
   String _adminDisplayName = 'Admin User';
   String _adminEmail = '';
@@ -119,13 +132,68 @@ class _AdminAppShellState extends State<AdminAppShell> {
   @override
   void initState() {
     super.initState();
+    _checkAndRestoreSession();
+    _setupAuthListener();
     _syncCurrentAdminProfile();
   }
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _navScrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkAndRestoreSession() async {
+    try {
+      final client = SupabaseConfig.clientSafe;
+      final prefs = await SharedPreferences.getInstance();
+      final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
+
+      if (client != null && (client.auth.currentSession != null || (wasLoggedIn && client.auth.currentUser != null))) {
+        if (mounted && !_isLoggedIn) {
+          setState(() {
+            _isLoggedIn = true;
+          });
+        }
+        _syncCurrentAdminProfile();
+      }
+    } catch (_) {}
+  }
+
+  void _setupAuthListener() {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+
+    _authSubscription = client.auth.onAuthStateChange.listen((data) async {
+      final event = data.event;
+      final session = data.session;
+
+      if (event == AuthChangeEvent.signedIn || (session != null && event == AuthChangeEvent.tokenRefreshed)) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('rankearn_admin_logged_in', true);
+        } catch (_) {}
+        if (mounted && !_isLoggedIn) {
+          setState(() {
+            _isLoggedIn = true;
+          });
+          _syncCurrentAdminProfile();
+        }
+      } else if (event == AuthChangeEvent.signedOut) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('rankearn_admin_logged_in', false);
+        } catch (_) {}
+        if (mounted && _isLoggedIn) {
+          setState(() {
+            _isLoggedIn = false;
+            _adminDisplayName = 'Admin User';
+            _adminEmail = '';
+          });
+        }
+      }
+    });
   }
 
   Future<void> _syncCurrentAdminProfile() async {
@@ -174,6 +242,10 @@ class _AdminAppShellState extends State<AdminAppShell> {
   }
 
   Future<void> _handleSignOut() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('rankearn_admin_logged_in', false);
+    } catch (_) {}
     try {
       await SupabaseConfig.clientSafe?.auth.signOut();
     } catch (_) {}
@@ -1122,9 +1194,15 @@ class _AdminAppShellState extends State<AdminAppShell> {
   // ==========================================
   Widget _buildAdminLoginScreen() {
     return AdminLoginScreen(
-      onLoginSuccess: () {
-        setState(() => _isLoggedIn = true);
-        _syncCurrentAdminProfile();
+      onLoginSuccess: () async {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('rankearn_admin_logged_in', true);
+        } catch (_) {}
+        if (mounted) {
+          setState(() => _isLoggedIn = true);
+          _syncCurrentAdminProfile();
+        }
       },
       onBackToWebsite: () {
         ScaffoldMessenger.of(context).showSnackBar(
