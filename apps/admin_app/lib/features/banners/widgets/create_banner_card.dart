@@ -358,30 +358,31 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           const SizedBox(height: 24),
 
           // Bottom Action Buttons
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              AppButton.adminGhost(
-                label: 'Reset Form',
-                onPressed: widget.isSaving ? null : widget.onReset,
-              ),
-              Wrap(
-                spacing: 12,
-                runSpacing: 10,
-                children: [
-                  AppButton.adminSecondary(
-                    label: 'Preview Banner',
-                    onPressed: widget.onPreview,
-                  ),
-                  AppButton.adminPrimary(
-                    label: widget.isSaving ? 'Saving...' : 'Save Banner',
-                    isLoading: widget.isSaving,
-                    onPressed: widget.isSaving ? null : widget.onSave,
-                  ),
-                ],
+              Flexible(
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    AppButton.adminOutline(
+                      label: 'Reset Form',
+                      onPressed: widget.isSaving ? null : widget.onReset,
+                    ),
+                    AppButton.adminSecondary(
+                      label: 'Preview Banner',
+                      onPressed: widget.onPreview,
+                    ),
+                    AppButton.adminPrimary(
+                      label: widget.isSaving ? 'Saving...' : 'Save Banner',
+                      isLoading: widget.isSaving,
+                      onPressed: widget.isSaving ? null : widget.onSave,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

@@ -125,6 +125,28 @@ class AppButton extends StatelessWidget {
         gradient = null,
         boxShadow = null;
 
+  /// Factory constructor for Admin Dashboard outline/reset buttons with crisp border
+  const AppButton.adminOutline({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.isLoading = false,
+    this.disabled = false,
+    this.leadingIcon,
+    this.trailingIcon,
+    this.width,
+    this.height = AppSpacing.adminControlHeight,
+    this.fullWidth = false,
+    this.borderColor = AppColors.adminBorder,
+    this.foregroundColor = AppColors.adminSecondaryText,
+  })  : variant = AppButtonVariant.outlined,
+        size = AppButtonSize.medium,
+        backgroundColor = Colors.transparent,
+        borderRadius = AppRadii.adminControl,
+        customTextStyle = AppTypography.adminButtonGhost,
+        gradient = null,
+        boxShadow = null;
+
   @override
   Widget build(BuildContext context) {
     final effectiveEnabled = !disabled && onPressed != null && !isLoading;
