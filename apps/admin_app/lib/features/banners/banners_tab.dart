@@ -575,21 +575,19 @@ class _BannersTabState extends State<BannersTab> {
               );
 
               if (constraints.maxWidth > 1080) {
-                return IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        flex: 48,
-                        child: createCard,
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        flex: 52,
-                        child: tableCard,
-                      ),
-                    ],
-                  ),
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 48,
+                      child: createCard,
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      flex: 52,
+                      child: tableCard,
+                    ),
+                  ],
                 );
               } else {
                 return Column(
