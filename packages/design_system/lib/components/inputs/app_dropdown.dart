@@ -531,7 +531,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
               borderRadius: effectiveBorderRadius,
               border: Border.all(
                 color: _isOpen
-                    ? (widget.focusedBorderColor ?? const Color(0xFFFF9500))
+                    ? (widget.focusedBorderColor ?? AppColors.adminPurple)
                     : (widget.errorText != null)
                     ? (widget.errorBorderColor ?? AppColors.errorRose)
                     : effectiveBorderColor,
@@ -672,8 +672,8 @@ class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
     final isSelected = widget.isSelected;
     final isEnabled = widget.item.enabled;
 
-    final primaryAccent = widget.selectedColor ?? const Color(0xFFFF9500);
-    final primaryAccentBg = widget.selectedBackgroundColor ?? const Color(0xFFFFF7ED);
+    final primaryAccent = widget.selectedColor ?? AppColors.adminPurple;
+    final primaryAccentBg = widget.selectedBackgroundColor ?? AppColors.adminPurpleLight;
 
     final bgColor = isSelected
         ? primaryAccentBg
@@ -914,7 +914,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                                   vertical: 8,
                                 ),
                                 color: isSelected
-                                    ? const Color(0xFFFFF7ED)
+                                    ? AppColors.adminPurpleLight
                                     : Colors.transparent,
                                 child: Row(
                                   children: [
@@ -923,7 +923,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                                         label,
                                         style: effectiveTextStyle.copyWith(
                                           color: isSelected
-                                              ? const Color(0xFFFF9500)
+                                              ? AppColors.adminPurple
                                               : AppColors.textPrimary,
                                           fontWeight: isSelected
                                               ? FontWeight.w700
@@ -935,7 +935,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
                                       const Icon(
                                         Icons.check_rounded,
                                         size: 14,
-                                        color: Color(0xFFFF9500),
+                                        color: AppColors.adminPurple,
                                       ),
                                   ],
                                 ),
@@ -980,7 +980,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
     final effectiveRadius = widget.borderRadius ?? BorderRadius.circular(8);
     final effectiveBgColor = widget.backgroundColor ?? AppColors.surfaceSubtle;
     final effectiveBorderColor = _isOpen
-        ? const Color(0xFFFF9500)
+        ? AppColors.adminPurple
         : (widget.borderColor ?? AppColors.borderSubtle);
     final effectiveTextStyle =
         widget.textStyle ??
@@ -1025,7 +1025,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
               boxShadow: _isOpen
                   ? [
                       BoxShadow(
-                        color: const Color(0xFFFF9500).withValues(alpha: 0.12),
+                        color: AppColors.adminPurple.withValues(alpha: 0.12),
                         blurRadius: 4,
                         offset: const Offset(0, 1),
                       ),

@@ -197,7 +197,7 @@ class AppStatusSwitchField extends StatelessWidget {
     this.inactiveLabel = 'Status: Inactive',
     this.activeIcon = Icons.check_circle_rounded,
     this.inactiveIcon = Icons.pause_circle_rounded,
-    this.activeColor = AppColors.adminSuccess,
+    this.activeColor = AppColors.adminPurple,
     this.inactiveColor = AppColors.adminSecondaryText,
     this.height = AppSpacing.adminControlHeight,
     this.backgroundColor = AppColors.adminBackground,
@@ -272,8 +272,9 @@ class AppStatusSwitchField extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              AppSwitch.success(
+              AppSwitch.primary(
                 value: value,
+                activeTrackColor: activeColor,
                 onChanged: enabled ? onChanged : null,
               ),
             ],
