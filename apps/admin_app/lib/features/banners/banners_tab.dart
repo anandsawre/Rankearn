@@ -491,22 +491,25 @@ class _BannersTabState extends State<BannersTab> {
                 onToggleStatus: _toggleStatus,
                 onAnalytics: _showBannerAnalytics,
                 onDelete: _deleteBanner,
+                isDesktop: constraints.maxWidth > 1080,
               );
 
               if (constraints.maxWidth > 1080) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 48,
-                      child: createCard,
-                    ),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      flex: 52,
-                      child: tableCard,
-                    ),
-                  ],
+                return IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 48,
+                        child: createCard,
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        flex: 52,
+                        child: tableCard,
+                      ),
+                    ],
+                  ),
                 );
               } else {
                 return Column(

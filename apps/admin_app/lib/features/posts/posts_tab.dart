@@ -3,10 +3,10 @@ import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'widgets/community_hero_card.dart';
 import 'widgets/community_quick_actions.dart';
+import 'widgets/community_kpi_row.dart';
 import 'widgets/create_post_card.dart';
 import 'widgets/community_post_card.dart';
 import 'widgets/community_poll_card.dart';
-import 'widgets/community_overview_panel.dart';
 
 class PostsTab extends StatefulWidget {
   final List<Map<String, dynamic>>? initialPosts;
@@ -300,19 +300,22 @@ class _PostsTabState extends State<PostsTab> {
           ),
           const SizedBox(height: 18),
 
-          // 2. 3-Panel Desktop Layout
+          // 2. Community Overview Horizontal KPI Row (Dashboard Style)
+          const CommunityKpiRow(),
+          const SizedBox(height: 18),
+
+          // 3. Post Creation & Stream Feed Layout
           LayoutBuilder(
             builder: (context, constraints) {
-              final isDesktop = constraints.maxWidth >= 1150;
-              final isTablet = constraints.maxWidth >= 768 && constraints.maxWidth < 1150;
+              final isDesktop = constraints.maxWidth >= 980;
 
               if (isDesktop) {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left Panel: Create Community Post (300px)
+                    // Left Panel: Create Community Post (340px)
                     SizedBox(
-                      width: 300,
+                      width: 340,
                       child: CreatePostCard(
                         onPublish: _handlePublishPost,
                         onReset: () {},
@@ -320,7 +323,7 @@ class _PostsTabState extends State<PostsTab> {
                     ),
                     const SizedBox(width: 16),
 
-                    // Center Panel: Post Feed (Expanded)
+                    // Center/Right Panel: Post Feed (Expanded)
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,77 +353,6 @@ class _PostsTabState extends State<PostsTab> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 16),
-
-                    // Right Panel: Community Overview & Quick Actions (280px)
-                    SizedBox(
-                      width: 280,
-                      child: CommunityOverviewPanel(
-                        onViewAsUser: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Switched to Learner Community Feed view.')),
-                          );
-                        },
-                        onManageComments: () => setState(() => _activeSubTab = 'comments'),
-                        onPinnedPosts: () => setState(() => _filterType = 'pinned'),
-                        onScheduledPosts: () => setState(() => _filterType = 'scheduled'),
-                        onPostAnalytics: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Community Post Insights & Engagement Analytics.')),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              } else if (isTablet) {
-                return Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: CreatePostCard(
-                            onPublish: _handlePublishPost,
-                            onReset: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        SizedBox(
-                          width: 270,
-                          child: CommunityOverviewPanel(
-                            onViewAsUser: () {},
-                            onManageComments: () {},
-                            onPinnedPosts: () {},
-                            onScheduledPosts: () {},
-                            onPostAnalytics: () {},
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    _buildFeedHeader(filteredPosts.length),
-                    const SizedBox(height: 14),
-                    ...filteredPosts.map((p) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: p['type'] == 'poll'
-                            ? CommunityPollCard(
-                                poll: p,
-                                onPin: () => setState(() => p['isPinned'] = !(p['isPinned'] == true)),
-                                onEdit: () {},
-                                onAnalytics: () {},
-                                onDelete: () => _handleDeletePost(p),
-                              )
-                            : CommunityPostCard(
-                                post: p,
-                                onPin: () => setState(() => p['isPinned'] = !(p['isPinned'] == true)),
-                                onEdit: () {},
-                                onDuplicate: () => _handlePublishPost(Map<String, dynamic>.from(p)),
-                                onDelete: () => _handleDeletePost(p),
-                              ),
-                      );
-                    }),
                   ],
                 );
               } else {
@@ -453,14 +385,6 @@ class _PostsTabState extends State<PostsTab> {
                               ),
                       );
                     }),
-                    const SizedBox(height: 18),
-                    CommunityOverviewPanel(
-                      onViewAsUser: () {},
-                      onManageComments: () {},
-                      onPinnedPosts: () {},
-                      onScheduledPosts: () {},
-                      onPostAnalytics: () {},
-                    ),
                   ],
                 );
               }

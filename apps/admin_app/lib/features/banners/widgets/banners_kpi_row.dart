@@ -43,6 +43,11 @@ class BannersKpiRow extends StatelessWidget {
         subtitle: 'All created assets',
         icon: Icons.photo_library_rounded,
         color: AppColors.adminPurple,
+        iconBgColor: AppColors.adminPurpleLight,
+        iconColor: AppColors.adminPurple,
+        growth: '+8.3%',
+        isGrowthPositive: true,
+        sparklineData: const [16, 18, 19, 21, 22, 23, 24],
       ),
       AdminMetricCard(
         title: 'Active Banners',
@@ -50,6 +55,11 @@ class BannersKpiRow extends StatelessWidget {
         subtitle: 'Currently serving',
         icon: Icons.check_circle_rounded,
         color: AppColors.adminSuccess,
+        iconBgColor: AppColors.adminSuccessLight,
+        iconColor: AppColors.adminSuccess,
+        growth: '+12.5%',
+        isGrowthPositive: true,
+        sparklineData: const [4, 5, 5, 6, 7, 7, 8],
       ),
       AdminMetricCard(
         title: 'Scheduled',
@@ -57,6 +67,11 @@ class BannersKpiRow extends StatelessWidget {
         subtitle: 'Upcoming launches',
         icon: Icons.schedule_rounded,
         color: AppColors.adminSky,
+        iconBgColor: AppColors.adminSkyLight,
+        iconColor: AppColors.adminSky,
+        growth: '+5.0%',
+        isGrowthPositive: true,
+        sparklineData: const [1, 2, 2, 2, 3, 3, 3],
       ),
       AdminMetricCard(
         title: 'Inactive',
@@ -64,6 +79,11 @@ class BannersKpiRow extends StatelessWidget {
         subtitle: 'Paused or expired',
         icon: Icons.pause_circle_rounded,
         color: AppColors.adminNeutral,
+        iconBgColor: AppColors.adminNeutralLight,
+        iconColor: AppColors.adminNeutral,
+        growth: '-4.2%',
+        isGrowthPositive: false,
+        sparklineData: const [16, 15, 15, 14, 14, 13, 13],
       ),
     ];
 
@@ -74,6 +94,8 @@ class BannersKpiRow extends StatelessWidget {
         subtitle: 'Impression count',
         icon: Icons.visibility_rounded,
         color: AppColors.adminBlue,
+        iconBgColor: AppColors.adminBlueLight,
+        iconColor: AppColors.adminBlue,
         growth: '+16.2%',
         isGrowthPositive: true,
         sparklineData: const [80, 95, 110, 125, 138, 142, 148],
@@ -83,7 +105,9 @@ class BannersKpiRow extends StatelessWidget {
         value: totalClicks > 0 ? _formatNumber(totalClicks) : '28.3k',
         subtitle: 'Banner interactions',
         icon: Icons.touch_app_rounded,
-        color: AppColors.adminAmber,
+        color: AppColors.adminWarning,
+        iconBgColor: AppColors.adminAmberLight,
+        iconColor: AppColors.adminWarning,
         growth: '+9.4%',
         isGrowthPositive: true,
         sparklineData: const [15, 18, 20, 22, 25, 27, 28],
@@ -94,6 +118,8 @@ class BannersKpiRow extends StatelessWidget {
         subtitle: 'Avg engagement rate',
         icon: Icons.trending_up_rounded,
         color: AppColors.adminViolet,
+        iconBgColor: AppColors.adminPurpleLight,
+        iconColor: AppColors.adminViolet,
         growth: '+1.8%',
         isGrowthPositive: true,
         sparklineData: const [16, 16.8, 17.5, 18.0, 18.4, 18.9, 19.1],
@@ -106,16 +132,16 @@ class BannersKpiRow extends StatelessWidget {
           Row(
             children: [
               for (int i = 0; i < statusCards.length; i++) ...[
-                if (i > 0) const SizedBox(width: 14),
+                if (i > 0) SizedBox(width: AppSpacing.adminGridSpacing),
                 Expanded(child: statusCards[i]),
               ],
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.adminGridSpacing),
           Row(
             children: [
               for (int i = 0; i < performanceCards.length; i++) ...[
-                if (i > 0) const SizedBox(width: 14),
+                if (i > 0) SizedBox(width: AppSpacing.adminGridSpacing),
                 Expanded(child: performanceCards[i]),
               ],
             ],
@@ -126,10 +152,10 @@ class BannersKpiRow extends StatelessWidget {
 
     final allCards = [...statusCards, ...performanceCards];
     return Wrap(
-      spacing: 14,
-      runSpacing: 14,
+      spacing: AppSpacing.adminGridSpacing,
+      runSpacing: AppSpacing.adminGridSpacing,
       children: allCards.map((c) {
-        final width = screenWidth >= 768 ? (screenWidth - 48 - 14) / 2 : double.infinity;
+        final width = screenWidth >= 768 ? (screenWidth - 48 - AppSpacing.adminGridSpacing) / 2 : double.infinity;
         return SizedBox(width: width, child: c);
       }).toList(),
     );

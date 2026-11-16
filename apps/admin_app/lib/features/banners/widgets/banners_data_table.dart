@@ -8,6 +8,7 @@ class BannersDataTable extends StatefulWidget {
   final void Function(Map<String, dynamic> item)? onToggleStatus;
   final void Function(Map<String, dynamic> item)? onAnalytics;
   final void Function(Map<String, dynamic> item)? onDelete;
+  final bool isDesktop;
 
   const BannersDataTable({
     super.key,
@@ -17,6 +18,7 @@ class BannersDataTable extends StatefulWidget {
     this.onToggleStatus,
     this.onAnalytics,
     this.onDelete,
+    this.isDesktop = false,
   });
 
   @override
@@ -70,23 +72,32 @@ class _BannersDataTableState extends State<BannersDataTable> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Subtabs and Search Bar
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 768;
+          // Subtabs and Search Bar (Horizontal alignment on desktop, responsive wrap)
+          Builder(
+            builder: (context) {
+              final isWide = MediaQuery.sizeOf(context).width >= 768;
               if (isWide) {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildSubTabs(),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: _buildSubTabs(),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
                     _buildSearchInput(),
                   ],
                 );
               }
               return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildSubTabs(),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: _buildSubTabs(),
+                  ),
                   const SizedBox(height: 12),
                   _buildSearchInput(),
                 ],
@@ -96,14 +107,29 @@ class _BannersDataTableState extends State<BannersDataTable> {
           const SizedBox(height: 18),
 
           if (widget.isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child: CircularProgressIndicator(color: AppColors.adminPurple),
-              ),
-            )
+            widget.isDesktop
+                ? const Expanded(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: CircularProgressIndicator(color: AppColors.adminPurple),
+                      ),
+                    ),
+                  )
+                : const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: CircularProgressIndicator(color: AppColors.adminPurple),
+                    ),
+                  )
           else if (filtered.isEmpty)
-            _buildEmptyState()
+            widget.isDesktop
+                ? Expanded(
+                    child: Center(
+                      child: _buildEmptyState(),
+                    ),
+                  )
+                : _buildEmptyState()
           else
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -404,8 +430,8 @@ class _BannersDataTableState extends State<BannersDataTable> {
 
   Widget _buildSearchInput() {
     return SizedBox(
-      width: 240,
-      height: 40,
+      width: 210,
+      height: AppSpacing.adminControlHeight,
       child: AppTextField.search(
         hintText: 'Search banners...',
         onChanged: (v) => setState(() {
@@ -483,32 +509,54 @@ class _BannersDataTableState extends State<BannersDataTable> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.adminPurpleLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.photo_library_outlined, color: AppColors.adminPurple, size: 28),
+    final hasActiveFilter = _activeTab != 'all' || _searchQuery.isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: const BoxDecoration(
+              color: AppColors.adminPurpleLight,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 14),
-            Text(
-              'No Banners Found',
-              style: AppTypography.adminCardTitle,
+            child: const Icon(
+              Icons.photo_library_outlined,
+              color: AppColors.adminPurple,
+              size: 30,
             ),
-            const SizedBox(height: 4),
-            Text(
-              'No promotional banners match your current filter or query.',
-              style: AppTypography.adminCardSubtitle,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Banners Found',
+            style: AppTypography.adminCardTitle,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'No promotional banners match your current filter or query.',
+            style: AppTypography.adminCardSubtitle,
+            textAlign: TextAlign.center,
+          ),
+          if (hasActiveFilter) ...[
+            const SizedBox(height: 16),
+            AppButton.adminSecondary(
+              label: 'Reset Filters',
+              leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
+              height: 36,
+              onPressed: () => setState(() {
+                _activeTab = 'all';
+                _searchQuery = '';
+                _currentPage = 1;
+              }),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

@@ -163,9 +163,9 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           const SizedBox(height: 20),
 
           // Title & Target Link Row
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isTwo = constraints.maxWidth >= 540;
+          Builder(
+            builder: (context) {
+              final isTwo = MediaQuery.sizeOf(context).width >= 640;
               if (isTwo) {
                 return Row(
                   children: [
@@ -187,9 +187,9 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           const SizedBox(height: 18),
 
           // Banner Type & Display Mode Row
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isTwo = constraints.maxWidth >= 540;
+          Builder(
+            builder: (context) {
+              final isTwo = MediaQuery.sizeOf(context).width >= 640;
               if (isTwo) {
                 return Row(
                   children: [
@@ -211,55 +211,100 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           const SizedBox(height: 18),
 
           // Priority & Status Row
-          Row(
-            children: [
-              Expanded(
-                child: AppTextField(
-                  controller: widget.priorityController,
-                  hintText: 'Display Priority (1-10)',
-                  keyboardType: TextInputType.number,
-                  prefixIcon: const Icon(Icons.sort_rounded, size: 20, color: AppColors.adminSecondaryText),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(
-                height: AppSpacing.adminControlHeight,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: AppRadii.adminControl,
-                  border: Border.all(color: AppColors.adminBorder),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          Builder(
+            builder: (context) {
+              final isTwo = MediaQuery.sizeOf(context).width >= 640;
+              final priorityField = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Display Priority (1–10) *',
+                    style: AppTypography.adminFieldLabelSmall,
+                  ),
+                  const SizedBox(height: 6),
+                  AppTextField(
+                    controller: widget.priorityController,
+                    hintText: 'Enter priority (e.g. 1)',
+                    keyboardType: TextInputType.number,
+                    prefixIcon: const Icon(Icons.sort_rounded, size: 20, color: AppColors.adminSecondaryText),
+                  ),
+                ],
+              );
+
+              final statusCard = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Publication Status',
+                    style: AppTypography.adminFieldLabelSmall,
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    height: AppSpacing.adminControlHeight,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: AppColors.adminBackground,
+                      borderRadius: AppRadii.adminControl,
+                      border: Border.all(color: AppColors.adminBorder),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                widget.isActive ? Icons.check_circle_rounded : Icons.pause_circle_rounded,
+                                size: 18,
+                                color: widget.isActive ? AppColors.adminSuccess : AppColors.adminSecondaryText,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  widget.isActive ? 'Active' : 'Inactive',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: widget.isActive ? AppColors.adminSuccess : AppColors.adminSecondaryText,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: widget.isActive,
+                          activeThumbColor: Colors.white,
+                          activeTrackColor: AppColors.adminSuccess,
+                          onChanged: widget.onActiveToggled,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+
+              if (isTwo) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Status:',
-                      style: AppTypography.adminHint.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.adminSecondaryText,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Switch(
-                      value: widget.isActive,
-                      activeThumbColor: Colors.white,
-                      activeTrackColor: AppColors.adminSuccess,
-                      onChanged: widget.onActiveToggled,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      widget.isActive ? 'Active' : 'Inactive',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: widget.isActive ? AppColors.adminSuccess : AppColors.adminSecondaryText,
-                      ),
-                    ),
+                    Expanded(child: priorityField),
+                    const SizedBox(width: 16),
+                    Expanded(child: statusCard),
                   ],
-                ),
-              ),
-            ],
+                );
+              }
+              return Column(
+                children: [
+                  priorityField,
+                  const SizedBox(height: 14),
+                  statusCard,
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
 
@@ -523,18 +568,38 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
   }
 
   Widget _buildTitleField() {
-    return AppTextField(
-      controller: widget.titleController,
-      hintText: 'Banner Title * (e.g. 🎯 Live Mock Test Extravaganza)',
-      prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Banner Title *',
+          style: AppTypography.adminFieldLabelSmall,
+        ),
+        const SizedBox(height: 6),
+        AppTextField(
+          controller: widget.titleController,
+          hintText: 'e.g. 🎯 Live Mock Test Extravaganza',
+          prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),
+        ),
+      ],
     );
   }
 
   Widget _buildLinkField() {
-    return AppTextField(
-      controller: widget.linkController,
-      hintText: 'Target Link / Route * (e.g. /tests or /contests)',
-      prefixIcon: const Icon(Icons.link_rounded, size: 20, color: AppColors.adminSecondaryText),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Target Link / Route *',
+          style: AppTypography.adminFieldLabelSmall,
+        ),
+        const SizedBox(height: 6),
+        AppTextField(
+          controller: widget.linkController,
+          hintText: 'e.g. /tests or /contests',
+          prefixIcon: const Icon(Icons.link_rounded, size: 20, color: AppColors.adminSecondaryText),
+        ),
+      ],
     );
   }
 
@@ -548,35 +613,31 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
       {'value': 'announcement', 'label': 'System Announcement'},
     ];
 
-    return AppDropdown<String>(
-      inlineLabel: true,
-      hint: 'Select Banner Type *',
-      prefixIcon: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.category_rounded, size: 18, color: AppColors.adminSecondaryText),
-          const SizedBox(width: 8),
-          Text(
-            'Type:',
-            style: AppTypography.adminHint.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.adminSecondaryText,
-            ),
-          ),
-        ],
-      ),
-      value: widget.bannerType,
-      height: AppSpacing.adminControlHeight,
-      borderRadius: AppRadii.adminControl,
-      items: types.map((t) {
-        return AppDropdownItem<String>(
-          value: t['value']!,
-          label: t['label']!,
-        );
-      }).toList(),
-      onChanged: (v) {
-        if (v != null) widget.onBannerTypeChanged(v);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Banner Type *',
+          style: AppTypography.adminFieldLabelSmall,
+        ),
+        const SizedBox(height: 6),
+        AppDropdown<String>(
+          hint: 'Select Banner Type',
+          prefixIcon: const Icon(Icons.category_rounded, size: 18, color: AppColors.adminSecondaryText),
+          value: widget.bannerType,
+          height: AppSpacing.adminControlHeight,
+          borderRadius: AppRadii.adminControl,
+          items: types.map((t) {
+            return AppDropdownItem<String>(
+              value: t['value']!,
+              label: t['label']!,
+            );
+          }).toList(),
+          onChanged: (v) {
+            if (v != null) widget.onBannerTypeChanged(v);
+          },
+        ),
+      ],
     );
   }
 
@@ -589,35 +650,31 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
       {'value': 'popup_modal', 'label': 'Pop-up Modal on Launch'},
     ];
 
-    return AppDropdown<String>(
-      inlineLabel: true,
-      hint: 'Select Placement *',
-      prefixIcon: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.view_carousel_rounded, size: 18, color: AppColors.adminSecondaryText),
-          const SizedBox(width: 8),
-          Text(
-            'Placement:',
-            style: AppTypography.adminHint.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.adminSecondaryText,
-            ),
-          ),
-        ],
-      ),
-      value: widget.displayMode,
-      height: AppSpacing.adminControlHeight,
-      borderRadius: AppRadii.adminControl,
-      items: modes.map((m) {
-        return AppDropdownItem<String>(
-          value: m['value']!,
-          label: m['label']!,
-        );
-      }).toList(),
-      onChanged: (v) {
-        if (v != null) widget.onDisplayModeChanged(v);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Display Mode / Placement *',
+          style: AppTypography.adminFieldLabelSmall,
+        ),
+        const SizedBox(height: 6),
+        AppDropdown<String>(
+          hint: 'Select Placement',
+          prefixIcon: const Icon(Icons.view_carousel_rounded, size: 18, color: AppColors.adminSecondaryText),
+          value: widget.displayMode,
+          height: AppSpacing.adminControlHeight,
+          borderRadius: AppRadii.adminControl,
+          items: modes.map((m) {
+            return AppDropdownItem<String>(
+              value: m['value']!,
+              label: m['label']!,
+            );
+          }).toList(),
+          onChanged: (v) {
+            if (v != null) widget.onDisplayModeChanged(v);
+          },
+        ),
+      ],
     );
   }
 }

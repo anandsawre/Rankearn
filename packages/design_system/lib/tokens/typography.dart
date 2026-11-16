@@ -499,6 +499,22 @@ class AppTypography {
     fontFamilyFallback: fontFallbacks,
   );
 
+  static const TextStyle adminMetricValue = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 18,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.2,
+    color: AppColors.adminPrimaryText,
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle adminMetricLabel = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.adminSecondaryText,
+    fontFamilyFallback: fontFallbacks,
+  );
+
   static const TextStyle adminSectionTitle = TextStyle(
     fontFamily: fontHeading,
     fontSize: 16,

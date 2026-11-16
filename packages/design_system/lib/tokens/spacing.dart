@@ -52,4 +52,5 @@ class AppSpacing {
   static const double adminGapCard = 24.0;
   static const double adminGapItem = 18.0;
   static const double adminGapSmall = 12.0;
+  static const double adminGridSpacing = 16.0;
 }

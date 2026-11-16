@@ -29,10 +29,6 @@ class ReferralsKpiRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1200;
-    final isTablet = screenWidth >= 768 && screenWidth < 1200;
-
     final cards = [
       AdminMetricCard(
         title: 'Total Referrals',
@@ -40,6 +36,8 @@ class ReferralsKpiRow extends StatelessWidget {
         subtitle: 'Invites shared',
         icon: Icons.share_rounded,
         color: AppColors.adminPurple,
+        iconBgColor: AppColors.adminPurpleLight,
+        iconColor: AppColors.adminPurple,
         growth: '+18.2%',
         isGrowthPositive: true,
         sparklineData: const [25, 34, 45, 52, 68, 75, 92],
@@ -50,6 +48,8 @@ class ReferralsKpiRow extends StatelessWidget {
         subtitle: 'Activated new users',
         icon: Icons.person_add_alt_1_rounded,
         color: AppColors.adminSuccess,
+        iconBgColor: AppColors.adminSuccessLight,
+        iconColor: AppColors.adminSuccess,
         growth: '+14.6%',
         isGrowthPositive: true,
         sparklineData: const [20, 28, 38, 45, 58, 65, 82],
@@ -60,6 +60,8 @@ class ReferralsKpiRow extends StatelessWidget {
         subtitle: 'Referral coins & cash',
         icon: Icons.monetization_on_rounded,
         color: AppColors.adminWarning,
+        iconBgColor: AppColors.adminAmberLight,
+        iconColor: AppColors.adminWarning,
         growth: '+22.4%',
         isGrowthPositive: true,
         sparklineData: const [40, 52, 60, 78, 90, 115, 142],
@@ -70,6 +72,8 @@ class ReferralsKpiRow extends StatelessWidget {
         subtitle: 'Disbursed payouts',
         icon: Icons.account_balance_wallet_rounded,
         color: AppColors.adminBlue,
+        iconBgColor: AppColors.adminBlueLight,
+        iconColor: AppColors.adminBlue,
         growth: '+11.8%',
         isGrowthPositive: true,
         sparklineData: const [30, 40, 50, 62, 70, 85, 98],
@@ -80,41 +84,45 @@ class ReferralsKpiRow extends StatelessWidget {
         subtitle: 'Lead to active ratio',
         icon: Icons.percent_rounded,
         color: AppColors.adminViolet,
+        iconBgColor: AppColors.adminPurpleLight,
+        iconColor: AppColors.adminViolet,
         growth: '+4.5%',
         isGrowthPositive: true,
         sparklineData: const [75, 78, 80, 81, 82, 82.8, 83.2],
       ),
     ];
 
-    if (isDesktop) {
-      return Row(
-        children: [
-          for (int i = 0; i < cards.length; i++) ...[
-            if (i > 0) const SizedBox(width: 14),
-            Expanded(child: cards[i]),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > 1100) {
+          return Row(
+            children: [
+              for (int i = 0; i < cards.length; i++) ...[
+                if (i > 0) SizedBox(width: AppSpacing.adminGridSpacing),
+                Expanded(child: cards[i]),
+              ],
+            ],
+          );
+        }
+
+        if (constraints.maxWidth > 650) {
+          final cardWidth = (constraints.maxWidth - AppSpacing.adminGridSpacing) / 2;
+          return Wrap(
+            spacing: AppSpacing.adminGridSpacing,
+            runSpacing: AppSpacing.adminGridSpacing,
+            children: cards.map((c) => SizedBox(width: cardWidth, child: c)).toList(),
+          );
+        }
+
+        return Column(
+          children: [
+            for (int i = 0; i < cards.length; i++) ...[
+              if (i > 0) SizedBox(height: AppSpacing.adminGridSpacing),
+              cards[i],
+            ],
           ],
-        ],
-      );
-    }
-
-    if (isTablet) {
-      return Wrap(
-        spacing: 14,
-        runSpacing: 14,
-        children: cards.map((c) {
-          final width = (screenWidth - 48 - 14) / 2;
-          return SizedBox(width: width, child: c);
-        }).toList(),
-      );
-    }
-
-    return Column(
-      children: [
-        for (int i = 0; i < cards.length; i++) ...[
-          if (i > 0) const SizedBox(height: 12),
-          cards[i],
-        ],
-      ],
+        );
+      },
     );
   }
 }

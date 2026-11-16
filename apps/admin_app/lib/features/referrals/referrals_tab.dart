@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import 'widgets/referrals_hero_card.dart';
+import 'widgets/referrals_quick_actions.dart';
 import 'widgets/referrals_kpi_row.dart';
 import 'widgets/referral_settings_card.dart';
 import 'widgets/referral_share_preview_card.dart';
 import 'widgets/referral_analytics_card.dart';
 import 'widgets/recent_referrals_table.dart';
-import 'widgets/referral_quick_actions_card.dart';
 
 class ReferralsTab extends StatefulWidget {
   final List<Map<String, dynamic>>? initialReferralLogs;
@@ -230,14 +231,42 @@ class _ReferralsTabState extends State<ReferralsTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Purple Gradient Header Banner
-          AdminModuleHeroBanner(
-            title: 'Refer & Earn Management',
-            subtitle: 'Manage referral incentives, track viral invitations, reward bonuses and payout thresholds.',
-            icon: Icons.card_giftcard_rounded,
-            actionLabel: 'Refresh Logs',
-            actionIcon: Icons.refresh_rounded,
-            onAction: _fetchReferrals,
+          // 1. Hero Banner (Left 58%) + Quick Actions (Right 42%)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final heroCard = ReferralsHeroCard(
+                onRefresh: _fetchReferrals,
+              );
+              final quickActions = ReferralsQuickActions(
+                onAction: _handleQuickAction,
+              );
+
+              if (constraints.maxWidth > 980) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 58,
+                      child: heroCard,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 42,
+                      child: quickActions,
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    heroCard,
+                    const SizedBox(height: 16),
+                    quickActions,
+                  ],
+                );
+              }
+            },
           ),
           const SizedBox(height: AppSpacing.adminGapCard),
 
@@ -300,27 +329,8 @@ class _ReferralsTabState extends State<ReferralsTab> {
           ],
           const SizedBox(height: AppSpacing.adminGapCard),
 
-          // 4. Analytics Performance Chart & Quick Actions
-          if (isDesktop)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Expanded(
-                  flex: 5,
-                  child: ReferralAnalyticsCard(),
-                ),
-                const SizedBox(width: AppSpacing.adminGapCard),
-                SizedBox(
-                  width: 400,
-                  child: ReferralQuickActionsCard(onAction: _handleQuickAction),
-                ),
-              ],
-            )
-          else ...[
-            const ReferralAnalyticsCard(),
-            const SizedBox(height: AppSpacing.adminGapCard),
-            ReferralQuickActionsCard(onAction: _handleQuickAction),
-          ],
+          // 4. Analytics Performance Chart
+          const ReferralAnalyticsCard(),
           const SizedBox(height: AppSpacing.adminGapSection),
 
           // 5. Recent Referrals Data Table

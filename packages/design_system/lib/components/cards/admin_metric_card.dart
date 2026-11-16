@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 import '../../tokens/shadows.dart';
+import '../../tokens/typography.dart';
 import '../display/sparkline_painter.dart';
 
 /// AdminMetricCard represents a high-density, pixel-perfect KPI summary card
@@ -74,10 +75,12 @@ class AdminMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveRadius = borderRadius ?? AppRadii.adminCard;
+    final effectiveIconBg = iconBgColor ?? color.withValues(alpha: 0.12);
+    final effectiveIconColor = iconColor ?? color;
 
     final cardContent = Container(
       width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.adminCardBackground,
         borderRadius: effectiveRadius,
@@ -86,18 +89,18 @@ class AdminMetricCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 1. Icon Squircle / Circle
+          // 1. Icon Squircle
           Container(
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: iconBgColor ?? color,
-              shape: BoxShape.circle,
+              color: effectiveIconBg,
+              borderRadius: AppRadii.adminControl,
             ),
             alignment: Alignment.center,
-            child: Icon(icon, color: iconColor ?? Colors.white, size: 22),
+            child: Icon(icon, color: effectiveIconColor, size: 20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
 
           // 2. Middle Value and Subtitle
           Expanded(
@@ -107,38 +110,34 @@ class AdminMetricCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF64748B),
-                  ),
+                  style: AppTypography.adminMetricLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 4,
-                  runSpacing: 2,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          value,
+                          style: AppTypography.adminMetricValue,
+                          maxLines: 1,
+                        ),
                       ),
                     ),
                     if (growth != null && growth!.isNotEmpty) ...[
+                      const SizedBox(width: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                         decoration: BoxDecoration(
                           color: isGrowthPositive
-                              ? const Color(0xFFECFDF5)
-                              : const Color(0xFFFEF2F2),
-                          borderRadius: BorderRadius.circular(4),
+                              ? AppColors.adminSuccessLight
+                              : AppColors.adminDangerLight,
+                          borderRadius: AppRadii.badge,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -149,19 +148,17 @@ class AdminMetricCard extends StatelessWidget {
                                   : Icons.arrow_downward_rounded,
                               size: 9,
                               color: isGrowthPositive
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFFEF4444),
+                                  ? AppColors.adminSuccess
+                                  : AppColors.adminDanger,
                             ),
                             const SizedBox(width: 2),
                             Text(
                               growth!,
-                              style: TextStyle(
-                                fontFamily: 'Plus Jakarta Sans',
+                              style: AppTypography.adminBadge.copyWith(
                                 fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
                                 color: isGrowthPositive
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFFEF4444),
+                                    ? AppColors.adminSuccess
+                                    : AppColors.adminDanger,
                               ),
                             ),
                           ],
@@ -169,6 +166,7 @@ class AdminMetricCard extends StatelessWidget {
                       ),
                     ],
                     if (badge != null) ...[
+                      const SizedBox(width: 4),
                       badge!,
                     ],
                   ],
@@ -176,12 +174,7 @@ class AdminMetricCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    fontFamily: 'Plus Jakarta Sans',
-                    fontSize: 10.5,
-                    color: Color(0xFF94A3B8),
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: AppTypography.adminTableSecondary,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -193,10 +186,10 @@ class AdminMetricCard extends StatelessWidget {
           if (trailing != null)
             trailing!
           else if (sparklineData != null && sparklineData!.length >= 2) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             SizedBox(
-              width: 70,
-              height: 32,
+              width: 54,
+              height: 28,
               child: CustomPaint(
                 painter: SparklinePainter(
                   data: sparklineData!,

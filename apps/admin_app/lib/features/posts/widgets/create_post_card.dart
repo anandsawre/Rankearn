@@ -125,9 +125,9 @@ class _CreatePostCardState extends State<CreatePostCard> {
             ),
             child: Row(
               children: [
-                _buildTypeTab('post', 'Post'),
-                _buildTypeTab('poll', 'Poll'),
-                _buildTypeTab('announcement', 'Announcement'),
+                _buildTypeTab('post', 'Post', flex: 3),
+                _buildTypeTab('poll', 'Poll', flex: 3),
+                _buildTypeTab('announcement', 'Announcement', flex: 5),
               ],
             ),
           ),
@@ -249,26 +249,31 @@ class _CreatePostCardState extends State<CreatePostCard> {
     );
   }
 
-  Widget _buildTypeTab(String id, String label) {
+  Widget _buildTypeTab(String id, String label, {int flex = 1}) {
     final isSelected = _activeType == id;
     return Expanded(
+      flex: flex,
       child: InkWell(
         onTap: () => setState(() => _activeType = id),
         borderRadius: BorderRadius.circular(6),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.adminPurple : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),
           alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isSelected ? Colors.white : AppColors.adminSecondaryText,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? Colors.white : AppColors.adminSecondaryText,
+              ),
             ),
           ),
         ),

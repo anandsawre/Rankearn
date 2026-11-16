@@ -21,20 +21,14 @@ class CommunityOverviewPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // 1. Community Overview
+        // 1. Community Overview (Tokenized KPI Cards in 2x2 Grid)
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.adminCardBackground,
             borderRadius: AppRadii.adminCard,
             border: Border.all(color: AppColors.adminBorder),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x06000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
+            boxShadow: AppShadows.adminCard,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,54 +38,60 @@ class CommunityOverviewPanel extends StatelessWidget {
                   const Icon(Icons.bar_chart_rounded, size: 20, color: AppColors.adminPurple),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text('Community Overview', style: AppTypography.adminCardTitle, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      'Community Overview',
+                      style: AppTypography.adminCardTitle,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              // 2x2 Grid of stats
+              // 2x2 Grid of Tokenized Admin KPI Cards
               Row(
-                children: [
+                children: const [
                   Expanded(
-                    child: _buildStatTile(
+                    child: AdminKpiCard(
                       icon: Icons.groups_rounded,
-                      iconBg: AppColors.adminPurpleLight,
                       iconColor: AppColors.adminPurple,
+                      iconBgColor: AppColors.adminPurpleLight,
                       value: '45,280',
                       label: 'Total Members',
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(
-                    child: _buildStatTile(
+                    child: AdminKpiCard(
                       icon: Icons.trending_up_rounded,
-                      iconBg: const Color(0xFFECFDF5),
                       iconColor: AppColors.adminSuccess,
+                      iconBgColor: AppColors.adminSuccessLight,
                       value: '+12%',
                       label: 'Growth (7 Days)',
+                      growth: '+12%',
+                      isGrowthPositive: true,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               Row(
-                children: [
+                children: const [
                   Expanded(
-                    child: _buildStatTile(
+                    child: AdminKpiCard(
                       icon: Icons.article_outlined,
-                      iconBg: const Color(0xFFEFF6FF),
-                      iconColor: const Color(0xFF2563EB),
+                      iconColor: AppColors.adminBlue,
+                      iconBgColor: AppColors.adminBlueLight,
                       value: '142',
                       label: 'Total Posts',
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Expanded(
-                    child: _buildStatTile(
+                    child: AdminKpiCard(
                       icon: Icons.chat_bubble_outline_rounded,
-                      iconBg: const Color(0xFFFFFBEB),
-                      iconColor: const Color(0xFFF59E0B),
+                      iconColor: AppColors.adminWarning,
+                      iconBgColor: AppColors.adminAmberLight,
                       value: '6,842',
                       label: 'Total Comments',
                     ),
@@ -107,16 +107,10 @@ class CommunityOverviewPanel extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.adminCardBackground,
             borderRadius: AppRadii.adminCard,
             border: Border.all(color: AppColors.adminBorder),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x06000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
+            boxShadow: AppShadows.adminCard,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,7 +120,11 @@ class CommunityOverviewPanel extends StatelessWidget {
                   const Icon(Icons.flash_on_rounded, size: 20, color: AppColors.adminPurple),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text('Quick Actions', style: AppTypography.adminCardTitle, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      'Quick Actions',
+                      style: AppTypography.adminCardTitle,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -145,7 +143,7 @@ class CommunityOverviewPanel extends StatelessWidget {
                 title: 'Manage Comments',
                 badge: '24',
                 badgeColor: AppColors.adminDanger,
-                color: const Color(0xFF0284C7),
+                color: AppColors.adminSky,
                 onTap: onManageComments,
               ),
               const SizedBox(height: 8),
@@ -164,8 +162,8 @@ class CommunityOverviewPanel extends StatelessWidget {
                 icon: Icons.calendar_month_outlined,
                 title: 'Scheduled Posts',
                 badge: '5',
-                badgeColor: const Color(0xFFF59E0B),
-                color: const Color(0xFFF59E0B),
+                badgeColor: AppColors.adminWarning,
+                color: AppColors.adminWarning,
                 onTap: onScheduledPosts,
               ),
               const SizedBox(height: 8),
@@ -180,47 +178,6 @@ class CommunityOverviewPanel extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStatTile({
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
-    required String value,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.adminBackground,
-        borderRadius: AppRadii.adminControl,
-        border: Border.all(color: AppColors.adminBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(8)),
-            alignment: Alignment.center,
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.adminPrimaryText),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.adminSecondaryText),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
     );
   }
 
@@ -249,7 +206,7 @@ class CommunityOverviewPanel extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.adminPrimaryText),
+                style: AppTypography.adminTablePrimary.copyWith(fontSize: 12),
               ),
             ),
             if (badge != null) ...[
@@ -261,7 +218,11 @@ class CommunityOverviewPanel extends StatelessWidget {
                 ),
                 child: Text(
                   badge,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
                 ),
               ),
               const SizedBox(width: 6),
@@ -273,4 +234,3 @@ class CommunityOverviewPanel extends StatelessWidget {
     );
   }
 }
-

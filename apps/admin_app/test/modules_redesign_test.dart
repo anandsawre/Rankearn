@@ -347,8 +347,10 @@ void main() {
     // Verify Center Feed
     expect(find.text('RRB Technician Grade 3 – Daily Practice Set 🔥'), findsOneWidget);
 
-    // Verify Right Overview
-    expect(find.text('Community Overview'), findsOneWidget);
+    // Verify 4 KPI Cards
     expect(find.text('Total Members'), findsOneWidget);
+    expect(find.text('Growth (7 Days)'), findsOneWidget);
+    expect(find.text('Total Posts'), findsOneWidget);
+    expect(find.text('Total Comments'), findsOneWidget);
   });
 }
