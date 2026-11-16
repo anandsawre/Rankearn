@@ -850,7 +850,7 @@ class _UserAppShellState extends State<UserAppShell> {
   Widget build(BuildContext context) {
     final isPro = _profile.subscriptionStatus == 'premium';
     final isDesktop = MediaQuery.of(context).size.width >= 850;
-    final isSpinTab = _activeTab == UserNavTab.spin;
+    final isSpinTab = _activeTab == UserNavTab.spin && !isDesktop;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isSpinTab
@@ -870,7 +870,7 @@ class _UserAppShellState extends State<UserAppShell> {
             ),
       child: Scaffold(
         key: _scaffoldKey,
-        drawer: isDesktop ? null : _buildDrawer(),
+        drawer: _buildDrawer(),
         appBar: isSpinTab
             ? null
             : AppHeader(
@@ -878,7 +878,7 @@ class _UserAppShellState extends State<UserAppShell> {
                 userName: _profile.name,
                 isPro: isPro,
                 unreadNotifications: _unreadNotifications,
-                showMenuButton: !isDesktop,
+                showMenuButton: true,
                 currentTab: _activeTab,
                 onTabSelected: (tab) {
                   setState(() => _activeTab = tab);
@@ -888,6 +888,7 @@ class _UserAppShellState extends State<UserAppShell> {
                 },
                 onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
                 onNotificationTap: _openNotificationsModal,
+                onSupportTap: _openSupportDialog,
                 onCoinsTap: () {
                   setState(() => _activeTab = UserNavTab.wallet);
                   _syncProfileWithDatabase();

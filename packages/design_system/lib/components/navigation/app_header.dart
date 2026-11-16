@@ -19,6 +19,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onCoinsTap;
   final VoidCallback? onAddCoinsTap;
   final VoidCallback? onMenuTap;
+  final VoidCallback? onSupportTap;
   final bool showMenuButton;
   final UserNavTab? currentTab;
   final ValueChanged<UserNavTab>? onTabSelected;
@@ -35,6 +36,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     this.onCoinsTap,
     this.onAddCoinsTap,
     this.onMenuTap,
+    this.onSupportTap,
     this.showMenuButton = true,
     this.currentTab,
     this.onTabSelected,
@@ -226,6 +228,18 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                                 label: 'Rewards',
                                 tab: UserNavTab.rewards,
                               ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
+                                icon: Icons.casino_rounded,
+                                label: 'Lucky Spin',
+                                tab: UserNavTab.spin,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildDesktopNavItem(
+                                icon: Icons.person_outline_rounded,
+                                label: 'Profile',
+                                tab: UserNavTab.profile,
+                              ),
                             ],
                           ),
                         ),
@@ -354,6 +368,25 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                       compact: isMobile,
                     ),
                     SizedBox(width: isVeryCompact ? 3 : (isCompact ? 4 : 6)),
+
+                    // Live Support Chat Button
+                    if (isDesktop && onSupportTap != null) ...[
+                      IconButton(
+                        icon: Icon(
+                          Icons.headset_mic_outlined,
+                          color: AppColors.textPrimary,
+                          size: isVeryCompact ? 18 : (isCompact ? 20 : 22),
+                        ),
+                        onPressed: onSupportTap,
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        tooltip: 'Support Chat',
+                      ),
+                      SizedBox(width: isVeryCompact ? 3 : (isCompact ? 4 : 6)),
+                    ],
 
                     // Notification Bell with badge
                     Stack(
@@ -498,9 +531,6 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       return true;
     }
     if (tab == UserNavTab.live && currentTab == UserNavTab.earn) {
-      return true;
-    }
-    if (tab == UserNavTab.rewards && currentTab == UserNavTab.spin) {
       return true;
     }
     return false;
