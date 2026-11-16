@@ -49,7 +49,13 @@ class _ReplyFeedbackDialogState extends State<ReplyFeedbackDialog> {
         AppModalDialog.cancelButton(context, label: 'Cancel'),
         AppModalDialog.primaryButton(
           onPressed: _isSending ? null : _submit,
-          icon: const Icon(Icons.send_rounded, size: 16),
+          icon: _isSending
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : null,
           child: Text(
             _isSending ? 'Sending...' : 'Send Email Reply',
             style: const TextStyle(
@@ -91,11 +97,9 @@ class _ReplyFeedbackDialogState extends State<ReplyFeedbackDialog> {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text('Admin Response Message *', style: AppTypography.adminFieldLabelSmall),
-            const SizedBox(height: AppSpacing.xs),
             AppModalDialog.textField(
               controller: _replyController,
-              hint: 'Type your official response to candidate...',
+              hint: 'Admin Response Message * (official candidate reply)',
               maxLines: 4,
               minLines: 3,
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter response message' : null,

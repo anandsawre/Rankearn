@@ -82,7 +82,7 @@ class _CreateTicketDialogState extends State<CreateTicketDialog> {
                   height: 14,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
-              : const Icon(Icons.check_rounded, size: 16),
+              : null,
           child: Text(
             _isSubmitting ? 'Creating...' : 'Create Ticket',
             style: const TextStyle(
@@ -98,8 +98,6 @@ class _CreateTicketDialogState extends State<CreateTicketDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Candidate Information', style: AppTypography.adminFieldLabelSmall),
-            const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
                 Expanded(
@@ -131,69 +129,53 @@ class _CreateTicketDialogState extends State<CreateTicketDialog> {
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Category *', style: AppTypography.adminFieldLabelSmall),
-                      const SizedBox(height: AppSpacing.xs),
-                      AppDropdown<String>(
-                        inlineLabel: true,
-                        value: _category,
-                        items: const [
-                          AppDropdownItem(value: 'Payment', label: 'Payment & Coins'),
-                          AppDropdownItem(value: 'Verification', label: 'Verification'),
-                          AppDropdownItem(value: 'Referral', label: 'Referral'),
-                          AppDropdownItem(value: 'Technical', label: 'Technical'),
-                          AppDropdownItem(value: 'Withdrawal', label: 'Withdrawal'),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) setState(() => _category = v);
-                        },
-                      ),
+                  child: AppDropdown<String>(
+                    inlineLabel: true,
+                    value: _category,
+                    prefixIcon: const Icon(Icons.category_rounded, size: 16, color: AppColors.adminSecondaryText),
+                    items: const [
+                      AppDropdownItem(value: 'Payment', label: 'Category: Payment & Coins'),
+                      AppDropdownItem(value: 'Verification', label: 'Category: Verification'),
+                      AppDropdownItem(value: 'Referral', label: 'Category: Referral'),
+                      AppDropdownItem(value: 'Technical', label: 'Category: Technical'),
+                      AppDropdownItem(value: 'Withdrawal', label: 'Category: Withdrawal'),
                     ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _category = v);
+                    },
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Priority Level *', style: AppTypography.adminFieldLabelSmall),
-                      const SizedBox(height: AppSpacing.xs),
-                      AppDropdown<String>(
-                        inlineLabel: true,
-                        value: _priority,
-                        items: const [
-                          AppDropdownItem(value: 'high', label: 'High Priority'),
-                          AppDropdownItem(value: 'medium', label: 'Medium Priority'),
-                          AppDropdownItem(value: 'low', label: 'Low Priority'),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) setState(() => _priority = v);
-                        },
-                      ),
+                  child: AppDropdown<String>(
+                    inlineLabel: true,
+                    value: _priority,
+                    prefixIcon: const Icon(Icons.flag_rounded, size: 16, color: AppColors.adminSecondaryText),
+                    items: const [
+                      AppDropdownItem(value: 'high', label: 'Priority: High Priority'),
+                      AppDropdownItem(value: 'medium', label: 'Priority: Medium Priority'),
+                      AppDropdownItem(value: 'low', label: 'Priority: Low Priority'),
                     ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _priority = v);
+                    },
                   ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
 
-            Text('Subject Line *', style: AppTypography.adminFieldLabelSmall),
-            const SizedBox(height: AppSpacing.xs),
             AppModalDialog.textField(
               controller: _subjectController,
-              hint: 'Ticket Subject (e.g. Coins not added after payment)',
+              hint: 'Ticket Subject Line * (e.g. Coins not added after payment)',
               prefixIcon: const Icon(Icons.title_rounded, size: 18, color: AppColors.adminSecondaryText),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter subject line' : null,
             ),
             const SizedBox(height: AppSpacing.md),
 
-            Text('Initial Query / Issue Notes *', style: AppTypography.adminFieldLabelSmall),
-            const SizedBox(height: AppSpacing.xs),
             AppModalDialog.textField(
               controller: _messageController,
-              hint: 'Type detailed query description or candidate issue notes...',
+              hint: 'Initial Query / Issue Notes *',
               maxLines: 4,
               minLines: 3,
               prefixIcon: const Icon(Icons.notes_rounded, size: 18, color: AppColors.adminSecondaryText),
