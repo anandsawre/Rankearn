@@ -188,7 +188,18 @@ class _BannersTabState extends State<BannersTab> {
             'end_date': _endDate?.toIso8601String(),
           },
         });
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Error saving banner to Supabase: $e');
+        if (!mounted) return;
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Database error: $e'),
+            backgroundColor: AppColors.adminDanger,
+          ),
+        );
+        return;
+      }
     }
 
     if (!mounted) return;
@@ -297,7 +308,9 @@ class _BannersTabState extends State<BannersTab> {
     if (client != null && id != null) {
       try {
         await client.from('app_banners').delete().eq('id', id);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Error deleting banner from Supabase: $e');
+      }
     }
 
     if (mounted) {
