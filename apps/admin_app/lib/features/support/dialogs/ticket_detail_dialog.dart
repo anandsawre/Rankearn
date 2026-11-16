@@ -60,7 +60,7 @@ class _TicketDetailDialogState extends State<TicketDetailDialog> {
         .listen(
       (data) {
         if (!mounted) return;
-        final updated = data.map((m) => {
+        final updated = data.map<Map<String, dynamic>>((m) => <String, dynamic>{
           'isUser': m['role'] == 'user',
           'text': m['text']?.toString() ?? '',
           'time': m['created_at'] != null

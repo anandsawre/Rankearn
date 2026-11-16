@@ -1500,7 +1500,7 @@ class _UserSupportChatDialogState extends State<_UserSupportChatDialog> {
         .listen(
       (data) {
         if (!mounted) return;
-        final updated = data.map((m) => {
+        final updated = data.map<Map<String, dynamic>>((m) => <String, dynamic>{
           'isUser': m['role'] == 'user',
           'text': m['text']?.toString() ?? '',
           'time': m['created_at'] != null
@@ -1542,11 +1542,14 @@ class _UserSupportChatDialogState extends State<_UserSupportChatDialog> {
         '${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}';
 
     setState(() {
-      _messages.add({
-        'isUser': true,
-        'text': text,
-        'time': timeNow,
-      });
+      _messages = [
+        ..._messages,
+        <String, dynamic>{
+          'isUser': true,
+          'text': text,
+          'time': timeNow,
+        },
+      ];
     });
     _messageController.clear();
     _scrollToBottom();
