@@ -188,20 +188,17 @@ class _BannerCarouselState extends State<BannerCarousel> {
   Widget _buildBannerSlide(BannerItemData banner) {
     final cleanUrl = _sanitizeUrl(banner.imageUrl);
     final hasImage = cleanUrl.isNotEmpty;
-    final hasTitle = banner.title.trim().isNotEmpty;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => widget.onBannerTap?.call(banner),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Background Image or Gradient
-            if (hasImage)
-              Image.network(
+        child: hasImage
+            ? Image.network(
                 cleanUrl,
                 fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
                 errorBuilder: (ctx, err, stack) => _buildFallbackBanner(banner),
                 loadingBuilder: (ctx, child, progress) {
                   if (progress == null) return child;
@@ -213,64 +210,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                   );
                 },
               )
-            else
-              _buildFallbackBanner(banner),
-
-            // Gradient Overlay for Title & CTA if title exists
-            if (hasTitle)
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xDD000000),
-                      Color(0x66000000),
-                      Colors.transparent,
-                    ],
-                    begin: Alignment.bottomLeft,
-                    end: Alignment.topRight,
-                  ),
-                ),
-                padding: const EdgeInsets.all(16),
-                alignment: Alignment.bottomLeft,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.adminPurple,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        banner.type.toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      banner.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        shadows: [
-                          Shadow(blurRadius: 4, color: Colors.black87),
-                        ],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
+            : _buildFallbackBanner(banner),
       ),
     );
   }
