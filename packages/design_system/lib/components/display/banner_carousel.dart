@@ -42,7 +42,9 @@ class BannerCarousel extends StatefulWidget {
   final List<BannerItemData> banners;
   final ValueChanged<BannerItemData>? onBannerTap;
   final Widget? fallbackWidget;
-  final double height;
+  /// Height of the banner carousel. If omitted, matches [TestsHeroBanner] / [AppHeroBanner]
+  /// height (172px on compact mobile, 219px on tablet/desktop).
+  final double? height;
   final BorderRadius? borderRadius;
   final Duration autoPlayInterval;
 
@@ -51,7 +53,7 @@ class BannerCarousel extends StatefulWidget {
     required this.banners,
     this.onBannerTap,
     this.fallbackWidget,
-    this.height = 160.0,
+    this.height,
     this.borderRadius,
     this.autoPlayInterval = const Duration(seconds: 5),
   });
@@ -110,66 +112,73 @@ class _BannerCarouselState extends State<BannerCarousel> {
 
     final radius = widget.borderRadius ?? BorderRadius.circular(12);
 
-    return Container(
-      height: widget.height,
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0C000000),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: radius,
-        child: Stack(
-          children: [
-            PageView.builder(
-              controller: _pageController,
-              itemCount: widget.banners.length,
-              onPageChanged: (idx) {
-                setState(() => _currentPage = idx);
-              },
-              itemBuilder: (context, index) {
-                final banner = widget.banners[index];
-                return _buildBannerSlide(banner);
-              },
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 420;
+        final effectiveHeight = widget.height ?? (isCompact ? 172.0 : 219.0);
 
-            // Pagination Dots Indicator
-            if (widget.banners.length > 1)
-              Positioned(
-                bottom: 10,
-                right: 14,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black45,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(widget.banners.length, (i) {
-                      final isSelected = i == _currentPage;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                        width: isSelected ? 16 : 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: isSelected ? Colors.white : Colors.white54,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
+        return Container(
+          height: effectiveHeight,
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0C000000),
+                blurRadius: 14,
+                offset: Offset(0, 4),
               ),
-          ],
-        ),
-      ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: radius,
+            child: Stack(
+              children: [
+                PageView.builder(
+                  controller: _pageController,
+                  itemCount: widget.banners.length,
+                  onPageChanged: (idx) {
+                    setState(() => _currentPage = idx);
+                  },
+                  itemBuilder: (context, index) {
+                    final banner = widget.banners[index];
+                    return _buildBannerSlide(banner);
+                  },
+                ),
+
+                // Pagination Dots Indicator
+                if (widget.banners.length > 1)
+                  Positioned(
+                    bottom: 10,
+                    right: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black45,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(widget.banners.length, (i) {
+                          final isSelected = i == _currentPage;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                            width: isSelected ? 16 : 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.white : Colors.white54,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

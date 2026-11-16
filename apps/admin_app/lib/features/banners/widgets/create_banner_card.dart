@@ -401,7 +401,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
       children: [
         Container(
           width: double.infinity,
-          height: 160,
+          height: 180,
           decoration: BoxDecoration(
             color: AppColors.adminBackground,
             borderRadius: AppRadii.adminControl,
