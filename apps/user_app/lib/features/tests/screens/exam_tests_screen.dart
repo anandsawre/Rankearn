@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
@@ -27,6 +28,31 @@ class ExamTestsScreen extends StatefulWidget {
 }
 
 class _ExamTestsScreenState extends State<ExamTestsScreen> {
+  List<BannerModel> _categoryBanners = [];
+  StreamSubscription<List<BannerModel>>? _bannersSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBanners();
+  }
+
+  @override
+  void dispose() {
+    _bannersSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadBanners() async {
+    final res = await BannersRepository().getActiveBanners(displayMode: 'category_header');
+    if (res is Success<List<BannerModel>> && mounted) {
+      setState(() => _categoryBanners = res.data);
+    }
+    _bannersSub ??= BannersRepository().streamActiveBanners(displayMode: 'category_header').listen((updated) {
+      if (mounted) setState(() => _categoryBanners = updated);
+    }, onError: (_) {});
+  }
+
   List<TestModel> get _examTests {
     final examQuery = widget.exam.id.toLowerCase();
     return widget.allTests.where((t) {
@@ -191,6 +217,23 @@ class _ExamTestsScreenState extends State<ExamTestsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 0. Dynamic Category Top Header Banner (if published from Admin)
+                  if (_categoryBanners.isNotEmpty) ...[
+                    BannerCarousel(
+                      banners: _categoryBanners.map((b) => BannerItemData(
+                        id: b.id,
+                        imageUrl: b.imageUrl,
+                        title: b.title,
+                        link: b.link,
+                        type: b.type,
+                        spotlightData: b.spotlightData,
+                      )).toList(),
+                      borderRadius: BorderRadius.circular(12),
+                      onBannerTap: (b) => BannersRepository().recordClick(b.id),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
                   // 1. Test Format & Mode Selector Cards
                   _buildTestModeCards(isDesktop: isDesktop),
                   const SizedBox(height: 28),

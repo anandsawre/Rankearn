@@ -37,8 +37,8 @@ class BannersRepository {
     }
   }
 
-  /// Streams active promotional banners in realtime.
-  Stream<List<BannerModel>> streamActiveBanners() {
+  /// Streams active promotional banners in realtime (optionally filtered by displayMode).
+  Stream<List<BannerModel>> streamActiveBanners({String? displayMode}) {
     final client = _client ?? SupabaseConfig.clientSafe;
     if (client == null) {
       return const Stream.empty();
@@ -49,7 +49,11 @@ class BannersRepository {
         .stream(primaryKey: ['id'])
         .eq('is_active', true)
         .order('priority', ascending: true)
-        .map((rows) => rows.map((e) => BannerModel.fromJson(e)).toList());
+        .map((rows) {
+          final all = rows.map((e) => BannerModel.fromJson(e)).toList();
+          if (displayMode == null) return all;
+          return all.where((b) => b.displayMode == displayMode).toList();
+        });
   }
 
   /// Increments click count for attribution.

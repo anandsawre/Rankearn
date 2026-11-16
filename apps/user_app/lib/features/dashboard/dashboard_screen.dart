@@ -54,7 +54,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final testsRes = await TestsRepository().getTests();
     final tourRes = await ContestsRepository().getTournaments();
     final catRes = await TestsRepository().getCategories();
-    final bannersRes = await BannersRepository().getActiveBanners();
+    final bannersRes = await BannersRepository().getActiveBanners(displayMode: 'home_carousel');
 
     if (!mounted) return;
     setState(() {
@@ -85,7 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
     );
 
-    _bannersSub ??= BannersRepository().streamActiveBanners().listen(
+    _bannersSub ??= BannersRepository().streamActiveBanners(displayMode: 'home_carousel').listen(
       (updated) {
         if (mounted) {
           setState(() {
@@ -95,6 +95,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
       onError: (_) {},
     );
+
+    // Pop-up Modal on Launch
+    try {
+      final popupRes = await BannersRepository().getActiveBanners(displayMode: 'popup_modal');
+      if (popupRes is Success<List<BannerModel>> && popupRes.data.isNotEmpty && mounted) {
+        _showLaunchPopup(popupRes.data.first);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -111,6 +119,84 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       widget.onStartTest();
     }
+  }
+
+  static bool _hasShownLaunchPopup = false;
+
+  void _showLaunchPopup(BannerModel banner) {
+    if (_hasShownLaunchPopup) return;
+    _hasShownLaunchPopup = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Stack(
+                  children: [
+                    if (banner.imageUrl.isNotEmpty)
+                      Image.network(
+                        banner.imageUrl,
+                        fit: BoxFit.cover,
+                        height: 200,
+                        width: double.infinity,
+                      ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        icon: const Icon(Icons.close_rounded, color: Colors.white),
+                        style: IconButton.styleFrom(backgroundColor: Colors.black45),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ),
+                  ],
+                ),
+                if (banner.title.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                    child: Text(
+                      banner.title,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF5636F5),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _handleBannerTap(BannerItemData(
+                        id: banner.id,
+                        imageUrl: banner.imageUrl,
+                        title: banner.title,
+                        link: banner.link,
+                        type: banner.type,
+                      ));
+                    },
+                    child: const Text('Explore Now', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
   }
 
   void _handleBannerTap(BannerItemData banner) {

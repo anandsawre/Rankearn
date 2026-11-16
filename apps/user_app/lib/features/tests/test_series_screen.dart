@@ -61,6 +61,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
 
 
+  List<BannerModel> _testBanners = [];
+  StreamSubscription<List<BannerModel>>? _bannersSub;
+
   @override
   void initState() {
     super.initState();
@@ -73,7 +76,51 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     }
     _extractUpcomingTests();
     _loadTests();
+    _loadBanners();
     _startCountdownTicker();
+  }
+
+  Future<void> _loadBanners() async {
+    final res = await BannersRepository().getActiveBanners(displayMode: 'test_series');
+    if (res is Success<List<BannerModel>> && mounted) {
+      setState(() => _testBanners = res.data);
+    }
+    _bannersSub ??= BannersRepository().streamActiveBanners(displayMode: 'test_series').listen((updated) {
+      if (mounted) setState(() => _testBanners = updated);
+    }, onError: (_) {});
+  }
+
+  Widget _buildTopBanner({required BorderRadius borderRadius}) {
+    if (_testBanners.isEmpty) {
+      return TestsHeroBanner(
+        borderRadius: borderRadius,
+        onStartPracticing: () {
+          if (_filteredTests.isNotEmpty) {
+            widget.onStartTest(_filteredTests.first);
+          }
+        },
+      );
+    }
+    return BannerCarousel(
+      banners: _testBanners.map((b) => BannerItemData(
+        id: b.id,
+        imageUrl: b.imageUrl,
+        title: b.title,
+        link: b.link,
+        type: b.type,
+        spotlightData: b.spotlightData,
+      )).toList(),
+      borderRadius: borderRadius,
+      onBannerTap: (b) => BannersRepository().recordClick(b.id),
+      fallbackWidget: TestsHeroBanner(
+        borderRadius: borderRadius,
+        onStartPracticing: () {
+          if (_filteredTests.isNotEmpty) {
+            widget.onStartTest(_filteredTests.first);
+          }
+        },
+      ),
+    );
   }
 
   void _startCountdownTicker() {
@@ -316,6 +363,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   void dispose() {
     _ticker?.cancel();
     _categoriesSub?.cancel();
+    _bannersSub?.cancel();
     super.dispose();
   }
 
@@ -1041,15 +1089,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 1. Tests Hero Banner
-                      TestsHeroBanner(
-                        borderRadius: BorderRadius.circular(12),
-                        onStartPracticing: () {
-                          if (_filteredTests.isNotEmpty) {
-                            widget.onStartTest(_filteredTests.first);
-                          }
-                        },
-                      ),
+                      // 1. Tests Hero Banner / Dynamic Carousel
+                      _buildTopBanner(borderRadius: BorderRadius.circular(12)),
                       const SizedBox(height: 18),
 
                       // 2. Four User Statistics Cards
@@ -1123,15 +1164,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              // 1. Tests Hero Banner
-              TestsHeroBanner(
-                borderRadius: BorderRadius.circular(12),
-                onStartPracticing: () {
-                  if (_filteredTests.isNotEmpty) {
-                    widget.onStartTest(_filteredTests.first);
-                  }
-                },
-              ),
+              // 1. Tests Hero Banner / Dynamic Carousel
+              _buildTopBanner(borderRadius: BorderRadius.circular(12)),
               const SizedBox(height: 18),
 
               // 2. Four User Statistics Cards

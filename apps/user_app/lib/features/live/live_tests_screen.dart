@@ -118,6 +118,8 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
 
   final Set<String> _notifiedTestIds = <String>{};
   Timer? _refreshTimer;
+  List<BannerModel> _contestBanners = [];
+  StreamSubscription<List<BannerModel>>? _bannersSub;
 
   @override
   void initState() {
@@ -126,6 +128,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
     _processTournaments(initial);
     _isLoading = false;
     _loadLiveScreenData();
+    _loadBanners();
 
     // Auto-update live and upcoming status every 15 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
@@ -140,7 +143,61 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _bannersSub?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadBanners() async {
+    final res = await BannersRepository().getActiveBanners(displayMode: 'contest_spotlight');
+    if (res is Success<List<BannerModel>> && mounted) {
+      setState(() => _contestBanners = res.data);
+    }
+    _bannersSub ??= BannersRepository().streamActiveBanners(displayMode: 'contest_spotlight').listen((updated) {
+      if (mounted) setState(() => _contestBanners = updated);
+    }, onError: (_) {});
+  }
+
+  Widget _buildTopBanner({required BorderRadius borderRadius}) {
+    if (_contestBanners.isEmpty) {
+      return LiveTestsHeroBanner(
+        borderRadius: borderRadius,
+        imageAssetPath: 'assets/images/live_tests_hero_mascot.jpg',
+        onJoinLiveTest: () {
+          if (_liveNowTournaments.isNotEmpty) {
+            _handleJoinTest(_liveNowTournaments.first);
+          } else if (_allTournaments.isNotEmpty) {
+            _handleJoinTest(_allTournaments.first);
+          } else {
+            widget.onExploreSeries?.call();
+          }
+        },
+      );
+    }
+    return BannerCarousel(
+      banners: _contestBanners.map((b) => BannerItemData(
+        id: b.id,
+        imageUrl: b.imageUrl,
+        title: b.title,
+        link: b.link,
+        type: b.type,
+        spotlightData: b.spotlightData,
+      )).toList(),
+      borderRadius: borderRadius,
+      onBannerTap: (b) => BannersRepository().recordClick(b.id),
+      fallbackWidget: LiveTestsHeroBanner(
+        borderRadius: borderRadius,
+        imageAssetPath: 'assets/images/live_tests_hero_mascot.jpg',
+        onJoinLiveTest: () {
+          if (_liveNowTournaments.isNotEmpty) {
+            _handleJoinTest(_liveNowTournaments.first);
+          } else if (_allTournaments.isNotEmpty) {
+            _handleJoinTest(_allTournaments.first);
+          } else {
+            widget.onExploreSeries?.call();
+          }
+        },
+      ),
+    );
   }
 
   void _processTournaments(List<TestModel> tournaments) {
@@ -381,20 +438,8 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
         final mainContent = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Live Tests Hero Banner
-            LiveTestsHeroBanner(
-              borderRadius: BorderRadius.circular(12),
-              imageAssetPath: 'assets/images/live_tests_hero_mascot.jpg',
-              onJoinLiveTest: () {
-                if (_liveNowTournaments.isNotEmpty) {
-                  _handleJoinTest(_liveNowTournaments.first);
-                } else if (_allTournaments.isNotEmpty) {
-                  _handleJoinTest(_allTournaments.first);
-                } else {
-                  widget.onExploreSeries?.call();
-                }
-              },
-            ),
+            // 1. Live Tests Hero Banner / Dynamic Carousel
+            _buildTopBanner(borderRadius: BorderRadius.circular(12)),
             const SizedBox(height: 16),
 
             // 2. Real Statistics Cards (Live Count, Participants, Coins, Rank)
