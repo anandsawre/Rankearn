@@ -298,6 +298,27 @@ class _UserAppShellState extends State<UserAppShell> {
           createdAt: DateTime(2026, 10, 1),
         );
     _syncProfileWithDatabase();
+    _syncPlatformConfigs();
+  }
+
+  bool _isUnderMaintenance = false;
+
+  Future<void> _syncPlatformConfigs() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+    try {
+      final res = await client.from('app_configs').select();
+      if (res.isNotEmpty) {
+        for (final row in res) {
+          final key = row['key']?.toString();
+          final val = row['value'];
+          if (val is Map && key == 'advanced_settings') {
+            final isMaint = val['maintenance_mode'] == true;
+            if (mounted) setState(() => _isUnderMaintenance = isMaint);
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _syncProfileWithDatabase() async {
@@ -661,129 +682,367 @@ class _UserAppShellState extends State<UserAppShell> {
   void _openSupportDialog() {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Row(
-            children: const [
-              Icon(Icons.chat_bubble_outline, color: AppColors.primary),
-              SizedBox(width: 8),
-              Text(
-                'Support Chat',
-                style: TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                'Need help with mock tests, withdrawal verification, or tournament prize distribution?',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-              ),
-              SizedBox(height: 12),
-              Text(
-                '📧 Email: support@rankearn.in\n💬 Telegram: @RankearnSupport\n⏰ Hours: 9:00 AM - 9:00 PM IST',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Support ticket created. Our team will contact you shortly!',
+      builder: (dialogCtx) {
+        final client = SupabaseConfig.clientSafe;
+        final currentAuthId = client?.auth.currentUser?.id;
+        final targetUserId = (currentAuthId != null && currentAuthId.isNotEmpty)
+            ? currentAuthId
+            : _profile.id;
+
+        List<Map<String, dynamic>> messages = [];
+        String? activeTicketId;
+        bool isLoadingMessages = true;
+        final messageController = TextEditingController();
+        final scrollController = ScrollController();
+
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            if (isLoadingMessages) {
+              Future.microtask(() async {
+                if (client != null) {
+                  try {
+                    final ticketRes = await client
+                        .from('support_tickets')
+                        .select()
+                        .eq('user_id', targetUserId)
+                        .maybeSingle();
+
+                    if (ticketRes != null) {
+                      activeTicketId = ticketRes['id']?.toString();
+                      if (activeTicketId != null) {
+                        final msgsRes = await client
+                            .from('support_messages')
+                            .select()
+                            .eq('ticket_id', activeTicketId!)
+                            .order('created_at', ascending: true);
+
+                        if (msgsRes.isNotEmpty) {
+                          for (final m in msgsRes) {
+                            messages.add({
+                              'isUser': m['role'] == 'user',
+                              'text': m['text']?.toString() ?? '',
+                              'time': m['created_at'] != null
+                                  ? m['created_at'].toString().split('T').last.substring(0, 5)
+                                  : '',
+                            });
+                          }
+                        }
+                      }
+                    }
+                  } catch (_) {}
+                }
+                setDialogState(() => isLoadingMessages = false);
+              });
+            }
+
+            Future<void> sendMessage() async {
+              final text = messageController.text.trim();
+              if (text.isEmpty) return;
+
+              final timeNow = '${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}';
+              setDialogState(() {
+                messages.add({
+                  'isUser': true,
+                  'text': text,
+                  'time': timeNow,
+                });
+              });
+              messageController.clear();
+
+              Future.delayed(const Duration(milliseconds: 100), () {
+                if (scrollController.hasClients) {
+                  scrollController.animateTo(
+                    scrollController.position.maxScrollExtent,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOut,
+                  );
+                }
+              });
+
+              if (client != null) {
+                try {
+                  final nowIso = DateTime.now().toIso8601String();
+                  if (activeTicketId == null) {
+                    activeTicketId = 'tk_${DateTime.now().millisecondsSinceEpoch}';
+                    await client.from('support_tickets').insert({
+                      'id': activeTicketId,
+                      'user_id': targetUserId,
+                      'user_name': _profile.name,
+                      'user_email': _profile.email,
+                      'last_message': text,
+                      'status': 'open',
+                      'unread_count': 1,
+                      'created_at': nowIso,
+                      'last_updated': nowIso,
+                    });
+                  } else {
+                    await client.from('support_tickets').update({
+                      'last_message': text,
+                      'status': 'open',
+                      'last_updated': nowIso,
+                    }).eq('id', activeTicketId!);
+                  }
+
+                  await client.from('support_messages').insert({
+                    'id': 'msg_${DateTime.now().millisecondsSinceEpoch}',
+                    'ticket_id': activeTicketId!,
+                    'sender_id': (currentAuthId != null && currentAuthId.isNotEmpty)
+                        ? currentAuthId
+                        : '00000000-0000-0000-0000-000000000000',
+                    'sender_name': _profile.name,
+                    'text': text,
+                    'role': 'user',
+                    'created_at': nowIso,
+                  });
+                } catch (_) {}
+              }
+            }
+
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Container(
+                width: 480,
+                height: 520,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.support_agent_rounded, color: AppColors.primary, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Live Support Chat', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                              Row(
+                                children: [
+                                  Container(width: 7, height: 7, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF10B981))),
+                                  const SizedBox(width: 5),
+                                  const Text('Rankearn Helpdesk Online', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          onPressed: () => Navigator.pop(dialogCtx),
+                        ),
+                      ],
                     ),
-                  ),
-                );
-              },
-              child: const Text(
-                'Submit Ticket',
-                style: TextStyle(color: Colors.white),
+                    const Divider(height: 20),
+                    Expanded(
+                      child: isLoadingMessages
+                          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                          : messages.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.chat_bubble_outline_rounded, size: 40, color: AppColors.textMuted),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Hello ${_profile.name}! 👋',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Need help with tests, wallets, or payouts?\nSend a message below to start a live support ticket.',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.builder(
+                                  controller: scrollController,
+                                  itemCount: messages.length,
+                                  itemBuilder: (context, idx) {
+                                    final m = messages[idx];
+                                    final isUser = m['isUser'] == true;
+                                    return Align(
+                                      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(vertical: 4),
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        constraints: const BoxConstraints(maxWidth: 320),
+                                        decoration: BoxDecoration(
+                                          color: isUser ? AppColors.primary : const Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              m['text'] ?? '',
+                                              style: TextStyle(
+                                                color: isUser ? Colors.white : Colors.black87,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                            if ((m['time'] ?? '').isNotEmpty) ...[
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                m['time'] ?? '',
+                                                style: TextStyle(
+                                                  color: isUser ? Colors.white70 : Colors.black45,
+                                                  fontSize: 9,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: messageController,
+                            decoration: InputDecoration(
+                              hintText: 'Type your message...',
+                              hintStyle: const TextStyle(fontSize: 13),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
+                            ),
+                            onSubmitted: (_) => sendMessage(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        CircleAvatar(
+                          backgroundColor: AppColors.primary,
+                          child: IconButton(
+                            icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                            onPressed: sendMessage,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            );
+          },
         );
       },
     );
   }
 
   void _openFeedbackDialog() {
+    int selectedRating = 5;
+    final commentController = TextEditingController();
+
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Row(
-            children: const [
-              Icon(Icons.star_outline, color: Color(0xFFF59E0B)),
-              SizedBox(width: 8),
-              Text(
-                'Give Feedback',
-                style: TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'How would you rate your mock test experience on Rankearn?',
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  5,
-                  (index) => const Icon(
-                    Icons.star,
-                    color: Color(0xFFF59E0B),
-                    size: 28,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: const [
+                  Icon(Icons.star_rounded, color: Color(0xFFF59E0B)),
+                  SizedBox(width: 8),
+                  Text(
+                    'Rate Your Experience',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Any suggestions or feature requests...',
-                  border: OutlineInputBorder(borderRadius: AppRadii.borderMd),
-                ),
-                maxLines: 2,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Thank you for your valuable feedback!'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'How would you rate your mock tests and study experience on Rankearn?',
+                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
                   ),
-                );
-              },
-              child: const Text(
-                'Submit',
-                style: TextStyle(color: Colors.white),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      final starNumber = index + 1;
+                      final isSelected = starNumber <= selectedRating;
+                      return IconButton(
+                        icon: Icon(
+                          isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
+                          color: const Color(0xFFF59E0B),
+                          size: 32,
+                        ),
+                        onPressed: () => setModalState(() => selectedRating = starNumber),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: commentController,
+                    decoration: InputDecoration(
+                      hintText: 'Share your suggestions or feature requests...',
+                      hintStyle: const TextStyle(fontSize: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
               ),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogCtx),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () async {
+                    final comment = commentController.text.trim();
+                    Navigator.pop(dialogCtx);
+
+                    final client = SupabaseConfig.clientSafe;
+                    if (client != null) {
+                      final currentAuthId = client.auth.currentUser?.id;
+                      final targetUserId = (currentAuthId != null && currentAuthId.isNotEmpty)
+                          ? currentAuthId
+                          : _profile.id;
+
+                      try {
+                        await client.from('feedbacks').insert({
+                          'id': 'fb_${DateTime.now().millisecondsSinceEpoch}',
+                          'user_id': targetUserId,
+                          'user_name': _profile.name,
+                          'rating': selectedRating,
+                          'comment': comment.isNotEmpty ? comment : 'Rated $selectedRating stars on Rankearn platform.',
+                          'created_at': DateTime.now().toIso8601String(),
+                        });
+                      } catch (_) {}
+                    }
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Thank you for rating us $selectedRating ⭐! Your feedback has been recorded.'),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Submit Feedback', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -902,7 +1161,28 @@ class _UserAppShellState extends State<UserAppShell> {
                   }
                 },
               ),
-        body: switch (_activeTab) {
+        body: Column(
+          children: [
+            if (_isUnderMaintenance)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: const Color(0xFFFEF3C7),
+                child: Row(
+                  children: const [
+                    Icon(Icons.build_rounded, size: 16, color: Color(0xFFD97706)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '⚠️ Maintenance Notice: Platform upgrades in progress. Some features may be temporarily limited.',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF92400E)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: switch (_activeTab) {
           UserNavTab.home => DashboardScreen(
             profile: _profile,
             onStartTest: () => _startQuiz(_defaultMockTest),
@@ -1034,8 +1314,11 @@ class _UserAppShellState extends State<UserAppShell> {
           ),
         },
       ),
-    );
-  }
+    ],
+  ),
+),
+);
+}
 
   // --- Slide-out Navigation Drawer matching React App.tsx:1150-1258 ---
   Widget _buildDrawer() {

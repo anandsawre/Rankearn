@@ -29,8 +29,8 @@ class SupportKpiRow extends StatelessWidget {
         final cards = [
           _buildKpiCard(
             title: 'Total Tickets',
-            value: totalCount > 0 ? '$totalCount' : '1,248',
-            growth: '+18%',
+            value: '$totalCount',
+            growth: totalCount > 0 ? '+18%' : '0%',
             isPositive: true,
             icon: Icons.confirmation_number_outlined,
             iconColor: AppColors.adminPurple,
@@ -38,8 +38,8 @@ class SupportKpiRow extends StatelessWidget {
           ),
           _buildKpiCard(
             title: 'Resolved',
-            value: resolvedCount > 0 ? '$resolvedCount' : '846',
-            growth: '+22%',
+            value: '$resolvedCount',
+            growth: totalCount > 0 ? '${((resolvedCount / (totalCount > 0 ? totalCount : 1)) * 100).toStringAsFixed(0)}%' : '0%',
             isPositive: true,
             icon: Icons.check_circle_outline_rounded,
             iconColor: AppColors.adminSuccess,
@@ -47,8 +47,8 @@ class SupportKpiRow extends StatelessWidget {
           ),
           _buildKpiCard(
             title: 'In Progress',
-            value: inProgressCount > 0 ? '$inProgressCount' : '218',
-            growth: '+11%',
+            value: '$inProgressCount',
+            growth: totalCount > 0 ? '${((inProgressCount / (totalCount > 0 ? totalCount : 1)) * 100).toStringAsFixed(0)}%' : '0%',
             isPositive: true,
             icon: Icons.access_time_rounded,
             iconColor: const Color(0xFFF59E0B),
@@ -56,8 +56,8 @@ class SupportKpiRow extends StatelessWidget {
           ),
           _buildKpiCard(
             title: 'Open',
-            value: openCount > 0 ? '$openCount' : '96',
-            growth: '-6%',
+            value: '$openCount',
+            growth: totalCount > 0 ? '${((openCount / (totalCount > 0 ? totalCount : 1)) * 100).toStringAsFixed(0)}%' : '0%',
             isPositive: false,
             icon: Icons.error_outline_rounded,
             iconColor: AppColors.adminDanger,
@@ -65,8 +65,8 @@ class SupportKpiRow extends StatelessWidget {
           ),
           _buildKpiCard(
             title: 'On Hold',
-            value: onHoldCount > 0 ? '$onHoldCount' : '38',
-            growth: '+5%',
+            value: '$onHoldCount',
+            growth: '0%',
             isPositive: true,
             icon: Icons.pause_circle_outline_rounded,
             iconColor: const Color(0xFF8B5CF6),
@@ -74,8 +74,8 @@ class SupportKpiRow extends StatelessWidget {
           ),
           _buildKpiCard(
             title: 'Support Rating',
-            value: '${supportRating.toStringAsFixed(1)}/5',
-            growth: 'Top 5%',
+            value: '${supportRating > 0 ? supportRating.toStringAsFixed(1) : '5.0'}/5',
+            growth: 'Live CSAT',
             isPositive: true,
             icon: Icons.star_rounded,
             iconColor: const Color(0xFFF59E0B),

@@ -2,12 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
 class FeedbackAnalyticsPanel extends StatelessWidget {
+  final int totalCount;
+  final int positiveCount;
+  final int neutralCount;
+  final int negativeCount;
+  final Map<int, int>? ratingCounts;
   final VoidCallback onReplyAll;
   final VoidCallback onManageRatings;
   final VoidCallback onExportCsv;
 
   const FeedbackAnalyticsPanel({
     super.key,
+    this.totalCount = 0,
+    this.positiveCount = 0,
+    this.neutralCount = 0,
+    this.negativeCount = 0,
+    this.ratingCounts,
     required this.onReplyAll,
     required this.onManageRatings,
     required this.onExportCsv,
@@ -15,6 +25,49 @@ class FeedbackAnalyticsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveTotal = totalCount > 0 ? totalCount : 1;
+    final r5 = ratingCounts?[5] ?? (totalCount > 0 ? positiveCount : 0);
+    final r4 = ratingCounts?[4] ?? 0;
+    final r3 = ratingCounts?[3] ?? neutralCount;
+    final r2 = ratingCounts?[2] ?? 0;
+    final r1 = ratingCounts?[1] ?? negativeCount;
+
+    final p5 = totalCount > 0 ? r5 / effectiveTotal : 0.0;
+    final p4 = totalCount > 0 ? r4 / effectiveTotal : 0.0;
+    final p3 = totalCount > 0 ? r3 / effectiveTotal : 0.0;
+    final p2 = totalCount > 0 ? r2 / effectiveTotal : 0.0;
+    final p1 = totalCount > 0 ? r1 / effectiveTotal : 0.0;
+
+    final positivePct = totalCount > 0 ? (positiveCount / effectiveTotal * 100) : 0.0;
+    final neutralPct = totalCount > 0 ? (neutralCount / effectiveTotal * 100) : 0.0;
+    final negativePct = totalCount > 0 ? (negativeCount / effectiveTotal * 100) : 0.0;
+
+    final slices = totalCount > 0
+        ? [
+            DonutSlice(
+              label: 'Positive',
+              percentage: double.parse(positivePct.toStringAsFixed(1)),
+              color: AppColors.adminSuccess,
+            ),
+            DonutSlice(
+              label: 'Neutral',
+              percentage: double.parse(neutralPct.toStringAsFixed(1)),
+              color: const Color(0xFFF59E0B),
+            ),
+            DonutSlice(
+              label: 'Negative',
+              percentage: double.parse(negativePct.toStringAsFixed(1)),
+              color: AppColors.adminDanger,
+            ),
+          ]
+        : const [
+            DonutSlice(
+              label: 'No Feedback',
+              percentage: 100.0,
+              color: AppColors.adminNeutralLight,
+            ),
+          ];
+
     return Column(
       children: [
         // 1. Rating Distribution Card
@@ -49,15 +102,15 @@ class FeedbackAnalyticsPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              _buildStarRow(5, 0.527, '1,498 (52.7%)'),
+              _buildStarRow(5, p5, '$r5 (${(p5 * 100).toStringAsFixed(1)}%)'),
               const SizedBox(height: 10),
-              _buildStarRow(4, 0.170, '484 (17.0%)'),
+              _buildStarRow(4, p4, '$r4 (${(p4 * 100).toStringAsFixed(1)}%)'),
               const SizedBox(height: 10),
-              _buildStarRow(3, 0.110, '312 (11.0%)'),
+              _buildStarRow(3, p3, '$r3 (${(p3 * 100).toStringAsFixed(1)}%)'),
               const SizedBox(height: 10),
-              _buildStarRow(2, 0.076, '216 (7.6%)'),
+              _buildStarRow(2, p2, '$r2 (${(p2 * 100).toStringAsFixed(1)}%)'),
               const SizedBox(height: 10),
-              _buildStarRow(1, 0.116, '330 (11.6%)'),
+              _buildStarRow(1, p1, '$r1 (${(p1 * 100).toStringAsFixed(1)}%)'),
             ],
           ),
         ),
@@ -97,25 +150,9 @@ class FeedbackAnalyticsPanel extends StatelessWidget {
               const SizedBox(height: 16),
               AppDonutChart(
                 chartSize: 110,
-                totalCount: 2840,
+                totalCount: totalCount,
                 totalLabel: 'Total',
-                slices: const [
-                  DonutSlice(
-                    label: 'Positive',
-                    percentage: 69.8,
-                    color: AppColors.adminSuccess,
-                  ),
-                  DonutSlice(
-                    label: 'Neutral',
-                    percentage: 20.6,
-                    color: Color(0xFFF59E0B),
-                  ),
-                  DonutSlice(
-                    label: 'Negative',
-                    percentage: 9.6,
-                    color: AppColors.adminDanger,
-                  ),
-                ],
+                slices: slices,
               ),
             ],
           ),

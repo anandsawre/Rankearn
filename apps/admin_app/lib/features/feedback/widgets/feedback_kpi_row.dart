@@ -24,10 +24,15 @@ class FeedbackKpiRow extends StatelessWidget {
         final isDesktop = constraints.maxWidth >= 900;
         final isTablet = constraints.maxWidth >= 550 && constraints.maxWidth < 900;
 
+        final effectiveTotal = totalCount > 0 ? totalCount : 1;
+        final positivePct = totalCount > 0 ? ((positiveCount / effectiveTotal) * 100).toStringAsFixed(1) : '0';
+        final neutralPct = totalCount > 0 ? ((neutralCount / effectiveTotal) * 100).toStringAsFixed(1) : '0';
+        final negativePct = totalCount > 0 ? ((negativeCount / effectiveTotal) * 100).toStringAsFixed(1) : '0';
+
         final cards = [
           _buildKpiCard(
             title: 'Average Rating',
-            value: '${averageRating.toStringAsFixed(1)}/5',
+            value: '${averageRating > 0 ? averageRating.toStringAsFixed(1) : '0.0'}/5',
             growth: '+0.3',
             isPositive: true,
             icon: Icons.star_rounded,
@@ -36,8 +41,8 @@ class FeedbackKpiRow extends StatelessWidget {
           ),
           _buildKpiCard(
             title: 'Total Feedbacks',
-            value: totalCount > 0 ? '$totalCount' : '2,840',
-            growth: '+18%',
+            value: '$totalCount',
+            growth: totalCount > 0 ? '+18%' : '0%',
             isPositive: true,
             icon: Icons.chat_bubble_rounded,
             iconColor: AppColors.adminPurple,
@@ -45,8 +50,8 @@ class FeedbackKpiRow extends StatelessWidget {
           ),
           _buildKpiCard(
             title: 'Positive',
-            value: positiveCount > 0 ? '$positiveCount' : '1,982',
-            growth: '69.8%',
+            value: '$positiveCount',
+            growth: '$positivePct%',
             isPositive: true,
             icon: Icons.thumb_up_alt_rounded,
             iconColor: AppColors.adminSuccess,
@@ -54,8 +59,8 @@ class FeedbackKpiRow extends StatelessWidget {
           ),
           _buildKpiCard(
             title: 'Neutral',
-            value: neutralCount > 0 ? '$neutralCount' : '584',
-            growth: '20.6%',
+            value: '$neutralCount',
+            growth: '$neutralPct%',
             isPositive: true,
             icon: Icons.remove_circle_outline_rounded,
             iconColor: const Color(0xFFF59E0B),
@@ -63,8 +68,8 @@ class FeedbackKpiRow extends StatelessWidget {
           ),
           _buildKpiCard(
             title: 'Negative',
-            value: negativeCount > 0 ? '$negativeCount' : '274',
-            growth: '9.6%',
+            value: '$negativeCount',
+            growth: '$negativePct%',
             isPositive: false,
             icon: Icons.thumb_down_alt_rounded,
             iconColor: AppColors.adminDanger,
@@ -152,14 +157,18 @@ class FeedbackKpiRow extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.adminPrimaryText,
+                    Flexible(
+                      child: Text(
+                        value,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.adminPrimaryText,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(

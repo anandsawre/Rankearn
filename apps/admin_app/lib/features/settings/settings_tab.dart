@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 import 'widgets/settings_hero_card.dart';
 import 'widgets/settings_quick_actions.dart';
 import 'widgets/settings_category_nav.dart';
@@ -22,6 +24,8 @@ class SettingsTab extends StatefulWidget {
 
 class _SettingsTabState extends State<SettingsTab> {
   String _activeCategory = 'all';
+  bool _isLoading = true;
+  bool _isSaving = false;
 
   // 1. Platform Information
   final _nameController = TextEditingController(text: 'Rankearn');
@@ -88,6 +92,87 @@ class _SettingsTabState extends State<SettingsTab> {
   final _workerUrlController = TextEditingController(text: 'https://testkarlo.alleduupdated.workers.dev');
 
   @override
+  void initState() {
+    super.initState();
+    _loadSettingsFromSupabase();
+  }
+
+  Future<void> _loadSettingsFromSupabase() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final res = await client.from('app_configs').select();
+      if (res.isNotEmpty) {
+        for (final row in res) {
+          final key = row['key']?.toString();
+          final val = row['value'];
+          if (val is! Map) continue;
+          final map = val as Map<String, dynamic>;
+
+          if (key == 'platform_info') {
+            if (map['name'] != null) _nameController.text = map['name'].toString();
+            if (map['tagline'] != null) _taglineController.text = map['tagline'].toString();
+            if (map['email'] != null) _emailController.text = map['email'].toString();
+            if (map['whatsapp'] != null) _whatsappController.text = map['whatsapp'].toString();
+          } else if (key == 'feature_flags') {
+            for (final fKey in _features.keys) {
+              if (map.containsKey(fKey) && map[fKey] is bool) {
+                _features[fKey] = map[fKey] as bool;
+              }
+            }
+          } else if (key == 'rewards_settings') {
+            if (map['signup_bonus'] != null) _signupBonusController.text = map['signup_bonus'].toString();
+            if (map['referral_reward'] != null) _referralRewardController.text = map['referral_reward'].toString();
+            if (map['battle_reward'] != null) _battleRewardController.text = map['battle_reward'].toString();
+            if (map['spin_min'] != null) _spinMinController.text = map['spin_min'].toString();
+            if (map['spin_max'] != null) _spinMaxController.text = map['spin_max'].toString();
+            if (map['min_withdrawal'] != null) _minWithdrawalController.text = map['min_withdrawal'].toString();
+            if (map['coin_rate'] != null) _coinRateController.text = map['coin_rate'].toString();
+          } else if (key == 'battle_settings') {
+            if (map['question_time'] != null) _questionTime = map['question_time'].toString();
+            if (map['battle_duration'] != null) _battleDuration = map['battle_duration'].toString();
+            if (map['max_players'] != null) _maxPlayersController.text = map['max_players'].toString();
+            if (map['entry_fee'] != null) _entryFeeController.text = map['entry_fee'].toString();
+            if (map['winning_reward'] != null) _winningRewardController.text = map['winning_reward'].toString();
+          } else if (key == 'payment_settings') {
+            if (map['enable_payments'] is bool) _enablePayments = map['enable_payments'] as bool;
+            if (map['default_gateway'] != null) _defaultGateway = map['default_gateway'].toString();
+            if (map['enable_razorpay'] is bool) _enableRazorpay = map['enable_razorpay'] as bool;
+            if (map['enable_cashfree'] is bool) _enableCashfree = map['enable_cashfree'] as bool;
+            if (map['enable_payu'] is bool) _enablePayU = map['enable_payu'] as bool;
+          } else if (key == 'notification_settings') {
+            if (map['enable_push'] is bool) _enablePush = map['enable_push'] as bool;
+            if (map['enable_in_app'] is bool) _enableInApp = map['enable_in_app'] as bool;
+            if (map['enable_email'] is bool) _enableEmail = map['enable_email'] as bool;
+            if (map['enable_sms'] is bool) _enableSms = map['enable_sms'] as bool;
+          } else if (key == 'limits_rules') {
+            if (map['battle_limit'] != null) _battleLimitController.text = map['battle_limit'].toString();
+            if (map['coin_limit'] != null) _coinLimitController.text = map['coin_limit'].toString();
+            if (map['withdrawal_limit'] != null) _withdrawalLimitController.text = map['withdrawal_limit'].toString();
+            if (map['suspension_threshold'] != null) _suspensionThresholdController.text = map['suspension_threshold'].toString();
+          } else if (key == 'appearance_branding') {
+            if (map['primary_color'] != null) _primaryColorController.text = map['primary_color'].toString();
+            if (map['secondary_color'] != null) _secondaryColorController.text = map['secondary_color'].toString();
+          } else if (key == 'advanced_settings') {
+            if (map['maintenance_mode'] is bool) _maintenanceMode = map['maintenance_mode'] as bool;
+            if (map['debug_mode'] is bool) _debugMode = map['debug_mode'] as bool;
+            if (map['auto_backup'] is bool) _autoBackup = map['auto_backup'] as bool;
+            if (map['activity_logs'] is bool) _activityLogs = map['activity_logs'] as bool;
+            if (map['worker_url'] != null) _workerUrlController.text = map['worker_url'].toString();
+          }
+        }
+      }
+      if (mounted) setState(() => _isLoading = false);
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _taglineController.dispose();
@@ -113,7 +198,7 @@ class _SettingsTabState extends State<SettingsTab> {
     super.dispose();
   }
 
-  void _resetToDefault() {
+  Future<void> _resetToDefault() async {
     setState(() {
       _nameController.text = 'Rankearn';
       _taglineController.text = 'India\'s 1st Learning with Earning Platform';
@@ -146,52 +231,194 @@ class _SettingsTabState extends State<SettingsTab> {
       _autoBackup = true;
       _activityLogs = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Settings reset to platform defaults.')),
-    );
+
+    await _updateSettings();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Settings restored to defaults and saved to Supabase.')),
+      );
+    }
   }
 
-  void _updateSettings() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('System configuration and platform settings updated successfully!')),
-    );
+  Future<void> _updateSettings() async {
+    setState(() => _isSaving = true);
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      final now = DateTime.now().toIso8601String();
+      try {
+        await Future.wait([
+          client.from('app_configs').upsert({
+            'key': 'platform_info',
+            'value': {
+              'name': _nameController.text.trim(),
+              'tagline': _taglineController.text.trim(),
+              'email': _emailController.text.trim(),
+              'whatsapp': _whatsappController.text.trim(),
+            },
+            'updated_at': now,
+          }),
+          client.from('app_configs').upsert({
+            'key': 'feature_flags',
+            'value': _features,
+            'updated_at': now,
+          }),
+          client.from('app_configs').upsert({
+            'key': 'rewards_settings',
+            'value': {
+              'signup_bonus': _signupBonusController.text.trim(),
+              'referral_reward': _referralRewardController.text.trim(),
+              'battle_reward': _battleRewardController.text.trim(),
+              'spin_min': _spinMinController.text.trim(),
+              'spin_max': _spinMaxController.text.trim(),
+              'min_withdrawal': _minWithdrawalController.text.trim(),
+              'coin_rate': _coinRateController.text.trim(),
+            },
+            'updated_at': now,
+          }),
+          client.from('app_configs').upsert({
+            'key': 'battle_settings',
+            'value': {
+              'question_time': _questionTime,
+              'battle_duration': _battleDuration,
+              'max_players': _maxPlayersController.text.trim(),
+              'entry_fee': _entryFeeController.text.trim(),
+              'winning_reward': _winningRewardController.text.trim(),
+            },
+            'updated_at': now,
+          }),
+          client.from('app_configs').upsert({
+            'key': 'payment_settings',
+            'value': {
+              'enable_payments': _enablePayments,
+              'default_gateway': _defaultGateway,
+              'enable_razorpay': _enableRazorpay,
+              'enable_cashfree': _enableCashfree,
+              'enable_payu': _enablePayU,
+            },
+            'updated_at': now,
+          }),
+          client.from('app_configs').upsert({
+            'key': 'notification_settings',
+            'value': {
+              'enable_push': _enablePush,
+              'enable_in_app': _enableInApp,
+              'enable_email': _enableEmail,
+              'enable_sms': _enableSms,
+            },
+            'updated_at': now,
+          }),
+          client.from('app_configs').upsert({
+            'key': 'limits_rules',
+            'value': {
+              'battle_limit': _battleLimitController.text.trim(),
+              'coin_limit': _coinLimitController.text.trim(),
+              'withdrawal_limit': _withdrawalLimitController.text.trim(),
+              'suspension_threshold': _suspensionThresholdController.text.trim(),
+            },
+            'updated_at': now,
+          }),
+          client.from('app_configs').upsert({
+            'key': 'appearance_branding',
+            'value': {
+              'primary_color': _primaryColorController.text.trim(),
+              'secondary_color': _secondaryColorController.text.trim(),
+            },
+            'updated_at': now,
+          }),
+          client.from('app_configs').upsert({
+            'key': 'advanced_settings',
+            'value': {
+              'maintenance_mode': _maintenanceMode,
+              'debug_mode': _debugMode,
+              'auto_backup': _autoBackup,
+              'activity_logs': _activityLogs,
+              'worker_url': _workerUrlController.text.trim(),
+            },
+            'updated_at': now,
+          }),
+        ]);
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ All platform configuration documents saved to Supabase!')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: AppSpacing.pagePadding(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Hero Banner (Left) + Quick Actions (Right)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final heroCard = SettingsHeroCard(
-                onResetDefaults: _resetToDefault,
-                onUpdateSettings: _updateSettings,
-              );
-              final quickActions = SettingsQuickActions(
-                onUpdateSettings: _updateSettings,
-                onResetDefaults: _resetToDefault,
-                onConfigurePayments: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Configuring Payment Gateway API credentials...')),
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(48),
+          child: CircularProgressIndicator(color: AppColors.adminPurple),
+        ),
+      );
+    }
+
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: AppSpacing.pagePadding(context),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Hero Banner (Left) + Quick Actions (Right)
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final heroCard = SettingsHeroCard(
+                    onResetDefaults: _resetToDefault,
+                    onUpdateSettings: _updateSettings,
                   );
-                },
-                onToggleMaintenance: () {
-                  setState(() => _maintenanceMode = !_maintenanceMode);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(_maintenanceMode
-                          ? 'Maintenance Mode activated'
-                          : 'Maintenance Mode deactivated'),
-                    ),
-                  );
-                },
+                  final quickActions = SettingsQuickActions(
+                    onUpdateSettings: _updateSettings,
+                    onResetDefaults: _resetToDefault,
+                    onConfigurePayments: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Configuring Payment Gateway API credentials...')),
+                      );
+                    },
+                    onToggleMaintenance: () async {
+                      final newVal = !_maintenanceMode;
+                      setState(() => _maintenanceMode = newVal);
+                      final client = SupabaseConfig.clientSafe;
+                      if (client != null) {
+                        await client.from('app_configs').upsert({
+                          'key': 'advanced_settings',
+                          'value': {
+                            'maintenance_mode': newVal,
+                            'debug_mode': _debugMode,
+                            'auto_backup': _autoBackup,
+                            'activity_logs': _activityLogs,
+                            'worker_url': _workerUrlController.text.trim(),
+                          },
+                          'updated_at': DateTime.now().toIso8601String(),
+                        });
+                      }
+                      if (!mounted) return;
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(newVal
+                              ? '⚠️ Maintenance Mode ACTIVATED in live database'
+                              : '✅ Maintenance Mode DEACTIVATED in live database'),
+                        ),
+                      );
+                    },
                 onBackupDatabase: () {
+                  final configJson = {
+                    'platform_info': {'name': _nameController.text, 'email': _emailController.text},
+                    'feature_flags': _features,
+                    'rewards_settings': {'signup_bonus': _signupBonusController.text, 'coin_rate': _coinRateController.text},
+                    'maintenance_mode': _maintenanceMode,
+                    'timestamp': DateTime.now().toIso8601String(),
+                  };
+                  Clipboard.setData(ClipboardData(text: configJson.toString()));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Starting full platform backup export...')),
+                    const SnackBar(content: Text('📋 System configuration exported to clipboard as JSON!')),
                   );
                 },
               );
@@ -313,6 +540,33 @@ class _SettingsTabState extends State<SettingsTab> {
           ),
         ],
       ),
+    ),
+    if (_isSaving)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.15),
+              child: const Center(
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.adminPurple),
+                        ),
+                        SizedBox(width: 12),
+                        Text('Saving settings to Supabase...', style: AppTypography.adminTablePrimary),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 

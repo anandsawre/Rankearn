@@ -9,6 +9,9 @@ class SupportDataTable extends StatelessWidget {
   final void Function(Map<String, dynamic> ticket) onReplyTicket;
   final int currentPage;
   final int totalCount;
+  final int openCount;
+  final int inProgressCount;
+  final int resolvedCount;
   final ValueChanged<int> onPageChanged;
 
   const SupportDataTable({
@@ -19,7 +22,10 @@ class SupportDataTable extends StatelessWidget {
     required this.onViewTicket,
     required this.onReplyTicket,
     this.currentPage = 1,
-    this.totalCount = 1248,
+    this.totalCount = 0,
+    this.openCount = 0,
+    this.inProgressCount = 0,
+    this.resolvedCount = 0,
     required this.onPageChanged,
   });
 
@@ -67,11 +73,11 @@ class SupportDataTable extends StatelessWidget {
                     children: [
                       _buildTabPill('all', 'All ($totalCount)'),
                       const SizedBox(width: 8),
-                      _buildTabPill('open', 'Open (96)'),
+                      _buildTabPill('open', 'Open ($openCount)'),
                       const SizedBox(width: 8),
-                      _buildTabPill('in_progress', 'In Progress (218)'),
+                      _buildTabPill('in_progress', 'In Progress ($inProgressCount)'),
                       const SizedBox(width: 8),
-                      _buildTabPill('resolved', 'Resolved (846)'),
+                      _buildTabPill('resolved', 'Resolved ($resolvedCount)'),
                     ],
                   ),
                 ),

@@ -2,10 +2,63 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
 class SupportAnalyticsPanel extends StatelessWidget {
-  const SupportAnalyticsPanel({super.key});
+  final int totalCount;
+  final int resolvedCount;
+  final int inProgressCount;
+  final int openCount;
+  final int onHoldCount;
+  final Map<String, int>? categoryCounts;
+
+  const SupportAnalyticsPanel({
+    super.key,
+    this.totalCount = 0,
+    this.resolvedCount = 0,
+    this.inProgressCount = 0,
+    this.openCount = 0,
+    this.onHoldCount = 0,
+    this.categoryCounts,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveTotal = totalCount > 0 ? totalCount : 1;
+    final resolvedPct = totalCount > 0 ? (resolvedCount / effectiveTotal * 100) : 0.0;
+    final inProgressPct = totalCount > 0 ? (inProgressCount / effectiveTotal * 100) : 0.0;
+    final openPct = totalCount > 0 ? (openCount / effectiveTotal * 100) : 0.0;
+    final onHoldPct = totalCount > 0 ? (onHoldCount / effectiveTotal * 100) : 0.0;
+
+    final slices = totalCount > 0
+        ? [
+            DonutSlice(
+              label: 'Resolved',
+              percentage: double.parse(resolvedPct.toStringAsFixed(1)),
+              color: AppColors.adminSuccess,
+            ),
+            DonutSlice(
+              label: 'In Progress',
+              percentage: double.parse(inProgressPct.toStringAsFixed(1)),
+              color: const Color(0xFF0284C7),
+            ),
+            DonutSlice(
+              label: 'Open',
+              percentage: double.parse(openPct.toStringAsFixed(1)),
+              color: const Color(0xFFF59E0B),
+            ),
+            if (onHoldCount > 0)
+              DonutSlice(
+                label: 'On Hold',
+                percentage: double.parse(onHoldPct.toStringAsFixed(1)),
+                color: AppColors.adminPurple,
+              ),
+          ]
+        : const [
+            DonutSlice(
+              label: 'No Tickets',
+              percentage: 100.0,
+              color: AppColors.adminNeutralLight,
+            ),
+          ];
+
     return Column(
       children: [
         // 1. Ticket Analytics Donut Chart
@@ -42,30 +95,9 @@ class SupportAnalyticsPanel extends StatelessWidget {
               const SizedBox(height: 16),
               AppDonutChart(
                 chartSize: 110,
-                totalCount: 1248,
+                totalCount: totalCount,
                 totalLabel: 'Total',
-                slices: const [
-                  DonutSlice(
-                    label: 'Resolved',
-                    percentage: 67.8,
-                    color: AppColors.adminSuccess,
-                  ),
-                  DonutSlice(
-                    label: 'In Progress',
-                    percentage: 17.5,
-                    color: Color(0xFF0284C7),
-                  ),
-                  DonutSlice(
-                    label: 'Open',
-                    percentage: 7.7,
-                    color: Color(0xFFF59E0B),
-                  ),
-                  DonutSlice(
-                    label: 'On Hold',
-                    percentage: 7.0,
-                    color: AppColors.adminPurple,
-                  ),
-                ],
+                slices: slices,
               ),
             ],
           ),
@@ -104,17 +136,17 @@ class SupportAnalyticsPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              _buildCategoryRow('Payment & Coins', 362, const Color(0xFFD97706), Icons.monetization_on_outlined),
+              _buildCategoryRow('Payment & Coins', categoryCounts?['Payment'] ?? (openCount > 0 ? openCount : 0), const Color(0xFFD97706), Icons.monetization_on_outlined),
               const SizedBox(height: 10),
-              _buildCategoryRow('Account & Verification', 248, const Color(0xFF0284C7), Icons.verified_user_outlined),
+              _buildCategoryRow('Account & Verification', categoryCounts?['Verification'] ?? 0, const Color(0xFF0284C7), Icons.verified_user_outlined),
               const SizedBox(height: 10),
-              _buildCategoryRow('Referral & Rewards', 186, AppColors.adminPurple, Icons.share_rounded),
+              _buildCategoryRow('Referral & Rewards', categoryCounts?['Referral'] ?? 0, AppColors.adminPurple, Icons.share_rounded),
               const SizedBox(height: 10),
-              _buildCategoryRow('Technical Issue', 172, const Color(0xFF6366F1), Icons.build_outlined),
+              _buildCategoryRow('Technical Issue', categoryCounts?['Technical'] ?? 0, const Color(0xFF6366F1), Icons.build_outlined),
               const SizedBox(height: 10),
-              _buildCategoryRow('Withdrawal', 128, AppColors.adminSuccess, Icons.account_balance_wallet_outlined),
+              _buildCategoryRow('Withdrawal', categoryCounts?['Withdrawal'] ?? 0, AppColors.adminSuccess, Icons.account_balance_wallet_outlined),
               const SizedBox(height: 10),
-              _buildCategoryRow('Other', 152, AppColors.adminSecondaryText, Icons.help_outline_rounded),
+              _buildCategoryRow('General Query', categoryCounts?['General'] ?? resolvedCount, AppColors.adminSecondaryText, Icons.help_outline_rounded),
             ],
           ),
         ),
