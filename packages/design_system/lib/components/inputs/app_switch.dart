@@ -19,19 +19,20 @@ enum AppSwitchVariant {
   danger,
 }
 
-/// Sizing scale for [AppSwitch].
+/// Sizing scale for [AppSwitch], aligned with Rankearn design system icon metrics.
 enum AppSwitchSize {
-  /// Standard switch size (1.0x).
+  /// Regular size: scaled to match standard app form & field icon size (18–20px thumb).
   regular,
 
-  /// Compact switch size (0.8x) for tables, dense rows, and inline dialogs.
+  /// Compact small size: scaled to match table, badge & dense row icon size (14–15px thumb).
   small,
 }
 
 /// Rankearn Centralized Design System - Tokenized Switch / Toggle Component.
 ///
 /// Implements pixel-perfect, design-token-aligned toggle switches with
-/// crisp state colors, smooth physics, and accessibility support.
+/// crisp state colors, smooth physics, and proportions calibrated to match
+/// the application's icon sizing (18-20px standard, 14-15px dense).
 class AppSwitch extends StatelessWidget {
   const AppSwitch({
     super.key,
@@ -39,6 +40,7 @@ class AppSwitch extends StatelessWidget {
     required this.onChanged,
     this.variant = AppSwitchVariant.primary,
     this.size = AppSwitchSize.regular,
+    this.scale,
     this.activeTrackColor,
     this.activeThumbColor,
     this.inactiveTrackColor,
@@ -54,6 +56,7 @@ class AppSwitch extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.size = AppSwitchSize.regular,
+    this.scale,
     this.activeTrackColor,
     this.activeThumbColor,
     this.inactiveTrackColor,
@@ -69,6 +72,7 @@ class AppSwitch extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.size = AppSwitchSize.regular,
+    this.scale,
     this.activeTrackColor,
     this.activeThumbColor,
     this.inactiveTrackColor,
@@ -83,6 +87,7 @@ class AppSwitch extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.variant = AppSwitchVariant.primary,
+    this.scale,
     this.activeTrackColor,
     this.activeThumbColor,
     this.inactiveTrackColor,
@@ -95,6 +100,10 @@ class AppSwitch extends StatelessWidget {
   final ValueChanged<bool>? onChanged;
   final AppSwitchVariant variant;
   final AppSwitchSize size;
+
+  /// Optional custom scale multiplier. Defaults to 0.72 for regular and 0.60 for small.
+  final double? scale;
+
   final Color? activeTrackColor;
   final Color? activeThumbColor;
   final Color? inactiveTrackColor;
@@ -123,6 +132,13 @@ class AppSwitch extends StatelessWidget {
     final effectiveInactiveTrack = inactiveTrackColor ?? const Color(0xFFE4E4E7);
     final effectiveInactiveThumb = inactiveThumbColor ?? AppColors.adminSecondaryText;
 
+    // Scale calibrated directly against app icon scale:
+    // Regular: 0.72x scale gives ~18px thumb & 23px track height (matching 18-20px icons).
+    // Small: 0.60x scale gives ~15px thumb & 19px track height (matching 14-15px dense icons).
+    final effectiveScale = scale ?? (size == AppSwitchSize.small ? 0.60 : 0.72);
+    final boxWidth = size == AppSwitchSize.small ? 34.0 : 40.0;
+    final boxHeight = size == AppSwitchSize.small ? 22.0 : 26.0;
+
     final switchWidget = Switch(
       value: value,
       onChanged: onChanged,
@@ -147,20 +163,20 @@ class AppSwitch extends StatelessWidget {
         }
         return 1.5;
       }),
-      materialTapTargetSize: size == AppSwitchSize.small
-          ? MaterialTapTargetSize.shrinkWrap
-          : MaterialTapTargetSize.padded,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
 
-    if (size == AppSwitchSize.small) {
-      return Transform.scale(
-        scale: 0.8,
-        alignment: Alignment.center,
-        child: switchWidget,
-      );
-    }
-
-    return switchWidget;
+    return SizedBox(
+      width: boxWidth,
+      height: boxHeight,
+      child: Center(
+        child: Transform.scale(
+          scale: effectiveScale,
+          alignment: Alignment.center,
+          child: switchWidget,
+        ),
+      ),
+    );
   }
 }
 
