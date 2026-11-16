@@ -453,16 +453,21 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
   void _closeDropdown({bool animated = true}) {
     if (!_isOpen) return;
 
-    if (animated) {
+    if (animated && _animationController.status != AnimationStatus.dismissed) {
       _animationController.reverse().then((_) {
+        if (!mounted) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _overlayEntry?.remove();
+          _overlayEntry = null;
+          if (mounted) setState(() => _isOpen = false);
+        });
+      });
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         _overlayEntry?.remove();
         _overlayEntry = null;
         if (mounted) setState(() => _isOpen = false);
       });
-    } else {
-      _overlayEntry?.remove();
-      _overlayEntry = null;
-      if (mounted) setState(() => _isOpen = false);
     }
   }
 
@@ -509,13 +514,17 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
         onEnter: (_) {
-          if (widget.enabled && !_isHovered) {
-            setState(() => _isHovered = true);
+          if (widget.enabled && !_isHovered && mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() => _isHovered = true);
+            });
           }
         },
         onExit: (_) {
-          if (widget.enabled && _isHovered) {
-            setState(() => _isHovered = false);
+          if (widget.enabled && _isHovered && mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() => _isHovered = false);
+            });
           }
         },
         child: GestureDetector(
@@ -642,7 +651,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
 }
 
 /// Custom item widget with mouse hover transitions and selected emerald state
-class _AppDropdownItemWidget<T> extends StatefulWidget {
+class _AppDropdownItemWidget<T> extends StatelessWidget {
   final AppDropdownItem<T> item;
   final bool isSelected;
   final TextStyle textStyle;
@@ -660,57 +669,34 @@ class _AppDropdownItemWidget<T> extends StatefulWidget {
   });
 
   @override
-  State<_AppDropdownItemWidget<T>> createState() =>
-      _AppDropdownItemWidgetState<T>();
-}
-
-class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
-  bool _isHovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    final isSelected = widget.isSelected;
-    final isEnabled = widget.item.enabled;
+    final isEnabled = item.enabled;
+    final primaryAccent = selectedColor ?? AppColors.adminPurple;
+    final primaryAccentBg = selectedBackgroundColor ?? AppColors.adminPurpleLight;
 
-    final primaryAccent = widget.selectedColor ?? AppColors.adminPurple;
-    final primaryAccentBg = widget.selectedBackgroundColor ?? AppColors.adminPurpleLight;
-
-    final bgColor = isSelected
-        ? primaryAccentBg
-        : _isHovered
-        ? const Color(0xFFF8FAFC) // Crisp subtle hover
-        : Colors.transparent;
-
+    final bgColor = isSelected ? primaryAccentBg : Colors.transparent;
     final textColor = isSelected
         ? primaryAccent
         : !isEnabled
         ? AppColors.textMuted
         : AppColors.textPrimary;
 
-    return MouseRegion(
-      cursor: isEnabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-      onEnter: (_) {
-        if (isEnabled && !_isHovered) setState(() => _isHovered = true);
-      },
-      onExit: (_) {
-        if (isEnabled && _isHovered) setState(() => _isHovered = false);
-      },
+    return Material(
+      color: bgColor,
       child: InkWell(
-        onTap: isEnabled ? widget.onTap : null,
-        hoverColor: Colors.transparent,
+        onTap: isEnabled ? onTap : null,
+        hoverColor: isSelected ? primaryAccentBg : const Color(0xFFF8FAFC),
         splashColor: primaryAccent.withValues(alpha: 0.08),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          color: bgColor,
           child: Row(
             children: [
-              if (widget.item.leading != null) ...[
-                widget.item.leading!,
+              if (item.leading != null) ...[
+                item.leading!,
                 const SizedBox(width: AppSpacing.sm),
-              ] else if (widget.item.icon != null) ...[
+              ] else if (item.icon != null) ...[
                 Icon(
-                  widget.item.icon,
+                  item.icon,
                   size: 18,
                   color: isSelected
                       ? primaryAccent
@@ -720,8 +706,8 @@ class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
               ],
               Expanded(
                 child: Text(
-                  widget.item.label,
-                  style: widget.textStyle.copyWith(
+                  item.label,
+                  style: textStyle.copyWith(
                     color: textColor,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   ),
@@ -734,8 +720,8 @@ class _AppDropdownItemWidgetState<T> extends State<_AppDropdownItemWidget<T>> {
                   size: 16,
                   color: primaryAccent,
                 )
-              else if (widget.item.trailing != null)
-                widget.item.trailing!,
+              else if (item.trailing != null)
+                item.trailing!,
             ],
           ),
         ),
@@ -962,16 +948,21 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
   void _closeDropdown({bool animated = true}) {
     if (!_isOpen) return;
 
-    if (animated) {
+    if (animated && _animationController.status != AnimationStatus.dismissed) {
       _animationController.reverse().then((_) {
+        if (!mounted) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _overlayEntry?.remove();
+          _overlayEntry = null;
+          if (mounted) setState(() => _isOpen = false);
+        });
+      });
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         _overlayEntry?.remove();
         _overlayEntry = null;
         if (mounted) setState(() => _isOpen = false);
       });
-    } else {
-      _overlayEntry?.remove();
-      _overlayEntry = null;
-      if (mounted) setState(() => _isOpen = false);
     }
   }
 

@@ -341,10 +341,18 @@ class _AppTextFieldState extends State<AppTextField> {
     Widget box = MouseRegion(
       cursor: widget.enabled ? SystemMouseCursors.text : SystemMouseCursors.basic,
       onEnter: (_) {
-        if (widget.enabled && !_isHovered) setState(() => _isHovered = true);
+        if (widget.enabled && !_isHovered && mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _isHovered = true);
+          });
+        }
       },
       onExit: (_) {
-        if (widget.enabled && _isHovered) setState(() => _isHovered = false);
+        if (widget.enabled && _isHovered && mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _isHovered = false);
+          });
+        }
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
