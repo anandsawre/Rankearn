@@ -65,6 +65,14 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
   }
 
   @override
+  void didUpdateWidget(covariant CreateBannerCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.imageUrl != oldWidget.imageUrl) {
+      _customUrlController.text = widget.imageUrl ?? '';
+    }
+  }
+
+  @override
   void dispose() {
     _customUrlController.dispose();
     super.dispose();
