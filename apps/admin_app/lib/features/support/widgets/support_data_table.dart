@@ -48,10 +48,26 @@ class SupportDataTable extends StatelessWidget {
       itemLabel: 'tickets',
       minWidth: 880.0,
       filterControls: [
-        _buildTabPill('all', 'All ($totalCount)'),
-        _buildTabPill('open', 'Open ($openCount)'),
-        _buildTabPill('in_progress', 'In Progress ($inProgressCount)'),
-        _buildTabPill('resolved', 'Resolved ($resolvedCount)'),
+        AdminTableDropdown<String>(
+          value: activeTab,
+          width: 175,
+          prefixIcon: const Icon(Icons.filter_alt_outlined, size: 14, color: AppColors.adminPurple),
+          items: const ['all', 'open', 'in_progress', 'resolved'],
+          itemLabel: (tab) {
+            switch (tab) {
+              case 'open':
+                return 'Open ($openCount)';
+              case 'in_progress':
+                return 'In Progress ($inProgressCount)';
+              case 'resolved':
+                return 'Resolved ($resolvedCount)';
+              case 'all':
+              default:
+                return 'All Tickets ($totalCount)';
+            }
+          },
+          onChanged: onTabChanged,
+        ),
       ],
       columns: const [
         DataColumn(label: Text('#', style: AppTypography.adminTableHead)),
@@ -164,35 +180,6 @@ class SupportDataTable extends StatelessWidget {
                 style: AppTypography.adminTableSecondary,
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabPill(String id, String label) {
-    final isSelected = activeTab == id;
-    return InkWell(
-      onTap: () => onTabChanged(id),
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.adminPurple : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppColors.adminPurple : AppColors.borderSubtle,
-            width: 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: AppTypography.fontHeading,
-            fontSize: 11.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),
       ),
