@@ -40,7 +40,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<TestModel> _popularTests = [];
   List<TestModel> _tournaments = [];
   List<CategoryModel> _liveCategories = [];
+  List<BannerModel> _activeBanners = [];
   StreamSubscription<List<CategoryModel>>? _categoriesSub;
+  StreamSubscription<List<BannerModel>>? _bannersSub;
 
   @override
   void initState() {
@@ -52,6 +54,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final testsRes = await TestsRepository().getTests();
     final tourRes = await ContestsRepository().getTournaments();
     final catRes = await TestsRepository().getCategories();
+    final bannersRes = await BannersRepository().getActiveBanners();
 
     if (!mounted) return;
     setState(() {
@@ -63,6 +66,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
       if (catRes is Success<List<CategoryModel>> && catRes.data.isNotEmpty) {
         _liveCategories = catRes.data;
+      }
+      if (bannersRes is Success<List<BannerModel>>) {
+        _activeBanners = bannersRes.data;
       }
     });
 
@@ -78,11 +84,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Silently ignore channel close/reconnect events
       },
     );
+
+    _bannersSub ??= BannersRepository().streamActiveBanners().listen(
+      (updated) {
+        if (mounted) {
+          setState(() {
+            _activeBanners = updated;
+          });
+        }
+      },
+      onError: (_) {},
+    );
   }
 
   @override
   void dispose() {
     _categoriesSub?.cancel();
+    _bannersSub?.cancel();
     super.dispose();
   }
 
@@ -93,6 +111,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       widget.onStartTest();
     }
+  }
+
+  void _handleBannerTap(BannerItemData banner) {
+    BannersRepository().recordClick(banner.id);
+    final link = banner.link.trim().toLowerCase();
+    if (link == '/tests' || link == 'tests') {
+      widget.onStartTest();
+    } else if (link == '/spin' || link == 'spin' || link.contains('wheel')) {
+      widget.onSpinWheel();
+    } else if (link == '/wallet' || link == 'wallet') {
+      widget.onOpenWallet();
+    } else if (link == '/battle' || link == 'battle') {
+      widget.onOpenBattle?.call();
+    } else if (link == '/leaderboard' || link == 'leaderboard') {
+      widget.onLeaderboardTap?.call();
+    } else {
+      widget.onStartTest();
+    }
+  }
+
+  Widget _buildTopBanner({required BorderRadius borderRadius}) {
+    if (_activeBanners.isEmpty) {
+      return HeroPromoBanner(
+        onStartLearning: widget.onStartTest,
+        borderRadius: borderRadius,
+      );
+    }
+
+    return BannerCarousel(
+      banners: _activeBanners.map((b) => BannerItemData(
+        id: b.id,
+        imageUrl: b.imageUrl,
+        title: b.title,
+        link: b.link,
+        type: b.type,
+        spotlightData: b.spotlightData,
+      )).toList(),
+      borderRadius: borderRadius,
+      onBannerTap: _handleBannerTap,
+      fallbackWidget: HeroPromoBanner(
+        onStartLearning: widget.onStartTest,
+        borderRadius: borderRadius,
+      ),
+    );
   }
 
   @override
@@ -117,8 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      HeroPromoBanner(
-                        onStartLearning: widget.onStartTest,
+                      _buildTopBanner(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       const SizedBox(height: 20),
@@ -178,8 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              HeroPromoBanner(
-                onStartLearning: widget.onStartTest,
+              _buildTopBanner(
                 borderRadius: BorderRadius.circular(12),
               ),
               const SizedBox(height: 18),

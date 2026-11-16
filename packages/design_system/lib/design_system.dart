@@ -45,6 +45,7 @@ export 'components/display/app_bar_chart.dart';
 export 'components/display/admin_hero_card.dart';
 export 'components/display/app_hero_banner.dart';
 export 'components/display/hero_promo_banner.dart';
+export 'components/display/banner_carousel.dart';
 export 'components/display/tests_hero_banner.dart';
 export 'components/cards/test_metric_card.dart';
 export 'components/navigation/test_type_navigation.dart';

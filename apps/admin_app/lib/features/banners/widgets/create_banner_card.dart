@@ -395,10 +395,11 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
     final hasImage = widget.imageUrl != null && widget.imageUrl!.isNotEmpty;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           width: double.infinity,
-          height: 150,
+          height: 160,
           decoration: BoxDecoration(
             color: AppColors.adminBackground,
             borderRadius: AppRadii.adminControl,
@@ -407,34 +408,56 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
               width: hasImage ? 1.5 : 1,
             ),
           ),
+          clipBehavior: Clip.antiAlias,
           child: hasImage
-              ? ClipRRect(
-                  borderRadius: AppRadii.adminControl,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Image.network(
-                          widget.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (ctx, err, stack) => _buildUploadPlaceholder(),
-                        ),
-                      ),
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: IconButton(
-                          onPressed: () {
-                            widget.onImageUrlChanged(null);
-                            _customUrlController.clear();
-                          },
-                          icon: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.black54,
+              ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      widget.imageUrl!,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (ctx, child, progress) {
+                        if (progress == null) return child;
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.adminPurple,
                           ),
+                        );
+                      },
+                      errorBuilder: (ctx, err, stack) => _buildImageErrorView(),
+                    ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: IconButton(
+                        onPressed: () {
+                          widget.onImageUrlChanged(null);
+                          _customUrlController.clear();
+                        },
+                        icon: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black54,
+                          padding: const EdgeInsets.all(6),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    Positioned(
+                      bottom: 8,
+                      left: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Live Creative Preview',
+                          style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
                 )
               : _buildUploadPlaceholder(),
         ),
@@ -444,10 +467,11 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
             Expanded(
               child: AppTextField(
                 controller: _customUrlController,
-                hintText: 'Paste direct Image URL or Storage link...',
+                hintText: 'Paste direct Image URL (e.g. https://.../banner.png)',
                 prefixIcon: const Icon(Icons.image_search_rounded, size: 20, color: AppColors.adminSecondaryText),
                 onChanged: (v) {
-                  widget.onImageUrlChanged(v.trim().isEmpty ? null : v.trim());
+                  final trimmed = v.trim();
+                  widget.onImageUrlChanged(trimmed.isEmpty ? null : trimmed);
                 },
               ),
             ),
@@ -456,18 +480,108 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
               label: 'Apply',
               height: AppSpacing.adminControlHeight,
               onPressed: () {
-                final url = _customUrlController.text.trim();
+                var url = _customUrlController.text.trim();
                 if (url.isNotEmpty) {
+                  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://$url';
+                    _customUrlController.text = url;
+                  }
                   widget.onImageUrlChanged(url);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Banner image URL set!')),
+                    const SnackBar(content: Text('Banner creative URL applied!')),
                   );
                 }
               },
             ),
           ],
         ),
+        const SizedBox(height: 8),
+        // Sample Preset Badges for Instant 1-Click Creative Testing
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              'Sample Creatives:',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.adminSecondaryText,
+              ),
+            ),
+            _buildSampleChip(
+              '🎯 Mock Test',
+              'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80',
+            ),
+            _buildSampleChip(
+              '⚔️ Quiz Battle',
+              'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1200&q=80',
+            ),
+            _buildSampleChip(
+              '🎁 Rewards',
+              'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200&q=80',
+            ),
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildSampleChip(String label, String url) {
+    return InkWell(
+      onTap: () {
+        _customUrlController.text = url;
+        widget.onImageUrlChanged(url);
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppColors.adminPurpleLight,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.adminPurple.withValues(alpha: 0.3)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: AppColors.adminPurple,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageErrorView() {
+    return Container(
+      color: const Color(0xFFFEF2F2),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.broken_image_rounded, color: AppColors.adminDanger, size: 28),
+          const SizedBox(height: 6),
+          const Text(
+            'Unable to Load Preview',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.adminDanger),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            widget.imageUrl ?? '',
+            style: TextStyle(fontSize: 10, color: AppColors.adminDanger.withValues(alpha: 0.8)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Ensure the link points directly to a public image (.png, .jpg, .webp).',
+            style: TextStyle(fontSize: 10, color: AppColors.adminSecondaryText),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
@@ -479,7 +593,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.adminPurpleLight,
               shape: BoxShape.circle,
             ),
@@ -487,7 +601,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Drag & drop banner creative or enter URL below',
+            'Banner creative preview will appear here',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -496,7 +610,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
           ),
           const SizedBox(height: 2),
           const Text(
-            'PNG, JPG, WebP supported up to 5MB (1200x500 standard)',
+            'Enter direct URL below or click a sample creative',
             style: TextStyle(fontSize: 11, color: AppColors.adminSecondaryText),
           ),
         ],
