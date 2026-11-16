@@ -416,7 +416,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                   fit: StackFit.expand,
                   children: [
                     Image.network(
-                      cleanUrl,
+                      AppFormatters.webSafeImageUrl(cleanUrl),
                       fit: BoxFit.cover,
                       loadingBuilder: (ctx, child, progress) {
                         if (progress == null) return child;

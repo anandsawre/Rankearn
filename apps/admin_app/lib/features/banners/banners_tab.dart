@@ -321,12 +321,18 @@ class _BannersTabState extends State<BannersTab> {
   }
 
   void _previewBanner() {
+    final cleanUrl = AppFormatters.sanitizeImageUrl(_imageUrl);
+    final webUrl = AppFormatters.webSafeImageUrl(_imageUrl);
+    final hasImage = cleanUrl.isNotEmpty;
+    final title = _titleController.text.trim();
+    final link = _linkController.text.trim();
+
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: AppRadii.adminCard),
         child: Container(
-          width: 520,
+          width: 540,
           padding: AppSpacing.adminCardPadding,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -335,7 +341,13 @@ class _BannersTabState extends State<BannersTab> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Live Banner Preview', style: AppTypography.adminCardTitle),
+                  Row(
+                    children: [
+                      const Icon(Icons.preview_rounded, color: AppColors.adminPurple, size: 22),
+                      const SizedBox(width: 8),
+                      Text('Live Banner Preview', style: AppTypography.adminCardTitle),
+                    ],
+                  ),
                   IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close_rounded)),
                 ],
               ),
@@ -349,22 +361,71 @@ class _BannersTabState extends State<BannersTab> {
                   border: Border.all(color: AppColors.adminBorder),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: AppFormatters.sanitizeImageUrl(_imageUrl).isNotEmpty
+                child: hasImage
                     ? Image.network(
-                        AppFormatters.sanitizeImageUrl(_imageUrl),
+                        webUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => _buildFallbackBanner(),
+                        loadingBuilder: (c, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.adminPurple),
+                          );
+                        },
+                        errorBuilder: (c, e, s) => Container(
+                          color: const Color(0xFFFEF2F2),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.broken_image_rounded, color: AppColors.adminDanger, size: 32),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Unable to Load Image Creative',
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.adminDanger),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                cleanUrl,
+                                style: const TextStyle(fontSize: 11, color: AppColors.adminSecondaryText),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
                       )
-                    : _buildFallbackBanner(),
+                    : Container(
+                        color: AppColors.adminPurpleLight,
+                        padding: const EdgeInsets.all(24),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_photo_alternate_rounded, color: AppColors.adminPurple, size: 36),
+                            SizedBox(height: 8),
+                            Text(
+                              'No Image Creative URL Entered',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.adminPurple),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Paste an image URL in the form to see the creative preview.',
+                              style: TextStyle(fontSize: 11, color: AppColors.adminSecondaryText),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
               ),
               const SizedBox(height: 16),
               Text(
-                _titleController.text.isNotEmpty ? _titleController.text : 'Promotional Headline',
-                style: AppTypography.adminCardTitle,
+                title.isNotEmpty ? title : 'Promotional Headline (Not Set)',
+                style: AppTypography.adminCardTitle.copyWith(
+                  color: title.isNotEmpty ? AppColors.adminPrimaryText : AppColors.adminSecondaryText,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
-                'Target Destination: ${_linkController.text}',
+                'Target Destination: ${link.isNotEmpty ? link : '/tests'}',
                 style: AppTypography.adminTableSecondary.copyWith(
                   color: AppColors.adminPurple,
                   fontWeight: FontWeight.w600,
@@ -373,29 +434,6 @@ class _BannersTabState extends State<BannersTab> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFallbackBanner() {
-    return Container(
-      decoration: const BoxDecoration(gradient: AppColors.adminBannerGradient),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: Colors.white24, borderRadius: AppRadii.adminStatusPill),
-            child: Text('PROMOTIONAL', style: AppTypography.adminBadge.copyWith(color: Colors.white)),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _titleController.text.isNotEmpty ? _titleController.text : 'Headline Goes Here',
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
-          ),
-        ],
       ),
     );
   }

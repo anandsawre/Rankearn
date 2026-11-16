@@ -82,4 +82,20 @@ class AppFormatters {
 
     return raw;
   }
+
+  /// Returns a web-safe image URL that bypasses browser CanvasKit CORS blocks
+  /// for external image hosts (e.g. ImgBB) by routing through Cloudflare's public wsrv.nl proxy.
+  static String webSafeImageUrl(String? input) {
+    final clean = sanitizeImageUrl(input);
+    if (clean.isEmpty) return '';
+    if (clean.startsWith('https://wsrv.nl') || clean.startsWith('data:') || clean.startsWith('blob:')) {
+      return clean;
+    }
+    // External domains known to block CORS in browsers (ImgBB, postimg, etc.)
+    final lower = clean.toLowerCase();
+    if (lower.contains('ibb.co') || lower.contains('imgbb.com') || lower.contains('postimg.cc')) {
+      return 'https://wsrv.nl/?url=${Uri.encodeComponent(clean)}';
+    }
+    return clean;
+  }
 }

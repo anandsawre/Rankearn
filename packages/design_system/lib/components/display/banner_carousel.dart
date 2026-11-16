@@ -17,6 +17,19 @@ String _sanitizeUrl(String? input) {
   return raw;
 }
 
+String _webSafeUrl(String? input) {
+  final clean = _sanitizeUrl(input);
+  if (clean.isEmpty) return '';
+  if (clean.startsWith('https://wsrv.nl') || clean.startsWith('data:') || clean.startsWith('blob:')) {
+    return clean;
+  }
+  final lower = clean.toLowerCase();
+  if (lower.contains('ibb.co') || lower.contains('imgbb.com') || lower.contains('postimg.cc')) {
+    return 'https://wsrv.nl/?url=${Uri.encodeComponent(clean)}';
+  }
+  return clean;
+}
+
 class BannerItemData {
   final String id;
   final String imageUrl;
@@ -195,7 +208,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
         onTap: () => widget.onBannerTap?.call(banner),
         child: hasImage
             ? Image.network(
-                cleanUrl,
+                _webSafeUrl(cleanUrl),
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
