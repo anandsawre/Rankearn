@@ -30,78 +30,6 @@ class LiveTestsScreen extends StatefulWidget {
     this.initialTournaments,
   });
 
-  static List<TestModel> get sampleTournaments => [
-        TestModel(
-          id: 'live_rrb_01',
-          title: 'RRB Technician Special Live Test',
-          categoryId: 'General Science',
-          totalQuestions: 100,
-          durationMinutes: 60,
-          totalParticipants: 3244,
-          entryFeeCoins: 0,
-          prizePoolCoins: 200,
-          isTournament: true,
-          status: 'published',
-          syllabus: 'General Science',
-        ),
-        TestModel(
-          id: 'live_all_india_quiz_02',
-          title: 'All India Mega Quiz',
-          categoryId: 'Mixed Subjects',
-          totalQuestions: 50,
-          durationMinutes: 30,
-          totalParticipants: 1100,
-          entryFeeCoins: 10,
-          prizePoolCoins: 100,
-          isTournament: true,
-          status: 'published',
-          syllabus: 'Mixed Subjects',
-        ),
-        TestModel(
-          id: 'live_maths_speed_03',
-          title: 'Maths Speed Test',
-          categoryId: 'Mathematics',
-          totalQuestions: 25,
-          durationMinutes: 20,
-          totalParticipants: 856,
-          entryFeeCoins: 0,
-          prizePoolCoins: 50,
-          isTournament: true,
-          status: 'published',
-          syllabus: 'Mathematics',
-        ),
-        TestModel(
-          id: 'up_01',
-          title: 'General Science Mega Test',
-          categoryId: 'General Science',
-          totalQuestions: 100,
-          durationMinutes: 60,
-          isTournament: true,
-          status: 'published',
-          scheduledStartTime: DateTime.now().add(const Duration(hours: 2, minutes: 15)),
-        ),
-        TestModel(
-          id: 'up_02',
-          title: 'Current Affairs Live Test',
-          categoryId: 'Current Affairs',
-          totalQuestions: 50,
-          durationMinutes: 30,
-          isTournament: true,
-          status: 'published',
-          scheduledStartTime: DateTime.now().add(const Duration(days: 1)),
-        ),
-        TestModel(
-          id: 'up_03',
-          title: 'Reasoning Challenge',
-          categoryId: 'Reasoning',
-          totalQuestions: 50,
-          durationMinutes: 30,
-          isTournament: true,
-          status: 'published',
-          scheduledStartTime: DateTime.now().add(const Duration(days: 2)),
-        ),
-      ];
-
   @override
   State<LiveTestsScreen> createState() => _LiveTestsScreenState();
 }
@@ -115,6 +43,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
   List<TestModel> _upcomingTournaments = [];
   List<Map<String, dynamic>> _myParticipations = [];
   List<Map<String, dynamic>> _leaderboardUsers = [];
+  Map<String, dynamic> _userStats = {};
 
   final Set<String> _notifiedTestIds = <String>{};
   Timer? _refreshTimer;
@@ -124,9 +53,9 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
   @override
   void initState() {
     super.initState();
-    final initial = widget.initialTournaments ?? LiveTestsScreen.sampleTournaments;
+    final initial = widget.initialTournaments ?? <TestModel>[];
     _processTournaments(initial);
-    _isLoading = false;
+    _isLoading = initial.isEmpty;
     _loadLiveScreenData();
     _loadBanners();
 
@@ -219,11 +148,13 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
 
   Future<void> _loadLiveScreenData() async {
     final repo = ContestsRepository();
+    final testsRepo = TestsRepository();
 
     final results = await Future.wait([
       repo.getTournaments(),
       repo.getLeaderboardUsers(),
       repo.getUserParticipations(widget.userId ?? ''),
+      testsRepo.getUserStats(widget.userId ?? ''),
     ]);
 
     if (!mounted) return;
@@ -231,18 +162,18 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
     final tRes = results[0] as Result<List<TestModel>>;
     final lRes = results[1] as Result<List<Map<String, dynamic>>>;
     final pRes = results[2] as Result<List<Map<String, dynamic>>>;
+    final stats = results[3] as Map<String, dynamic>;
 
     final tournaments = tRes is Success<List<TestModel>> ? tRes.data : <TestModel>[];
     final leaderboard = lRes is Success<List<Map<String, dynamic>>> ? lRes.data : <Map<String, dynamic>>[];
     final participations = pRes is Success<List<Map<String, dynamic>>> ? pRes.data : <Map<String, dynamic>>[];
 
-    if (tournaments.isNotEmpty) {
-      _processTournaments(tournaments);
-    }
-
     setState(() {
-      if (leaderboard.isNotEmpty) _leaderboardUsers = leaderboard;
+      _processTournaments(tournaments);
+      _leaderboardUsers = leaderboard;
       _myParticipations = participations;
+      _userStats = stats;
+      _isLoading = false;
     });
   }
 
@@ -330,13 +261,25 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
             ],
           ),
           content: _leaderboardUsers.isEmpty
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildLeaderboardRow(1, 'Anand Jaikaran', '4,110 Coins', false),
-                    const Divider(height: 12),
-                    _buildLeaderboardRow(2, 'Super Admin', '10 Coins', false),
-                  ],
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.emoji_events_outlined, size: 40, color: AppColors.textMuted),
+                      SizedBox(height: 12),
+                      Text(
+                        'No leaderboard rankings yet',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Rankings will appear as learners participate in live contests.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
                 )
               : SingleChildScrollView(
                   child: Column(
@@ -344,11 +287,14 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
                     children: _leaderboardUsers.take(10).map((u) {
                       final rank = _leaderboardUsers.indexOf(u) + 1;
                       final isUser = u['id'] == widget.userId;
+                      final name = isUser
+                          ? '${u['name'] ?? 'Candidate'} (You)'
+                          : (u['name']?.toString() ?? (u['email'] != null ? u['email'].toString().split('@').first : 'Learner'));
                       return Column(
                         children: [
                           _buildLeaderboardRow(
                             rank,
-                            u['name']?.toString() ?? 'Candidate',
+                            name,
                             '${u['coins'] ?? 0} Coins',
                             isUser,
                           ),
@@ -433,7 +379,8 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
         final isDesktop = constraints.maxWidth >= 990;
 
         final totalParts = _allTournaments.fold<int>(0, (sum, t) => sum + t.totalParticipants);
-        final displayParts = totalParts > 0 ? (totalParts >= 1000 ? '${(totalParts / 1000).toStringAsFixed(1)}K' : '$totalParts') : '5.2K';
+        final displayParts = totalParts > 0 ? (totalParts >= 1000 ? '${(totalParts / 1000).toStringAsFixed(1)}K' : '$totalParts') : '0';
+        final userRank = _userStats['rank']?.toString() ?? '-';
 
         final mainContent = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,9 +394,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
               liveNowCount: _liveNowTournaments.length,
               participants: displayParts,
               coinsEarned: '${widget.userCoins}',
-              rankPosition: _leaderboardUsers.isNotEmpty
-                  ? '#${(_leaderboardUsers.indexWhere((u) => u['id'] == widget.userId) + 1).clamp(1, 999)}'
-                  : '#1256',
+              rankPosition: userRank,
               onLiveNowTap: () => setState(() => _selectedTab = LiveTestFilterTab.liveNow),
               onParticipantsTap: _openLeaderboardsDialog,
               onCoinsTap: () => widget.onOpenLeaderboard?.call(),
@@ -524,13 +469,14 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
 
             // 2. Daily Streak
             DailyStreakCard(
-              streakDays: 7,
-              completedDays: 5,
+              streakDays: (_userStats['streakDays'] as num?)?.toInt() ?? 0,
+              completedDays: ((_userStats['testsAttempted'] as num?)?.toInt() ?? 0).clamp(0, 7),
               onTap: () {
+                final sDays = _userStats['streakDays'] ?? 0;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('7-Day Streak Active! Keep taking tests every day to earn bonus coins.'),
-                    backgroundColor: Color(0xFFF97316),
+                  SnackBar(
+                    content: Text('$sDays-Day Streak! Keep taking tests to earn bonus coins.'),
+                    backgroundColor: const Color(0xFFF97316),
                   ),
                 );
               },
@@ -539,6 +485,20 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
 
             // 3. Weekly Leaderboard
             WeeklyLeaderboardCard(
+              title: 'Top Performers',
+              topUsers: _leaderboardUsers.take(6).map((u) {
+                final rank = _leaderboardUsers.indexOf(u) + 1;
+                final name = u['id'] == widget.userId
+                    ? '${u['name'] ?? 'Candidate'} (You)'
+                    : (u['name']?.toString() ?? (u['email'] != null ? u['email'].toString().split('@').first : 'Learner'));
+                return {
+                  'rank': rank,
+                  'name': name,
+                  'coins': (u['coins'] as num?)?.toInt() ?? 0,
+                  'avatarUrl': u['profile_photo_url'],
+                  'isCurrentUser': u['id'] == widget.userId,
+                };
+              }).toList(),
               onViewAll: _openLeaderboardsDialog,
               onUserTap: (user) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -781,13 +741,15 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
       children: _upcomingTournaments.map((t) {
         final testId = t.id;
         final isNotified = _notifiedTestIds.contains(testId);
-        final date = t.scheduledStartTime ?? DateTime.now().add(const Duration(hours: 3));
+        final date = t.scheduledStartTime;
+        final dayStr = date != null ? '${date.day}' : '--';
+        final monthStr = date != null ? _formatMonth(date.month) : 'SOON';
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: UpcomingLiveTestCard(
-            day: '${date.day}',
-            month: _formatMonth(date.month),
+            day: dayStr,
+            month: monthStr,
             title: t.title,
             typeBadge: t.isTournament ? (t.entryFeeCoins > 0 ? 'TOURNAMENT (${t.entryFeeCoins}C)' : 'FREE TOURNAMENT') : 'LIVE QUIZ',
             typeBadgeColor: t.isTournament ? const Color(0xFF7C3AED) : const Color(0xFFEA580C),
@@ -803,14 +765,15 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
   }
 
   Widget _buildTodaysGoalSection() {
+    final testsDone = ((_userStats['testsAttempted'] as num?)?.toInt() ?? _myParticipations.length).clamp(0, 5);
     return TodayGoalCard(
-      completed: _myParticipations.length.clamp(0, 5),
+      completed: testsDone,
       target: 5,
       subtitle: 'Complete 5 tests today to earn 50 coins!',
       onTap: () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Today\'s Goal: ${_myParticipations.length}/5 completed! Keep practicing.'),
+            content: Text('Today\'s Goal: $testsDone/5 completed! Keep practicing.'),
             backgroundColor: AppColors.brandGreen,
           ),
         );

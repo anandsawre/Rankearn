@@ -41,6 +41,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<TestModel> _tournaments = [];
   List<CategoryModel> _liveCategories = [];
   List<BannerModel> _activeBanners = [];
+  Map<String, dynamic> _userStats = {};
+  List<Map<String, dynamic>> _leaderboardUsers = [];
   StreamSubscription<List<CategoryModel>>? _categoriesSub;
   StreamSubscription<List<BannerModel>>? _bannersSub;
 
@@ -55,9 +57,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final tourRes = await ContestsRepository().getTournaments();
     final catRes = await TestsRepository().getCategories();
     final bannersRes = await BannersRepository().getActiveBanners(displayMode: 'home_carousel');
+    final stats = await TestsRepository().getUserStats(widget.profile.id);
+    final lbRes = await ContestsRepository().getLeaderboardUsers(limit: 8);
 
     if (!mounted) return;
     setState(() {
+      _userStats = stats;
       if (testsRes is Success<List<TestModel>>) {
         _popularTests = testsRes.data;
       }
@@ -69,6 +74,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
       if (bannersRes is Success<List<BannerModel>>) {
         _activeBanners = bannersRes.data;
+      }
+      if (lbRes is Success<List<Map<String, dynamic>>>) {
+        _leaderboardUsers = lbRes.data;
       }
     });
 
@@ -291,15 +299,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TodayGoalCard(
-                        completed: 3,
+                        completed: ((_userStats['testsAttempted'] as num?)?.toInt() ?? 0).clamp(0, 5),
                         target: 5,
                         subtitle: 'Complete 5 tests today to earn 50 coins!',
                         onTap: widget.onStartTest,
                       ),
                       const SizedBox(height: 16),
                       DailyStreakCard(
-                        streakDays: 7,
-                        completedDays: 5,
+                        streakDays: (_userStats['streakDays'] as num?)?.toInt() ?? 0,
+                        completedDays: ((_userStats['testsAttempted'] as num?)?.toInt() ?? 0).clamp(0, 7),
                         onTap: widget.onDailyStreakTap ?? () => _showStreakInfo(context),
                       ),
                       const SizedBox(height: 20),
@@ -366,7 +374,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         TestMetricCard(
           icon: Icons.local_fire_department_rounded,
           label: 'Daily Streak',
-          value: '7 Days',
+          value: (_userStats['streakDays'] ?? 0) > 0 ? '${_userStats['streakDays']} Days' : '0 Days',
           accentColor: const Color(0xFFF97316),
           backgroundColor: const Color(0xFFFFF7ED),
           onTap: widget.onDailyStreakTap ?? () => _showStreakInfo(context),
@@ -374,7 +382,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         TestMetricCard(
           icon: Icons.track_changes_rounded,
           label: 'Tests Attempted',
-          value: '28',
+          value: '${_userStats['testsAttempted'] ?? 0}',
           accentColor: const Color(0xFF2587F8),
           backgroundColor: const Color(0xFFEFF6FF),
           onTap: widget.onExploreTests,
@@ -382,7 +390,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         TestMetricCard(
           icon: Icons.military_tech_rounded,
           label: 'My Rank',
-          value: '#1256',
+          value: '${_userStats['rank'] ?? '-'}',
           accentColor: const Color(0xFFEAB308),
           backgroundColor: const Color(0xFFFEFCE8),
           onTap: widget.onLeaderboardTap ?? () => _showRankInfo(context),
@@ -680,27 +688,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 700;
 
-        final activeTitle = _popularTests.isNotEmpty
+        final hasTest = _popularTests.isNotEmpty;
+        final activeTitle = hasTest
             ? _popularTests.first.title
-            : 'RRB Technician Grade 3';
-        final activeSubtitle = _popularTests.isNotEmpty
-            ? '${_popularTests.first.categoryId ?? "General Science"} • ${_popularTests.first.totalQuestions} Questions'
-            : 'General Science • 120 Questions';
-        final activeTag = _popularTests.isNotEmpty
+            : 'Explore Mock Tests';
+        final activeSubtitle = hasTest
+            ? '${_popularTests.first.categoryId ?? "General"} • ${_popularTests.first.totalQuestions} Questions'
+            : 'Practice from hundreds of curated questions';
+        final activeTag = hasTest
             ? (_popularTests.first.categoryId ?? 'Target Exam')
-            : 'RRB Technician';
+            : 'Practice';
 
         final continueCard = ContinueLearningCard(
           title: activeTitle,
           subtitle: activeSubtitle,
-          progress: 0.65,
+          progress: hasTest ? 0.65 : 0.0,
           tag: activeTag,
           onContinue: () => _triggerStartTest(),
           onViewAll: widget.onExploreTests,
         );
 
         final goalCard = TodayGoalCard(
-          completed: 3,
+          completed: ((_userStats['testsAttempted'] as num?)?.toInt() ?? 0).clamp(0, 5),
           target: 5,
           onTap: () => _triggerStartTest(),
         );
@@ -788,50 +797,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       }).toList();
     } else {
-      subjects = const [
-        (
-          title: 'General\nScience',
-          count: '1200+ Qs',
-          icon: Icons.science_rounded,
-          accent: Color(0xFF2587F8),
-          bg: Color(0xFFF0F7FF),
-        ),
-        (
-          title: 'Mathematics',
-          count: '800+ Qs',
-          icon: Icons.calculate_rounded,
-          accent: Color(0xFFF59E0B),
-          bg: Color(0xFFFFFBEB),
-        ),
-        (
-          title: 'Reasoning',
-          count: '700+ Qs',
-          icon: Icons.psychology_rounded,
-          accent: Color(0xFFF43F5E),
-          bg: Color(0xFFFFF1F2),
-        ),
-        (
-          title: 'Current Affairs',
-          count: '500+ Qs',
-          icon: Icons.newspaper_rounded,
-          accent: Color(0xFF8B5CF6),
-          bg: Color(0xFFF5F3FF),
-        ),
-        (
-          title: 'Chemistry',
-          count: '600+ Qs',
-          icon: Icons.biotech_rounded,
-          accent: Color(0xFF06B6D4),
-          bg: Color(0xFFECFEFF),
-        ),
-        (
-          title: 'Biology',
-          count: '550+ Qs',
-          icon: Icons.eco_rounded,
-          accent: Color(0xFF10B981),
-          bg: Color(0xFFECFDF5),
-        ),
-      ];
+      subjects = [];
     }
 
     return Column(
@@ -896,32 +862,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 148,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: subjects.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              final sub = subjects[index];
-              return SubjectCard(
-                title: sub.title,
-                questionCount: sub.count,
-                icon: sub.icon,
-                accentColor: sub.accent,
-                backgroundColor: sub.bg,
-                onTap: () {
-                  if (widget.onFilterSubject != null) {
-                    widget.onFilterSubject!(sub.title.replaceAll('\n', ' '));
-                  } else {
-                    widget.onExploreTests();
-                  }
-                },
-              );
-            },
+        if (subjects.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: const Center(
+              child: Text(
+                'No subject categories available right now.',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          )
+        else
+          SizedBox(
+            height: 148,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: subjects.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final sub = subjects[index];
+                return SubjectCard(
+                  title: sub.title,
+                  questionCount: sub.count,
+                  icon: sub.icon,
+                  accentColor: sub.accent,
+                  backgroundColor: sub.bg,
+                  onTap: () {
+                    if (widget.onFilterSubject != null) {
+                      widget.onFilterSubject!(sub.title.replaceAll('\n', ' '));
+                    } else {
+                      widget.onExploreTests();
+                    }
+                  },
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }
@@ -973,7 +960,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       VoidCallback onAction,
     })>[
       if (_tournaments.isNotEmpty) ...[
-        for (final t in _tournaments.take(2))
+        for (final t in _tournaments.take(5))
           (
             title: t.title,
             dateTime: t.scheduledStartTime != null
@@ -984,11 +971,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
+                color: t.isLive ? const Color(0xFFF43F5E) : const Color(0xFFEFF6FF),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Center(
-                child: Icon(Icons.emoji_events_rounded, color: Color(0xFF2587F8), size: 22),
+              child: Center(
+                child: Icon(
+                  t.isLive ? Icons.calendar_month_rounded : Icons.emoji_events_rounded,
+                  color: t.isLive ? Colors.white : const Color(0xFF2587F8),
+                  size: 22,
+                ),
               ),
             ),
             isLive: t.isLive,
@@ -996,70 +987,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onAction: widget.onJoinContest,
           ),
       ],
-      (
-        title: 'RRB Special Live Test',
-        dateTime: '20 Oct 2026 • 10:00 AM',
-        questions: '100 Questions',
-        icon: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF43F5E),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Center(
-            child: Icon(Icons.calendar_month_rounded, color: Colors.white, size: 22),
-          ),
-        ),
-        isLive: true,
-        actionType: LiveEventActionType.joinNow,
-        onAction: widget.onJoinContest,
-      ),
-      (
-        title: 'General Science Mega Test',
-        dateTime: '21 Oct 2026 • 06:00 PM',
-        questions: '120 Questions',
-        icon: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: const Color(0xFF2587F8),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Center(
-            child: Icon(Icons.emoji_events_rounded, color: Colors.white, size: 22),
-          ),
-        ),
-        isLive: false,
-        actionType: LiveEventActionType.notifyMe,
-        onAction: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Reminder set! You will be notified 15 minutes before the test begins.'),
-              backgroundColor: AppColors.brandBlue,
-            ),
-          );
-        },
-      ),
-      (
-        title: 'All India Quiz Tournament',
-        dateTime: '25 Oct 2026 • 07:00 PM',
-        questions: '50 Questions',
-        icon: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: const Color(0xFF7C3AED),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Center(
-            child: Icon(Icons.military_tech_rounded, color: Colors.white, size: 22),
-          ),
-        ),
-        isLive: false,
-        actionType: LiveEventActionType.register,
-        onAction: widget.onJoinContest,
-      ),
     ];
 
     return Column(
@@ -1114,47 +1041,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 142,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: liveEvents.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final event = liveEvents[index];
-              return LiveEventCard(
-                title: event.title,
-                dateTime: event.dateTime,
-                questionCount: event.questions,
-                icon: event.icon,
-                isLive: event.isLive,
-                actionType: event.actionType,
-                onAction: event.onAction,
-              );
-            },
+        if (liveEvents.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: const Center(
+              child: Text(
+                'No live tournaments currently scheduled.',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          )
+        else
+          SizedBox(
+            height: 142,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: liveEvents.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final event = liveEvents[index];
+                return LiveEventCard(
+                  title: event.title,
+                  dateTime: event.dateTime,
+                  questionCount: event.questions,
+                  icon: event.icon,
+                  isLive: event.isLive,
+                  actionType: event.actionType,
+                  onAction: event.onAction,
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }
 
   // --- Desktop Specific Sidebar Components ---
   Widget _buildContinueLearningOnlySection() {
-    final activeTitle = _popularTests.isNotEmpty
+    final hasTest = _popularTests.isNotEmpty;
+    final activeTitle = hasTest
         ? _popularTests.first.title
-        : 'RRB Technician Grade 3';
-    final activeSubtitle = _popularTests.isNotEmpty
-        ? '${_popularTests.first.categoryId ?? "General Science"} • ${_popularTests.first.totalQuestions} Questions'
-        : 'General Science • 120 Questions';
-    final activeTag = _popularTests.isNotEmpty
+        : 'Explore Mock Tests';
+    final activeSubtitle = hasTest
+        ? '${_popularTests.first.categoryId ?? "General"} • ${_popularTests.first.totalQuestions} Questions'
+        : 'Practice from hundreds of curated questions';
+    final activeTag = hasTest
         ? (_popularTests.first.categoryId ?? 'Target Exam')
-        : 'RRB Technician';
+        : 'Practice';
 
     return ContinueLearningCard(
       title: activeTitle,
       subtitle: activeSubtitle,
-      progress: 0.65,
+      progress: hasTest ? 0.65 : 0.0,
       tag: activeTag,
       onContinue: () => _triggerStartTest(),
       onViewAll: widget.onExploreTests,
@@ -1226,55 +1175,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        // Event 1: RRB Special Live Test
-        _buildDesktopLiveEventCard(
-          iconBg: const Color(0xFFF43F5E),
-          icon: const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 22),
-          isLive: true,
-          title: 'RRB Special Live Test',
-          dateTime: '20 Oct 2026 • 10:00 AM',
-          questions: '100 Questions',
-          actionLabel: 'Join Now →',
-          actionColor: const Color(0xFFE11D48),
-          actionBg: const Color(0xFFFFE4E6),
-          onTap: widget.onJoinContest,
-        ),
-        const SizedBox(height: 10),
-        // Event 2: General Science Mega Test
-        _buildDesktopLiveEventCard(
-          iconBg: const Color(0xFF2587F8),
-          icon: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 22),
-          isLive: false,
-          title: 'General Science Mega Test',
-          dateTime: '21 Oct 2026 • 06:00 PM',
-          questions: '120 Questions',
-          actionLabel: 'Notify Me',
-          actionIcon: Icons.notifications_none_rounded,
-          actionColor: const Color(0xFF2587F8),
-          actionBg: const Color(0xFFEFF6FF),
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Reminder set! You will be notified 15 minutes before the test begins.'),
-                backgroundColor: AppColors.brandBlue,
+        if (_tournaments.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: const Center(
+              child: Text(
+                'No live tests scheduled right now.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600),
               ),
-            );
-          },
-        ),
-        const SizedBox(height: 10),
-        // Event 3: All India Quiz Tournament
-        _buildDesktopLiveEventCard(
-          iconBg: const Color(0xFF7C3AED),
-          icon: const Icon(Icons.military_tech_rounded, color: Colors.white, size: 22),
-          isLive: false,
-          title: 'All India Quiz Tournament',
-          dateTime: '25 Oct 2026 • 07:00 PM',
-          questions: '50 Questions',
-          actionLabel: 'Register →',
-          actionColor: const Color(0xFF7C3AED),
-          actionBg: const Color(0xFFF3E8FF),
-          onTap: widget.onJoinContest,
-        ),
+            ),
+          )
+        else
+          for (final t in _tournaments.take(3)) ...[
+            _buildDesktopLiveEventCard(
+              iconBg: t.isLive ? const Color(0xFFF43F5E) : const Color(0xFF2587F8),
+              icon: Icon(
+                t.isLive ? Icons.calendar_month_rounded : Icons.emoji_events_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+              isLive: t.isLive,
+              title: t.title,
+              dateTime: t.scheduledStartTime != null
+                  ? '${t.scheduledStartTime!.day} ${_monthName(t.scheduledStartTime!.month)} • ${_formatHour(t.scheduledStartTime!)}'
+                  : 'Live Tournament',
+              questions: '${t.totalQuestions} Questions',
+              actionLabel: t.isLive ? 'Join Now →' : 'Register →',
+              actionColor: t.isLive ? const Color(0xFFE11D48) : const Color(0xFF2587F8),
+              actionBg: t.isLive ? const Color(0xFFFFE4E6) : const Color(0xFFEFF6FF),
+              onTap: widget.onJoinContest,
+            ),
+            const SizedBox(height: 10),
+          ],
       ],
     );
   }
@@ -1643,91 +1581,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          ...[
-            (
-              rank: 1,
-              name: 'Aarav Sharma',
-              coins: 3420,
-              badgeBg: const Color(0xFFFEF3C7),
-              badgeColor: const Color(0xFFD97706),
-              avatarBg: const Color(0xFFDBEAFE),
-              isUser: false,
-            ),
-            (
-              rank: 2,
-              name: 'Priya Patel',
-              coins: 2980,
-              badgeBg: const Color(0xFFF1F5F9),
-              badgeColor: const Color(0xFF64748B),
-              avatarBg: const Color(0xFFFCE7F3),
-              isUser: false,
-            ),
-            (
-              rank: 3,
-              name: '${widget.profile.name} (You)',
-              coins: widget.profile.coins > 0 ? widget.profile.coins : 1450,
-              badgeBg: const Color(0xFFFFEDD5),
-              badgeColor: const Color(0xFFC2410C),
-              avatarBg: const Color(0xFFDCFCE7),
-              isUser: true,
-            ),
-            (
-              rank: 4,
-              name: 'Amit Verma',
-              coins: 1320,
-              badgeBg: const Color(0xFFF8FAFC),
-              badgeColor: const Color(0xFF64748B),
-              avatarBg: const Color(0xFFEDE9FE),
-              isUser: false,
-            ),
-            (
-              rank: 5,
-              name: 'Sneha Roy',
-              coins: 1240,
-              badgeBg: const Color(0xFFF8FAFC),
-              badgeColor: const Color(0xFF64748B),
-              avatarBg: const Color(0xFFFEF3C7),
-              isUser: false,
-            ),
-            (
-              rank: 6,
-              name: 'Rohan Gupta',
-              coins: 1150,
-              badgeBg: const Color(0xFFF8FAFC),
-              badgeColor: const Color(0xFF64748B),
-              avatarBg: const Color(0xFFE0E7FF),
-              isUser: false,
-            ),
-            (
-              rank: 7,
-              name: 'Ananya Singh',
-              coins: 1080,
-              badgeBg: const Color(0xFFF8FAFC),
-              badgeColor: const Color(0xFF64748B),
-              avatarBg: const Color(0xFFFCE7F3),
-              isUser: false,
-            ),
-            (
-              rank: 8,
-              name: 'Deepak Kumar',
-              coins: 990,
-              badgeBg: const Color(0xFFF8FAFC),
-              badgeColor: const Color(0xFF64748B),
-              avatarBg: const Color(0xFFDCFCE7),
-              isUser: false,
-            ),
-          ].map((item) => Padding(
+          if (_leaderboardUsers.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(
+                  'No learners on leaderboard yet.',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                ),
+              ),
+            )
+          else
+            ..._leaderboardUsers.take(8).map((u) {
+              final rank = _leaderboardUsers.indexOf(u) + 1;
+              final isUser = u['id'] == widget.profile.id;
+              final name = isUser
+                  ? '${widget.profile.name} (You)'
+                  : (u['name']?.toString() ?? (u['email'] != null ? u['email'].toString().split('@').first : 'Learner'));
+              final coins = (u['coins'] as num?)?.toInt() ?? 0;
+
+              final badgeBg = rank == 1
+                  ? const Color(0xFFFEF3C7)
+                  : (rank == 2
+                      ? const Color(0xFFF1F5F9)
+                      : (rank == 3 ? const Color(0xFFFFEDD5) : const Color(0xFFF8FAFC)));
+              final badgeColor = rank == 1
+                  ? const Color(0xFFD97706)
+                  : (rank == 2
+                      ? const Color(0xFF64748B)
+                      : (rank == 3 ? const Color(0xFFC2410C) : const Color(0xFF64748B)));
+              final avatarBg = rank == 1
+                  ? const Color(0xFFDBEAFE)
+                  : (rank == 2
+                      ? const Color(0xFFFCE7F3)
+                      : (rank == 3 ? const Color(0xFFDCFCE7) : const Color(0xFFEDE9FE)));
+
+              return Padding(
                 padding: const EdgeInsets.only(bottom: 11),
                 child: _buildLeaderboardRow(
-                  rank: item.rank,
-                  name: item.name,
-                  coins: item.coins,
-                  badgeBg: item.badgeBg,
-                  badgeColor: item.badgeColor,
-                  avatarBg: item.avatarBg,
-                  isUser: item.isUser,
+                  rank: rank,
+                  name: name,
+                  coins: coins,
+                  badgeBg: badgeBg,
+                  badgeColor: badgeColor,
+                  avatarBg: avatarBg,
+                  isUser: isUser,
                 ),
-              )),
+              );
+            }),
         ],
       ),
     ),

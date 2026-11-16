@@ -61,6 +61,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
 
 
+  Map<String, dynamic> _userStats = {};
   List<BannerModel> _testBanners = [];
   StreamSubscription<List<BannerModel>>? _bannersSub;
 
@@ -71,8 +72,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       _tests = List.from(widget.initialTests!);
       _isLoading = false;
     } else {
-      _tests = _getFallbackTests();
-      _isLoading = false;
+      _tests = [];
+      _isLoading = true;
     }
     _extractUpcomingTests();
     _loadTests();
@@ -320,15 +321,15 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     final tourRes = await ContestsRepository().getTournaments();
     final registered = await ContestsRepository()
         .getUserRegisteredTournamentIds(widget.userId ?? '');
+    final stats = await testsRepo.getUserStats(widget.userId ?? '');
 
     if (!mounted) return;
     setState(() {
       _isLoading = false;
+      _userStats = stats;
       _registeredContestIds = registered;
-      if (res is Success<List<TestModel>> && res.data.isNotEmpty) {
+      if (res is Success<List<TestModel>>) {
         _tests = res.data;
-      } else if (_tests.isEmpty) {
-        _tests = _getFallbackTests();
       }
       if (examRes is Success<List<ExamCategoryModel>>) {
         _examCategories = examRes.data;
@@ -507,99 +508,6 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     final minutes = (diff.inMinutes % 60).toString().padLeft(2, '0');
     final seconds = (diff.inSeconds % 60).toString().padLeft(2, '0');
     return '$hours:$minutes:$seconds';
-  }
-
-  List<TestModel> _getFallbackTests() {
-    return const [
-      TestModel(
-        id: 'test_mock_01',
-        title: '70th BPSC Prelims Grand Full Mock Test 1',
-        categoryId: 'General Science',
-        durationMinutes: 120,
-        totalQuestions: 150,
-        negativeMarking: 0.33,
-        isProOnly: false,
-        unlockPriceCoins: 0,
-        testMode: 'mock',
-      ),
-      TestModel(
-        id: 'test_math_02',
-        title: 'Quantitative Aptitude Master Challenge',
-        categoryId: 'Mathematics',
-        durationMinutes: 60,
-        totalQuestions: 50,
-        negativeMarking: 0.25,
-        isProOnly: false,
-        unlockPriceCoins: 0,
-        testMode: 'chapter',
-      ),
-      TestModel(
-        id: 'test_reasoning_03',
-        title: 'Logical & Analytical Reasoning Speed Test',
-        categoryId: 'Reasoning',
-        durationMinutes: 45,
-        totalQuestions: 40,
-        negativeMarking: 0.25,
-        isProOnly: true,
-        unlockPriceCoins: 50,
-        testMode: 'topic',
-      ),
-      TestModel(
-        id: 'test_ca_04',
-        title: 'October 2026 Current Affairs Super Quiz',
-        categoryId: 'Current Affairs',
-        durationMinutes: 30,
-        totalQuestions: 30,
-        negativeMarking: 0.0,
-        isProOnly: false,
-        unlockPriceCoins: 0,
-        testMode: 'daily',
-      ),
-      TestModel(
-        id: 'test_pyq_05',
-        title: '69th BPSC Prelims 2024 Solved Official Paper',
-        categoryId: 'General Science',
-        durationMinutes: 120,
-        totalQuestions: 150,
-        negativeMarking: 0.33,
-        isProOnly: false,
-        unlockPriceCoins: 0,
-        testMode: 'previous-year',
-      ),
-      TestModel(
-        id: 'test_chem_06',
-        title: 'Organic Chemistry Reactions & Catalysts Test',
-        categoryId: 'Chemistry',
-        durationMinutes: 45,
-        totalQuestions: 40,
-        negativeMarking: 0.25,
-        isProOnly: false,
-        unlockPriceCoins: 0,
-        testMode: 'chapter',
-      ),
-      TestModel(
-        id: 'test_bio_07',
-        title: 'Human Physiology & Cell Biology Mega Test',
-        categoryId: 'Biology',
-        durationMinutes: 50,
-        totalQuestions: 50,
-        negativeMarking: 0.25,
-        isProOnly: false,
-        unlockPriceCoins: 0,
-        testMode: 'chapter',
-      ),
-      TestModel(
-        id: 'test_live_08',
-        title: 'All India Live Scholarship Championship #12',
-        categoryId: 'General Science',
-        durationMinutes: 90,
-        totalQuestions: 100,
-        negativeMarking: 0.33,
-        isProOnly: false,
-        unlockPriceCoins: 0,
-        testMode: 'live',
-      ),
-    ];
   }
 
   List<TestModel> get _filteredTests {
@@ -887,20 +795,30 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
-            _buildSeriesTile(
-              '70th BPSC Prelims 2026 Master Series',
-              '30 Mocks • 4500 Qs • Bilingual',
-            ),
-            const SizedBox(height: 10),
-            _buildSeriesTile(
-              'SSC CGL 2026 Tier 1 & 2 Champion Series',
-              '50 Mocks • 7500 Qs • TCS Pattern',
-            ),
-            const SizedBox(height: 10),
-            _buildSeriesTile(
-              'RRB NTPC & Group D Super Series',
-              '40 Mocks • 6000 Qs • Technical & Non-Tech',
-            ),
+            if (_examCategories.isNotEmpty)
+              ..._examCategories.take(4).map((cat) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _buildSeriesTile(
+                      '${cat.name} Complete Series',
+                      'Comprehensive Mock Tests & Performance Analytics',
+                    ),
+                  ))
+            else if (_allCategories.isNotEmpty)
+              ..._allCategories.take(4).map((cat) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _buildSeriesTile(
+                      '${cat.name} Series',
+                      'Curated Questions & Real-Time Ranking',
+                    ),
+                  ))
+            else
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  'No specialized test series published yet.',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                ),
+              ),
           ],
         ),
         actions: [
@@ -1220,28 +1138,28 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       (
         icon: Icons.description_rounded,
         label: 'Tests Attempted',
-        value: '28',
+        value: '${_userStats['testsAttempted'] ?? 0}',
         color: const Color(0xFF10B981),
         bg: const Color(0xFFF0FDF4),
       ),
       (
         icon: Icons.track_changes_rounded,
-        label: 'Average Score',
-        value: '78%',
+        label: 'Accuracy',
+        value: '${_userStats['accuracyFormatted'] ?? '0%'}',
         color: const Color(0xFF8B5CF6),
         bg: const Color(0xFFF5F3FF),
       ),
       (
         icon: Icons.bar_chart_rounded,
         label: 'Rank Position',
-        value: '#1256',
+        value: '${_userStats['rank'] ?? '-'}',
         color: const Color(0xFFF59E0B),
         bg: const Color(0xFFFFFBEB),
       ),
       (
         icon: Icons.emoji_events_rounded,
         label: 'Coins Earned',
-        value: widget.userCoins > 0 ? _formatNumber(widget.userCoins) : '1,250',
+        value: _formatNumber(widget.userCoins),
         color: const Color(0xFFF43F5E),
         bg: const Color(0xFFFFF1F2),
       ),

@@ -249,4 +249,73 @@ class TestsRepository {
       return Failure('Failed to unlock test: $e', e);
     }
   }
+
+  /// Calculates real user attempt statistics, accuracy, speed, and rank directly from Supabase
+  Future<Map<String, dynamic>> getUserStats(String? userId) async {
+    final client = _client;
+    if (client == null || userId == null || userId.isEmpty) {
+      return {
+        'testsAttempted': 0,
+        'accuracy': 0.0,
+        'accuracyFormatted': '0%',
+        'avgSpeedSeconds': 0,
+        'avgSpeedFormatted': '0s',
+        'rank': '-',
+        'streakDays': 0,
+      };
+    }
+
+    try {
+      final attemptsRes = await client
+          .from('attempts')
+          .select('id, accuracy, time_taken_seconds, score, created_at')
+          .eq('user_id', userId);
+
+      final list = (attemptsRes as List);
+      final count = list.length;
+      double totalAcc = 0;
+      int totalTime = 0;
+      for (final a in list) {
+        totalAcc += (a['accuracy'] as num?)?.toDouble() ?? 0.0;
+        totalTime += (a['time_taken_seconds'] as num?)?.toInt() ?? 0;
+      }
+
+      final avgAcc = count > 0 ? (totalAcc / count) : 0.0;
+      final avgTime = count > 0 ? (totalTime / count).round() : 0;
+
+      // Real user rank calculated from profiles ordered by coins
+      String rankStr = '-';
+      try {
+        final rankRes = await client
+            .from('profiles')
+            .select('id')
+            .order('coins', ascending: false);
+        final profiles = (rankRes as List);
+        final myIndex = profiles.indexWhere((p) => p['id'] == userId);
+        if (myIndex != -1) {
+          rankStr = '#${myIndex + 1}';
+        }
+      } catch (_) {}
+
+      return {
+        'testsAttempted': count,
+        'accuracy': avgAcc,
+        'accuracyFormatted': count > 0 ? '${avgAcc.toStringAsFixed(1)}%' : '0%',
+        'avgSpeedSeconds': avgTime,
+        'avgSpeedFormatted': count > 0 ? '${avgTime}s' : '0s',
+        'rank': rankStr,
+        'streakDays': count > 0 ? 1 : 0,
+      };
+    } catch (_) {
+      return {
+        'testsAttempted': 0,
+        'accuracy': 0.0,
+        'accuracyFormatted': '0%',
+        'avgSpeedSeconds': 0,
+        'avgSpeedFormatted': '0s',
+        'rank': '-',
+        'streakDays': 0,
+      };
+    }
+  }
 }

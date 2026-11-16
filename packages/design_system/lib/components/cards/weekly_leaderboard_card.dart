@@ -172,79 +172,7 @@ class WeeklyLeaderboardCard extends StatelessWidget {
   final VoidCallback? onViewAll;
   final Function(Map<String, dynamic>)? onUserTap;
 
-  static const List<Map<String, dynamic>> defaultTopUsers = [
-    {
-      'rank': 1,
-      'name': 'Aarav Sharma',
-      'coins': 3420,
-      'avatarColor': Color(0xFF3B82F6),
-      'initial': 'A',
-    },
-    {
-      'rank': 2,
-      'name': 'Priya Patel',
-      'coins': 2980,
-      'avatarColor': Color(0xFFEC4899),
-      'initial': 'P',
-    },
-    {
-      'rank': 3,
-      'name': 'Vikram Singh (You)',
-      'coins': 1450,
-      'avatarColor': Color(0xFF10B981),
-      'initial': 'V',
-      'isCurrentUser': true,
-    },
-    {
-      'rank': 4,
-      'name': 'Ananya Mishra',
-      'coins': 1320,
-      'avatarColor': Color(0xFF8B5CF6),
-      'initial': 'A',
-    },
-    {
-      'rank': 5,
-      'name': 'Rohan Verma',
-      'coins': 1190,
-      'avatarColor': Color(0xFFF97316),
-      'initial': 'R',
-    },
-    {
-      'rank': 6,
-      'name': 'Sneha Reddy',
-      'coins': 1050,
-      'avatarColor': Color(0xFF06B6D4),
-      'initial': 'S',
-    },
-    {
-      'rank': 7,
-      'name': 'Rahul Kumar',
-      'coins': 980,
-      'avatarColor': Color(0xFF6366F1),
-      'initial': 'R',
-    },
-    {
-      'rank': 8,
-      'name': 'Pooja Gupta',
-      'coins': 890,
-      'avatarColor': Color(0xFFEF4444),
-      'initial': 'P',
-    },
-    {
-      'rank': 9,
-      'name': 'Amit Deshmukh',
-      'coins': 810,
-      'avatarColor': Color(0xFF14B8A6),
-      'initial': 'A',
-    },
-    {
-      'rank': 10,
-      'name': 'Neha Joshi',
-      'coins': 750,
-      'avatarColor': Color(0xFF84CC16),
-      'initial': 'N',
-    },
-  ];
+  static const List<Map<String, dynamic>> defaultTopUsers = [];
 
   const WeeklyLeaderboardCard({
     super.key,
@@ -411,24 +339,39 @@ class WeeklyLeaderboardCard extends StatelessWidget {
           const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
 
           // User list rows & dividers
-          for (int i = 0; i < topUsers.length; i++) ...[
-            LeaderboardRow(
-              rank: topUsers[i]['rank'] as int,
-              name: topUsers[i]['name'] as String,
-              coins: topUsers[i]['coins'] as int,
-              avatarUrl: topUsers[i]['avatarUrl'] as String?,
-              avatarColor: topUsers[i]['avatarColor'] as Color?,
-              initial: topUsers[i]['initial'] as String?,
-              isCurrentUser: topUsers[i]['isCurrentUser'] as bool? ?? false,
-              onTap: () => onUserTap?.call(topUsers[i]),
-            ),
-            if (i < topUsers.length - 1)
-              const Divider(
-                height: 1,
-                thickness: 0.8,
-                color: Color(0xFFF1F5F9),
+          if (topUsers.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              child: Center(
+                child: Text(
+                  'No rankings recorded yet.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
               ),
-          ],
+            )
+          else
+            for (int i = 0; i < topUsers.length; i++) ...[
+              LeaderboardRow(
+                rank: topUsers[i]['rank'] as int,
+                name: topUsers[i]['name'] as String,
+                coins: topUsers[i]['coins'] as int,
+                avatarUrl: topUsers[i]['avatarUrl'] as String?,
+                avatarColor: topUsers[i]['avatarColor'] as Color?,
+                initial: topUsers[i]['initial'] as String?,
+                isCurrentUser: topUsers[i]['isCurrentUser'] as bool? ?? false,
+                onTap: () => onUserTap?.call(topUsers[i]),
+              ),
+              if (i < topUsers.length - 1)
+                const Divider(
+                  height: 1,
+                  thickness: 0.8,
+                  color: Color(0xFFF1F5F9),
+                ),
+            ],
         ],
       ),
         ],
