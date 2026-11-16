@@ -224,50 +224,9 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                 prefixIcon: const Icon(Icons.sort_rounded, size: 20, color: AppColors.adminSecondaryText),
               );
 
-              final statusCard = Container(
-                height: AppSpacing.adminControlHeight,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.adminBackground,
-                  borderRadius: AppRadii.adminControl,
-                  border: Border.all(color: AppColors.adminBorder),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            widget.isActive ? Icons.check_circle_rounded : Icons.pause_circle_rounded,
-                            size: 18,
-                            color: widget.isActive ? AppColors.adminSuccess : AppColors.adminSecondaryText,
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              widget.isActive ? 'Status: Active' : 'Status: Inactive',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: widget.isActive ? AppColors.adminSuccess : AppColors.adminSecondaryText,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Switch(
-                      value: widget.isActive,
-                      activeThumbColor: Colors.white,
-                      activeTrackColor: AppColors.adminSuccess,
-                      onChanged: widget.onActiveToggled,
-                    ),
-                  ],
-                ),
+              final statusCard = AppStatusSwitchField(
+                value: widget.isActive,
+                onChanged: widget.onActiveToggled,
               );
 
               if (isTwo) {
@@ -325,10 +284,8 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                 ),
               ),
               const SizedBox(width: 10),
-              Switch(
+              AppSwitch.primary(
                 value: widget.isScheduled,
-                activeThumbColor: Colors.white,
-                activeTrackColor: AppColors.adminPurple,
                 onChanged: widget.onScheduleToggled,
               ),
             ],
