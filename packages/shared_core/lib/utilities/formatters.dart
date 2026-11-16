@@ -37,4 +37,49 @@ class AppFormatters {
       return word[0].toUpperCase() + word.substring(1).toLowerCase();
     }).join(' ');
   }
+
+  /// Cleans image URLs copied from web browsers, HTML embed tags, markdown or image hosts (e.g. ImgBB)
+  /// by stripping accidental quotes (" or %22), HTML attributes, whitespace and trailing artifacts.
+  static String sanitizeImageUrl(String? input) {
+    if (input == null) return '';
+    var raw = input.trim();
+    if (raw.isEmpty) return '';
+
+    // If copied from HTML embed code like <img src="..." /> or <a href="...">
+    final srcMatch = RegExp(r'''(?:src|href)=["']([^"']+)["']''', caseSensitive: false).firstMatch(raw);
+    if (srcMatch != null) {
+      raw = srcMatch.group(1)!;
+    }
+
+    // If copied from markdown like ![alt](url) or [title](url)
+    final mdMatch = RegExp(r'''\((https?://[^)]+)\)''').firstMatch(raw);
+    if (mdMatch != null) {
+      raw = mdMatch.group(1)!;
+    }
+
+    // Strip URL encoded quotes and HTML entity quotes
+    raw = raw.replaceAll('%22', '');
+    raw = raw.replaceAll('&quot;', '');
+    raw = raw.replaceAll(RegExp(r'%20[a-zA-Z0-9_-]+$'), '');
+
+    // Strip leading/trailing quotation marks, backticks, brackets, HTML remnants
+    raw = raw.replaceAll(RegExp(r'''^["'`<(\s]+|["'`>)%\s]+$'''), '');
+
+    // If there's an embedded quote followed by tag attributes (e.g. url" alt=...)
+    if (raw.contains('"')) {
+      raw = raw.split('"').first;
+    }
+    if (raw.contains("'")) {
+      raw = raw.split("'").first;
+    }
+
+    raw = raw.trim();
+
+    // Auto-prepend https:// if missing protocol
+    if (raw.isNotEmpty && !raw.startsWith('http://') && !raw.startsWith('https://')) {
+      raw = 'https://$raw';
+    }
+
+    return raw;
+  }
 }

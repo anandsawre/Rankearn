@@ -84,7 +84,7 @@ class _BannersTabState extends State<BannersTab> {
             'link': b['link']?.toString() ?? '/tests',
             'priority': priority,
             'isActive': isActive,
-            'imageUrl': b['image_url']?.toString() ?? '',
+            'imageUrl': AppFormatters.sanitizeImageUrl(b['image_url']?.toString()),
             'type': b['type']?.toString() ?? 'promotional',
             'displayMode': displayMode,
             'display': _formatDisplayMode(displayMode),
@@ -144,12 +144,13 @@ class _BannersTabState extends State<BannersTab> {
     setState(() => _isSaving = true);
     final priority = int.tryParse(_priorityController.text.trim()) ?? 1;
     final bannerId = _editingBannerId ?? 'banner-${DateTime.now().millisecondsSinceEpoch}';
+    final cleanUrl = AppFormatters.sanitizeImageUrl(_imageUrl);
 
     final newItem = {
       'id': bannerId,
       'title': title,
       'link': link.isNotEmpty ? link : '/tests',
-      'imageUrl': _imageUrl ?? '',
+      'imageUrl': cleanUrl,
       'priority': priority,
       'isActive': _isActive,
       'type': _bannerType,
@@ -177,7 +178,7 @@ class _BannersTabState extends State<BannersTab> {
           'link': link,
           'priority': priority,
           'is_active': _isActive,
-          'image_url': _imageUrl ?? '',
+          'image_url': cleanUrl,
           'type': _bannerType,
           'scheduled_at': _isScheduled && _startDate != null ? _startDate!.toIso8601String() : null,
           'spotlight_data': {
@@ -232,7 +233,7 @@ class _BannersTabState extends State<BannersTab> {
       _titleController.text = item['title']?.toString() ?? '';
       _linkController.text = item['link']?.toString() ?? '';
       _priorityController.text = (item['priority'] ?? 1).toString();
-      _imageUrl = item['imageUrl']?.toString();
+      _imageUrl = AppFormatters.sanitizeImageUrl(item['imageUrl']?.toString());
       _isActive = item['isActive'] == true;
       _bannerType = item['type']?.toString() ?? 'promotional';
       _displayMode = item['displayMode']?.toString() ?? 'home_carousel';
@@ -335,9 +336,9 @@ class _BannersTabState extends State<BannersTab> {
                   border: Border.all(color: AppColors.adminBorder),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: _imageUrl != null && _imageUrl!.isNotEmpty
+                child: AppFormatters.sanitizeImageUrl(_imageUrl).isNotEmpty
                     ? Image.network(
-                        _imageUrl!,
+                        AppFormatters.sanitizeImageUrl(_imageUrl),
                         fit: BoxFit.cover,
                         errorBuilder: (c, e, s) => _buildFallbackBanner(),
                       )

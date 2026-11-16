@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class CreateBannerCard extends StatefulWidget {
   final TextEditingController titleController;
@@ -392,7 +393,8 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
   }
 
   Widget _buildImageUploader() {
-    final hasImage = widget.imageUrl != null && widget.imageUrl!.isNotEmpty;
+    final cleanUrl = AppFormatters.sanitizeImageUrl(widget.imageUrl);
+    final hasImage = cleanUrl.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -414,7 +416,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                   fit: StackFit.expand,
                   children: [
                     Image.network(
-                      widget.imageUrl!,
+                      cleanUrl,
                       fit: BoxFit.cover,
                       loadingBuilder: (ctx, child, progress) {
                         if (progress == null) return child;
@@ -470,8 +472,8 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
                 hintText: 'Paste direct Image URL (e.g. https://.../banner.png)',
                 prefixIcon: const Icon(Icons.image_search_rounded, size: 20, color: AppColors.adminSecondaryText),
                 onChanged: (v) {
-                  final trimmed = v.trim();
-                  widget.onImageUrlChanged(trimmed.isEmpty ? null : trimmed);
+                  final sanitized = AppFormatters.sanitizeImageUrl(v);
+                  widget.onImageUrlChanged(sanitized.isEmpty ? null : sanitized);
                 },
               ),
             ),
@@ -480,13 +482,10 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
               label: 'Apply',
               height: AppSpacing.adminControlHeight,
               onPressed: () {
-                var url = _customUrlController.text.trim();
-                if (url.isNotEmpty) {
-                  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                    url = 'https://$url';
-                    _customUrlController.text = url;
-                  }
-                  widget.onImageUrlChanged(url);
+                final sanitized = AppFormatters.sanitizeImageUrl(_customUrlController.text);
+                _customUrlController.text = sanitized;
+                widget.onImageUrlChanged(sanitized.isEmpty ? null : sanitized);
+                if (sanitized.isNotEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Banner creative URL applied!')),
                   );

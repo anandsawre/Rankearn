@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class BannersDataTable extends StatefulWidget {
   final List<Map<String, dynamic>> banners;
@@ -123,7 +124,7 @@ class _BannersDataTableState extends State<BannersDataTable> {
       rows: pagedItems.map((item) {
         final title = item['title']?.toString() ?? 'Promo Banner';
         final link = item['link']?.toString() ?? '/tests';
-        final imageUrl = item['imageUrl']?.toString() ?? '';
+        final imageUrl = AppFormatters.sanitizeImageUrl(item['imageUrl']?.toString());
         final isActive = item['isActive'] == true;
         final isScheduled = item['isScheduled'] == true;
         final display = item['display']?.toString() ?? 'Home Carousel';

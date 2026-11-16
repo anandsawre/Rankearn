@@ -1,3 +1,5 @@
+import 'package:shared_core/shared_core.dart';
+
 class BannerModel {
   final String id;
   final String imageUrl;
@@ -28,7 +30,7 @@ class BannerModel {
   factory BannerModel.fromJson(Map<String, dynamic> json) {
     return BannerModel(
       id: json['id']?.toString() ?? '',
-      imageUrl: json['image_url']?.toString() ?? '',
+      imageUrl: AppFormatters.sanitizeImageUrl(json['image_url']?.toString()),
       title: json['title']?.toString() ?? '',
       link: json['link']?.toString() ?? '/tests',
       isActive: json['is_active'] == true,

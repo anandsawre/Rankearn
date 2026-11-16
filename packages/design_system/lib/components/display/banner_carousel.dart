@@ -2,6 +2,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 
+String _sanitizeUrl(String? input) {
+  if (input == null) return '';
+  var raw = input.trim();
+  if (raw.isEmpty) return '';
+  raw = raw.replaceAll('%22', '').replaceAll('&quot;', '');
+  raw = raw.replaceAll(RegExp(r'''^["'`<(\s]+|["'`>)%\s]+$'''), '');
+  if (raw.contains('"')) raw = raw.split('"').first;
+  if (raw.contains("'")) raw = raw.split("'").first;
+  raw = raw.trim();
+  if (raw.isNotEmpty && !raw.startsWith('http://') && !raw.startsWith('https://')) {
+    raw = 'https://$raw';
+  }
+  return raw;
+}
+
 class BannerItemData {
   final String id;
   final String imageUrl;
@@ -159,7 +174,8 @@ class _BannerCarouselState extends State<BannerCarousel> {
   }
 
   Widget _buildBannerSlide(BannerItemData banner) {
-    final hasImage = banner.imageUrl.trim().isNotEmpty;
+    final cleanUrl = _sanitizeUrl(banner.imageUrl);
+    final hasImage = cleanUrl.isNotEmpty;
     final hasTitle = banner.title.trim().isNotEmpty;
 
     return Material(
@@ -172,7 +188,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
             // Background Image or Gradient
             if (hasImage)
               Image.network(
-                banner.imageUrl,
+                cleanUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (ctx, err, stack) => _buildFallbackBanner(banner),
                 loadingBuilder: (ctx, child, progress) {
