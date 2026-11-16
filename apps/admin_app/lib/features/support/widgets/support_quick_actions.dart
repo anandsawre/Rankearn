@@ -9,6 +9,7 @@ class SupportQuickActions extends StatelessWidget {
   final VoidCallback onFilterOpen;
   final VoidCallback onFilterHighPriority;
   final VoidCallback onFaqHelp;
+  final VoidCallback? onManageCategories;
   final VoidCallback? onCustomize;
   final double? height;
 
@@ -19,6 +20,7 @@ class SupportQuickActions extends StatelessWidget {
     required this.onFilterOpen,
     required this.onFilterHighPriority,
     required this.onFaqHelp,
+    this.onManageCategories,
     this.onCustomize,
     this.height = AppSpacing.adminHeroHeight,
   });
@@ -58,6 +60,14 @@ class SupportQuickActions extends StatelessWidget {
           cardColor: AppColors.brandPinkLight,
           onTap: onFilterHighPriority,
         ),
+        if (onManageCategories != null)
+          QuickActionItemData(
+            label: 'Manage\nCategories',
+            icon: Icons.category_rounded,
+            iconColor: const Color(0xFFF59E0B),
+            cardColor: AppColors.adminAmberLight,
+            onTap: onManageCategories!,
+          ),
         QuickActionItemData(
           label: 'FAQ / Help\nCenter',
           icon: Icons.help_outline_rounded,

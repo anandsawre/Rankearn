@@ -376,6 +376,7 @@ class _SupportTabState extends State<SupportTab> {
                   );
                 },
                 onFaqHelp: _showFaqDialog,
+                onManageCategories: _showCategoriesDialog,
               );
 
               if (constraints.maxWidth > 980) {
@@ -451,14 +452,6 @@ class _SupportTabState extends State<SupportTab> {
                         },
                         onApplyFilters: () => setState(() {}),
                         onReset: _resetFilters,
-                        onCreateTicket: _showCreateTicketDialog,
-                        onBulkReply: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Bulk Reply composer opened for filtered tickets.')),
-                          );
-                        },
-                        onManageCategories: _showCategoriesDialog,
-                        onHelpCenter: _showFaqDialog,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -522,10 +515,6 @@ class _SupportTabState extends State<SupportTab> {
                             },
                             onApplyFilters: () => setState(() {}),
                             onReset: _resetFilters,
-                            onCreateTicket: _showCreateTicketDialog,
-                            onBulkReply: () {},
-                            onManageCategories: _showCategoriesDialog,
-                            onHelpCenter: _showFaqDialog,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -579,10 +568,6 @@ class _SupportTabState extends State<SupportTab> {
                       },
                       onApplyFilters: () => setState(() {}),
                       onReset: _resetFilters,
-                      onCreateTicket: _showCreateTicketDialog,
-                      onBulkReply: () {},
-                      onManageCategories: _showCategoriesDialog,
-                      onHelpCenter: _showFaqDialog,
                     ),
                     const SizedBox(height: 16),
                     SupportDataTable(
