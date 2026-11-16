@@ -13,6 +13,7 @@ class SupportDataTable extends StatelessWidget {
   final int inProgressCount;
   final int resolvedCount;
   final ValueChanged<int> onPageChanged;
+  final int rowsPerPage;
 
   const SupportDataTable({
     super.key,
@@ -27,231 +28,144 @@ class SupportDataTable extends StatelessWidget {
     this.inProgressCount = 0,
     this.resolvedCount = 0,
     required this.onPageChanged,
+    this.rowsPerPage = 10,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.adminCard,
-        border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with Title and Tabs
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 16,
-              runSpacing: 12,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.confirmation_number_outlined, size: 20, color: AppColors.adminPurple),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Support Tickets ($totalCount)',
-                      style: AppTypography.adminCardTitle,
-                    ),
-                  ],
+    final totalPages = (totalCount / rowsPerPage).ceil().clamp(1, 999);
+
+    return AdminDataTableCard(
+      title: 'Support Tickets',
+      totalCount: totalCount,
+      icon: Icons.confirmation_number_outlined,
+      iconBgColor: AppColors.adminPurpleLight,
+      iconColor: AppColors.adminPurple,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      rowsPerPage: rowsPerPage,
+      onPageChanged: onPageChanged,
+      itemLabel: 'tickets',
+      minWidth: 880.0,
+      filterControls: [
+        _buildTabPill('all', 'All ($totalCount)'),
+        _buildTabPill('open', 'Open ($openCount)'),
+        _buildTabPill('in_progress', 'In Progress ($inProgressCount)'),
+        _buildTabPill('resolved', 'Resolved ($resolvedCount)'),
+      ],
+      columns: const [
+        DataColumn(label: Text('#', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('Ticket ID', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('User & Subject', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('Category', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('Priority', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('Status', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('Last Update', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('Actions', style: AppTypography.adminTableHead)),
+      ],
+      rows: tickets.asMap().entries.map((entry) {
+        final idx = entry.key;
+        final t = entry.value;
+        final ticketId = t['id']?.toString() ?? 'TK-202611${48 - idx}';
+        final name = t['name']?.toString() ?? 'Candidate';
+        final subject = t['subject']?.toString() ?? t['lastMsg']?.toString() ?? 'Support Query';
+        final category = t['category']?.toString() ?? 'Payment';
+        final priority = t['priority']?.toString() ?? 'High';
+        final status = t['status']?.toString() ?? 'open';
+        final lastTime = t['lastTime']?.toString() ?? 'Recent';
+
+        return DataRow(
+          cells: [
+            DataCell(Text('${(currentPage - 1) * rowsPerPage + idx + 1}', style: AppTypography.adminTableNumber)),
+            DataCell(
+              Text(
+                ticketId,
+                style: AppTypography.adminTablePrimary.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.adminPrimaryText,
+                  fontSize: 12,
                 ),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
+              ),
+            ),
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 14,
+                    backgroundColor: AppColors.adminPurpleLight,
+                    child: Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: AppColors.adminPurple,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildTabPill('all', 'All ($totalCount)'),
-                      const SizedBox(width: 8),
-                      _buildTabPill('open', 'Open ($openCount)'),
-                      const SizedBox(width: 8),
-                      _buildTabPill('in_progress', 'In Progress ($inProgressCount)'),
-                      const SizedBox(width: 8),
-                      _buildTabPill('resolved', 'Resolved ($resolvedCount)'),
+                      Text(name, style: AppTypography.adminTablePrimary.copyWith(fontSize: 12)),
+                      SizedBox(
+                        width: 170,
+                        child: Text(
+                          subject,
+                          style: AppTypography.adminTableSecondary.copyWith(fontSize: 10.5),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: AppColors.adminBorder),
-
-          // Table Content
-          if (tickets.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(48),
-              child: Center(
-                child: Text('No support tickets match current filters.', style: AppTypography.adminTableSecondary),
-              ),
-            )
-          else
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 800),
-                child: DataTable(
-                  horizontalMargin: 20,
-                  columnSpacing: 18,
-                  headingRowHeight: 44,
-                  dataRowMinHeight: 64,
-                  dataRowMaxHeight: 74,
-                  headingRowColor: WidgetStateProperty.all(AppColors.adminBackground),
-                  columns: const [
-                    DataColumn(label: Text('#', style: AppTypography.adminTableHead)),
-                    DataColumn(label: Text('Ticket ID', style: AppTypography.adminTableHead)),
-                    DataColumn(label: Text('User & Subject', style: AppTypography.adminTableHead)),
-                    DataColumn(label: Text('Category', style: AppTypography.adminTableHead)),
-                    DataColumn(label: Text('Priority', style: AppTypography.adminTableHead)),
-                    DataColumn(label: Text('Status', style: AppTypography.adminTableHead)),
-                    DataColumn(label: Text('Last Update', style: AppTypography.adminTableHead)),
-                    DataColumn(label: Text('Actions', style: AppTypography.adminTableHead)),
-                  ],
-                  rows: tickets.asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final t = entry.value;
-                    final ticketId = t['id']?.toString() ?? 'TK-202611${48 - idx}';
-                    final name = t['name']?.toString() ?? 'Candidate';
-                    final subject = t['subject']?.toString() ?? t['lastMsg']?.toString() ?? 'Support Query';
-                    final category = t['category']?.toString() ?? 'Payment';
-                    final priority = t['priority']?.toString() ?? 'High';
-                    final status = t['status']?.toString() ?? 'open';
-                    final lastTime = t['lastTime']?.toString() ?? 'Recent';
-
-                    return DataRow(
-                      cells: [
-                        DataCell(Text('${idx + 1}', style: AppTypography.adminTableNumber)),
-                        DataCell(
-                          Text(
-                            ticketId,
-                            style: AppTypography.adminTablePrimary.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.adminPrimaryText,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        DataCell(
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircleAvatar(
-                                radius: 16,
-                                backgroundColor: AppColors.adminPurpleLight,
-                                child: Text(
-                                  name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.adminPurple),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(name, style: AppTypography.adminTablePrimary),
-                                  SizedBox(
-                                    width: 190,
-                                    child: Text(
-                                      subject,
-                                      style: AppTypography.adminTableSecondary.copyWith(fontSize: 11),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        DataCell(_buildCategoryPill(category)),
-                        DataCell(_buildPriorityPill(priority)),
-                        DataCell(_buildStatusPill(status)),
-                        DataCell(Text(lastTime, style: AppTypography.adminTableSecondary.copyWith(fontSize: 11))),
-                        DataCell(
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.visibility_outlined, size: 18, color: AppColors.adminPurple),
-                                tooltip: 'View Ticket',
-                                onPressed: () => onViewTicket(t),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.reply_rounded, size: 18, color: AppColors.adminSuccess),
-                                tooltip: 'Reply',
-                                onPressed: () => onReplyTicket(t),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
+                ],
               ),
             ),
-
-          const Divider(height: 1, color: AppColors.adminBorder),
-
-          // Pagination Footer
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Showing 1 – ${tickets.length} of $totalCount tickets',
-                  style: AppTypography.adminTableSecondary.copyWith(fontSize: 12),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    InkWell(
-                      onTap: currentPage > 1 ? () => onPageChanged(currentPage - 1) : null,
-                      borderRadius: BorderRadius.circular(4),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        child: const Icon(Icons.chevron_left_rounded, size: 18, color: AppColors.adminSecondaryText),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: const BoxDecoration(
-                        color: AppColors.adminPurple,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '$currentPage',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    InkWell(
-                      onTap: () => onPageChanged(currentPage + 1),
-                      borderRadius: BorderRadius.circular(4),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        child: const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.adminSecondaryText),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            DataCell(_buildCategoryPill(category)),
+            DataCell(_buildPriorityPill(priority)),
+            DataCell(_buildStatusPill(status)),
+            DataCell(Text(lastTime, style: AppTypography.adminTableSecondary.copyWith(fontSize: 11))),
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AdminTableActionButton(
+                    icon: Icons.visibility_outlined,
+                    tooltip: 'View & Chat',
+                    color: AppColors.adminPurple,
+                    onTap: () => onViewTicket(t),
+                  ),
+                  const SizedBox(width: 6),
+                  AdminTableActionButton(
+                    icon: Icons.reply_rounded,
+                    tooltip: 'Reply to Ticket',
+                    color: AppColors.adminSuccess,
+                    onTap: () => onReplyTicket(t),
+                  ),
+                ],
+              ),
             ),
+          ],
+        );
+      }).toList(),
+      emptyWidget: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 16),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.confirmation_number_outlined, size: 40, color: AppColors.textMuted),
+              SizedBox(height: 10),
+              Text(
+                'No support tickets match current filters',
+                style: AppTypography.adminTableSecondary,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -263,18 +177,22 @@ class SupportDataTable extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.adminPurple : AppColors.adminBackground,
+          color: isSelected ? AppColors.adminPurple : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppColors.adminPurple : AppColors.adminBorder),
+          border: Border.all(
+            color: isSelected ? AppColors.adminPurple : AppColors.borderSubtle,
+            width: 1,
+          ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : AppColors.adminSecondaryText,
+            fontFamily: AppTypography.fontHeading,
+            fontSize: 11.5,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            color: isSelected ? Colors.white : AppColors.textSecondary,
           ),
         ),
       ),
@@ -305,8 +223,9 @@ class SupportDataTable extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(4),
+        color: color.withAlpha(22),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withAlpha(45), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -315,7 +234,12 @@ class SupportDataTable extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             category,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -343,7 +267,12 @@ class SupportDataTable extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           priority,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
+          style: TextStyle(
+            fontFamily: AppTypography.fontHeading,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
         ),
       ],
     );
@@ -377,6 +306,7 @@ class SupportDataTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: fg.withAlpha(50), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -389,7 +319,12 @@ class SupportDataTable extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: fg),
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: fg,
+            ),
           ),
         ],
       ),
