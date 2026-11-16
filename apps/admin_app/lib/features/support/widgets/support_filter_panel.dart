@@ -82,118 +82,78 @@ class SupportFilterPanel extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Search
+          // Search Field
           AppTextField(
             controller: searchController,
             hintText: 'Search Ticket / User...',
             prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.adminSecondaryText),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
-          // Status & Category Row
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Status', style: AppTypography.adminFieldLabelSmall),
-                    const SizedBox(height: 6),
-                    AppDropdown<String>(
-                      inlineLabel: true,
-                      value: selectedStatus,
-                      items: const [
-                        AppDropdownItem(value: 'all', label: 'All Statuses'),
-                        AppDropdownItem(value: 'open', label: 'Open'),
-                        AppDropdownItem(value: 'in_progress', label: 'In Progress'),
-                        AppDropdownItem(value: 'resolved', label: 'Resolved'),
-                        AppDropdownItem(value: 'on_hold', label: 'On Hold'),
-                      ],
-                      onChanged: onStatusChanged,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Category', style: AppTypography.adminFieldLabelSmall),
-                    const SizedBox(height: 6),
-                    AppDropdown<String>(
-                      inlineLabel: true,
-                      value: selectedCategory,
-                      items: const [
-                        AppDropdownItem(value: 'all', label: 'All Categories'),
-                        AppDropdownItem(value: 'payment', label: 'Payment'),
-                        AppDropdownItem(value: 'verification', label: 'Verification'),
-                        AppDropdownItem(value: 'referral', label: 'Referral'),
-                        AppDropdownItem(value: 'technical', label: 'Technical'),
-                        AppDropdownItem(value: 'general', label: 'General'),
-                      ],
-                      onChanged: onCategoryChanged,
-                    ),
-                  ],
-                ),
-              ),
+          // 1. Status Dropdown (Full width, stacked, label on box)
+          AppDropdown<String>(
+            value: selectedStatus,
+            prefixIcon: const Icon(Icons.adjust_rounded, size: 16, color: AppColors.adminPurple),
+            items: const [
+              AppDropdownItem(value: 'all', label: 'Status: All Statuses'),
+              AppDropdownItem(value: 'open', label: 'Status: Open'),
+              AppDropdownItem(value: 'in_progress', label: 'Status: In Progress'),
+              AppDropdownItem(value: 'resolved', label: 'Status: Resolved'),
+              AppDropdownItem(value: 'on_hold', label: 'Status: On Hold'),
             ],
+            onChanged: onStatusChanged,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
 
-          // Priority & Date Range Row
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Priority', style: AppTypography.adminFieldLabelSmall),
-                    const SizedBox(height: 6),
-                    AppDropdown<String>(
-                      inlineLabel: true,
-                      value: selectedPriority,
-                      items: const [
-                        AppDropdownItem(value: 'all', label: 'All Priorities'),
-                        AppDropdownItem(value: 'high', label: 'High Priority'),
-                        AppDropdownItem(value: 'medium', label: 'Medium Priority'),
-                        AppDropdownItem(value: 'low', label: 'Low Priority'),
-                      ],
-                      onChanged: onPriorityChanged,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Date Range', style: AppTypography.adminFieldLabelSmall),
-                    const SizedBox(height: 6),
-                    AppDropdown<String>(
-                      inlineLabel: true,
-                      value: selectedDateRange,
-                      prefixIcon: const Icon(Icons.date_range_rounded, size: 16, color: AppColors.adminPurple),
-                      items: const [
-                        AppDropdownItem(value: '30days', label: 'Last 30 Days'),
-                        AppDropdownItem(value: '7days', label: 'Last 7 Days'),
-                        AppDropdownItem(value: 'today', label: 'Today'),
-                        AppDropdownItem(value: 'all', label: 'All Time'),
-                      ],
-                      onChanged: onDateRangeChanged,
-                    ),
-                  ],
-                ),
-              ),
+          // 2. Category Dropdown (Full width, stacked, label on box)
+          AppDropdown<String>(
+            value: selectedCategory,
+            prefixIcon: const Icon(Icons.category_rounded, size: 16, color: AppColors.adminPurple),
+            items: const [
+              AppDropdownItem(value: 'all', label: 'Category: All Categories'),
+              AppDropdownItem(value: 'payment', label: 'Category: Payment'),
+              AppDropdownItem(value: 'verification', label: 'Category: Verification'),
+              AppDropdownItem(value: 'referral', label: 'Category: Referral'),
+              AppDropdownItem(value: 'technical', label: 'Category: Technical'),
+              AppDropdownItem(value: 'general', label: 'Category: General'),
             ],
+            onChanged: onCategoryChanged,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
 
-          // Apply Filters
+          // 3. Priority Dropdown (Full width, stacked, label on box)
+          AppDropdown<String>(
+            value: selectedPriority,
+            prefixIcon: const Icon(Icons.flag_rounded, size: 16, color: AppColors.adminPurple),
+            items: const [
+              AppDropdownItem(value: 'all', label: 'Priority: All Priorities'),
+              AppDropdownItem(value: 'high', label: 'Priority: High Priority'),
+              AppDropdownItem(value: 'medium', label: 'Priority: Medium Priority'),
+              AppDropdownItem(value: 'low', label: 'Priority: Low Priority'),
+            ],
+            onChanged: onPriorityChanged,
+          ),
+          const SizedBox(height: 10),
+
+          // 4. Date Range Dropdown (Full width, stacked, label on box)
+          AppDropdown<String>(
+            value: selectedDateRange,
+            prefixIcon: const Icon(Icons.date_range_rounded, size: 16, color: AppColors.adminPurple),
+            items: const [
+              AppDropdownItem(value: '30days', label: 'Date: Last 30 Days'),
+              AppDropdownItem(value: '7days', label: 'Date: Last 7 Days'),
+              AppDropdownItem(value: 'today', label: 'Date: Today'),
+              AppDropdownItem(value: 'all', label: 'Date: All Time'),
+            ],
+            onChanged: onDateRangeChanged,
+          ),
+          const SizedBox(height: 16),
+
+          // Apply Filters (Full width button)
           AppButton.adminPrimary(
             label: 'Apply Filters',
             leadingIcon: const Icon(Icons.filter_list_rounded, size: 16),
+            fullWidth: true,
             onPressed: onApplyFilters,
           ),
         ],
