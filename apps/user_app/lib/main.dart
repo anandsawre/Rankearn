@@ -1470,6 +1470,8 @@ class _UserSupportChatDialogState extends State<_UserSupportChatDialog> {
           .from('support_tickets')
           .select()
           .eq('user_id', _targetUserId)
+          .order('last_updated', ascending: false)
+          .limit(1)
           .maybeSingle();
 
       if (ticketRes != null) {
@@ -1479,7 +1481,9 @@ class _UserSupportChatDialogState extends State<_UserSupportChatDialog> {
           return;
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Support initChat error: $e');
+    }
 
     if (mounted) setState(() => _isLoading = false);
   }
@@ -1516,6 +1520,7 @@ class _UserSupportChatDialogState extends State<_UserSupportChatDialog> {
         _scrollToBottom();
       },
       onError: (err) {
+        debugPrint('Support messages stream error: $err');
         if (mounted) setState(() => _isLoading = false);
       },
     );
@@ -1587,13 +1592,15 @@ class _UserSupportChatDialogState extends State<_UserSupportChatDialog> {
           'ticket_id': _activeTicketId!,
           'sender_id': (currentAuthId != null && currentAuthId.isNotEmpty)
               ? currentAuthId
-              : '00000000-0000-0000-0000-000000000000',
+              : _targetUserId,
           'sender_name': widget.profile.name,
           'text': text,
           'role': 'user',
           'created_at': nowIso,
         });
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Support sendMessage error: $e');
+      }
     }
   }
 

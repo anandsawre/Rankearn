@@ -223,7 +223,7 @@ class _SupportTabState extends State<SupportTab> {
         await client.from('support_messages').insert({
           'id': 'msg-${DateTime.now().millisecondsSinceEpoch}',
           'ticket_id': ticketId,
-          'sender_id': authUser?.id ?? '00000000-0000-0000-0000-000000000000',
+          'sender_id': authUser?.id ?? 'admin_support',
           'sender_name': 'Rankearn Support Admin',
           'text': text,
           'role': 'admin',
@@ -232,7 +232,9 @@ class _SupportTabState extends State<SupportTab> {
           'last_message': text,
           'last_updated': DateTime.now().toIso8601String(),
         }).eq('id', ticketId);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Admin sendMessage error: $e');
+      }
     }
   }
 
