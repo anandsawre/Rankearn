@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
@@ -31,6 +32,7 @@ class _SupportTabState extends State<SupportTab> {
   String _selectedDateRange = '30days';
   String _activeTab = 'all';
   int _currentPage = 1;
+  StreamSubscription<List<Map<String, dynamic>>>? _ticketsSub;
 
   @override
   void initState() {
@@ -40,13 +42,57 @@ class _SupportTabState extends State<SupportTab> {
       _isLoading = false;
     } else {
       _fetchTickets();
+      _subscribeToTickets();
     }
   }
 
   @override
   void dispose() {
+    _ticketsSub?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _subscribeToTickets() {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+
+    _ticketsSub?.cancel();
+    _ticketsSub = client
+        .from('support_tickets')
+        .stream(primaryKey: ['id'])
+        .order('last_updated', ascending: false)
+        .listen(
+      (data) {
+        if (!mounted) return;
+        setState(() {
+          final Map<String, Map<String, dynamic>> existingMap = {
+            for (final t in _tickets) t['id']?.toString() ?? '': t
+          };
+
+          _tickets = data.map((row) {
+            final id = row['id']?.toString() ?? '';
+            final existing = existingMap[id];
+            return {
+              'id': id,
+              'name': row['user_name']?.toString() ?? 'Candidate',
+              'email': row['user_email']?.toString() ?? '',
+              'subject': row['subject']?.toString() ?? row['last_message']?.toString() ?? 'Support Request',
+              'category': row['category']?.toString() ?? 'General',
+              'priority': row['priority']?.toString() ?? 'Medium',
+              'status': row['status']?.toString() ?? 'open',
+              'lastTime': row['last_updated'] != null
+                  ? row['last_updated'].toString().split('T').first
+                  : 'Recent',
+              'lastMsg': row['last_message']?.toString() ?? 'No messages yet.',
+              'messages': existing?['messages'] ?? [],
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      },
+      onError: (_) {},
+    );
   }
 
   Future<void> _fetchTickets() async {

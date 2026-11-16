@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 
 class TicketDetailDialog extends StatefulWidget {
   final Map<String, dynamic> ticket;
@@ -22,6 +24,9 @@ class TicketDetailDialog extends StatefulWidget {
 class _TicketDetailDialogState extends State<TicketDetailDialog> {
   final _replyController = TextEditingController();
   final _internalNotesController = TextEditingController();
+  final _scrollController = ScrollController();
+  StreamSubscription<List<Map<String, dynamic>>>? _messagesSub;
+  List<Map<String, dynamic>> _messages = [];
   late String _currentStatus;
   late String _currentPriority;
   bool _isSending = false;
@@ -31,12 +36,65 @@ class _TicketDetailDialogState extends State<TicketDetailDialog> {
     super.initState();
     _currentStatus = widget.ticket['status']?.toString() ?? 'open';
     _currentPriority = widget.ticket['priority']?.toString() ?? 'High';
+
+    if (widget.ticket['messages'] is List) {
+      _messages = List<Map<String, dynamic>>.from(
+        (widget.ticket['messages'] as List).map((e) => Map<String, dynamic>.from(e as Map)),
+      );
+    }
+
+    _subscribeToLiveMessages();
+  }
+
+  void _subscribeToLiveMessages() {
+    final client = SupabaseConfig.clientSafe;
+    final ticketId = widget.ticket['id']?.toString();
+    if (client == null || ticketId == null || ticketId.isEmpty) return;
+
+    _messagesSub?.cancel();
+    _messagesSub = client
+        .from('support_messages')
+        .stream(primaryKey: ['id'])
+        .eq('ticket_id', ticketId)
+        .order('created_at', ascending: true)
+        .listen(
+      (data) {
+        if (!mounted) return;
+        final updated = data.map((m) => {
+          'isUser': m['role'] == 'user',
+          'text': m['text']?.toString() ?? '',
+          'time': m['created_at'] != null
+              ? m['created_at'].toString().split('T').last.substring(0, 5)
+              : '',
+        }).toList();
+
+        setState(() {
+          _messages = updated;
+        });
+        _scrollToBottom();
+      },
+      onError: (_) {},
+    );
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted && _scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
+    _messagesSub?.cancel();
     _replyController.dispose();
     _internalNotesController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -48,6 +106,7 @@ class _TicketDetailDialogState extends State<TicketDetailDialog> {
     await widget.onSendMessage(text);
     _replyController.clear();
     if (mounted) setState(() => _isSending = false);
+    _scrollToBottom();
   }
 
   @override
@@ -56,7 +115,6 @@ class _TicketDetailDialogState extends State<TicketDetailDialog> {
     final name = widget.ticket['name']?.toString() ?? 'Candidate';
     final email = widget.ticket['email']?.toString() ?? 'user@rankearn.app';
     final subject = widget.ticket['subject']?.toString() ?? widget.ticket['lastMsg']?.toString() ?? 'Support Query';
-    final messages = (widget.ticket['messages'] as List<dynamic>?) ?? [];
 
     return AppModalDialog(
       title: 'Ticket #$ticketId',
@@ -101,14 +159,15 @@ class _TicketDetailDialogState extends State<TicketDetailDialog> {
 
                   // Messages List
                   Expanded(
-                    child: messages.isEmpty
+                    child: _messages.isEmpty
                         ? const Center(
                             child: Text('No previous messages.', style: AppTypography.adminTableSecondary),
                           )
                         : ListView.builder(
-                            itemCount: messages.length,
+                            controller: _scrollController,
+                            itemCount: _messages.length,
                             itemBuilder: (context, idx) {
-                              final m = messages[idx];
+                              final m = _messages[idx];
                               final isUser = m['isUser'] == true;
                               return Align(
                                 alignment: isUser ? Alignment.centerLeft : Alignment.centerRight,
