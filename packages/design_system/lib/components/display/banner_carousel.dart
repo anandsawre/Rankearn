@@ -117,23 +117,25 @@ class _BannerCarouselState extends State<BannerCarousel> {
         final isCompact = constraints.maxWidth < 420;
         final effectiveHeight = widget.height ?? (isCompact ? 172.0 : 219.0);
 
-        return Container(
-          height: effectiveHeight,
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0C000000),
-                blurRadius: 14,
-                offset: Offset(0, 4),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              height: effectiveHeight,
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0C000000),
+                    blurRadius: 14,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: radius,
-            child: Stack(
-              children: [
-                PageView.builder(
+              child: ClipRRect(
+                borderRadius: radius,
+                child: PageView.builder(
                   controller: _pageController,
                   itemCount: widget.banners.length,
                   onPageChanged: (idx) {
@@ -144,39 +146,40 @@ class _BannerCarouselState extends State<BannerCarousel> {
                     return _buildBannerSlide(banner);
                   },
                 ),
+              ),
+            ),
 
-                // Pagination Dots Indicator
-                if (widget.banners.length > 1)
-                  Positioned(
-                    bottom: 10,
-                    right: 14,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            // Pagination Dots Indicator (outside banner, centered)
+            if (widget.banners.length > 1) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(widget.banners.length, (i) {
+                  final isSelected = i == _currentPage;
+                  return GestureDetector(
+                    onTap: () {
+                      _pageController.animateToPage(
+                        i,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOutCubic,
+                      );
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: isSelected ? 18 : 6,
+                      height: 6,
                       decoration: BoxDecoration(
-                        color: Colors.black45,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(widget.banners.length, (i) {
-                          final isSelected = i == _currentPage;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                            width: isSelected ? 16 : 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.white : Colors.white54,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          );
-                        }),
+                        color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
+                        borderRadius: BorderRadius.circular(3),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ),
+                  );
+                }),
+              ),
+            ],
+          ],
         );
       },
     );
