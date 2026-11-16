@@ -53,6 +53,12 @@ class QuickActionItemData {
 /// )
 /// ```
 class QuickActionsCard extends StatelessWidget {
+  /// Header title displayed next to the icon. Defaults to 'Quick Actions'.
+  final String title;
+
+  /// Optional custom icon in the header. Defaults to `Icons.bolt_rounded`.
+  final IconData? titleIcon;
+
   /// List of quick action items to display.
   final List<QuickActionItemData> actions;
 
@@ -72,6 +78,8 @@ class QuickActionsCard extends StatelessWidget {
   const QuickActionsCard({
     super.key,
     required this.actions,
+    this.title = 'Quick Actions',
+    this.titleIcon,
     this.onCustomize,
     this.smallBreakpoint = 480,
     this.height,
@@ -119,14 +127,14 @@ class QuickActionsCard extends StatelessWidget {
                     ),
                     alignment: Alignment.center,
                     child: Icon(
-                      Icons.bolt_rounded,
+                      titleIcon ?? Icons.bolt_rounded,
                       color: Colors.white,
                       size: isCompact ? 13 : 16,
                     ),
                   ),
                   SizedBox(width: isCompact ? 6 : 8),
                   Text(
-                    'Quick Actions',
+                    title,
                     style: TextStyle(
                       fontFamily: AppTypography.fontHeading,
                       fontSize: isCompact ? 13 : 14,

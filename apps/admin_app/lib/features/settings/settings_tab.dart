@@ -1,5 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'widgets/settings_hero_card.dart';
+import 'widgets/settings_quick_actions.dart';
+import 'widgets/settings_category_nav.dart';
+import 'widgets/platform_info_card.dart';
+import 'widgets/features_control_card.dart';
+import 'widgets/rewards_settings_card.dart';
+import 'widgets/battle_settings_card.dart';
+import 'widgets/payment_settings_card.dart';
+import 'widgets/notification_settings_card.dart';
+import 'widgets/limits_rules_card.dart';
+import 'widgets/appearance_branding_card.dart';
+import 'widgets/advanced_settings_card.dart';
 
 class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key});
@@ -9,423 +21,435 @@ class SettingsTab extends StatefulWidget {
 }
 
 class _SettingsTabState extends State<SettingsTab> {
-  // 1. Worker Settings
+  String _activeCategory = 'all';
+
+  // 1. Platform Information
+  final _nameController = TextEditingController(text: 'Rankearn');
+  final _taglineController = TextEditingController(text: 'India\'s 1st Learning with Earning Platform');
+  final _emailController = TextEditingController(text: 'support@rankearn.app');
+  final _whatsappController = TextEditingController(text: '+91 9876543210');
+
+  // 2. Features Control
+  final Map<String, bool> _features = {
+    '1v1_battle': true,
+    'multiplayer_battle': true,
+    'live_quiz': true,
+    'mock_test_series': true,
+    'fortune_wheel': true,
+    'referral_earn': true,
+    'live_poll': true,
+    'community': true,
+  };
+
+  // 3. Rewards & Coins
+  final _signupBonusController = TextEditingController(text: '100');
+  final _referralRewardController = TextEditingController(text: '10');
+  final _battleRewardController = TextEditingController(text: '50');
+  final _spinMinController = TextEditingController(text: '5');
+  final _spinMaxController = TextEditingController(text: '50');
+  final _minWithdrawalController = TextEditingController(text: '1000');
+  final _coinRateController = TextEditingController(text: '100 Coins = ₹1');
+
+  // 4. Battle & Games
+  String _questionTime = '3Seconds';
+  String _battleDuration = '1Minutes';
+  final _maxPlayersController = TextEditingController(text: '100');
+  final _entryFeeController = TextEditingController(text: '10 Coins');
+  final _winningRewardController = TextEditingController(text: '50 Coins');
+
+  // 5. Payments
+  bool _enablePayments = true;
+  String _defaultGateway = 'Razorpay';
+  bool _enableRazorpay = true;
+  bool _enableCashfree = true;
+  bool _enablePayU = false;
+
+  // 6. Notifications
+  bool _enablePush = true;
+  bool _enableInApp = true;
+  bool _enableEmail = false;
+  bool _enableSms = false;
+
+  // 7. Limits & Rules
+  final _battleLimitController = TextEditingController(text: '20');
+  final _coinLimitController = TextEditingController(text: '1,000');
+  final _withdrawalLimitController = TextEditingController(text: '5,000');
+  final _suspensionThresholdController = TextEditingController(text: '3 Violations');
+
+  // 8. Appearance & Branding
+  final _primaryColorController = TextEditingController(text: '#7C3AED');
+  final _secondaryColorController = TextEditingController(text: '#A855F7');
+
+  // 9. Advanced Settings
+  bool _maintenanceMode = false;
+  bool _debugMode = false;
+  bool _autoBackup = true;
+  bool _activityLogs = true;
   final _workerUrlController = TextEditingController(text: 'https://testkarlo.alleduupdated.workers.dev');
-
-  // 2. Feature Flags
-  bool _showSubscriptionTab = true;
-
-  // 3. Rankearn PRO Configuration
-  final _proPriceController = TextEditingController(text: '5000');
-  final _proDurationController = TextEditingController(text: '30');
-  final _proDiscountController = TextEditingController(text: '50');
-  bool _isProActive = true;
-
-  // 4. Social Links
-  final _whatsappController = TextEditingController(text: 'https://wa.me/919876543210');
-  final _telegramController = TextEditingController(text: 'https://t.me/rankearn_official');
-  final _youtubeController = TextEditingController(text: 'https://youtube.com/@rankearn');
-
-  // 5. APK URL
-  final _apkUrlController = TextEditingController(text: 'https://rankearn.com/downloads/rankearn-latest.apk');
-
-  // 6. Security
-  bool _requireEmailVerification = true;
 
   @override
   void dispose() {
-    _workerUrlController.dispose();
-    _proPriceController.dispose();
-    _proDurationController.dispose();
-    _proDiscountController.dispose();
+    _nameController.dispose();
+    _taglineController.dispose();
+    _emailController.dispose();
     _whatsappController.dispose();
-    _telegramController.dispose();
-    _youtubeController.dispose();
-    _apkUrlController.dispose();
+    _signupBonusController.dispose();
+    _referralRewardController.dispose();
+    _battleRewardController.dispose();
+    _spinMinController.dispose();
+    _spinMaxController.dispose();
+    _minWithdrawalController.dispose();
+    _coinRateController.dispose();
+    _maxPlayersController.dispose();
+    _entryFeeController.dispose();
+    _winningRewardController.dispose();
+    _battleLimitController.dispose();
+    _coinLimitController.dispose();
+    _withdrawalLimitController.dispose();
+    _suspensionThresholdController.dispose();
+    _primaryColorController.dispose();
+    _secondaryColorController.dispose();
+    _workerUrlController.dispose();
     super.dispose();
+  }
+
+  void _resetToDefault() {
+    setState(() {
+      _nameController.text = 'Rankearn';
+      _taglineController.text = 'India\'s 1st Learning with Earning Platform';
+      _emailController.text = 'support@rankearn.app';
+      _whatsappController.text = '+91 9876543210';
+      _features.updateAll((key, value) => true);
+      _signupBonusController.text = '100';
+      _referralRewardController.text = '10';
+      _battleRewardController.text = '50';
+      _spinMinController.text = '5';
+      _spinMaxController.text = '50';
+      _minWithdrawalController.text = '1000';
+      _coinRateController.text = '100 Coins = ₹1';
+      _questionTime = '3Seconds';
+      _battleDuration = '1Minutes';
+      _maxPlayersController.text = '100';
+      _entryFeeController.text = '10 Coins';
+      _winningRewardController.text = '50 Coins';
+      _enablePayments = true;
+      _defaultGateway = 'Razorpay';
+      _enableRazorpay = true;
+      _enableCashfree = true;
+      _enablePayU = false;
+      _enablePush = true;
+      _enableInApp = true;
+      _enableEmail = false;
+      _enableSms = false;
+      _maintenanceMode = false;
+      _debugMode = false;
+      _autoBackup = true;
+      _activityLogs = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Settings reset to platform defaults.')),
+    );
+  }
+
+  void _updateSettings() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('System configuration and platform settings updated successfully!')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: AppSpacing.pagePadding(context),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 880),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Master Header
-            _buildMasterHeader(),
-            const SizedBox(height: 24),
-
-            // 1. AI Worker Settings
-            _buildWorkerSettingsCard(),
-            const SizedBox(height: 24),
-
-            // 2. App Feature Flags
-            _buildFeatureFlagsCard(),
-            const SizedBox(height: 24),
-
-            // 3. Rankearn PRO Subscription Model
-            _buildProSettingsCard(),
-            const SizedBox(height: 24),
-
-            // 4. Social Media Links
-            _buildSocialLinksCard(),
-            const SizedBox(height: 24),
-
-            // 5. APK Download Settings
-            _buildApkSettingsCard(),
-            const SizedBox(height: 24),
-
-            // 6. Security & Authentication
-            _buildSecuritySettingsCard(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMasterHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 4)),
-        ],
-      ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. Hero Banner (Left) + Quick Actions (Right)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final heroCard = SettingsHeroCard(
+                onResetDefaults: _resetToDefault,
+                onUpdateSettings: _updateSettings,
+              );
+              final quickActions = SettingsQuickActions(
+                onUpdateSettings: _updateSettings,
+                onResetDefaults: _resetToDefault,
+                onConfigurePayments: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Configuring Payment Gateway API credentials...')),
+                  );
+                },
+                onToggleMaintenance: () {
+                  setState(() => _maintenanceMode = !_maintenanceMode);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(_maintenanceMode
+                          ? 'Maintenance Mode activated'
+                          : 'Maintenance Mode deactivated'),
+                    ),
+                  );
+                },
+                onBackupDatabase: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Starting full platform backup export...')),
+                  );
+                },
+              );
+
+              if (constraints.maxWidth > 980) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 58,
+                      child: heroCard,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 42,
+                      child: quickActions,
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    heroCard,
+                    const SizedBox(height: 16),
+                    quickActions,
+                  ],
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 18),
+
+          // 2. Horizontal Category Pills Nav
+          SettingsCategoryNav(
+            activeCategory: _activeCategory,
+            onCategoryChanged: (cat) => setState(() => _activeCategory = cat),
+          ),
+          const SizedBox(height: 20),
+
+          // 3. Grid of Settings Cards
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double width = constraints.maxWidth;
+              final int columns = width >= 1650
+                  ? 5
+                  : (width >= 1250
+                      ? 3
+                      : (width >= 700
+                          ? 2
+                          : 1));
+              final double cardWidth = (width - (columns - 1) * 14) / columns;
+
+              final cards = [
+                _buildPlatformInfoCard(),
+                _buildFeaturesControlCard(),
+                _buildRewardsSettingsCard(),
+                _buildBattleSettingsCard(),
+                _buildPaymentSettingsCard(),
+                _buildNotificationSettingsCard(),
+                _buildLimitsRulesCard(),
+                _buildAppearanceBrandingCard(),
+                _buildAdvancedSettingsCard(),
+              ];
+
+              return Wrap(
+                spacing: 14,
+                runSpacing: 16,
+                children: cards.map((c) => SizedBox(width: cardWidth, child: c)).toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+
+          // 4. Bottom Footer Bar
           Container(
-            width: 44,
-            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFF64748B),
-              borderRadius: AppRadii.borderLg,
+              color: Colors.white,
+              borderRadius: AppRadii.adminCard,
+              border: Border.all(color: AppColors.adminBorder),
               boxShadow: const [
-                BoxShadow(color: Color(0x2064748B), blurRadius: 12, offset: Offset(0, 4)),
+                BoxShadow(
+                  color: Color(0x06000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
               ],
             ),
-            alignment: Alignment.center,
-            child: const Icon(Icons.settings_outlined, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 14),
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('System & Platform Settings', style: AppTypography.displayMedium),
-              SizedBox(height: 2),
-              Text('Configure Global AI Proxy, Pro Membership Economy, APK Links, and Security', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8))),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWorkerSettingsCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              Icon(Icons.hub_outlined, color: AppColors.brandPrimary),
-              SizedBox(width: 10),
-              Text('Cloudflare Worker / Gemini Proxy API', style: AppTypography.titleLarge),
-            ],
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'This URL acts as an edge gateway proxy to Gemini API. The AI Creator dispatches structured prompt payloads to this endpoint.',
-            style: AppTypography.bodySmall,
-          ),
-          const SizedBox(height: 16),
-          AppTextField(
-            controller: _workerUrlController,
-            label: 'Edge Worker URL',
-            hintText: 'https://testkarlo.alleduupdated.workers.dev',
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            label: 'Save Worker Configuration',
-            size: AppButtonSize.small,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('AI Worker URL saved successfully!')),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeatureFlagsCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              Icon(Icons.toggle_on_outlined, color: Color(0xFF6366F1)),
-              SizedBox(width: 10),
-              Text('App Feature Flags', style: AppTypography.titleLarge),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Subscription Tab Visibility', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  SizedBox(height: 2),
-                  Text('Show the PRO Subscription tab in candidate mobile navigation.', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                ],
-              ),
-              Switch(
-                value: _showSubscriptionTab,
-                activeTrackColor: const Color(0xFF6366F1),
-                onChanged: (val) {
-                  setState(() => _showSubscriptionTab = val);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Subscription tab visibility updated to $val.')),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProSettingsCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              Icon(Icons.workspace_premium_outlined, color: Color(0xFFF59E0B)),
-              SizedBox(width: 10),
-              Text('Rankearn PRO Configuration', style: AppTypography.titleLarge),
-            ],
-          ),
-          const SizedBox(height: 4),
-          const Text('Configure Coin-based subscription pricing and tournament entry discounts.', style: AppTypography.bodySmall),
-          const SizedBox(height: 20),
-
-          Wrap(
-            spacing: 20,
-            runSpacing: 16,
-            children: [
-              SizedBox(
-                width: 240,
-                child: AppTextField(
-                  controller: _proPriceController,
-                  label: 'Price (in Coins)',
-                  hintText: '5000',
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                AppButton.adminSecondary(
+                  label: 'Reset to Default',
+                  leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
+                  onPressed: _resetToDefault,
                 ),
-              ),
-              SizedBox(
-                width: 240,
-                child: AppTextField(
-                  controller: _proDurationController,
-                  label: 'Duration (Days)',
-                  hintText: '30',
+                Row(
+                  children: const [
+                    Icon(Icons.info_outline_rounded, size: 16, color: AppColors.adminSecondaryText),
+                    SizedBox(width: 8),
+                    Text(
+                      'Changes will be applied across the platform for all users.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.adminSecondaryText,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(
-                width: 240,
-                child: AppTextField(
-                  controller: _proDiscountController,
-                  label: 'Contest Discount (%)',
-                  hintText: '50',
+                AppButton.adminPrimary(
+                  label: 'Update Settings',
+                  leadingIcon: const Icon(Icons.save_rounded, size: 16),
+                  onPressed: _updateSettings,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Is PRO Pass Active?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  SizedBox(height: 2),
-                  Text('Allow candidates to purchase or upgrade to PRO.', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                ],
-              ),
-              Switch(
-                value: _isProActive,
-                activeTrackColor: const Color(0xFFF59E0B),
-                onChanged: (val) => setState(() => _isProActive = val),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          AppButton(
-            label: 'Save PRO Settings',
-            size: AppButtonSize.small,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('PRO subscription parameters updated successfully!')),
-              );
-            },
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSocialLinksCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              Icon(Icons.public, color: Color(0xFF2563EB)),
-              SizedBox(width: 10),
-              Text('Official Social Media Channels', style: AppTypography.titleLarge),
-            ],
-          ),
-          const SizedBox(height: 16),
-          AppTextField(controller: _whatsappController, label: 'WhatsApp Community Link'),
-          const SizedBox(height: 12),
-          AppTextField(controller: _telegramController, label: 'Telegram Channel Link'),
-          const SizedBox(height: 12),
-          AppTextField(controller: _youtubeController, label: 'YouTube Channel Link'),
-          const SizedBox(height: 20),
-          AppButton(
-            label: 'Save Social Channels',
-            size: AppButtonSize.small,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Social channels updated successfully.')),
-              );
-            },
-          ),
-        ],
-      ),
+  Widget _buildPlatformInfoCard() {
+    return PlatformInfoCard(
+      nameController: _nameController,
+      taglineController: _taglineController,
+      emailController: _emailController,
+      whatsappController: _whatsappController,
+      onReset: () {
+        setState(() {
+          _nameController.text = 'Rankearn';
+          _taglineController.text = 'India\'s 1st Learning with Earning Platform';
+          _emailController.text = 'support@rankearn.app';
+          _whatsappController.text = '+91 9876543210';
+        });
+      },
+      onSave: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Platform information saved successfully!')),
+        );
+      },
     );
   }
 
-  Widget _buildApkSettingsCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              Icon(Icons.android, color: Color(0xFF059669)),
-              SizedBox(width: 10),
-              Text('Android APK Distribution', style: AppTypography.titleLarge),
-            ],
-          ),
-          const SizedBox(height: 16),
-          AppTextField(
-            controller: _apkUrlController,
-            label: 'Latest Release Direct APK Download URL',
-          ),
-          const SizedBox(height: 16),
-          AppButton(
-            label: 'Save APK URL',
-            size: AppButtonSize.small,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('APK download link updated.')),
-              );
-            },
-          ),
-        ],
-      ),
+  Widget _buildFeaturesControlCard() {
+    return FeaturesControlCard(
+      featureStates: _features,
+      onFeatureToggled: (key, val) => setState(() => _features[key] = val),
     );
   }
 
-  Widget _buildSecuritySettingsCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              Icon(Icons.shield_outlined, color: Color(0xFFEF4444)),
-              SizedBox(width: 10),
-              Text('Security & Authentication Policy', style: AppTypography.titleLarge),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Mandatory Email Verification', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  SizedBox(height: 2),
-                  Text('Require email link verification before accessing live tests and wallet.', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                ],
-              ),
-              Switch(
-                value: _requireEmailVerification,
-                activeTrackColor: const Color(0xFFEF4444),
-                onChanged: (val) {
-                  setState(() => _requireEmailVerification = val);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Email verification requirement set to $val.')),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
+  Widget _buildRewardsSettingsCard() {
+    return RewardsSettingsCard(
+      signupBonusController: _signupBonusController,
+      referralRewardController: _referralRewardController,
+      battleRewardController: _battleRewardController,
+      spinMinController: _spinMinController,
+      spinMaxController: _spinMaxController,
+      minWithdrawalController: _minWithdrawalController,
+      coinRateController: _coinRateController,
+    );
+  }
+
+  Widget _buildBattleSettingsCard() {
+    return BattleSettingsCard(
+      questionTime: _questionTime,
+      battleDuration: _battleDuration,
+      maxPlayersController: _maxPlayersController,
+      entryFeeController: _entryFeeController,
+      winningRewardController: _winningRewardController,
+      onQuestionTimeChanged: (v) {
+        if (v != null) setState(() => _questionTime = v);
+      },
+      onBattleDurationChanged: (v) {
+        if (v != null) setState(() => _battleDuration = v);
+      },
+    );
+  }
+
+  Widget _buildPaymentSettingsCard() {
+    return PaymentSettingsCard(
+      enablePayments: _enablePayments,
+      defaultGateway: _defaultGateway,
+      enableRazorpay: _enableRazorpay,
+      enableCashfree: _enableCashfree,
+      enablePayU: _enablePayU,
+      onEnablePaymentsChanged: (v) => setState(() => _enablePayments = v),
+      onDefaultGatewayChanged: (v) {
+        if (v != null) setState(() => _defaultGateway = v);
+      },
+      onEnableRazorpayChanged: (v) => setState(() => _enableRazorpay = v),
+      onEnableCashfreeChanged: (v) => setState(() => _enableCashfree = v),
+      onEnablePayUChanged: (v) => setState(() => _enablePayU = v),
+      onConfigureKeys: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment gateway API keys are up to date.')),
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationSettingsCard() {
+    return NotificationSettingsCard(
+      enablePush: _enablePush,
+      enableInApp: _enableInApp,
+      enableEmail: _enableEmail,
+      enableSms: _enableSms,
+      onEnablePushChanged: (v) => setState(() => _enablePush = v),
+      onEnableInAppChanged: (v) => setState(() => _enableInApp = v),
+      onEnableEmailChanged: (v) => setState(() => _enableEmail = v),
+      onEnableSmsChanged: (v) => setState(() => _enableSms = v),
+    );
+  }
+
+  Widget _buildLimitsRulesCard() {
+    return LimitsRulesCard(
+      battleLimitController: _battleLimitController,
+      coinLimitController: _coinLimitController,
+      withdrawalLimitController: _withdrawalLimitController,
+      suspensionThresholdController: _suspensionThresholdController,
+    );
+  }
+
+  Widget _buildAppearanceBrandingCard() {
+    return AppearanceBrandingCard(
+      primaryColorController: _primaryColorController,
+      secondaryColorController: _secondaryColorController,
+      onUploadLogo: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Upload new App Logo...')),
+        );
+      },
+      onUploadFavicon: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Upload new Favicon...')),
+        );
+      },
+    );
+  }
+
+  Widget _buildAdvancedSettingsCard() {
+    return AdvancedSettingsCard(
+      maintenanceMode: _maintenanceMode,
+      debugMode: _debugMode,
+      autoBackup: _autoBackup,
+      activityLogs: _activityLogs,
+      workerUrlController: _workerUrlController,
+      onMaintenanceChanged: (v) => setState(() => _maintenanceMode = v),
+      onDebugChanged: (v) => setState(() => _debugMode = v),
+      onAutoBackupChanged: (v) => setState(() => _autoBackup = v),
+      onActivityLogsChanged: (v) => setState(() => _activityLogs = v),
+      onSaveWorkerUrl: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Worker URL updated!')),
+        );
+      },
     );
   }
 }

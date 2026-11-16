@@ -3,6 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:admin_app/features/notifications/notifications_tab.dart';
 import 'package:admin_app/features/referrals/referrals_tab.dart';
 import 'package:admin_app/features/banners/banners_tab.dart';
+import 'package:admin_app/features/settings/settings_tab.dart';
+import 'package:admin_app/features/feedback/feedback_tab.dart';
+import 'package:admin_app/features/support/support_tab.dart';
+import 'package:admin_app/features/posts/posts_tab.dart';
 
 void main() {
   testWidgets('NotificationsTab renders Hero banner, 5 KPI cards, Create Card, Delivery Analytics & Table', (tester) async {
@@ -166,5 +170,185 @@ void main() {
     expect(find.text('Mega Diwali Scholarship Test'), findsOneWidget);
     expect(find.text('/contests'), findsOneWidget);
     expect(find.text('ACTIVE'), findsOneWidget);
+  });
+
+  testWidgets('SettingsTab renders Hero, category navigation, 9 configuration cards & footer', (tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SettingsTab(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify Hero Banner
+    expect(find.text('System Settings'), findsOneWidget);
+
+    // Verify Category Pills
+    expect(find.text('General'), findsOneWidget);
+    expect(find.text('Features'), findsOneWidget);
+    expect(find.text('Rewards & Coins'), findsOneWidget);
+    expect(find.text('Battles & Games'), findsOneWidget);
+    expect(find.text('Payments'), findsOneWidget);
+    expect(find.text('Notifications'), findsOneWidget);
+
+    // Verify Cards
+    expect(find.text('Platform Information'), findsOneWidget);
+    expect(find.text('App Features Control'), findsOneWidget);
+    expect(find.text('Rewards & Coins Settings'), findsOneWidget);
+    expect(find.text('Battle & Game Settings'), findsOneWidget);
+    expect(find.text('Payment Settings'), findsOneWidget);
+    expect(find.text('Notification Settings'), findsOneWidget);
+    expect(find.text('Limits & Rules'), findsWidgets);
+    expect(find.text('Appearance & Branding'), findsOneWidget);
+    expect(find.text('Advanced Settings'), findsOneWidget);
+
+    // Verify Footer
+    expect(find.text('Reset to Default'), findsOneWidget);
+    expect(find.text('Update Settings'), findsOneWidget);
+  });
+
+  testWidgets('FeedbackTab renders Hero, 5 KPI cards, filter panel, table & analytics', (tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final mockFeedbacks = [
+      {
+        'id': 'fb-1',
+        'name': 'Rohit Kumar',
+        'uid': 'UID: RK10234',
+        'email': 'rohit@test.com',
+        'rating': 5,
+        'comment': 'Awesome test series!',
+        'type': 'Feedback',
+        'feature': 'Mock Test',
+        'date': 'Nov 11, 2026',
+      },
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FeedbackTab(initialFeedbacks: mockFeedbacks),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify Hero
+    expect(find.text('User Feedback Management'), findsOneWidget);
+
+    // Verify KPI Cards
+    expect(find.text('Average Rating'), findsOneWidget);
+    expect(find.text('Total Feedbacks'), findsOneWidget);
+    expect(find.text('Positive'), findsWidgets);
+
+    // Verify Filter Panel & Table
+    expect(find.text('Feedback Filters'), findsOneWidget);
+    expect(find.text('Rohit Kumar'), findsOneWidget);
+    expect(find.text('Awesome test series!'), findsOneWidget);
+
+    // Verify Analytics
+    expect(find.text('Rating Distribution'), findsOneWidget);
+    expect(find.text('Feedback Sentiment'), findsOneWidget);
+  });
+
+  testWidgets('SupportTab renders Hero, 6 KPI cards, filters, data table & analytics', (tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final mockTickets = [
+      {
+        'id': 'TK-20261148',
+        'name': 'Rohit Kumar',
+        'email': 'rohit@test.com',
+        'subject': 'Coins not credited after payment',
+        'category': 'Payment',
+        'priority': 'High',
+        'status': 'open',
+        'lastTime': 'Nov 11',
+        'lastMsg': 'Deposited ₹500 via UPI',
+        'messages': [],
+      },
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SupportTab(initialTickets: mockTickets),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify Hero
+    expect(find.text('Support Ticket Management'), findsOneWidget);
+
+    // Verify KPI Cards
+    expect(find.text('Total Tickets'), findsOneWidget);
+    expect(find.text('Resolved'), findsWidgets);
+    expect(find.text('In Progress'), findsWidgets);
+    expect(find.text('Support Rating'), findsOneWidget);
+
+    // Verify Filter Panel & Table
+    expect(find.text('Ticket Filters'), findsOneWidget);
+    expect(find.text('TK-20261148'), findsOneWidget);
+    expect(find.text('Coins not credited after payment'), findsOneWidget);
+
+    // Verify Analytics
+    expect(find.text('Ticket Analytics'), findsOneWidget);
+    expect(find.text('Top Categories'), findsOneWidget);
+  });
+
+  testWidgets('PostsTab renders Sub-nav header, Create Post card, Feed stream & Overview', (tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final mockPosts = [
+      {
+        'id': 'post-1',
+        'title': 'RRB Technician Grade 3 – Daily Practice Set 🔥',
+        'content': '10 महत्वपूर्ण MCQs के साथ अभी प्रैक्टिस करें।',
+        'category': 'RRB',
+        'type': 'announcement',
+        'date': 'Nov 11, 2026',
+        'isPinned': true,
+        'views': '12,480',
+        'likes': '1,426',
+        'comments': '278',
+        'shares': '86',
+      },
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PostsTab(initialPosts: mockPosts),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify Sub-nav Header
+    expect(find.text('Community Management'), findsOneWidget);
+
+    // Verify Left Create Card
+    expect(find.text('Create Community Post'), findsOneWidget);
+    expect(find.text('Post Now'), findsOneWidget);
+
+    // Verify Center Feed
+    expect(find.text('RRB Technician Grade 3 – Daily Practice Set 🔥'), findsOneWidget);
+
+    // Verify Right Overview
+    expect(find.text('Community Overview'), findsOneWidget);
+    expect(find.text('Total Members'), findsOneWidget);
   });
 }

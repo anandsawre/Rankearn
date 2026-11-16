@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
+import 'widgets/community_hero_card.dart';
+import 'widgets/community_quick_actions.dart';
+import 'widgets/create_post_card.dart';
+import 'widgets/community_post_card.dart';
+import 'widgets/community_poll_card.dart';
+import 'widgets/community_overview_panel.dart';
 
 class PostsTab extends StatefulWidget {
   final List<Map<String, dynamic>>? initialPosts;
@@ -14,6 +20,62 @@ class _PostsTabState extends State<PostsTab> {
   List<Map<String, dynamic>> _posts = [];
   bool _isLoading = true;
 
+  final _searchController = TextEditingController();
+  String _filterType = 'all'; // 'all', 'published', 'scheduled', 'draft'
+  String _sortOrder = 'latest'; // 'latest', 'oldest'
+  String _activeSubTab = 'posts';
+
+  static final List<Map<String, dynamic>> _defaultMockPosts = [
+    {
+      'id': 'post-1',
+      'title': 'RRB Technician Grade 3 – Daily Practice Set 🔥',
+      'content': 'आज का विषय: Cell Biology 🧬\n10 महत्वपूर्ण MCQs के साथ अभी प्रैक्टिस करें।',
+      'excerpt': 'आज का विषय: Cell Biology 🧬 10 महत्वपूर्ण MCQs के साथ अभी प्रैक्टिस करें।',
+      'category': 'RRB',
+      'type': 'announcement',
+      'date': 'Nov 11, 2026 • 10:30 AM',
+      'isPinned': true,
+      'views': '12,480',
+      'likes': '1,426',
+      'comments': '278',
+      'shares': '86',
+      'imageUrl': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop&q=60',
+    },
+    {
+      'id': 'post-2',
+      'title': 'अगला Live Quiz किस विषय पर हो? 🤔',
+      'type': 'poll',
+      'category': 'Quiz',
+      'date': 'Nov 10, 2026 • 06:15 PM • Poll',
+      'isPinned': false,
+      'views': '9,840',
+      'likes': '782',
+      'comments': '412',
+      'shares': '45',
+      'options': [
+        {'label': 'General Science', 'pct': 0.42, 'count': '42% (3,920)'},
+        {'label': 'Mathematics', 'pct': 0.28, 'count': '28% (2,610)'},
+        {'label': 'Reasoning', 'pct': 0.18, 'count': '18% (1,680)'},
+        {'label': 'General Awareness', 'pct': 0.12, 'count': '12% (1,120)'},
+      ],
+    },
+    {
+      'id': 'post-3',
+      'title': 'RRB Technician – Cell Biology Handwritten Notes 📑',
+      'content': 'Cell Biology के महत्वपूर्ण और परीक्षा-उपयोगी नोट्स PDF में डाउनलोड करें!',
+      'excerpt': 'Cell Biology के महत्वपूर्ण और परीक्षा-उपयोगी नोट्स PDF में डाउनलोड करें!',
+      'category': 'Study',
+      'type': 'document',
+      'isPdf': true,
+      'date': 'Nov 09, 2026 • 09:00 AM',
+      'isPinned': false,
+      'views': '18,320',
+      'likes': '2,146',
+      'comments': '564',
+      'shares': '192',
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -25,367 +87,447 @@ class _PostsTabState extends State<PostsTab> {
     }
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchPosts() async {
     final client = SupabaseConfig.clientSafe;
     if (client == null) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _posts = List.from(_defaultMockPosts);
+          _isLoading = false;
+        });
+      }
       return;
     }
 
     try {
       final res = await client.from('posts').select().order('created_at', ascending: false);
       if (mounted) {
+        final list = (res as List).map((row) {
+          return {
+            'id': row['id']?.toString() ?? '',
+            'title': row['title']?.toString() ?? '',
+            'category': row['category']?.toString() ?? 'General',
+            'excerpt': row['excerpt']?.toString() ?? row['content']?.toString() ?? '',
+            'content': row['content']?.toString() ?? '',
+            'imageUrl': row['image_url']?.toString() ?? '',
+            'type': row['category'] == 'Poll' ? 'poll' : 'announcement',
+            'date': row['created_at'] != null ? row['created_at'].toString().split('T').first : 'Recent',
+            'views': '1,240',
+            'likes': '145',
+            'comments': '28',
+            'shares': '12',
+            'isPinned': false,
+          };
+        }).toList();
+
         setState(() {
-          _posts = (res as List).map((row) {
-            return {
-              'id': row['id']?.toString() ?? '',
-              'title': row['title']?.toString() ?? '',
-              'category': row['category']?.toString() ?? 'General',
-              'excerpt': row['excerpt']?.toString() ?? '',
-              'imageUrl': row['image_url']?.toString() ?? 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=60',
-              'isActive': row['is_active'] == true,
-              'date': row['created_at'] != null ? row['created_at'].toString().split('T').first : 'Recent',
-            };
-          }).toList();
+          _posts = list.isNotEmpty ? list : List.from(_defaultMockPosts);
           _isLoading = false;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _posts = List.from(_defaultMockPosts);
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  List<Map<String, dynamic>> _getFilteredPosts() {
+    return _posts.where((p) {
+      final query = _searchController.text.trim().toLowerCase();
+      if (query.isNotEmpty) {
+        final title = (p['title'] ?? '').toString().toLowerCase();
+        final content = (p['content'] ?? p['excerpt'] ?? '').toString().toLowerCase();
+        if (!title.contains(query) && !content.contains(query)) {
+          return false;
+        }
+      }
+
+      if (_activeSubTab == 'polls' && p['type'] != 'poll') return false;
+      if (_filterType == 'polls' && p['type'] != 'poll') return false;
+      if (_filterType == 'announcements' && p['type'] != 'announcement') return false;
+
+      return true;
+    }).toList();
+  }
+
+  Future<void> _handlePublishPost(Map<String, dynamic> post) async {
+    setState(() {
+      _posts.insert(0, post);
+    });
+
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      try {
+        final slug = post['title'].toString().trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+        await client.from('posts').insert({
+          'id': post['id'],
+          'slug': slug,
+          'title': post['title'],
+          'content': post['content'],
+          'excerpt': post['excerpt'],
+          'category': post['category'],
+          'author_name': 'Rankearn Academic Team',
+          'is_active': true,
+          'image_url': post['imageUrl'] ?? '',
+        });
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Community post broadcast live to students!')),
+      );
+    }
+  }
+
+  void _handleDeletePost(Map<String, dynamic> post) async {
+    final postId = post['id']?.toString() ?? '';
+    setState(() => _posts.remove(post));
+
+    final client = SupabaseConfig.clientSafe;
+    if (client != null && postId.isNotEmpty) {
+      try {
+        await client.from('posts').delete().eq('id', postId);
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Deleted post "${post['title']}"')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(48),
+          child: CircularProgressIndicator(color: AppColors.adminPurple),
+        ),
+      );
+    }
+
+    final filteredPosts = _getFilteredPosts();
+
     return SingleChildScrollView(
       padding: AppSpacing.pagePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Master Header
-          _buildMasterHeader(),
-          const SizedBox(height: 24),
-
-          // Updates Grid or Empty State
-          if (_isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(48),
-                child: CircularProgressIndicator(color: AppColors.brandPrimary),
-              ),
-            )
-          else if (_posts.isEmpty)
-            _buildEmptyState()
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 800;
-                return Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: _posts.map((p) {
-                    final cardWidth = isWide ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth;
-                    return SizedBox(width: cardWidth, child: _buildPostCard(p));
-                  }).toList(),
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(48),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.brandPrimary.withAlpha(20),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.feed_outlined, color: AppColors.brandPrimary, size: 32),
-          ),
-          const SizedBox(height: 16),
-          const Text('No Published Articles Yet', style: AppTypography.titleLarge),
-          const SizedBox(height: 8),
-          const Text(
-            'Keep your candidates informed by publishing syllabus breakdowns, exam alerts, and current affairs analysis.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-          ),
-          const SizedBox(height: 20),
-          AppButton(
-            label: '+ Create First Article',
-            onPressed: _showNewArticleDialog,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMasterHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderXl,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 4)),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.brandPrimary,
-                  borderRadius: AppRadii.borderLg,
-                  boxShadow: [
-                    BoxShadow(color: AppColors.brandPrimary.withAlpha(60), blurRadius: 12, offset: const Offset(0, 4)),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: const Icon(Icons.feed_outlined, color: Colors.white, size: 22),
-              ),
-              const SizedBox(width: 14),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Official Updates & Articles', style: AppTypography.displayMedium),
-                  SizedBox(height: 2),
-                  Text('Publish Exam Notifications, Current Affairs, and Editorial Articles', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8))),
-                ],
-              ),
-            ],
-          ),
-
-          AppButton(
-            label: '+ New Article',
-            onPressed: _showNewArticleDialog,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPostCard(Map<String, dynamic> post) {
-    final imageUrl = post['imageUrl']?.toString() ?? '';
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderLg,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x05000000), blurRadius: 6, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Banner Image
-          if (imageUrl.isNotEmpty)
-            Container(
-              height: 140,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                image: DecorationImage(
-                  image: NetworkImage(imageUrl),
-                  fit: BoxFit.cover,
-                  onError: (_, _) {},
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
-                        borderRadius: AppRadii.borderPill,
-                      ),
-                      child: Text(
-                        (post['category'] as String).toUpperCase(),
-                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: AppColors.brandPrimaryDark),
-                      ),
-                    ),
-                    Text(post['date'].toString(), style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(post['title'].toString(), style: AppTypography.titleMedium),
-                const SizedBox(height: 6),
-                Text(
-                  post['excerpt'].toString(),
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle)),
-                        const SizedBox(width: 6),
-                        const Text('Published Live', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)),
-                      onPressed: () async {
-                        final postId = post['id']?.toString() ?? '';
-                        setState(() => _posts.remove(post));
-                        final client = SupabaseConfig.clientSafe;
-                        if (client != null && postId.isNotEmpty) {
-                          try {
-                            await client.from('posts').delete().eq('id', postId);
-                          } catch (_) {}
-                        }
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Deleted "${post['title']}"')),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showNewArticleDialog() {
-    final titleController = TextEditingController();
-    final catController = TextEditingController(text: 'Current Affairs');
-    final excerptController = TextEditingController();
-
-    AppModalDialog.show(
-      context: context,
-      builder: (ctx) => AppModalDialog(
-        title: 'Publish New Article',
-        subtitle: 'Broadcast educational articles, updates & exam strategies',
-        iconData: Icons.article_rounded,
-        gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
-        maxWidth: 520,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: const BorderSide(color: Color(0xFFCBD5E1)),
-              ),
-            ),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5636F5),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () async {
-              if (titleController.text.isNotEmpty) {
-                final newId = 'post-${DateTime.now().millisecondsSinceEpoch}';
-                final slug = titleController.text.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
-                final newPost = {
-                  'id': newId,
-                  'title': titleController.text.trim(),
-                  'category': catController.text.trim(),
-                  'excerpt': excerptController.text.isEmpty ? 'Key updates published by Rankearn academic panel.' : excerptController.text.trim(),
-                  'imageUrl': 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=60',
-                  'isActive': true,
-                  'date': 'Today',
-                };
-
-                setState(() {
-                  _posts.insert(0, newPost);
-                });
-                Navigator.pop(ctx);
-
-                final client = SupabaseConfig.clientSafe;
-                if (client != null) {
-                  try {
-                    await client.from('posts').insert({
-                      'id': newId,
-                      'slug': slug,
-                      'title': titleController.text.trim(),
-                      'content': excerptController.text.trim(),
-                      'excerpt': excerptController.text.trim(),
-                      'category': catController.text.trim(),
-                      'author_name': 'Rankearn Academic Team',
-                      'is_active': true,
-                      'image_url': 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=60',
-                    });
-                  } catch (_) {}
-                }
-
-                if (mounted) {
+          // 1. Hero Banner (Left) + Quick Actions (Right)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final heroCard = CommunityHeroCard(
+                onRefresh: _fetchPosts,
+              );
+              final quickActions = CommunityQuickActions(
+                onCommunityPost: () {
+                  setState(() {
+                    _activeSubTab = 'posts';
+                    _filterType = 'all';
+                  });
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Article published live to candidate feeds!')),
+                    const SnackBar(content: Text('Switched to Community Post feed')),
                   );
-                }
+                },
+                onPoll: () {
+                  setState(() {
+                    _activeSubTab = 'polls';
+                    _filterType = 'poll';
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Switched to Live Polls')),
+                  );
+                },
+                onComments: () {
+                  setState(() => _activeSubTab = 'comments');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Opening Community Comments Moderation...')),
+                  );
+                },
+                onReports: () {
+                  setState(() => _activeSubTab = 'reports');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Viewing Reported Community Posts...')),
+                  );
+                },
+                onSettings: () {
+                  setState(() => _activeSubTab = 'settings');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Opening Community Rules & Moderation Settings...')),
+                  );
+                },
+              );
+
+              if (constraints.maxWidth > 980) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 52,
+                      child: heroCard,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 48,
+                      child: quickActions,
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    heroCard,
+                    const SizedBox(height: 16),
+                    quickActions,
+                  ],
+                );
               }
             },
-            child: const Text('Publish Live'),
+          ),
+          const SizedBox(height: 18),
+
+          // 2. 3-Panel Desktop Layout
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth >= 1150;
+              final isTablet = constraints.maxWidth >= 768 && constraints.maxWidth < 1150;
+
+              if (isDesktop) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left Panel: Create Community Post (300px)
+                    SizedBox(
+                      width: 300,
+                      child: CreatePostCard(
+                        onPublish: _handlePublishPost,
+                        onReset: () {},
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Center Panel: Post Feed (Expanded)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildFeedHeader(filteredPosts.length),
+                          const SizedBox(height: 14),
+                          ...filteredPosts.map((p) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 14),
+                              child: p['type'] == 'poll'
+                                  ? CommunityPollCard(
+                                      poll: p,
+                                      onPin: () => setState(() => p['isPinned'] = !(p['isPinned'] == true)),
+                                      onEdit: () {},
+                                      onAnalytics: () {},
+                                      onDelete: () => _handleDeletePost(p),
+                                    )
+                                  : CommunityPostCard(
+                                      post: p,
+                                      onPin: () => setState(() => p['isPinned'] = !(p['isPinned'] == true)),
+                                      onEdit: () {},
+                                      onDuplicate: () => _handlePublishPost(Map<String, dynamic>.from(p)),
+                                      onDelete: () => _handleDeletePost(p),
+                                    ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Right Panel: Community Overview & Quick Actions (280px)
+                    SizedBox(
+                      width: 280,
+                      child: CommunityOverviewPanel(
+                        onViewAsUser: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Switched to Learner Community Feed view.')),
+                          );
+                        },
+                        onManageComments: () => setState(() => _activeSubTab = 'comments'),
+                        onPinnedPosts: () => setState(() => _filterType = 'pinned'),
+                        onScheduledPosts: () => setState(() => _filterType = 'scheduled'),
+                        onPostAnalytics: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Community Post Insights & Engagement Analytics.')),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              } else if (isTablet) {
+                return Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: CreatePostCard(
+                            onPublish: _handlePublishPost,
+                            onReset: () {},
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        SizedBox(
+                          width: 270,
+                          child: CommunityOverviewPanel(
+                            onViewAsUser: () {},
+                            onManageComments: () {},
+                            onPinnedPosts: () {},
+                            onScheduledPosts: () {},
+                            onPostAnalytics: () {},
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    _buildFeedHeader(filteredPosts.length),
+                    const SizedBox(height: 14),
+                    ...filteredPosts.map((p) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: p['type'] == 'poll'
+                            ? CommunityPollCard(
+                                poll: p,
+                                onPin: () => setState(() => p['isPinned'] = !(p['isPinned'] == true)),
+                                onEdit: () {},
+                                onAnalytics: () {},
+                                onDelete: () => _handleDeletePost(p),
+                              )
+                            : CommunityPostCard(
+                                post: p,
+                                onPin: () => setState(() => p['isPinned'] = !(p['isPinned'] == true)),
+                                onEdit: () {},
+                                onDuplicate: () => _handlePublishPost(Map<String, dynamic>.from(p)),
+                                onDelete: () => _handleDeletePost(p),
+                              ),
+                      );
+                    }),
+                  ],
+                );
+              } else {
+                return Column(
+                  children: [
+                    CreatePostCard(
+                      onPublish: _handlePublishPost,
+                      onReset: () {},
+                    ),
+                    const SizedBox(height: 18),
+                    _buildFeedHeader(filteredPosts.length),
+                    const SizedBox(height: 14),
+                    ...filteredPosts.map((p) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: p['type'] == 'poll'
+                            ? CommunityPollCard(
+                                poll: p,
+                                onPin: () => setState(() => p['isPinned'] = !(p['isPinned'] == true)),
+                                onEdit: () {},
+                                onAnalytics: () {},
+                                onDelete: () => _handleDeletePost(p),
+                              )
+                            : CommunityPostCard(
+                                post: p,
+                                onPin: () => setState(() => p['isPinned'] = !(p['isPinned'] == true)),
+                                onEdit: () {},
+                                onDuplicate: () => _handlePublishPost(Map<String, dynamic>.from(p)),
+                                onDelete: () => _handleDeletePost(p),
+                              ),
+                      );
+                    }),
+                    const SizedBox(height: 18),
+                    CommunityOverviewPanel(
+                      onViewAsUser: () {},
+                      onManageComments: () {},
+                      onPinnedPosts: () {},
+                      onScheduledPosts: () {},
+                      onPostAnalytics: () {},
+                    ),
+                  ],
+                );
+              }
+            },
           ),
         ],
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppTextField(
-              label: 'Article Title',
-              controller: titleController,
-              hintText: 'e.g. 70th BPSC Prelims Strategy',
-              borderRadius: BorderRadius.circular(8),
+      ),
+    );
+  }
+
+  Widget _buildFeedHeader(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadii.adminCard,
+        border: Border.all(color: AppColors.adminBorder),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.push_pin_rounded, size: 18, color: AppColors.adminPurple),
+          const SizedBox(width: 8),
+          Text(
+            'Posts ($count)',
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.adminPrimaryText),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: AppTextField(
+              controller: _searchController,
+              hintText: 'Search posts...',
+              prefixIcon: const Icon(Icons.search_rounded, size: 16, color: AppColors.adminSecondaryText),
+              onChanged: (_) => setState(() {}),
             ),
-            const SizedBox(height: 12),
-            AppTextField(
-              label: 'Category',
-              controller: catController,
-              hintText: 'Current Affairs',
-              borderRadius: BorderRadius.circular(8),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 130,
+            child: AppDropdown<String>(
+              inlineLabel: true,
+              value: _filterType,
+              items: const [
+                AppDropdownItem(value: 'all', label: 'All Posts'),
+                AppDropdownItem(value: 'announcements', label: 'Articles'),
+                AppDropdownItem(value: 'polls', label: 'Polls'),
+              ],
+              onChanged: (v) {
+                if (v != null) setState(() => _filterType = v);
+              },
             ),
-            const SizedBox(height: 12),
-            AppTextField(
-              label: 'Excerpt Summary',
-              controller: excerptController,
-              hintText: 'Short synopsis of the update...',
-              maxLines: 2,
-              borderRadius: BorderRadius.circular(8),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 110,
+            child: AppDropdown<String>(
+              inlineLabel: true,
+              value: _sortOrder,
+              items: const [
+                AppDropdownItem(value: 'latest', label: 'Latest'),
+                AppDropdownItem(value: 'oldest', label: 'Oldest'),
+              ],
+              onChanged: (v) {
+                if (v != null) setState(() => _sortOrder = v);
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
