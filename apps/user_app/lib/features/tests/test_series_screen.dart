@@ -55,10 +55,6 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   StreamSubscription<List<CategoryModel>>? _categoriesSub;
   Timer? _ticker;
 
-  List<
-    ({String title, String questionCount, IconData icon, Color color, Color bg})
-  > _subjects = [];
-
   Map<String, dynamic> _userStats = {};
   List<BannerModel> _testBanners = [];
   StreamSubscription<List<BannerModel>>? _bannersSub;
@@ -171,112 +167,6 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     _upcomingAndLiveTests = active;
   }
 
-  IconData _resolveCategoryIcon(String iconName) {
-    switch (iconName.toLowerCase()) {
-      case 'science':
-        return Icons.science_rounded;
-      case 'calculate':
-      case 'mathematics':
-      case 'math':
-        return Icons.calculate_rounded;
-      case 'psychology':
-      case 'reasoning':
-        return Icons.psychology_rounded;
-      case 'menu_book':
-        return Icons.menu_book_rounded;
-      case 'newspaper':
-      case 'current affairs':
-        return Icons.newspaper_rounded;
-      case 'biotech':
-      case 'biology':
-        return Icons.biotech_rounded;
-      case 'eco':
-        return Icons.eco_rounded;
-      case 'school':
-        return Icons.school_rounded;
-      case 'assignment':
-        return Icons.assignment_rounded;
-      case 'public':
-        return Icons.public_rounded;
-      case 'history':
-      case 'auto_stories':
-        return Icons.auto_stories_rounded;
-      case 'code':
-        return Icons.code_rounded;
-      default:
-        return Icons.school_rounded;
-    }
-  }
-
-  Color _resolveCategoryColor(
-    String hex, [
-    Color fallback = const Color(0xFF2587F8),
-  ]) {
-    try {
-      final clean = hex.replaceAll('#', '').trim();
-      if (clean.length == 6) {
-        return Color(int.parse('FF$clean', radix: 16));
-      }
-      return fallback;
-    } catch (_) {
-      return fallback;
-    }
-  }
-
-  void _applyCategories([List<CategoryModel>? categories]) {
-    final source = categories ?? _allCategories;
-    if (source.isEmpty) return;
-
-    final filtered = (_selectedExamId == null || _selectedExamId == 'all')
-        ? source
-        : source
-              .where(
-                (c) =>
-                    c.examCategoryId != null &&
-                    (c.examCategoryId!.toLowerCase() ==
-                            _selectedExamId!.toLowerCase() ||
-                        c.examCategoryId == _selectedExamId),
-              )
-              .toList();
-
-    final targetList = filtered.isNotEmpty ? filtered : source;
-
-    final mapped = targetList.map((c) {
-      final accent = _resolveCategoryColor(c.iconColor);
-      final countText = c.totalQuestions > 0
-          ? '${c.totalQuestions}+ Qs'
-          : (c.topics.isNotEmpty
-                ? '${c.topics.length} Chapters'
-                : 'Practice Qs');
-      return (
-        title: c.name,
-        questionCount: countText,
-        icon: _resolveCategoryIcon(c.iconName),
-        color: accent,
-        bg: accent.withValues(alpha: 0.1),
-      );
-    }).toList();
-
-    setState(() {
-      _subjects = mapped;
-    });
-  }
-
-  void _onSelectSubject(String title) {
-    setState(() {
-      if (_selectedSubject == title) {
-        _selectedSubject = null;
-        _selectedCategory = null;
-      } else {
-        _selectedSubject = title;
-        _selectedCategory = _allCategories.cast<CategoryModel?>().firstWhere(
-          (c) => c != null && c.name.toLowerCase() == title.toLowerCase(),
-          orElse: () => null,
-        );
-      }
-    });
-  }
-
   void _openExamScreen(ExamCategoryModel exam) {
     Navigator.push(
       context,
@@ -338,14 +228,12 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
     if (catRes is Success<List<CategoryModel>>) {
       _allCategories = catRes.data;
-      _applyCategories(catRes.data);
     }
 
     _categoriesSub ??= testsRepo.streamCategories().listen(
       (updated) {
         if (mounted && updated.isNotEmpty) {
           _allCategories = updated;
-          _applyCategories(updated);
         }
       },
       onError: (_) {
@@ -1022,11 +910,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                       _buildExamCategorySelector(isDesktop, isTablet),
                       const SizedBox(height: 20),
 
-                      // 4. Select Subject Section
-                      _buildSelectSubjectSection(),
-                      const SizedBox(height: 22),
-
-                      // 5. Filtered Tests Catalog List (Recommended Tests)
+                      // 4. Filtered Tests Catalog List (Recommended Tests)
                       _buildFilteredCatalogSection(),
                       const SizedBox(height: 28),
 
@@ -1098,11 +982,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               _buildUpcomingTestsSection(),
               const SizedBox(height: 20),
 
-              // 5. Select Subject Section
-              _buildSelectSubjectSection(),
-              const SizedBox(height: 22),
-
-              // 6. Filtered Tests Catalog List (Recommended Tests)
+              // 5. Filtered Tests Catalog List (Recommended Tests)
               _buildFilteredCatalogSection(),
               const SizedBox(height: 24),
 
@@ -1188,20 +1068,26 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: const [
-                Icon(Icons.explore_rounded, color: Color(0xFF10B981), size: 19),
-                SizedBox(width: 8),
-                Text(
-                  'Target Exam Category',
-                  style: TextStyle(
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
+            Expanded(
+              child: Row(
+                children: const [
+                  Icon(Icons.explore_rounded, color: Color(0xFF10B981), size: 19),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Target Exam Category',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
             InkWell(
               onTap: _openAllExamsScreen,
               child: Row(
@@ -2548,91 +2434,6 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     );
   }
 
-  // --- 4. Select Subject Section ---
-  Widget _buildSelectSubjectSection() {
-    if (_subjects.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: const [
-                Icon(
-                  Icons.grid_view_rounded,
-                  color: Color(0xFF2587F8),
-                  size: 19,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Select Subject',
-                  style: TextStyle(
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _selectedSubject = null;
-                  _selectedCategory = null;
-                });
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF2587F8),
-                    ),
-                  ),
-                  SizedBox(width: 2),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 14,
-                    color: Color(0xFF2587F8),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: [
-              for (int i = 0; i < _subjects.length; i++) ...[
-                if (i > 0) const SizedBox(width: 12),
-                SubjectSelectionCard(
-                  title: _subjects[i].title,
-                  questionCount: _subjects[i].questionCount,
-                  icon: _subjects[i].icon,
-                  accentColor: _subjects[i].color,
-                  backgroundColor: _subjects[i].bg,
-                  index: i,
-                  width: 116,
-                  height: 144,
-                  isSelected: _selectedSubject == _subjects[i].title,
-                  onTap: () => _onSelectSubject(_subjects[i].title),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   // --- 7. Filtered Tests Catalog ---
   Widget _buildFilteredCatalogSection() {
     return Column(
@@ -2641,23 +2442,28 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.auto_awesome_rounded,
-                  color: Color(0xFF10B981),
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Recommended Tests (${_filteredTests.length})',
-                  style: const TextStyle(
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
+            Expanded(
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: Color(0xFF10B981),
+                    size: 20,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Recommended Tests (${_filteredTests.length})',
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             if ((_selectedExamId != null && _selectedExamId != 'all') ||
                 _selectedSubject != null ||
@@ -2671,7 +2477,6 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                     _selectedCategory = null;
                     _selectedTopic = null;
                     _selectedTypeIndex = 0;
-                    _applyCategories();
                   });
                 },
                 icon: const Icon(Icons.clear_rounded, size: 14),
@@ -2723,7 +2528,6 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                         _selectedCategory = null;
                         _selectedTopic = null;
                         _selectedTypeIndex = 0;
-                        _applyCategories();
                       });
                     },
                   ),

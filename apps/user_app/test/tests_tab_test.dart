@@ -31,31 +31,20 @@ void main() {
 
       // 2. Four Statistic Cards
       expect(find.text('Tests Attempted'), findsOneWidget);
-      expect(find.text('Average Score'), findsOneWidget);
+      expect(find.text('Accuracy'), findsOneWidget);
       expect(find.text('Rank Position'), findsOneWidget);
       expect(find.text('Coins Earned'), findsOneWidget);
 
-      // 3. Test Type Navigation
+      // 3. Exam Category Navigation
+      expect(find.text('All Exams'), findsOneWidget);
       expect(find.text('All Tests'), findsOneWidget);
-      expect(find.text('Daily Test'), findsOneWidget);
-      expect(find.text('Mock Tests'), findsWidgets); // Can appear in nav & category
-      expect(find.text('Previous Year'), findsOneWidget);
-      expect(find.text('Chapter Wise'), findsOneWidget);
-      expect(find.text('My Tests'), findsOneWidget);
 
-      // 4. Select Subject Section
-      expect(find.text('Select Subject'), findsOneWidget);
-      expect(find.text('View All'), findsWidgets);
-      expect(find.text('Mathematics'), findsWidgets);
-      expect(find.text('Reasoning'), findsWidgets);
+      // 4. Select Subject Section (Removed from Test Series tab)
+      expect(find.text('Select Subject'), findsNothing);
 
-      // 5. Test Categories Section
-      expect(find.text('Test Categories'), findsOneWidget);
-      expect(find.text('Chapter Wise Tests'), findsOneWidget);
-      expect(find.text('Previous Year Papers'), findsOneWidget);
-      expect(find.text('Daily Practice Tests'), findsOneWidget);
-      expect(find.text('Topic Wise Tests'), findsOneWidget);
-      expect(find.text('Live Tests'), findsOneWidget);
+      // 5. Target Exam Category Section
+      expect(find.text('Target Exam Category'), findsOneWidget);
+      expect(find.text('View All Exams'), findsOneWidget);
 
       // 6. Bottom Promotional Banners
       expect(find.text('Test Series'), findsOneWidget);
@@ -70,24 +59,6 @@ void main() {
       expect(find.text('1v1 Quiz Battle'), findsOneWidget);
       expect(find.text('Upcoming Tests'), findsOneWidget);
       expect(find.text('Top Performers'), findsOneWidget);
-    });
-
-    testWidgets('Tapping test type navigation updates selection', (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(412, 915);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-
-      await tester.pumpWidget(buildTestScreen());
-      await tester.pumpAndSettle();
-
-      // Tap on Daily Test
-      final dailyFinder = find.text('Daily Test');
-      await tester.ensureVisible(dailyFinder);
-      await tester.tap(dailyFinder);
-      await tester.pumpAndSettle();
-
-      // Expect to still have zero errors
-      expect(tester.takeException(), isNull);
     });
 
     testWidgets('Renders with zero overflow across viewports', (WidgetTester tester) async {
