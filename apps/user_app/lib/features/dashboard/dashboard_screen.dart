@@ -586,56 +586,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // --- 5. Explore by Exam ---
   Widget _buildExploreByExamSection() {
-    final exams = _examCategories.isNotEmpty
-        ? _examCategories
-        : const [
-            ExamCategoryModel(
-              id: 'bpsc',
-              name: 'BPSC & State PCS',
-              normalizedName: 'bpsc',
-              iconUrl: '🏛️',
-              totalTests: 35,
-              totalMocks: 15,
-              totalSectional: 20,
-            ),
-            ExamCategoryModel(
-              id: 'ssc',
-              name: 'SSC CGL & CHSL',
-              normalizedName: 'ssc',
-              iconUrl: '📋',
-              totalTests: 45,
-              totalMocks: 20,
-              totalSectional: 25,
-            ),
-            ExamCategoryModel(
-              id: 'upsc',
-              name: 'UPSC Civil Services',
-              normalizedName: 'upsc',
-              iconUrl: '🇮🇳',
-              totalTests: 25,
-              totalMocks: 10,
-              totalSectional: 15,
-            ),
-            ExamCategoryModel(
-              id: 'railway',
-              name: 'RRB NTPC & Group D',
-              normalizedName: 'railway',
-              iconUrl: '🚆',
-              totalTests: 30,
-              totalMocks: 12,
-              totalSectional: 18,
-            ),
-            ExamCategoryModel(
-              id: 'banking',
-              name: 'Banking & Insurance',
-              normalizedName: 'banking',
-              iconUrl: '🏦',
-              totalTests: 28,
-              totalMocks: 14,
-              totalSectional: 14,
-            ),
-          ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -698,34 +648,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: [
-              ExamCategoryCard(
-                index: 0,
-                id: 'all',
-                name: 'All Exams',
-                badgeText: 'All Tests',
-                onTap: _openAllExams,
+        if (_examCategories.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: const Center(
+              child: Text(
+                'No exam categories available right now.',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
               ),
-              const SizedBox(width: 10),
-              for (int i = 0; i < exams.length; i++) ...[
+            ),
+          )
+        else
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
                 ExamCategoryCard(
-                  index: i + 1,
-                  id: exams[i].id,
-                  name: exams[i].name,
-                  badgeText: exams[i].totalMocks > 0 || exams[i].totalSectional > 0
-                      ? '${exams[i].totalMocks} Mock • ${exams[i].totalSectional} Sec'
-                      : '${exams[i].totalTests} Tests',
-                  onTap: () => _openExam(exams[i]),
+                  index: 0,
+                  id: 'all',
+                  name: 'All Exams',
+                  badgeText: 'All Tests',
+                  onTap: _openAllExams,
                 ),
                 const SizedBox(width: 10),
+                for (int i = 0; i < _examCategories.length; i++) ...[
+                  ExamCategoryCard(
+                    index: i + 1,
+                    id: _examCategories[i].id,
+                    name: _examCategories[i].name,
+                    badgeText: _examCategories[i].totalMocks > 0 ||
+                            _examCategories[i].totalSectional > 0
+                        ? '${_examCategories[i].totalMocks} Mock • ${_examCategories[i].totalSectional} Sec'
+                        : (_examCategories[i].totalTests > 0
+                            ? '${_examCategories[i].totalTests} Tests'
+                            : 'Practice'),
+                    onTap: () => _openExam(_examCategories[i]),
+                  ),
+                  const SizedBox(width: 10),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
       ],
     );
   }

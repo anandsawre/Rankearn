@@ -75,14 +75,13 @@ class TestsRepository {
       final data = await client
           .from('exam_categories')
           .select()
-          .eq('is_published', true)
           .order('display_order', ascending: true);
 
       // Fetch test counts grouped by exam_category_id and test_mode
       final testsData = await client
           .from('tests')
-          .select('exam_category_id, test_mode')
-          .eq('status', 'published');
+          .select('exam_category_id, test_mode, status')
+          .neq('status', 'archived');
 
       final mockCounts = <String, int>{};
       final sectionalCounts = <String, int>{};

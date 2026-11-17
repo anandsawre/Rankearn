@@ -1180,55 +1180,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
   // --- Exam Category Selector Bar ---
   Widget _buildExamCategorySelector(bool isDesktop, bool isTablet) {
-    final exams = _examCategories.isNotEmpty
-        ? _examCategories
-        : const [
-            ExamCategoryModel(
-              id: 'bpsc',
-              name: 'BPSC & State PCS',
-              normalizedName: 'bpsc',
-              iconUrl: '🏛️',
-              totalTests: 35,
-              totalMocks: 15,
-              totalSectional: 20,
-            ),
-            ExamCategoryModel(
-              id: 'ssc',
-              name: 'SSC CGL & CHSL',
-              normalizedName: 'ssc',
-              iconUrl: '📋',
-              totalTests: 45,
-              totalMocks: 20,
-              totalSectional: 25,
-            ),
-            ExamCategoryModel(
-              id: 'upsc',
-              name: 'UPSC Civil Services',
-              normalizedName: 'upsc',
-              iconUrl: '🇮🇳',
-              totalTests: 25,
-              totalMocks: 10,
-              totalSectional: 15,
-            ),
-            ExamCategoryModel(
-              id: 'railway',
-              name: 'RRB NTPC & Group D',
-              normalizedName: 'railway',
-              iconUrl: '🚆',
-              totalTests: 30,
-              totalMocks: 12,
-              totalSectional: 18,
-            ),
-            ExamCategoryModel(
-              id: 'banking',
-              name: 'Banking & Insurance',
-              normalizedName: 'banking',
-              iconUrl: '🏦',
-              totalTests: 28,
-              totalMocks: 14,
-              totalSectional: 14,
-            ),
-          ];
+    final exams = _examCategories;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1294,8 +1246,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                   index: i + 1,
                   id: exams[i].id,
                   name: exams[i].name,
-                  badgeText:
-                      '${exams[i].totalMocks} Mock • ${exams[i].totalSectional} Sec',
+                  badgeText: exams[i].totalMocks > 0 || exams[i].totalSectional > 0
+                      ? '${exams[i].totalMocks} Mock • ${exams[i].totalSectional} Sec'
+                      : (exams[i].totalTests > 0
+                          ? '${exams[i].totalTests} Tests'
+                          : 'Practice'),
                   isSelected: _selectedExamId == exams[i].id,
                   onTap: () {
                     _openExamScreen(exams[i]);
