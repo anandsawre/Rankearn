@@ -151,7 +151,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
     final testsRepo = TestsRepository();
 
     final results = await Future.wait([
-      repo.getTournaments(),
+      repo.getLiveAndUpcomingTests(),
       repo.getLeaderboardUsers(),
       repo.getUserParticipations(widget.userId ?? ''),
       testsRepo.getUserStats(widget.userId ?? ''),

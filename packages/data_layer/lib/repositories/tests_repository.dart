@@ -194,7 +194,11 @@ class TestsRepository {
         query = query.eq('test_mode', testMode);
       }
       if (isTournament != null) {
-        query = query.eq('is_tournament', isTournament);
+        if (!isTournament) {
+          query = query.or('is_tournament.eq.false,is_tournament.is.null');
+        } else {
+          query = query.eq('is_tournament', true);
+        }
       }
       if (searchQuery != null && searchQuery.trim().isNotEmpty) {
         query = query.ilike('title', '%${searchQuery.trim()}%');

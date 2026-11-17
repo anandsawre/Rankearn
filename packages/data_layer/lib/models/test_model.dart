@@ -76,17 +76,18 @@ class TestModel {
   }
 
   bool get isLive {
+    if (scheduledStartTime == null) return false;
     final now = DateTime.now();
     // If it has a scheduled start time in the future, it is not live yet
-    if (scheduledStartTime != null && now.isBefore(scheduledStartTime!)) {
+    if (now.isBefore(scheduledStartTime!)) {
       return false;
     }
     final effectiveEndTime = scheduledEndTime ??
-        (scheduledStartTime?.add(
+        scheduledStartTime!.add(
           Duration(minutes: durationMinutes > 0 ? durationMinutes : 60),
-        ));
+        );
     // If it has passed its end time, it is finished (past)
-    if (effectiveEndTime != null && now.isAfter(effectiveEndTime)) {
+    if (now.isAfter(effectiveEndTime)) {
       return false;
     }
     return true;

@@ -203,7 +203,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
   Future<void> _loadTests() async {
     final testsRepo = TestsRepository();
-    final res = await testsRepo.getTests();
+    final res = await testsRepo.getTests(isTournament: false);
     final catRes = await testsRepo.getCategories();
     final examRes = await testsRepo.getExamCategoryList();
     final tourRes = await ContestsRepository().getTournaments();

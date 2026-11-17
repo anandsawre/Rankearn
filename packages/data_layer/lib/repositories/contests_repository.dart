@@ -22,13 +22,34 @@ class ContestsRepository {
           .from('tests')
           .select()
           .eq('status', 'published')
-          .order('is_tournament', ascending: false)
+          .or('is_tournament.eq.true,test_mode.eq.tournament')
           .order('created_at', ascending: false);
 
       final list = (data as List).map((m) => TestModel.fromMap(m)).toList();
       return Success(list);
     } catch (e) {
       return Failure('Error fetching tournaments: $e', e);
+    }
+  }
+
+  /// Fetch Live and Scheduled Upcoming Tests
+  Future<Result<List<TestModel>>> getLiveAndUpcomingTests() async {
+    final client = _client;
+    if (client == null) {
+      return const Success([]);
+    }
+    try {
+      final data = await client
+          .from('tests')
+          .select()
+          .eq('status', 'published')
+          .not('scheduled_start_time', 'is', null)
+          .order('scheduled_start_time', ascending: true);
+
+      final list = (data as List).map((m) => TestModel.fromMap(m)).toList();
+      return Success(list);
+    } catch (e) {
+      return Failure('Error fetching live tests: $e', e);
     }
   }
 
