@@ -705,4 +705,22 @@ class AppTypography {
     height: 1.15,
     fontFamilyFallback: fontFallbacks,
   );
+
+  // --- Bottom Sheet Typography Tokens ---
+  static const TextStyle bottomSheetTitle = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 18.0,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.3,
+    color: Color(0xFF0F172A),
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle bottomSheetSubtitle = TextStyle(
+    fontFamily: fontBody,
+    fontSize: 12.5,
+    fontWeight: FontWeight.w500,
+    color: Color(0xFF64748B),
+    fontFamilyFallback: fontFallbacks,
+  );
 }

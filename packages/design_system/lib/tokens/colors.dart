@@ -413,4 +413,10 @@ class AppColors {
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
+
+  // --- Bottom Sheet Tokens ---
+  static const Color bottomSheetBg = Color(0xFFFFFFFF);
+  static const Color bottomSheetDragHandle = Color(0xFFCBD5E1);
+  static const Color bottomSheetBarrier = Color(0x660F172A);
+  static const Color bottomSheetBorder = Color(0xFFF1F5F9);
 }

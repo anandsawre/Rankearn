@@ -60,4 +60,10 @@ class AppSpacing {
   static const double contestItemGapCompact = 12.0;
   static const double contestCardPadding = 16.0;
   static const double contestCardPaddingMobile = 14.0;
+
+  // --- Bottom Sheet Spacing Tokens ---
+  static const EdgeInsets bottomSheetPadding = EdgeInsets.fromLTRB(20.0, 8.0, 20.0, 20.0);
+  static const double bottomSheetDragHandleWidth = 44.0;
+  static const double bottomSheetDragHandleHeight = 5.0;
+  static const double bottomSheetMaxWidth = 640.0;
 }

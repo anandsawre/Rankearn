@@ -59,4 +59,8 @@ class AppRadii {
   static const BorderRadius contestPill = borderPill;
   static const BorderRadius contestThumb = BorderRadius.all(Radius.circular(12.0));
   static const BorderRadius contestThumbSm = BorderRadius.all(Radius.circular(10.0));
+
+  // --- Bottom Sheet Semantic Radii Tokens ---
+  static const BorderRadius bottomSheet = BorderRadius.vertical(top: Radius.circular(24.0));
+  static const BorderRadius bottomSheetDragHandle = borderPill;
 }

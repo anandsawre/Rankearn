@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
-/// Purple Contest Hero Banner tokenized strictly with Centralized Design System
+/// Purple Tournament Hero Banner tokenized strictly with Centralized Design System
 class TournamentHeroBanner extends StatelessWidget {
   final bool isDesktop;
   final VoidCallback? onExploreTap;
@@ -87,7 +87,7 @@ class TournamentHeroBanner extends StatelessWidget {
                               ),
                               SizedBox(width: 5),
                               Text(
-                                'Contests',
+                                'Mega Tournaments',
                                 style: AppTypography.contestHeroTag,
                               ),
                             ],
@@ -99,8 +99,8 @@ class TournamentHeroBanner extends StatelessWidget {
                       // Title
                       Text(
                         isDesktop
-                            ? 'Compete in Live Contests'
-                            : 'Contests',
+                            ? 'All-India Mega Tournaments'
+                            : 'Tournaments',
                         style: isDesktop
                             ? AppTypography.contestHeroTitleDesktop
                             : AppTypography.contestHeroTitleMobile,
@@ -110,7 +110,7 @@ class TournamentHeroBanner extends StatelessWidget {
                       // Subtitle
                       Text(
                         isDesktop
-                            ? 'Test your knowledge, beat top players and win exciting rewards!'
+                            ? 'Compete with thousands of students and win cash prizes & certificates!'
                             : 'Compete, participate and win rewards.',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -141,7 +141,7 @@ class TournamentHeroBanner extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Explore Contests',
+                                'Explore Tournaments',
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w800,
@@ -201,8 +201,8 @@ class TournamentHeroBanner extends StatelessWidget {
                               fit: BoxFit.contain,
                               errorBuilder: (_, _, _) => const Icon(
                                 Icons.emoji_events_rounded,
-                                size: 80,
                                 color: AppColors.contestGold,
+                                size: 80,
                               ),
                             ),
                           ),

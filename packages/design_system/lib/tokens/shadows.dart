@@ -154,4 +154,13 @@ class AppShadows {
       offset: Offset(0, 2),
     ),
   ];
+
+  // --- Bottom Sheet Shadow Tokens ---
+  static const List<BoxShadow> bottomSheet = [
+    BoxShadow(
+      color: Color(0x26000000),
+      blurRadius: 24,
+      offset: Offset(0, -4),
+    ),
+  ];
 }

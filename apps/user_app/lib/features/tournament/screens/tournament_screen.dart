@@ -180,7 +180,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             ),
             const SizedBox(width: 12),
             const Text(
-              'Join Contest',
+              'Join Tournament',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
@@ -438,7 +438,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'Contests (${displayTournaments.length})',
+                    'Tournaments (${displayTournaments.length})',
                     style: AppTypography.contestSectionTitle,
                   ),
                   const Spacer(),
@@ -577,7 +577,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             ),
             const SizedBox(width: AppSpacing.sm),
             const Text(
-              'Running Contests',
+              'Running Tournaments',
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w900,
@@ -659,7 +659,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             ),
             const SizedBox(width: AppSpacing.sm),
             const Text(
-              'Upcoming Contests',
+              'Upcoming Tournaments',
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w900,
@@ -736,7 +736,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
           ),
           const SizedBox(height: 14),
           const Text(
-            'No Contests Found',
+            'No Tournaments Found',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
@@ -745,7 +745,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'No contests match the selected filter category.',
+            'No tournaments match the selected filter category.',
             style: TextStyle(
               fontSize: 12.5,
               color: AppColors.contestTextSecondary,
@@ -767,7 +767,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
                 borderRadius: AppRadii.borderMd,
               ),
             ),
-            child: const Text('Show All Contests'),
+            child: const Text('Show All Tournaments'),
           ),
         ],
       ),

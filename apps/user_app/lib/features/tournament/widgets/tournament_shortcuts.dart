@@ -23,7 +23,7 @@ class TournamentShortcuts extends StatelessWidget {
             child: _buildDesktopPill(
               keyName: 'all',
               icon: Icons.emoji_events_rounded,
-              label: 'All Contests',
+              label: 'All Tournaments',
             ),
           ),
           const SizedBox(width: AppSpacing.sm * 1.75),
@@ -31,7 +31,7 @@ class TournamentShortcuts extends StatelessWidget {
             child: _buildDesktopPill(
               keyName: 'my',
               icon: Icons.assignment_outlined,
-              label: 'My Contests',
+              label: 'My Tournaments',
             ),
           ),
           const SizedBox(width: AppSpacing.sm * 1.75),
@@ -68,7 +68,7 @@ class TournamentShortcuts extends StatelessWidget {
         Expanded(
           child: _buildMobilePod(
             keyName: 'all',
-            label: 'All\nContests',
+            label: 'All\nTournaments',
             icon: Icons.emoji_events_rounded,
             bgColor: AppColors.contestShortcutPurpleBg,
             iconBgColor: AppColors.contestShortcutPurpleIcon,
@@ -78,7 +78,7 @@ class TournamentShortcuts extends StatelessWidget {
         Expanded(
           child: _buildMobilePod(
             keyName: 'my',
-            label: 'My\nContests',
+            label: 'My\nTournaments',
             icon: Icons.assignment_outlined,
             bgColor: AppColors.contestShortcutPinkBg,
             iconBgColor: AppColors.contestShortcutPinkIcon,
@@ -121,11 +121,11 @@ class TournamentShortcuts extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.contestActiveGreen : AppColors.contestCardBg,
+          color: isSelected ? AppColors.brandPurple : AppColors.contestCardBg,
           borderRadius: AppRadii.contestShortcut,
           border: Border.all(
             color: isSelected
-                ? AppColors.contestActiveGreen
+                ? AppColors.brandPurple
                 : AppColors.contestCardBorder,
           ),
           boxShadow: isSelected ? AppShadows.contestPillActive : AppShadows.subtle,
@@ -164,19 +164,19 @@ class TournamentShortcuts extends StatelessWidget {
     required Color bgColor,
     required Color iconBgColor,
   }) {
+    final isSelected = activeShortcut == keyName;
+
     return InkWell(
       onTap: () => onShortcutTap(keyName),
       borderRadius: AppRadii.contestShortcut,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: isSelected ? iconBgColor.withValues(alpha: 0.15) : bgColor,
           borderRadius: AppRadii.contestShortcut,
           border: Border.all(
-            color: activeShortcut == keyName
-                ? iconBgColor
-                : Colors.transparent,
-            width: 1.5,
+            color: isSelected ? iconBgColor : Colors.transparent,
+            width: isSelected ? 1.5 : 0,
           ),
         ),
         child: Column(
@@ -197,10 +197,10 @@ class TournamentShortcuts extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               maxLines: 2,
-              style: const TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1E293B),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                color: AppColors.contestTextPrimary,
                 height: 1.15,
               ),
             ),

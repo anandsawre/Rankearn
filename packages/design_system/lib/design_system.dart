@@ -80,6 +80,7 @@ export 'components/cards/refer_earn_card.dart';
 export 'components/cards/quick_actions_rewards_card.dart';
 export 'components/feedback/app_loading.dart';
 export 'components/feedback/app_modal_dialog.dart';
+export 'components/feedback/app_bottom_sheet.dart';
 export 'components/navigation/app_header.dart';
 export 'components/navigation/app_bottom_nav.dart';
 export 'components/navigation/admin_sidebar.dart';

@@ -28,7 +28,7 @@ class TournamentStatsCards extends StatelessWidget {
               icon: Icons.emoji_events_rounded,
               iconBgColor: AppColors.contestCoinAmber,
               watermarkIcon: Icons.emoji_events_rounded,
-              title: 'Active\nContests',
+              title: 'Active\nTournaments',
               value: activeCount.toString(),
             ),
           ),
@@ -73,7 +73,7 @@ class TournamentStatsCards extends StatelessWidget {
           child: _buildMobileCard(
             icon: Icons.emoji_events_rounded,
             iconBgColor: AppColors.contestCoinAmber,
-            title: 'Active\nContests',
+            title: 'Active\nTournaments',
             value: activeCount.toString(),
           ),
         ),
@@ -170,59 +170,45 @@ class TournamentStatsCards extends StatelessWidget {
         border: Border.all(color: AppColors.contestCardBorder),
         boxShadow: AppShadows.contestCardMobile,
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Row(
         children: [
-          Positioned(
-            right: -4,
-            bottom: -6,
-            child: Icon(
-              icon,
-              size: 46,
-              color: AppColors.contestWatermark,
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: AppRadii.contestThumbSm,
             ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: Colors.white, size: 20),
           ),
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: iconBgColor,
-                  borderRadius: AppRadii.contestThumbSm,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.contestTextSecondary,
+                    height: 1.2,
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: Icon(icon, color: Colors.white, size: 22),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 2,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.contestTextSecondary,
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.contestTextPrimary,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.contestTextPrimary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
