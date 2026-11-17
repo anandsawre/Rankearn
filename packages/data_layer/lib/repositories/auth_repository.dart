@@ -77,12 +77,36 @@ class AuthRepository {
           } catch (_) {}
         }
 
-        final currentUserId = client.auth.currentUser?.id ?? currentSession.user.id;
-        final profileRes = await getProfile(currentUserId);
+        final sessionUser = client.auth.currentUser ?? currentSession.user;
+        final profileRes = await getProfile(sessionUser.id);
         if (profileRes is Success<UserProfile>) {
           await saveLocalProfile(profileRes.data);
           return profileRes;
         }
+
+        // Active session exists: fallback to cached profile if profile table query timed out
+        if (cachedProfile != null) {
+          return Success(cachedProfile);
+        }
+
+        // Active session exists: create fallback profile from session metadata so user is never logged out
+        final meta = sessionUser.userMetadata ?? {};
+        final fallback = UserProfile(
+          id: sessionUser.id,
+          name: meta['name']?.toString() ??
+              meta['full_name']?.toString() ??
+              sessionUser.email?.split('@').first ??
+              'Rankearn Aspirant',
+          email: sessionUser.email ?? '',
+          phone: sessionUser.phone ?? meta['phone']?.toString(),
+          coins: 100,
+          subscriptionStatus: 'free',
+          examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+          state: 'India',
+          createdAt: DateTime.now(),
+        );
+        await saveLocalProfile(fallback);
+        return Success(fallback);
       }
 
       final currentUser = client.auth.currentUser;
@@ -91,6 +115,9 @@ class AuthRepository {
         if (profileRes is Success<UserProfile>) {
           await saveLocalProfile(profileRes.data);
           return profileRes;
+        }
+        if (cachedProfile != null) {
+          return Success(cachedProfile);
         }
       }
     } catch (_) {}
@@ -148,6 +175,7 @@ class AuthRepository {
 
       final profileRes = await getProfile(user.id);
       if (profileRes is Success<UserProfile>) {
+        await saveLocalProfile(profileRes.data);
         return profileRes;
       }
 
@@ -168,6 +196,7 @@ class AuthRepository {
       try {
         await client.from('profiles').upsert(fallbackProfile.toMap());
       } catch (_) {}
+      await saveLocalProfile(fallbackProfile);
 
       return Success(fallbackProfile);
     } on supa.AuthException catch (e) {
@@ -287,7 +316,11 @@ class AuthRepository {
         return const Failure('Google login failed');
       }
 
-      return await getProfile(user.id);
+      final profileRes = await getProfile(user.id);
+      if (profileRes is Success<UserProfile>) {
+        await saveLocalProfile(profileRes.data);
+      }
+      return profileRes;
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {

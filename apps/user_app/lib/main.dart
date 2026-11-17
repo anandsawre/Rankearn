@@ -812,18 +812,23 @@ class _UserAppShellState extends State<UserAppShell> {
       MaterialPageRoute(
         builder: (context) => UserAuthScreen(
           initialMode: mode,
-          onAuthSuccess: (profile) {
-            setState(() {
-              _profile = profile;
-              _activeTab = UserNavTab.home;
-            });
-            Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Welcome back, ${profile.name}!'),
-                backgroundColor: AppColors.primary,
-              ),
-            );
+          onAuthSuccess: (profile) async {
+            await AuthRepository().saveLocalProfile(profile);
+            if (mounted) {
+              setState(() {
+                _profile = profile;
+                _activeTab = UserNavTab.home;
+              });
+            }
+            if (context.mounted) {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Welcome back, ${profile.name}!'),
+                  backgroundColor: AppColors.primary,
+                ),
+              );
+            }
           },
         ),
       ),
