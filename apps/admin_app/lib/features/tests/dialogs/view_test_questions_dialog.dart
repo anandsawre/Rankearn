@@ -186,6 +186,266 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
     );
   }
 
+  // --- IMPORT / COPY QUESTIONS FROM EXISTING TEST ---
+  Future<void> _openImportFromExistingTestDialog() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Database client not connected.')),
+      );
+      return;
+    }
+
+    // 1. Fetch all existing tests (excluding this one)
+    List<Map<String, dynamic>> availableTests = [];
+    try {
+      final res = await client
+          .from('tests')
+          .select('id, title, category_id, total_questions, duration_minutes')
+          .neq('id', widget.item.id)
+          .order('created_at', ascending: false);
+      availableTests = List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      debugPrint('Error fetching tests for question import: $e');
+    }
+
+    if (!mounted) return;
+
+    if (availableTests.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No other tests found in database to import from.'),
+          backgroundColor: Color(0xFFFF9F0A),
+        ),
+      );
+      return;
+    }
+
+    String? selectedTestId = availableTests.first['id']?.toString();
+    bool replaceExisting = false;
+    int previewQuestionCount =
+        (availableTests.first['total_questions'] as num?)?.toInt() ?? 0;
+
+    await AppModalDialog.show(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final selectedTest = availableTests.firstWhere(
+            (t) => t['id']?.toString() == selectedTestId,
+            orElse: () => availableTests.first,
+          );
+
+          return AppModalDialog(
+            title: 'Add from Existing Test',
+            subtitle: 'Bulk copy questions from another test series or mock test',
+            iconData: Icons.copy_all_rounded,
+            maxWidth: 520,
+            actions: [
+              AppModalDialog.cancelButton(ctx),
+              AppModalDialog.primaryButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await _copyQuestionsFromTest(
+                    sourceTestId: selectedTestId!,
+                    sourceTestTitle: selectedTest['title']?.toString() ?? 'Selected Test',
+                    replaceExisting: replaceExisting,
+                  );
+                },
+                child: const Text(
+                  'Copy Questions Now',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontHeading,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ),
+            ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select any existing test or mock set. All its questions will be automatically copied into this test.',
+                  style: TextStyle(fontSize: 12.5, color: Color(0xFF475569)),
+                ),
+                const SizedBox(height: 16),
+
+                // Test Selection Dropdown
+                const Text(
+                  'Select Test to Copy From *',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF334155),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                AppDropdown<String>(
+                  value: selectedTestId,
+                  items: availableTests.map((t) {
+                    final tId = t['id']?.toString() ?? '';
+                    final tTitle = t['title']?.toString() ?? 'Untitled Test';
+                    final tCat = t['category_id']?.toString() ?? 'General';
+                    final tQs = (t['total_questions'] as num?)?.toInt() ?? 0;
+                    return AppDropdownItem<String>(
+                      value: tId,
+                      label: '$tTitle ($tCat • $tQs Questions)',
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setDialogState(() {
+                        selectedTestId = val;
+                        final match = availableTests.firstWhere(
+                          (t) => t['id']?.toString() == val,
+                        );
+                        previewQuestionCount =
+                            (match['total_questions'] as num?)?.toInt() ?? 0;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 14),
+
+                // Info Box
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        color: Color(0xFF5636F5),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Selected test: "${selectedTest['title']}"\nQuestions to copy: $previewQuestionCount questions',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Color(0xFF1E293B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Replace vs Append Checkbox
+                CheckboxListTile(
+                  value: replaceExisting,
+                  onChanged: (val) =>
+                      setDialogState(() => replaceExisting = val ?? false),
+                  title: const Text(
+                    'Replace existing questions in this test',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: const Text(
+                    'If checked, current questions will be removed before copying.',
+                    style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: const Color(0xFF5636F5),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _copyQuestionsFromTest({
+    required String sourceTestId,
+    required String sourceTestTitle,
+    required bool replaceExisting,
+  }) async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final sourceQuestionsData = await client
+          .from('questions')
+          .select()
+          .eq('test_id', sourceTestId)
+          .order('question_number', ascending: true);
+
+      if (sourceQuestionsData.isEmpty) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('No questions found in "$sourceTestTitle" to copy.'),
+              backgroundColor: const Color(0xFFFF9F0A),
+            ),
+          );
+        }
+        return;
+      }
+
+      if (replaceExisting) {
+        await client.from('questions').delete().eq('test_id', widget.item.id);
+        _questions.clear();
+      }
+
+      final startNum = _questions.length;
+      final payload = <Map<String, dynamic>>[];
+
+      for (int i = 0; i < sourceQuestionsData.length; i++) {
+        final original = Map<String, dynamic>.from(sourceQuestionsData[i]);
+        final newNum = startNum + i + 1;
+        original['id'] =
+            'q_${widget.item.id}_${DateTime.now().millisecondsSinceEpoch}_$newNum';
+        original['test_id'] = widget.item.id;
+        original['question_number'] = newNum;
+        original['created_at'] = DateTime.now().toUtc().toIso8601String();
+        payload.add(original);
+      }
+
+      await client.from('questions').upsert(payload);
+
+      await client.from('tests').update({
+        'total_questions': _questions.length + payload.length,
+      }).eq('id', widget.item.id);
+
+      await _loadQuestions();
+      widget.onQuestionsUpdated?.call();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Successfully copied ${payload.length} questions from "$sourceTestTitle"!',
+            ),
+            backgroundColor: const Color(0xFF10B981),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error copying questions: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to copy questions: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+  }
+
   void _openImportQuestionsDialog() {
     AppModalDialog.show(
       context: context,
@@ -352,6 +612,21 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
         OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            side: const BorderSide(color: Color(0xFF6366F1)),
+            foregroundColor: const Color(0xFF4F46E5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          icon: const Icon(Icons.copy_all_rounded, size: 16),
+          label: const Text(
+            'Add from Existing Test',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+          ),
+          onPressed: () => _openImportFromExistingTestDialog(),
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             side: const BorderSide(color: Color(0xFF10B981)),
             foregroundColor: const Color(0xFF059669),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -499,6 +774,17 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
                   icon: const Icon(Icons.post_add_rounded, size: 16),
                   label: const Text('Add Question', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                   onPressed: () => _openAddQuestionDialog(),
+                ),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF4F46E5),
+                    side: const BorderSide(color: Color(0xFF6366F1)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  ),
+                  icon: const Icon(Icons.copy_all_rounded, size: 16),
+                  label: const Text('Add Existing Test', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  onPressed: () => _openImportFromExistingTestDialog(),
                 ),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(

@@ -296,82 +296,480 @@ class _ContestsTabState extends State<ContestsTab> {
       context: context,
       builder: (ctx) => CreateLiveQuizDialog(
         initialItem: editItem,
-        onSave: (savedItem) async {
-          final isEditing = editItem != null;
+        onSave: (savedItem) async => _saveQuiz(savedItem, editItem != null),
+        onSaveWithSource: (savedItem, sourceTestId) async =>
+            _saveQuiz(savedItem, editItem != null, sourceTestId: sourceTestId),
+      ),
+    );
+  }
 
-          final now = DateTime.now();
-          final localStart = savedItem.startTime.toLocal();
-          final localEnd = localStart.add(Duration(minutes: savedItem.durationMinutes));
+  Future<void> _saveQuiz(
+    LiveQuizItem savedItem,
+    bool isEditing, {
+    String? sourceTestId,
+  }) async {
+    final now = DateTime.now();
+    final localStart = savedItem.startTime.toLocal();
+    final localEnd = localStart.add(Duration(minutes: savedItem.durationMinutes));
 
-          LiveQuizStatus finalStatus = savedItem.status;
-          if (finalStatus != LiveQuizStatus.draft) {
-            if (now.isBefore(localStart)) {
-              finalStatus = LiveQuizStatus.scheduled;
-            } else if (now.isAfter(localEnd)) {
-              finalStatus = LiveQuizStatus.completed;
-            } else {
-              finalStatus = LiveQuizStatus.liveNow;
+    LiveQuizStatus finalStatus = savedItem.status;
+    if (finalStatus != LiveQuizStatus.draft) {
+      if (now.isBefore(localStart)) {
+        finalStatus = LiveQuizStatus.scheduled;
+      } else if (now.isAfter(localEnd)) {
+        finalStatus = LiveQuizStatus.completed;
+      } else {
+        finalStatus = LiveQuizStatus.liveNow;
+      }
+    }
+
+    final updatedItem = savedItem.copyWith(
+      startTime: localStart,
+      status: finalStatus,
+    );
+
+    setState(() {
+      final idx = _allQuizzes.indexWhere((q) => q.id == updatedItem.id);
+      if (idx >= 0) {
+        _allQuizzes[idx] = updatedItem;
+      } else {
+        _allQuizzes.insert(0, updatedItem);
+      }
+    });
+
+    // Supabase Persistence
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      try {
+        final payload = {
+          'title': updatedItem.title,
+          'syllabus': updatedItem.description,
+          'category_id': updatedItem.category,
+          'duration_minutes': updatedItem.durationMinutes,
+          'total_questions': updatedItem.questionsCount,
+          'entry_fee_coins': updatedItem.entryFeeCoins,
+          'prize_pool_coins': updatedItem.rewardCoins,
+          'is_tournament': false, // Strictly false for Live Quiz!
+          'test_mode': 'mock',
+          'status': updatedItem.status == LiveQuizStatus.draft ? 'draft' : 'published',
+          'scheduled_start_time': updatedItem.startTime.toUtc().toIso8601String(),
+          'scheduled_end_time': updatedItem.startTime
+              .add(Duration(minutes: updatedItem.durationMinutes))
+              .toUtc()
+              .toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        };
+
+        if (isEditing) {
+          await client.from('tests').update(payload).eq('id', updatedItem.id);
+        } else {
+          payload['id'] = updatedItem.id;
+          payload['total_participants'] = 0;
+          payload['created_at'] = DateTime.now().toUtc().toIso8601String();
+          await client.from('tests').insert(payload);
+
+          // Copy questions from source test if selected (just like in tournament!)
+          if (sourceTestId != null && sourceTestId.isNotEmpty) {
+            final sourceQs = await client
+                .from('questions')
+                .select()
+                .eq('test_id', sourceTestId)
+                .order('question_number', ascending: true);
+
+            if (sourceQs.isNotEmpty) {
+              final qPayload = <Map<String, dynamic>>[];
+              for (int i = 0; i < sourceQs.length; i++) {
+                final original = Map<String, dynamic>.from(sourceQs[i]);
+                original['id'] =
+                    'q_lq_${updatedItem.id}_${DateTime.now().millisecondsSinceEpoch}_${i + 1}';
+                original['test_id'] = updatedItem.id;
+                original['question_number'] = i + 1;
+                original['created_at'] = DateTime.now().toUtc().toIso8601String();
+                qPayload.add(original);
+              }
+              await client.from('questions').upsert(qPayload);
+              await client.from('tests').update({
+                'total_questions': qPayload.length,
+              }).eq('id', updatedItem.id);
+
+              final inMemIdx = _allQuizzes.indexWhere((q) => q.id == updatedItem.id);
+              if (inMemIdx >= 0) {
+                setState(() {
+                  _allQuizzes[inMemIdx] = _allQuizzes[inMemIdx].copyWith(
+                    questionsCount: qPayload.length,
+                  );
+                });
+              }
             }
           }
+        }
+      } catch (e) {
+        debugPrint('Supabase live quiz save error: $e');
+      }
+    }
 
-          final updatedItem = savedItem.copyWith(
-            startTime: localStart,
-            status: finalStatus,
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isEditing
+                ? 'Live Quiz updated in database!'
+                : (sourceTestId != null
+                    ? 'Live Quiz created & questions copied from existing test!'
+                    : 'Live Quiz created & synced with database!'),
+          ),
+          backgroundColor: const Color(0xFF10B981),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openAddExistingTestDialog() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Database client not connected.')),
+      );
+      return;
+    }
+
+    List<Map<String, dynamic>> availableTests = [];
+    try {
+      final res = await client
+          .from('tests')
+          .select('id, title, category_id, total_questions, duration_minutes, test_mode')
+          .order('created_at', ascending: false)
+          .limit(100);
+      availableTests = List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      debugPrint('Error loading existing tests for live quiz: $e');
+    }
+
+    if (!mounted) return;
+
+    if (availableTests.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No existing tests found in database to import from.'),
+          backgroundColor: Color(0xFFFF9F0A),
+        ),
+      );
+      return;
+    }
+
+    String? selectedTestId = availableTests.first['id']?.toString();
+    final initialTest = availableTests.first;
+    final titleController = TextEditingController(
+      text: '${initialTest['title']} (Live Showdown)',
+    );
+    final durationController = TextEditingController(
+      text: (initialTest['duration_minutes'] ?? 45).toString(),
+    );
+    final entryFeeController = TextEditingController(text: '0');
+    final rewardsController = TextEditingController(text: '1500');
+
+    DateTime scheduleTime = DateTime.now().add(const Duration(hours: 2));
+
+    await AppModalDialog.show(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final selectedTest = availableTests.firstWhere(
+            (t) => t['id']?.toString() == selectedTestId,
+            orElse: () => availableTests.first,
           );
 
-          setState(() {
-            final idx = _allQuizzes.indexWhere((q) => q.id == updatedItem.id);
-            if (idx >= 0) {
-              _allQuizzes[idx] = updatedItem;
-            } else {
-              _allQuizzes.insert(0, updatedItem);
-            }
-          });
-
-          // Supabase Persistence
-          final client = SupabaseConfig.clientSafe;
-          if (client != null) {
-            try {
-              final payload = {
-                'title': updatedItem.title,
-                'syllabus': updatedItem.description,
-                'category_id': updatedItem.category,
-                'duration_minutes': updatedItem.durationMinutes,
-                'total_questions': updatedItem.questionsCount,
-                'entry_fee_coins': updatedItem.entryFeeCoins,
-                'prize_pool_coins': updatedItem.rewardCoins,
-                'is_tournament': false, // Strictly false for Live Quiz!
-                'test_mode': 'mock',
-                'status': updatedItem.status == LiveQuizStatus.draft ? 'draft' : 'published',
-                'scheduled_start_time': updatedItem.startTime.toUtc().toIso8601String(),
-                'scheduled_end_time': updatedItem.startTime.add(Duration(minutes: updatedItem.durationMinutes)).toUtc().toIso8601String(),
-                'updated_at': DateTime.now().toUtc().toIso8601String(),
-              };
-
-              if (isEditing) {
-                await client.from('tests').update(payload).eq('id', updatedItem.id);
-              } else {
-                payload['id'] = updatedItem.id;
-                payload['total_participants'] = 0;
-                payload['created_at'] = DateTime.now().toUtc().toIso8601String();
-                await client.from('tests').insert(payload);
-              }
-            } catch (e) {
-              debugPrint('Supabase live quiz save error: $e');
-            }
-          }
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(isEditing ? 'Live Quiz updated in database!' : 'Live Quiz created & synced with database!'),
-                backgroundColor: const Color(0xFF10B981),
+          return AppModalDialog(
+            title: 'Add Existing Test as Live Quiz',
+            subtitle: 'Turn any existing test into a scheduled Live Quiz showdown with questions',
+            iconData: Icons.podcasts_rounded,
+            maxWidth: 560,
+            actions: [
+              AppModalDialog.cancelButton(ctx),
+              AppModalDialog.primaryButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await _createLiveQuizFromExistingTest(
+                    sourceTest: selectedTest,
+                    customTitle: titleController.text.trim(),
+                    startTime: scheduleTime,
+                    durationMins: int.tryParse(durationController.text.trim()) ?? 45,
+                    entryFee: int.tryParse(entryFeeController.text.trim()) ?? 0,
+                    rewardCoins: int.tryParse(rewardsController.text.trim()) ?? 1500,
+                  );
+                },
+                child: const Text(
+                  'Schedule Live Quiz Now',
+                  style: TextStyle(
+                    fontFamily: AppTypography.fontHeading,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.5,
+                  ),
+                ),
               ),
-            );
-          }
+            ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Select Existing Test Dropdown
+                const Text(
+                  'Select Existing Test to Clone *',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
+                ),
+                const SizedBox(height: 6),
+                AppDropdown<String>(
+                  value: selectedTestId,
+                  items: availableTests.map((t) {
+                    final tId = t['id']?.toString() ?? '';
+                    final tTitle = t['title']?.toString() ?? 'Untitled';
+                    final tCat = t['category_id']?.toString() ?? 'General';
+                    final tQs = (t['total_questions'] as num?)?.toInt() ?? 0;
+                    return AppDropdownItem<String>(
+                      value: tId,
+                      label: '$tTitle ($tCat • $tQs Questions)',
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setDialogState(() {
+                        selectedTestId = val;
+                        final match = availableTests.firstWhere((t) => t['id']?.toString() == val);
+                        titleController.text = '${match['title']} (Live Showdown)';
+                        durationController.text = (match['duration_minutes'] ?? 45).toString();
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 14),
+
+                // Title
+                AppModalDialog.textField(
+                  controller: titleController,
+                  hint: 'Live Quiz Title *',
+                ),
+                const SizedBox(height: 12),
+
+                // Date & Time Picker
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppDatePicker(
+                        label: 'Date',
+                        value: scheduleTime,
+                        firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        onChanged: (d) {
+                          setDialogState(() {
+                            scheduleTime = DateTime(
+                              d.year,
+                              d.month,
+                              d.day,
+                              scheduleTime.hour,
+                              scheduleTime.minute,
+                            );
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AppTimePicker(
+                        label: 'Time',
+                        value: TimeOfDay.fromDateTime(scheduleTime),
+                        onChanged: (t) {
+                          setDialogState(() {
+                            scheduleTime = DateTime(
+                              scheduleTime.year,
+                              scheduleTime.month,
+                              scheduleTime.day,
+                              t.hour,
+                              t.minute,
+                            );
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Duration, Entry Fee & Reward
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppModalDialog.textField(
+                        controller: durationController,
+                        keyboardType: TextInputType.number,
+                        hint: 'Duration (45)',
+                        suffixText: 'min',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: AppModalDialog.textField(
+                        controller: entryFeeController,
+                        keyboardType: TextInputType.number,
+                        hint: 'Entry (0=Free)',
+                        suffixText: 'Entry',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: AppModalDialog.textField(
+                        controller: rewardsController,
+                        keyboardType: TextInputType.number,
+                        hint: 'Prize (1500)',
+                        suffixText: 'Coins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // Info Box
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF86EFAC)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'All ${(selectedTest['total_questions'] as num?)?.toInt() ?? 0} questions from "${selectedTest['title']}" will be copied into this live quiz.',
+                          style: const TextStyle(fontSize: 11.5, color: Color(0xFF166534), fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
         },
       ),
     );
+  }
+
+  Future<void> _createLiveQuizFromExistingTest({
+    required Map<String, dynamic> sourceTest,
+    required String customTitle,
+    required DateTime startTime,
+    required int durationMins,
+    required int entryFee,
+    required int rewardCoins,
+  }) async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+
+    final sourceTestId = sourceTest['id']?.toString() ?? '';
+    final newId = 'lq-${DateTime.now().millisecondsSinceEpoch}';
+    final category = sourceTest['category_id']?.toString() ?? 'General';
+    final localStart = startTime.toLocal();
+    final localEnd = localStart.add(Duration(minutes: durationMins));
+    final now = DateTime.now();
+
+    LiveQuizStatus status = LiveQuizStatus.scheduled;
+    if (now.isAfter(localStart) && now.isBefore(localEnd)) {
+      status = LiveQuizStatus.liveNow;
+    } else if (now.isAfter(localEnd)) {
+      status = LiveQuizStatus.completed;
+    }
+
+    final newQuiz = LiveQuizItem(
+      id: newId,
+      title: customTitle.isNotEmpty ? customTitle : '${sourceTest['title']} (Live Showdown)',
+      description: 'Live competitive quiz showdown based on ${sourceTest['title']}.',
+      category: category,
+      status: status,
+      startTime: localStart,
+      durationMinutes: durationMins,
+      questionsCount: (sourceTest['total_questions'] as num?)?.toInt() ?? 25,
+      participantsCount: 0,
+      rewardCoins: rewardCoins,
+      entryFeeCoins: entryFee,
+    );
+
+    setState(() {
+      _allQuizzes.insert(0, newQuiz);
+    });
+
+    try {
+      // 1. Insert live quiz into tests
+      await client.from('tests').insert({
+        'id': newId,
+        'title': newQuiz.title,
+        'syllabus': newQuiz.description,
+        'category_id': newQuiz.category,
+        'duration_minutes': durationMins,
+        'total_questions': newQuiz.questionsCount,
+        'entry_fee_coins': entryFee,
+        'prize_pool_coins': rewardCoins,
+        'is_tournament': false,
+        'test_mode': 'mock',
+        'status': 'published',
+        'scheduled_start_time': localStart.toUtc().toIso8601String(),
+        'scheduled_end_time': localEnd.toUtc().toIso8601String(),
+        'total_participants': 0,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      // 2. Copy questions from source test
+      if (sourceTestId.isNotEmpty) {
+        final sourceQs = await client
+            .from('questions')
+            .select()
+            .eq('test_id', sourceTestId)
+            .order('question_number', ascending: true);
+
+        if (sourceQs.isNotEmpty) {
+          final qPayload = <Map<String, dynamic>>[];
+          for (int i = 0; i < sourceQs.length; i++) {
+            final original = Map<String, dynamic>.from(sourceQs[i]);
+            original['id'] = 'q_lq_${newId}_${DateTime.now().millisecondsSinceEpoch}_${i + 1}';
+            original['test_id'] = newId;
+            original['question_number'] = i + 1;
+            original['created_at'] = DateTime.now().toUtc().toIso8601String();
+            qPayload.add(original);
+          }
+          await client.from('questions').upsert(qPayload);
+          await client.from('tests').update({
+            'total_questions': qPayload.length,
+          }).eq('id', newId);
+
+          final inMemIdx = _allQuizzes.indexWhere((q) => q.id == newId);
+          if (inMemIdx >= 0) {
+            setState(() {
+              _allQuizzes[inMemIdx] = _allQuizzes[inMemIdx].copyWith(
+                questionsCount: qPayload.length,
+              );
+            });
+          }
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✓ Live Quiz scheduled and questions copied from "${sourceTest['title']}"!'),
+            backgroundColor: const Color(0xFF10B981),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error creating live quiz from existing test: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFEF4444)),
+        );
+      }
+    }
   }
 
   void _openScheduleDialog() {
@@ -712,6 +1110,7 @@ class _ContestsTabState extends State<ContestsTab> {
                       child: LiveQuizQuickActions(
                         height: 124,
                         onCreateLiveQuiz: () => _openCreateDialog(),
+                        onAddExistingTest: _openAddExistingTestDialog,
                         onScheduleQuiz: _openScheduleDialog,
                         onManageQuestions: () {
                           if (_allQuizzes.isNotEmpty) {
@@ -745,6 +1144,7 @@ class _ContestsTabState extends State<ContestsTab> {
                 LiveQuizQuickActions(
                   height: 124,
                   onCreateLiveQuiz: () => _openCreateDialog(),
+                  onAddExistingTest: _openAddExistingTestDialog,
                   onScheduleQuiz: _openScheduleDialog,
                   onManageQuestions: () {
                     if (_allQuizzes.isNotEmpty) {
@@ -815,6 +1215,7 @@ class _ContestsTabState extends State<ContestsTab> {
                         onAnalytics: _openLiveNowDashboard,
                         onEdit: (item) => _openCreateDialog(editItem: item),
                         onManageQuestions: _openManageQuestions,
+                        onAddExistingTest: _openAddExistingTestDialog,
                         onMore: _showMoreContextMenu,
                       ),
                     ),
@@ -878,6 +1279,7 @@ class _ContestsTabState extends State<ContestsTab> {
                   onAnalytics: _openLiveNowDashboard,
                   onEdit: (item) => _openCreateDialog(editItem: item),
                   onManageQuestions: _openManageQuestions,
+                  onAddExistingTest: _openAddExistingTestDialog,
                   onMore: _showMoreContextMenu,
                 ),
                 const SizedBox(height: 14),

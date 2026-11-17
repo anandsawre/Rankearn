@@ -5,6 +5,7 @@ import 'package:design_system/design_system.dart';
 /// Uses the centralized QuickActionsCard from the design system at fixed height: 124.
 class LiveQuizQuickActions extends StatelessWidget {
   final VoidCallback onCreateLiveQuiz;
+  final VoidCallback? onAddExistingTest;
   final VoidCallback onScheduleQuiz;
   final VoidCallback onManageQuestions;
   final VoidCallback onLiveNowDashboard;
@@ -16,6 +17,7 @@ class LiveQuizQuickActions extends StatelessWidget {
   const LiveQuizQuickActions({
     super.key,
     required this.onCreateLiveQuiz,
+    this.onAddExistingTest,
     required this.onScheduleQuiz,
     required this.onManageQuestions,
     required this.onLiveNowDashboard,
@@ -39,6 +41,14 @@ class LiveQuizQuickActions extends StatelessWidget {
           cardColor: const Color(0xFFF3F0FF),
           onTap: onCreateLiveQuiz,
         ),
+        if (onAddExistingTest != null)
+          QuickActionItemData(
+            label: 'Add Existing\nTest',
+            icon: Icons.copy_all_rounded,
+            iconColor: const Color(0xFF2587F8),
+            cardColor: const Color(0xFFEFF6FF),
+            onTap: onAddExistingTest!,
+          ),
         QuickActionItemData(
           label: 'Schedule\nQuiz',
           icon: Icons.schedule_rounded,

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:data_layer/data_layer.dart';
 import '../models/live_quiz_item.dart';
 
 class CreateLiveQuizDialog extends StatefulWidget {
   final LiveQuizItem? initialItem;
   final Function(LiveQuizItem) onSave;
+  final void Function(LiveQuizItem item, String? sourceTestId)? onSaveWithSource;
 
   const CreateLiveQuizDialog({
     super.key,
     this.initialItem,
     required this.onSave,
+    this.onSaveWithSource,
   });
 
   @override
@@ -28,6 +31,9 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
   DateTime _startTime = DateTime.now().add(const Duration(hours: 2));
   LiveQuizStatus _status = LiveQuizStatus.scheduled;
 
+  List<Map<String, dynamic>> _availableSourceTests = [];
+  String? _selectedSourceTestId;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +48,27 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
       _category = item.category;
       _startTime = item.startTime;
       _status = item.status;
+    }
+
+    _loadAvailableSourceTests();
+  }
+
+  Future<void> _loadAvailableSourceTests() async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) return;
+    try {
+      final res = await client
+          .from('tests')
+          .select('id, title, category_id, total_questions, duration_minutes')
+          .order('created_at', ascending: false)
+          .limit(100);
+      if (mounted) {
+        setState(() {
+          _availableSourceTests = List<Map<String, dynamic>>.from(res);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading source tests for live quiz: $e');
     }
   }
 
@@ -91,7 +118,11 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
       entryFeeCoins: entryFee,
     );
 
-    widget.onSave(newItem);
+    if (widget.onSaveWithSource != null) {
+      widget.onSaveWithSource!(newItem, _selectedSourceTestId);
+    } else {
+      widget.onSave(newItem);
+    }
     Navigator.of(context).pop();
   }
 
@@ -280,6 +311,102 @@ class _CreateLiveQuizDialogState extends State<CreateLiveQuizDialog> {
                 ),
               ],
             ),
+
+            // Copy Questions From Existing Test (Optional)
+            if (!isEdit) ...[
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceSubtle,
+                  borderRadius: AppRadii.cardSubtle,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.copy_all_rounded,
+                          size: 16,
+                          color: AppModalDialog.defaultPrimaryColor,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Copy Questions from Existing Test (Optional)',
+                            style: AppTypography.titleSmall.copyWith(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Select an existing test or mock set to automatically populate questions for this live quiz.',
+                      style: AppTypography.bodySmall.copyWith(
+                        fontSize: 11,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    AppDropdown<String?>(
+                      value: _selectedSourceTestId,
+                      items: [
+                        const AppDropdownItem(
+                          value: null,
+                          label: 'None (Blank quiz - add questions later)',
+                        ),
+                        ..._availableSourceTests.map((t) {
+                          final tId = t['id']?.toString() ?? '';
+                          final tTitle = t['title']?.toString() ?? 'Test';
+                          final tCat = t['category_id']?.toString() ?? 'General';
+                          final tQs = (t['total_questions'] as num?)?.toInt() ?? 0;
+                          return AppDropdownItem<String?>(
+                            value: tId,
+                            label: '$tTitle ($tCat • $tQs Questions)',
+                          );
+                        }),
+                      ],
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedSourceTestId = val;
+                          if (val != null) {
+                            final match = _availableSourceTests.firstWhere(
+                              (t) => t['id']?.toString() == val,
+                              orElse: () => {},
+                            );
+                            if (match.isNotEmpty) {
+                              final srcTitle = match['title']?.toString();
+                              if (srcTitle != null && srcTitle.isNotEmpty &&
+                                  (_titleController.text.trim().isEmpty || _titleController.text.trim().contains('Live Showdown'))) {
+                                _titleController.text = '$srcTitle (Live Showdown)';
+                              }
+                              final srcQs = (match['total_questions'] as num?)?.toInt();
+                              if (srcQs != null && srcQs > 0) {
+                                _questionsController.text = srcQs.toString();
+                              }
+                              final srcDur = (match['duration_minutes'] as num?)?.toInt();
+                              if (srcDur != null && srcDur > 0) {
+                                _durationController.text = srcDur.toString();
+                              }
+                              final srcCat = match['category_id']?.toString();
+                              if (srcCat != null && srcCat.isNotEmpty) {
+                                _category = srcCat;
+                              }
+                            }
+                          }
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

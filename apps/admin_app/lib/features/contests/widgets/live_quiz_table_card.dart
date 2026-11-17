@@ -26,6 +26,7 @@ class LiveQuizTableCard extends StatefulWidget {
   final Function(LiveQuizItem)? onManageQuestions;
   final Function(LiveQuizItem) onMore;
   final VoidCallback? onFiltersTap;
+  final VoidCallback? onAddExistingTest;
 
   const LiveQuizTableCard({
     super.key,
@@ -50,6 +51,7 @@ class LiveQuizTableCard extends StatefulWidget {
     this.onManageQuestions,
     required this.onMore,
     this.onFiltersTap,
+    this.onAddExistingTest,
   });
 
   @override
@@ -106,6 +108,25 @@ class _LiveQuizTableCardState extends State<LiveQuizTableCard> {
           onRowsPerPageChanged: widget.onRowsPerPageChanged,
           itemLabel: 'live quizzes',
           columnSpacing: dynamicColumnSpacing,
+          headerActions: widget.onAddExistingTest != null
+              ? [
+                  ElevatedButton.icon(
+                    onPressed: widget.onAddExistingTest,
+                    icon: const Icon(Icons.copy_all_rounded, size: 14),
+                    label: const Text(
+                      'Add Existing Test',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF5636F5),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      elevation: 0,
+                    ),
+                  ),
+                ]
+              : null,
           filterControls: [
             AdminTableDropdown(
               value: widget.selectedStatus,
