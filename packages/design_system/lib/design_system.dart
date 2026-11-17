@@ -50,6 +50,7 @@ export 'components/display/tests_hero_banner.dart';
 export 'components/cards/test_metric_card.dart';
 export 'components/navigation/test_type_navigation.dart';
 export 'components/cards/subject_selection_card.dart';
+export 'components/cards/exam_category_card.dart';
 export 'components/cards/test_category_card.dart';
 export 'components/cards/test_promo_card.dart';
 export 'components/cards/live_contest_card.dart';

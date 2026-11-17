@@ -32,7 +32,7 @@ void main() {
       expect(find.text('Rankearn'), findsWidgets);
       expect(find.text('Start Learning'), findsOneWidget);
       expect(find.text('Mock Tests'), findsOneWidget);
-      expect(find.text('Explore by Subject'), findsOneWidget);
+      expect(find.text('Explore by Exam'), findsOneWidget);
     });
   }
 }

@@ -58,9 +58,9 @@ void main() {
       expect(find.text('Continue Learning'), findsOneWidget);
       expect(find.text("Today's Goal"), findsOneWidget);
 
-      // Verify Explore by Subject
-      expect(find.text('Explore by Subject'), findsOneWidget);
-      expect(find.text('Mathematics'), findsOneWidget);
+      // Verify Explore by Exam
+      expect(find.text('Explore by Exam'), findsOneWidget);
+      expect(find.text('All Exams'), findsOneWidget);
 
       // Verify Daily Challenge & Upcoming Live Tests
       expect(find.text('Daily Challenge'), findsOneWidget);

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'widgets/live_poll_card.dart';
+import '../tests/screens/all_exams_screen.dart';
+import '../tests/screens/exam_tests_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final UserProfile profile;
@@ -47,6 +49,8 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   IncompleteTestModel? _incompleteTest;
   List<TestModel> _popularTests = [];
+  List<TestModel> _allTests = [];
+  List<ExamCategoryModel> _examCategories = [];
   List<TestModel> _tournaments = [];
   List<CategoryModel> _liveCategories = [];
   List<BannerModel> _activeBanners = [];
@@ -79,6 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final testsRes = await TestsRepository().getTests();
     final tourRes = await ContestsRepository().getTournaments();
     final catRes = await TestsRepository().getCategories();
+    final examRes = await TestsRepository().getExamCategoryList();
     final bannersRes = await BannersRepository().getActiveBanners(displayMode: 'home_carousel');
     final stats = await TestsRepository().getUserStats(widget.profile.id);
     final lbRes = await ContestsRepository().getLeaderboardUsers(limit: 8);
@@ -90,6 +95,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _userStats = stats;
       _incompleteTest = incomplete;
       if (testsRes is Success<List<TestModel>>) {
+        _allTests = testsRes.data;
         // Exclude active / upcoming live tests and tournaments from normal popular tests list
         _popularTests = testsRes.data
             .where(
@@ -101,6 +107,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   !t.isUpcoming,
             )
             .toList();
+      }
+      if (examRes is Success<List<ExamCategoryModel>> && examRes.data.isNotEmpty) {
+        _examCategories = examRes.data;
       }
       if (tourRes is Success<List<TestModel>>) {
         _tournaments = tourRes.data;
@@ -179,6 +188,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       widget.onStartTest();
     }
+  }
+
+  void _openExam(ExamCategoryModel exam) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ExamTestsScreen(
+          exam: exam,
+          allTests: _allTests,
+          allCategories: _liveCategories,
+          onStartTest: (t) => _triggerStartTest(t),
+          userCoins: widget.profile.coins,
+        ),
+      ),
+    );
+  }
+
+  void _openAllExams() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AllExamsScreen(
+          examCategories: _examCategories,
+          allTests: _allTests,
+          allCategories: _liveCategories,
+          onStartTest: (t) => _triggerStartTest(t),
+          userCoins: widget.profile.coins,
+        ),
+      ),
+    );
   }
 
   static bool _hasShownLaunchPopup = false;
@@ -334,7 +371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 24),
                       _buildContinueLearningOnlySection(),
                       const SizedBox(height: 24),
-                      _buildExploreBySubjectSection(),
+                      _buildExploreByExamSection(),
                       const SizedBox(height: 24),
                       _buildPromotionalBannersSection(),
                       const SizedBox(height: 32),
@@ -392,7 +429,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 20),
               _buildContinueLearningAndGoalSection(),
               const SizedBox(height: 22),
-              _buildExploreBySubjectSection(),
+              _buildExploreByExamSection(),
               const SizedBox(height: 22),
               _buildPromotionalBannersSection(),
               const SizedBox(height: 22),
@@ -547,37 +584,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Color _resolveCategoryColor(String hex, [Color fallback = const Color(0xFF2587F8)]) {
-    try {
-      final clean = hex.replaceAll('#', '').trim();
-      if (clean.length == 6) {
-        return Color(int.parse('FF$clean', radix: 16));
-      }
-      return fallback;
-    } catch (_) {
-      return fallback;
-    }
-  }
-
-  // --- 5. Explore by Subject ---
-  Widget _buildExploreBySubjectSection() {
-    final List<({String title, String count, IconData icon, Color accent, Color bg})> subjects;
-
-    if (_liveCategories.isNotEmpty) {
-      subjects = _liveCategories.map((c) {
-        final accent = _resolveCategoryColor(c.iconColor);
-        final countText = c.totalQuestions > 0 ? '${c.totalQuestions}+ Qs' : 'Practice Qs';
-        return (
-          title: c.name,
-          count: countText,
-          icon: _resolveCategoryIcon(c.iconName),
-          accent: accent,
-          bg: accent.withAlpha(20),
-        );
-      }).toList();
-    } else {
-      subjects = [];
-    }
+  // --- 5. Explore by Exam ---
+  Widget _buildExploreByExamSection() {
+    final exams = _examCategories.isNotEmpty
+        ? _examCategories
+        : const [
+            ExamCategoryModel(
+              id: 'bpsc',
+              name: 'BPSC & State PCS',
+              normalizedName: 'bpsc',
+              iconUrl: '🏛️',
+              totalTests: 35,
+              totalMocks: 15,
+              totalSectional: 20,
+            ),
+            ExamCategoryModel(
+              id: 'ssc',
+              name: 'SSC CGL & CHSL',
+              normalizedName: 'ssc',
+              iconUrl: '📋',
+              totalTests: 45,
+              totalMocks: 20,
+              totalSectional: 25,
+            ),
+            ExamCategoryModel(
+              id: 'upsc',
+              name: 'UPSC Civil Services',
+              normalizedName: 'upsc',
+              iconUrl: '🇮🇳',
+              totalTests: 25,
+              totalMocks: 10,
+              totalSectional: 15,
+            ),
+            ExamCategoryModel(
+              id: 'railway',
+              name: 'RRB NTPC & Group D',
+              normalizedName: 'railway',
+              iconUrl: '🚆',
+              totalTests: 30,
+              totalMocks: 12,
+              totalSectional: 18,
+            ),
+            ExamCategoryModel(
+              id: 'banking',
+              name: 'Banking & Insurance',
+              normalizedName: 'banking',
+              iconUrl: '🏦',
+              totalTests: 28,
+              totalMocks: 14,
+              totalSectional: 14,
+            ),
+          ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -597,7 +654,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     child: const Center(
                       child: Icon(
-                        Icons.grid_view_rounded,
+                        Icons.school_rounded,
                         color: AppColors.brandBlue,
                         size: 16,
                       ),
@@ -606,7 +663,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(width: 8),
                   const Flexible(
                     child: Text(
-                      'Explore by Subject',
+                      'Explore by Exam',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -619,7 +676,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             InkWell(
-              onTap: widget.onExploreTests,
+              onTap: _openAllExams,
               child: Row(
                 children: const [
                   Text(
@@ -641,53 +698,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        if (subjects.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: const Center(
-              child: Text(
-                'No subject categories available right now.',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              ExamCategoryCard(
+                index: 0,
+                id: 'all',
+                name: 'All Exams',
+                badgeText: 'All Tests',
+                onTap: _openAllExams,
               ),
-            ),
-          )
-        else
-          SizedBox(
-            height: 148,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: subjects.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final sub = subjects[index];
-                return SubjectCard(
-                  title: sub.title,
-                  questionCount: sub.count,
-                  icon: sub.icon,
-                  accentColor: sub.accent,
-                  backgroundColor: sub.bg,
-                  onTap: () {
-                    if (widget.onFilterSubject != null) {
-                      widget.onFilterSubject!(sub.title.replaceAll('\n', ' '));
-                    } else {
-                      widget.onExploreTests();
-                    }
-                  },
-                );
-              },
-            ),
+              const SizedBox(width: 10),
+              for (int i = 0; i < exams.length; i++) ...[
+                ExamCategoryCard(
+                  index: i + 1,
+                  id: exams[i].id,
+                  name: exams[i].name,
+                  badgeText: exams[i].totalMocks > 0 || exams[i].totalSectional > 0
+                      ? '${exams[i].totalMocks} Mock • ${exams[i].totalSectional} Sec'
+                      : '${exams[i].totalTests} Tests',
+                  onTap: () => _openExam(exams[i]),
+                ),
+                const SizedBox(width: 10),
+              ],
+            ],
           ),
+        ),
       ],
     );
   }
