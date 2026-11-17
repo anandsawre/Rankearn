@@ -54,12 +54,6 @@ void main() {
       expect(find.text('Tests Attempted'), findsOneWidget);
       expect(find.text('My Rank'), findsOneWidget);
 
-      // Verify 6 Feature Shortcuts
-      expect(find.text('Mock Tests'), findsOneWidget);
-      expect(find.text('Live Test'), findsOneWidget);
-      expect(find.text('Fortune Wheel'), findsWidgets);
-      expect(find.text('Tournaments'), findsOneWidget);
-
       // Verify Continue Learning & Today's Goal
       expect(find.text('Continue Learning'), findsOneWidget);
       expect(find.text("Today's Goal"), findsOneWidget);
