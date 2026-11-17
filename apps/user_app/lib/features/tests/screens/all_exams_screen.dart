@@ -426,22 +426,44 @@ class _AllExamsScreenState extends State<AllExamsScreen> {
     required bool isDesktop,
     required bool isTablet,
   }) {
-    final crossAxisCount = isDesktop ? 4 : (isTablet ? 3 : 2);
-    final childAspectRatio = isDesktop ? 1.05 : (isTablet ? 0.95 : 0.88);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final int crossAxisCount;
+        final double childAspectRatio;
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: exams.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: childAspectRatio,
-      ),
-      itemBuilder: (context, index) {
-        final exam = exams[index];
-        return _buildExamCard(exam: exam, index: index);
+        if (width >= 1200) {
+          crossAxisCount = 7;
+          childAspectRatio = 0.84;
+        } else if (width >= 960) {
+          crossAxisCount = 5;
+          childAspectRatio = 0.84;
+        } else if (width >= 720) {
+          crossAxisCount = 4;
+          childAspectRatio = 0.84;
+        } else if (width >= 460) {
+          crossAxisCount = 3;
+          childAspectRatio = 0.82;
+        } else {
+          crossAxisCount = 3;
+          childAspectRatio = 0.78;
+        }
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: exams.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: width >= 600 ? 14 : 10,
+            mainAxisSpacing: width >= 600 ? 14 : 10,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemBuilder: (context, index) {
+            final exam = exams[index];
+            return _buildExamCard(exam: exam, index: index);
+          },
+        );
       },
     );
   }
@@ -476,156 +498,170 @@ class _AllExamsScreenState extends State<AllExamsScreen> {
         .length;
     final displaySec = actualSec > 0 ? actualSec : exam.totalSectional;
 
-    return InkWell(
-      onTap: () => _openExam(exam),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [palette.bg, palette.bgEnd],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: palette.border.withValues(alpha: 0.6)),
-          boxShadow: [
-            BoxShadow(
-              color: palette.accent.withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    final badgeText = '$displayMocks Mock • $displaySec Sec';
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [palette.bg, palette.bgEnd],
         ),
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Top Row: Icon + Badge
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: palette.border.withValues(alpha: 0.65),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: palette.accent.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _openExam(exam),
+            child: Stack(
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: palette.accent.withValues(alpha: 0.15),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                // Background Design 1: Top-Right Decorative Glow Circle
+                Positioned(
+                  top: -16,
+                  right: -16,
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: palette.accent.withValues(alpha: 0.16),
+                    ),
                   ),
-                  child: Center(
+                ),
+                // Background Design 2: Top-Right Concentric Ring
+                Positioned(
+                  top: -26,
+                  right: -26,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: palette.accent.withValues(alpha: 0.18),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                // Background Design 3: Bottom-Right Tilted Watermark Icon
+                Positioned(
+                  bottom: -8,
+                  right: -8,
+                  child: Transform.rotate(
+                    angle: -0.15,
                     child: Icon(
                       iconData,
-                      size: 22,
-                      color: palette.accent,
+                      size: 54,
+                      color: palette.accent.withValues(alpha: 0.18),
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: palette.accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                // Background Design 4: Bottom-Left Soft White Highlight Bubble
+                Positioned(
+                  bottom: -20,
+                  left: -20,
+                  child: Container(
+                    width: 55,
+                    height: 55,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.65),
+                    ),
                   ),
-                  child: Text(
-                    '${displayMocks + displaySec} Tests',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: palette.accent,
+                ),
+                // Foreground Content
+                SizedBox.expand(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Top white rounded icon container
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(13),
+                            boxShadow: [
+                              BoxShadow(
+                                color: palette.accent.withValues(alpha: 0.18),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            iconData,
+                            color: palette.accent,
+                            size: 23,
+                          ),
+                        ),
+                        // Exam Name & Badge Pill
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              exam.name,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12.5,
+                                color: Color(0xFF1E293B),
+                                height: 1.2,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 5),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.88),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: palette.border.withValues(alpha: 0.5),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Text(
+                                badgeText,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF475569),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
-
-            // Middle: Exam Name
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  exam.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                    height: 1.25,
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                // Badges row
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: [
-                    _buildPillBadge(
-                      label: '$displayMocks Mocks',
-                      color: const Color(0xFF059669),
-                      bg: const Color(0xFFECFDF5),
-                    ),
-                    _buildPillBadge(
-                      label: '$displaySec Sectional',
-                      color: const Color(0xFF2563EB),
-                      bg: const Color(0xFFEFF6FF),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            // Bottom CTA
-            Row(
-              children: [
-                Text(
-                  'Explore Series',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    color: palette.accent,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 13,
-                  color: palette.accent,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPillBadge({
-    required String label,
-    required Color color,
-    required Color bg,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 9.5,
-          fontWeight: FontWeight.w700,
-          color: color,
+          ),
         ),
       ),
     );
