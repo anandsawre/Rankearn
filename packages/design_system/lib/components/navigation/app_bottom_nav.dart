@@ -57,7 +57,6 @@ class AppBottomNav extends StatelessWidget {
       (UserNavTab.battle, Icons.sports_kabaddi_rounded, 'Battle'),
       (UserNavTab.tournament, Icons.emoji_events_rounded, 'Tournament'),
       (UserNavTab.rewards, Icons.card_giftcard_rounded, 'Rewards'),
-      (UserNavTab.profile, Icons.person_outline_rounded, 'Profile'),
     ];
 
     final leaderboardItems = [
