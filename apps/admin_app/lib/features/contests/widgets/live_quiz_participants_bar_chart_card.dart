@@ -8,8 +8,8 @@ class DailyParticipantsData {
   const DailyParticipantsData({required this.dateLabel, required this.count});
 }
 
-/// Participants Trend (Last 7 Days) Card
-/// Bar chart card matching the reference image.
+/// Participants Trend Card
+/// Bar chart card showing real participant metrics or clean empty state.
 class LiveQuizParticipantsBarChartCard extends StatelessWidget {
   final VoidCallback? onViewAll;
   final List<DailyParticipantsData> dailyData;
@@ -17,15 +17,7 @@ class LiveQuizParticipantsBarChartCard extends StatelessWidget {
   const LiveQuizParticipantsBarChartCard({
     super.key,
     this.onViewAll,
-    this.dailyData = const [
-      DailyParticipantsData(dateLabel: 'Oct 12', count: 1200),
-      DailyParticipantsData(dateLabel: 'Oct 13', count: 1850),
-      DailyParticipantsData(dateLabel: 'Oct 14', count: 2400),
-      DailyParticipantsData(dateLabel: 'Oct 15', count: 3100),
-      DailyParticipantsData(dateLabel: 'Oct 16', count: 3900),
-      DailyParticipantsData(dateLabel: 'Oct 17', count: 3300),
-      DailyParticipantsData(dateLabel: 'Oct 18', count: 4100),
-    ],
+    this.dailyData = const [],
   });
 
   @override
@@ -66,7 +58,7 @@ class LiveQuizParticipantsBarChartCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
-                        'Participants Trend (Last 7 Days)',
+                        'Participants Trend',
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -79,60 +71,75 @@ class LiveQuizParticipantsBarChartCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
-              InkWell(
-                onTap: onViewAll,
-                child: const Text(
-                  'View All',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF5636F5),
+              if (onViewAll != null) ...[
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: onViewAll,
+                  child: const Text(
+                    'View All',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF5636F5),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
 
-          // Bar Chart with Y-Axis and 7 Bars
-          SizedBox(
-            height: 90,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Y-Axis Labels
-                const Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('4K', style: TextStyle(fontSize: 8, color: AppColors.textMuted)),
-                    Text('3K', style: TextStyle(fontSize: 8, color: AppColors.textMuted)),
-                    Text('2K', style: TextStyle(fontSize: 8, color: AppColors.textMuted)),
-                    Text('1K', style: TextStyle(fontSize: 8, color: AppColors.textMuted)),
-                    Text('0', style: TextStyle(fontSize: 8, color: AppColors.textMuted)),
-                  ],
-                ),
-                const SizedBox(width: 8),
-
-                // Bars Row
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: dailyData.map((d) => Expanded(child: _buildBar(d))).toList(),
+          // Bar Chart with Y-Axis or Empty State
+          if (dailyData.isEmpty)
+            const SizedBox(
+              height: 90,
+              child: Center(
+                child: Text(
+                  'No participant activity recorded yet',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
                   ),
                 ),
-              ],
+              ),
+            )
+          else ...[
+            SizedBox(
+              height: 90,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Y-Axis Labels
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: const [
+                      Text('Max', style: TextStyle(fontSize: 8, color: AppColors.textMuted)),
+                      Text('0', style: TextStyle(fontSize: 8, color: AppColors.textMuted)),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Bars Row
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: dailyData.map((d) => Expanded(child: _buildBar(d))).toList(),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildBar(DailyParticipantsData data) {
-    const maxVal = 4500.0;
-    final normalized = (data.count / maxVal).clamp(0.08, 1.0);
+    final maxCount = dailyData.map((d) => d.count).fold<int>(1, (a, b) => a > b ? a : b);
+    final normalized = (data.count / maxCount).clamp(0.08, 1.0);
     const chartHeight = 68.0;
 
     return Column(
@@ -168,9 +175,9 @@ class LiveQuizParticipantsBarChartCard extends StatelessWidget {
         Text(
           data.dateLabel,
           style: const TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+            fontSize: 8.5,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textMuted,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

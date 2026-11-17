@@ -55,6 +55,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   StreamSubscription<List<CategoryModel>>? _categoriesSub;
   Timer? _ticker;
 
+  List<
+    ({String title, String questionCount, IconData icon, Color color, Color bg})
+  > _subjects = [];
+
   Map<String, dynamic> _userStats = {};
   List<BannerModel> _testBanners = [];
   StreamSubscription<List<BannerModel>>? _bannersSub;
@@ -167,8 +171,110 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     _upcomingAndLiveTests = active;
   }
 
+  IconData _resolveCategoryIcon(String iconName) {
+    switch (iconName.toLowerCase()) {
+      case 'science':
+        return Icons.science_rounded;
+      case 'calculate':
+      case 'mathematics':
+      case 'math':
+        return Icons.calculate_rounded;
+      case 'psychology':
+      case 'reasoning':
+        return Icons.psychology_rounded;
+      case 'menu_book':
+        return Icons.menu_book_rounded;
+      case 'newspaper':
+      case 'current affairs':
+        return Icons.newspaper_rounded;
+      case 'biotech':
+      case 'biology':
+        return Icons.biotech_rounded;
+      case 'eco':
+        return Icons.eco_rounded;
+      case 'school':
+        return Icons.school_rounded;
+      case 'assignment':
+        return Icons.assignment_rounded;
+      case 'public':
+        return Icons.public_rounded;
+      case 'history':
+      case 'auto_stories':
+        return Icons.auto_stories_rounded;
+      case 'code':
+        return Icons.code_rounded;
+      default:
+        return Icons.school_rounded;
+    }
+  }
+
+  Color _resolveCategoryColor(
+    String hex, [
+    Color fallback = const Color(0xFF2587F8),
+  ]) {
+    try {
+      final clean = hex.replaceAll('#', '').trim();
+      if (clean.length == 6) {
+        return Color(int.parse('FF$clean', radix: 16));
+      }
+      return fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
   void _applyCategories([List<CategoryModel>? categories]) {
-    // Categories loaded
+    final source = categories ?? _allCategories;
+    if (source.isEmpty) return;
+
+    final filtered = (_selectedExamId == null || _selectedExamId == 'all')
+        ? source
+        : source
+              .where(
+                (c) =>
+                    c.examCategoryId != null &&
+                    (c.examCategoryId!.toLowerCase() ==
+                            _selectedExamId!.toLowerCase() ||
+                        c.examCategoryId == _selectedExamId),
+              )
+              .toList();
+
+    final targetList = filtered.isNotEmpty ? filtered : source;
+
+    final mapped = targetList.map((c) {
+      final accent = _resolveCategoryColor(c.iconColor);
+      final countText = c.totalQuestions > 0
+          ? '${c.totalQuestions}+ Qs'
+          : (c.topics.isNotEmpty
+                ? '${c.topics.length} Chapters'
+                : 'Practice Qs');
+      return (
+        title: c.name,
+        questionCount: countText,
+        icon: _resolveCategoryIcon(c.iconName),
+        color: accent,
+        bg: accent.withValues(alpha: 0.1),
+      );
+    }).toList();
+
+    setState(() {
+      _subjects = mapped;
+    });
+  }
+
+  void _onSelectSubject(String title) {
+    setState(() {
+      if (_selectedSubject == title) {
+        _selectedSubject = null;
+        _selectedCategory = null;
+      } else {
+        _selectedSubject = title;
+        _selectedCategory = _allCategories.cast<CategoryModel?>().firstWhere(
+          (c) => c != null && c.name.toLowerCase() == title.toLowerCase(),
+          orElse: () => null,
+        );
+      }
+    });
   }
 
   void _openExamScreen(ExamCategoryModel exam) {
@@ -905,9 +1011,13 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
                       // 3. Exam Category Selector (Level 1 Drill-Down)
                       _buildExamCategorySelector(isDesktop, isTablet),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
-                      // 4. Filtered Tests Catalog List (Recommended Tests)
+                      // 4. Select Subject Section
+                      _buildSelectSubjectSection(),
+                      const SizedBox(height: 22),
+
+                      // 5. Filtered Tests Catalog List (Recommended Tests)
                       _buildFilteredCatalogSection(),
                       const SizedBox(height: 28),
 
@@ -979,7 +1089,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               _buildUpcomingTestsSection(),
               const SizedBox(height: 20),
 
-              // 5. Filtered Tests Catalog List (Recommended Tests)
+              // 5. Select Subject Section
+              _buildSelectSubjectSection(),
+              const SizedBox(height: 22),
+
+              // 6. Filtered Tests Catalog List (Recommended Tests)
               _buildFilteredCatalogSection(),
               const SizedBox(height: 24),
 
@@ -2466,6 +2580,91 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
         testSeriesBanner,
         const SizedBox(height: 12),
         createTestBanner,
+      ],
+    );
+  }
+
+  // --- 4. Select Subject Section ---
+  Widget _buildSelectSubjectSection() {
+    if (_subjects.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: const [
+                Icon(
+                  Icons.grid_view_rounded,
+                  color: Color(0xFF2587F8),
+                  size: 19,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'Select Subject',
+                  style: TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _selectedSubject = null;
+                  _selectedCategory = null;
+                });
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Text(
+                    'View All',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF2587F8),
+                    ),
+                  ),
+                  SizedBox(width: 2),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: Color(0xFF2587F8),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              for (int i = 0; i < _subjects.length; i++) ...[
+                if (i > 0) const SizedBox(width: 12),
+                SubjectSelectionCard(
+                  title: _subjects[i].title,
+                  questionCount: _subjects[i].questionCount,
+                  icon: _subjects[i].icon,
+                  accentColor: _subjects[i].color,
+                  backgroundColor: _subjects[i].bg,
+                  index: i,
+                  width: 116,
+                  height: 144,
+                  isSelected: _selectedSubject == _subjects[i].title,
+                  onTap: () => _onSelectSubject(_subjects[i].title),
+                ),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }

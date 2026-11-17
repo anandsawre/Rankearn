@@ -66,7 +66,7 @@ class _ContestsTabState extends State<ContestsTab> {
     if (client == null) {
       if (mounted) {
         setState(() {
-          _allQuizzes = LiveQuizItem.sampleItems;
+          _allQuizzes = [];
           _isLoading = false;
         });
       }
@@ -141,14 +141,14 @@ class _ContestsTabState extends State<ContestsTab> {
 
         if (mounted) {
           setState(() {
-            _allQuizzes = loaded.isNotEmpty ? loaded : LiveQuizItem.sampleItems;
+            _allQuizzes = loaded;
             _isLoading = false;
           });
         }
       } else {
         if (mounted) {
           setState(() {
-            _allQuizzes = LiveQuizItem.sampleItems;
+            _allQuizzes = [];
             _isLoading = false;
           });
         }
@@ -157,7 +157,7 @@ class _ContestsTabState extends State<ContestsTab> {
       debugPrint('Error loading quizzes from Supabase: $e');
       if (mounted) {
         setState(() {
-          _allQuizzes = LiveQuizItem.sampleItems;
+          _allQuizzes = [];
           _isLoading = false;
         });
       }
@@ -678,20 +678,12 @@ class _ContestsTabState extends State<ContestsTab> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // Dynamic metrics
-    final totalLiveQuiz = _allQuizzes.length > 20 ? _allQuizzes.length : 128;
-    final totalParticipants = _allQuizzes.length > 20
-        ? _allQuizzes.fold<int>(0, (acc, q) => acc + q.participantsCount)
-        : 24892;
-    final completedQuiz = _allQuizzes.length > 20
-        ? _allQuizzes.where((q) => q.computedStatus == LiveQuizStatus.completed).length
-        : 106;
-    final ongoingQuiz = _allQuizzes.length > 20
-        ? _allQuizzes.where((q) => q.computedStatus == LiveQuizStatus.liveNow || q.computedStatus == LiveQuizStatus.ongoing).length
-        : 3;
-    final totalRewards = _allQuizzes.length > 20
-        ? _allQuizzes.fold<int>(0, (acc, q) => acc + q.rewardCoins)
-        : 12450;
+    // Genuine dynamic metrics from loaded database records
+    final totalLiveQuiz = _allQuizzes.length;
+    final totalParticipants = _allQuizzes.fold<int>(0, (acc, q) => acc + q.participantsCount);
+    final completedQuiz = _allQuizzes.where((q) => q.computedStatus == LiveQuizStatus.completed).length;
+    final ongoingQuiz = _allQuizzes.where((q) => q.computedStatus == LiveQuizStatus.liveNow || q.computedStatus == LiveQuizStatus.ongoing).length;
+    final totalRewards = _allQuizzes.fold<int>(0, (acc, q) => acc + q.rewardCoins);
 
     final categorySlices = _calculateCategorySlices();
     final recentActivities = _generateRecentActivities();
@@ -729,9 +721,15 @@ class _ContestsTabState extends State<ContestsTab> {
                           }
                         },
                         onLiveNowDashboard: () {
+                          if (_allQuizzes.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('No live quizzes found. Create or schedule one first.')),
+                            );
+                            return;
+                          }
                           final liveItem = _allQuizzes.firstWhere(
                             (q) => q.status == LiveQuizStatus.liveNow,
-                            orElse: () => _allQuizzes.isNotEmpty ? _allQuizzes.first : LiveQuizItem.sampleItems.first,
+                            orElse: () => _allQuizzes.first,
                           );
                           _openLiveNowDashboard(liveItem);
                         },
@@ -830,47 +828,13 @@ class _ContestsTabState extends State<ContestsTab> {
                         children: [
                           LiveQuizCategoryDonutCard(
                             totalCount: totalLiveQuiz,
-                            slices: categorySlices.isNotEmpty
-                                ? categorySlices
-                                : const [
-                                    DonutSlice(label: 'Railway', percentage: 22, color: Color(0xFF2587F8), count: 28),
-                                    DonutSlice(label: 'General Science', percentage: 18, color: Color(0xFF6B4EFF), count: 23),
-                                    DonutSlice(label: 'Mathematics', percentage: 15, color: Color(0xFFF04483), count: 19),
-                                    DonutSlice(label: 'Current Affairs', percentage: 14, color: Color(0xFFFF9F0A), count: 18),
-                                    DonutSlice(label: 'Reasoning', percentage: 12, color: Color(0xFF00C48C), count: 15),
-                                    DonutSlice(label: 'Biology', percentage: 10, color: Color(0xFF10B981), count: 13),
-                                    DonutSlice(label: 'Mixed', percentage: 9, color: Color(0xFFFBC531), count: 12),
-                                  ],
+                            slices: categorySlices,
                           ),
                           const SizedBox(height: 12),
                           const LiveQuizParticipantsBarChartCard(),
                           const SizedBox(height: 12),
                           LiveQuizRecentActivityCard(
-                            activities: recentActivities.isNotEmpty
-                                ? recentActivities
-                                : const [
-                                    LiveQuizActivityItem(
-                                      icon: Icons.play_arrow_rounded,
-                                      iconColor: Color(0xFF10B981),
-                                      iconBgColor: Color(0xFFDCFCE7),
-                                      title: 'Live quiz started: Current Affairs Live Quiz',
-                                      timeAgo: '10 minutes ago',
-                                    ),
-                                    LiveQuizActivityItem(
-                                      icon: Icons.people_alt_rounded,
-                                      iconColor: Color(0xFF2587F8),
-                                      iconBgColor: Color(0xFFEFF6FF),
-                                      title: '500 new participants joined',
-                                      timeAgo: '25 minutes ago',
-                                    ),
-                                    LiveQuizActivityItem(
-                                      icon: Icons.emoji_events_rounded,
-                                      iconColor: Color(0xFFFF9F0A),
-                                      iconBgColor: Color(0xFFFFFBEB),
-                                      title: 'Live quiz completed: General Science',
-                                      timeAgo: '1 hour ago',
-                                    ),
-                                  ],
+                            activities: recentActivities,
                           ),
                         ],
                       ),
@@ -919,18 +883,13 @@ class _ContestsTabState extends State<ContestsTab> {
                 const SizedBox(height: 14),
                 LiveQuizCategoryDonutCard(
                   totalCount: totalLiveQuiz,
-                  slices: categorySlices.isNotEmpty
-                      ? categorySlices
-                      : const [
-                          DonutSlice(label: 'Railway', percentage: 22, color: Color(0xFF2587F8), count: 28),
-                          DonutSlice(label: 'General Science', percentage: 18, color: Color(0xFF6B4EFF), count: 23),
-                        ],
+                  slices: categorySlices,
                 ),
                 const SizedBox(height: 12),
                 const LiveQuizParticipantsBarChartCard(),
                 const SizedBox(height: 12),
                 LiveQuizRecentActivityCard(
-                  activities: recentActivities.isNotEmpty ? recentActivities : const [],
+                  activities: recentActivities,
                 ),
               ],
             ],

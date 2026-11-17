@@ -26,43 +26,7 @@ class LiveQuizRecentActivityCard extends StatelessWidget {
   const LiveQuizRecentActivityCard({
     super.key,
     this.onViewAll,
-    this.activities = const [
-      LiveQuizActivityItem(
-        icon: Icons.play_arrow_rounded,
-        iconColor: Color(0xFF10B981),
-        iconBgColor: Color(0xFFDCFCE7),
-        title: 'Live quiz started: Current Affairs Live Quiz',
-        timeAgo: '10 minutes ago',
-      ),
-      LiveQuizActivityItem(
-        icon: Icons.people_alt_rounded,
-        iconColor: Color(0xFF2587F8),
-        iconBgColor: Color(0xFFEFF6FF),
-        title: '500 new participants joined',
-        timeAgo: '25 minutes ago',
-      ),
-      LiveQuizActivityItem(
-        icon: Icons.emoji_events_rounded,
-        iconColor: Color(0xFFFF9F0A),
-        iconBgColor: Color(0xFFFFFBEB),
-        title: 'Live quiz completed: General Science',
-        timeAgo: '1 hour ago',
-      ),
-      LiveQuizActivityItem(
-        icon: Icons.edit_note_rounded,
-        iconColor: Color(0xFF6C5CE7),
-        iconBgColor: Color(0xFFF3F0FF),
-        title: 'Quiz updated: RRB Technician Mega Quiz',
-        timeAgo: '2 hours ago',
-      ),
-      LiveQuizActivityItem(
-        icon: Icons.calendar_today_rounded,
-        iconColor: Color(0xFFF04483),
-        iconBgColor: Color(0xFFFFF1F2),
-        title: 'New quiz scheduled: Maths Challenge',
-        timeAgo: '3 hours ago',
-      ),
-    ],
+    this.activities = const [],
   });
 
   @override
@@ -133,9 +97,24 @@ class LiveQuizRecentActivityCard extends StatelessWidget {
           const SizedBox(height: 10),
 
           // Activity Items List
-          Column(
-            children: activities.map((item) => _buildItem(item)).toList(),
-          ),
+          if (activities.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'No recent live quiz activity yet',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            )
+          else
+            Column(
+              children: activities.map((item) => _buildItem(item)).toList(),
+            ),
         ],
       ),
     );
