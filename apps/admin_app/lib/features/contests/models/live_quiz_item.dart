@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../tests/models/test_series_item.dart';
 
 enum LiveQuizStatus {
   liveNow,
@@ -231,6 +232,34 @@ class LiveQuizItem {
       case LiveQuizStatus.draft:
         return const Color(0xFFCBD5E1);
     }
+  }
+
+  TestSeriesItem toTestSeriesItem() {
+    return TestSeriesItem(
+      id: id,
+      title: title,
+      description: description,
+      subject: category,
+      examCategoryId: category.toLowerCase(),
+      testMode: 'mock',
+      totalTests: 1,
+      durationMinutes: durationMinutes,
+      totalQuestions: questionsCount,
+      negativeMarking: 0.25,
+      isPremium: entryFeeCoins > 0,
+      priceInr: entryFeeCoins,
+      isTournament: false,
+      entryFeeCoins: entryFeeCoins,
+      scheduledStartTime: startTime,
+      scheduledEndTime: startTime.add(Duration(minutes: durationMinutes)),
+      enrollments: participantsCount,
+      status: status == LiveQuizStatus.draft
+          ? TestSeriesStatus.draft
+          : TestSeriesStatus.published,
+      createdAt: startTime,
+      icon: Icons.podcasts_rounded,
+      iconColor: const Color(0xFF5636F5),
+    );
   }
 
   static List<LiveQuizItem> get sampleItems {

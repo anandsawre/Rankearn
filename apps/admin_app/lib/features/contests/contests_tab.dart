@@ -14,6 +14,7 @@ import 'dialogs/create_live_quiz_dialog.dart';
 import 'dialogs/schedule_quiz_dialog.dart';
 import 'dialogs/live_now_dashboard_dialog.dart';
 import 'dialogs/view_live_quiz_dialog.dart';
+import '../tests/dialogs/view_test_questions_dialog.dart';
 
 /// Pixel-Accurate Live Quiz Management Tab
 /// Completely integrated with centralized design system tokens and Supabase.
@@ -278,6 +279,18 @@ class _ContestsTabState extends State<ContestsTab> {
   }
 
   // --- Dialog Handlers with Supabase CRUD ---
+  void _openManageQuestions(LiveQuizItem item) {
+    AppModalDialog.show(
+      context: context,
+      builder: (ctx) => ViewTestQuestionsDialog(
+        item: item.toTestSeriesItem(),
+        onQuestionsUpdated: () {
+          _loadQuizzes();
+        },
+      ),
+    );
+  }
+
   void _openCreateDialog({LiveQuizItem? editItem}) {
     AppModalDialog.show(
       context: context,
@@ -563,6 +576,14 @@ class _ContestsTabState extends State<ContestsTab> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.quiz_outlined, color: Color(0xFF5636F5)),
+              title: const Text('Manage Questions'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _openManageQuestions(item);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.copy_rounded, color: Color(0xFF5636F5)),
               title: const Text('Duplicate Live Quiz'),
               onTap: () async {
@@ -701,12 +722,10 @@ class _ContestsTabState extends State<ContestsTab> {
                         onCreateLiveQuiz: () => _openCreateDialog(),
                         onScheduleQuiz: _openScheduleDialog,
                         onManageQuestions: () {
-                          if (widget.onManageQuestions != null) {
+                          if (_allQuizzes.isNotEmpty) {
+                            _openManageQuestions(_allQuizzes.first);
+                          } else if (widget.onManageQuestions != null) {
                             widget.onManageQuestions!();
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Opening Question Bank management...')),
-                            );
                           }
                         },
                         onLiveNowDashboard: () {
@@ -730,12 +749,10 @@ class _ContestsTabState extends State<ContestsTab> {
                   onCreateLiveQuiz: () => _openCreateDialog(),
                   onScheduleQuiz: _openScheduleDialog,
                   onManageQuestions: () {
-                    if (widget.onManageQuestions != null) {
+                    if (_allQuizzes.isNotEmpty) {
+                      _openManageQuestions(_allQuizzes.first);
+                    } else if (widget.onManageQuestions != null) {
                       widget.onManageQuestions!();
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Opening Question Bank management...')),
-                      );
                     }
                   },
                   onLiveNowDashboard: () {
@@ -799,6 +816,7 @@ class _ContestsTabState extends State<ContestsTab> {
                         onView: _openViewDialog,
                         onAnalytics: _openLiveNowDashboard,
                         onEdit: (item) => _openCreateDialog(editItem: item),
+                        onManageQuestions: _openManageQuestions,
                         onMore: _showMoreContextMenu,
                       ),
                     ),
@@ -895,6 +913,7 @@ class _ContestsTabState extends State<ContestsTab> {
                   onView: _openViewDialog,
                   onAnalytics: _openLiveNowDashboard,
                   onEdit: (item) => _openCreateDialog(editItem: item),
+                  onManageQuestions: _openManageQuestions,
                   onMore: _showMoreContextMenu,
                 ),
                 const SizedBox(height: 14),

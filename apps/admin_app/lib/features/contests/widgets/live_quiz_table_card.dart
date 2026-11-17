@@ -23,6 +23,7 @@ class LiveQuizTableCard extends StatefulWidget {
   final Function(LiveQuizItem) onView;
   final Function(LiveQuizItem) onAnalytics;
   final Function(LiveQuizItem) onEdit;
+  final Function(LiveQuizItem)? onManageQuestions;
   final Function(LiveQuizItem) onMore;
   final VoidCallback? onFiltersTap;
 
@@ -46,6 +47,7 @@ class LiveQuizTableCard extends StatefulWidget {
     required this.onView,
     required this.onAnalytics,
     required this.onEdit,
+    this.onManageQuestions,
     required this.onMore,
     this.onFiltersTap,
   });
@@ -493,6 +495,15 @@ class _LiveQuizTableCardState extends State<LiveQuizTableCard> {
                         onTap: () => widget.onEdit(item),
                       ),
                       const SizedBox(width: 4),
+                      if (widget.onManageQuestions != null) ...[
+                        AdminTableActionButton(
+                          icon: Icons.quiz_outlined,
+                          tooltip: 'Manage Questions',
+                          color: AppColors.brandPurple,
+                          onTap: () => widget.onManageQuestions!(item),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
                       AdminTableActionButton(
                         icon: Icons.more_vert_rounded,
                         tooltip: 'More',
