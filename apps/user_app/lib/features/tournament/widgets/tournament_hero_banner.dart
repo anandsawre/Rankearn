@@ -53,8 +53,8 @@ class TournamentHeroBanner extends StatelessWidget {
           // Main Banner Content
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? AppSpacing.xxxl : 18,
-              vertical: isDesktop ? 28 : 18,
+              horizontal: isDesktop ? AppSpacing.xxxl : 14,
+              vertical: isDesktop ? 28 : 16,
             ),
             child: Row(
               children: [
@@ -105,7 +105,7 @@ class TournamentHeroBanner extends StatelessWidget {
                             ? AppTypography.contestHeroTitleDesktop
                             : AppTypography.contestHeroTitleMobile,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 5),
 
                       // Subtitle
                       Text(
@@ -115,43 +115,47 @@ class TournamentHeroBanner extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: isDesktop ? 13.5 : 12,
+                          fontSize: isDesktop ? 13.5 : 11.5,
                           color: Colors.white.withValues(alpha: 0.88),
-                          height: 1.35,
+                          height: 1.3,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(height: isDesktop ? 16 : 12),
+                      SizedBox(height: isDesktop ? 16 : 10),
 
-                      // Explore Button
+                      // Explore Button (Guaranteed zero overflow)
                       InkWell(
                         onTap: onExploreTap,
                         borderRadius: AppRadii.borderPill,
                         child: Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: isDesktop ? 18 : 14,
-                            vertical: isDesktop ? 9 : 7,
+                            horizontal: isDesktop ? 18 : 12,
+                            vertical: isDesktop ? 9 : 6,
                           ),
                           decoration: const BoxDecoration(
                             color: AppColors.contestGold,
                             borderRadius: AppRadii.borderPill,
                             boxShadow: AppShadows.contestTag,
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                'Explore Tournaments',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF1E293B),
+                              Flexible(
+                                child: Text(
+                                  isDesktop ? 'Explore Tournaments' : 'Explore',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: isDesktop ? 13 : 11.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFF1E293B),
+                                  ),
                                 ),
                               ),
-                              SizedBox(width: 4),
-                              Icon(
+                              const SizedBox(width: 4),
+                              const Icon(
                                 Icons.arrow_forward_rounded,
-                                size: 14,
+                                size: 13,
                                 color: Color(0xFF1E293B),
                               ),
                             ],
@@ -162,32 +166,32 @@ class TournamentHeroBanner extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
 
                 // Right 3D Trophy Graphic Section
                 Expanded(
-                  flex: isDesktop ? 4 : 5,
+                  flex: isDesktop ? 4 : 4,
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: Container(
                       constraints: BoxConstraints(
-                        maxWidth: isDesktop ? 180 : 130,
-                        maxHeight: isDesktop ? 140 : 110,
+                        maxWidth: isDesktop ? 180 : 105,
+                        maxHeight: isDesktop ? 140 : 95,
                       ),
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
                           // Soft gold glow behind trophy
                           Container(
-                            width: isDesktop ? 110 : 80,
-                            height: isDesktop ? 110 : 80,
+                            width: isDesktop ? 110 : 70,
+                            height: isDesktop ? 110 : 70,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
                                   color: AppColors.contestGold.withValues(alpha: 0.35),
-                                  blurRadius: 32,
-                                  spreadRadius: 6,
+                                  blurRadius: 28,
+                                  spreadRadius: 4,
                                 ),
                               ],
                             ),
@@ -202,7 +206,7 @@ class TournamentHeroBanner extends StatelessWidget {
                               errorBuilder: (_, _, _) => const Icon(
                                 Icons.emoji_events_rounded,
                                 color: AppColors.contestGold,
-                                size: 80,
+                                size: 64,
                               ),
                             ),
                           ),

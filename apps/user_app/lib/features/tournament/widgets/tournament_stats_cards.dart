@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
-/// Responsive Statistics Cards Tokenized with Centralized Design System
+/// Responsive Statistics Cards Tokenized with Centralized Design System.
+/// - Desktop: Single row of 4 cards.
+/// - Mobile: Clean 2x2 grid displaying all 4 cards.
 class TournamentStatsCards extends StatelessWidget {
   final bool isDesktop;
   final int activeCount;
@@ -66,25 +68,51 @@ class TournamentStatsCards extends StatelessWidget {
       );
     }
 
-    // Mobile: 2 Cards Row
-    return Row(
+    // Mobile: 2x2 Grid displaying all 4 cards
+    return Column(
       children: [
-        Expanded(
-          child: _buildMobileCard(
-            icon: Icons.emoji_events_rounded,
-            iconBgColor: AppColors.contestCoinAmber,
-            title: 'Active\nTournaments',
-            value: activeCount.toString(),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMobileCard(
+                icon: Icons.emoji_events_rounded,
+                iconBgColor: AppColors.contestCoinAmber,
+                title: 'Active Tournaments',
+                value: activeCount.toString(),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildMobileCard(
+                icon: Icons.people_alt_rounded,
+                iconBgColor: AppColors.contestBlue,
+                title: 'My Participation',
+                value: participationCount.toString(),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: _buildMobileCard(
-            icon: Icons.people_alt_rounded,
-            iconBgColor: AppColors.contestBlue,
-            title: 'My Participation',
-            value: participationCount.toString(),
-          ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMobileCard(
+                icon: Icons.workspace_premium_rounded,
+                iconBgColor: AppColors.contestPurple,
+                title: 'My Rank',
+                value: myRank,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildMobileCard(
+                icon: Icons.card_giftcard_rounded,
+                iconBgColor: AppColors.contestActiveGreen,
+                title: 'Total Rewards',
+                value: totalRewards,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -163,7 +191,7 @@ class TournamentStatsCards extends StatelessWidget {
     required String value,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.contestCardBg,
         borderRadius: AppRadii.contestCard,
@@ -173,16 +201,16 @@ class TournamentStatsCards extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: iconBgColor,
               borderRadius: AppRadii.contestThumbSm,
             ),
             alignment: Alignment.center,
-            child: Icon(icon, color: Colors.white, size: 20),
+            child: Icon(icon, color: Colors.white, size: 18),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,19 +218,21 @@ class TournamentStatsCards extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  maxLines: 2,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w600,
                     color: AppColors.contestTextSecondary,
-                    height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: AppColors.contestTextPrimary,
                   ),

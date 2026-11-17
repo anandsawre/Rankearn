@@ -370,15 +370,16 @@ class TournamentCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Badges Row
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                    // Badges Row (Wrap to prevent overflow on narrow screens)
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
                       children: [
                         // Running Tournament Pill
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 3.5,
+                            horizontal: 8,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF3E8FF),
@@ -389,28 +390,27 @@ class TournamentCard extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.emoji_events_rounded,
-                                size: 13,
+                                size: 12,
                                 color: Color(0xFF7C3AED),
                               ),
-                              SizedBox(width: 4),
+                              SizedBox(width: 3),
                               Text(
                                 'Running Tournament',
                                 style: TextStyle(
                                   color: Color(0xFF6D28D9),
-                                  fontSize: 11,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 6),
 
                         // Live Pill
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3.5,
+                            horizontal: 7,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFDCFCE7),
@@ -420,19 +420,19 @@ class TournamentCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                width: 6,
-                                height: 6,
+                                width: 5,
+                                height: 5,
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF16A34A),
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 3),
                               const Text(
                                 'Live',
                                 style: TextStyle(
                                   color: Color(0xFF15803D),
-                                  fontSize: 11,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -776,7 +776,7 @@ class TournamentCard extends StatelessWidget {
                   onTap: onParticipate,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF7C3AED), Color(0xFF6366F1)],
@@ -796,8 +796,8 @@ class TournamentCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          width: 20,
-                          height: 20,
+                          width: 18,
+                          height: 18,
                           decoration: const BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
@@ -806,10 +806,10 @@ class TournamentCard extends StatelessWidget {
                           child: const Icon(
                             Icons.play_arrow_rounded,
                             color: Color(0xFF7C3AED),
-                            size: 14,
+                            size: 13,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             isRegistered ? 'Play Quiz' : 'Participate Now',
@@ -817,7 +817,7 @@ class TournamentCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 12.5,
+                              fontSize: 12,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -826,7 +826,7 @@ class TournamentCard extends StatelessWidget {
                         const Icon(
                           Icons.chevron_right_rounded,
                           color: Colors.white,
-                          size: 16,
+                          size: 15,
                         ),
                       ],
                     ),
@@ -893,26 +893,27 @@ class TournamentCard extends StatelessWidget {
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 3),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: borderColor),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: iconColor, size: 18),
+            Icon(icon, color: iconColor, size: 16),
             const SizedBox(height: 3),
             Text(
               label,
               textAlign: TextAlign.center,
               maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 9.5,
+                fontSize: 9,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF0F172A),
-                height: 1.15,
+                height: 1.1,
               ),
             ),
           ],

@@ -79,6 +79,8 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                   widget.tournament.startsAt != null
                       ? 'Starts on ${widget.tournament.datesFormatted} • 10:00 AM'
                       : 'Starts on 25 Nov • 10:00 AM',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -86,38 +88,50 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.monetization_on_rounded,
-                      size: 13,
-                      color: AppColors.contestCoinAmber,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.monetization_on_rounded,
+                          size: 13,
+                          color: AppColors.contestCoinAmber,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          isFree ? 'Free' : '₹$entryFee',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: isFree
+                                ? AppColors.contestActiveGreen
+                                : AppColors.contestTextPrimary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 3),
-                    Text(
-                      isFree ? 'Free' : '₹$entryFee',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: isFree
-                            ? AppColors.contestActiveGreen
-                            : AppColors.contestTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(
-                      Icons.emoji_events_rounded,
-                      size: 13,
-                      color: AppColors.contestCoinAmber,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      prizePool,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.contestTextPrimary,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.emoji_events_rounded,
+                          size: 13,
+                          color: AppColors.contestCoinAmber,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          prizePool,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.contestTextPrimary,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
