@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 import 'screens/exam_tests_screen.dart';
+import 'screens/all_exams_screen.dart';
 import '../live/dialogs/contest_entry_dialog.dart';
 
 class TestSeriesScreen extends StatefulWidget {
@@ -281,6 +282,21 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           onStartTest: widget.onStartTest,
           allTests: _tests,
           allCategories: _allCategories,
+        ),
+      ),
+    );
+  }
+
+  void _openAllExamsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AllExamsScreen(
+          examCategories: _examCategories,
+          allTests: _tests,
+          allCategories: _allCategories,
+          userCoins: widget.userCoins,
+          onStartTest: widget.onStartTest,
         ),
       ),
     );
@@ -1253,18 +1269,28 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 ),
               ],
             ),
-            if (_selectedExamId != null)
-              InkWell(
-                onTap: () => _onSelectExam(null),
-                child: const Text(
-                  'View All Exams',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+            InkWell(
+              onTap: _openAllExamsScreen,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Text(
+                    'View All Exams',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                  SizedBox(width: 3),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 11,
                     color: Color(0xFF10B981),
                   ),
-                ),
+                ],
               ),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -1279,7 +1305,10 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 name: 'All Exams',
                 badgeText: 'All Tests',
                 isSelected: _selectedExamId == null || _selectedExamId == 'all',
-                onTap: () => _onSelectExam('all'),
+                onTap: () {
+                  _onSelectExam('all');
+                  _openAllExamsScreen();
+                },
               ),
               const SizedBox(width: 10),
               for (int i = 0; i < exams.length; i++) ...[
