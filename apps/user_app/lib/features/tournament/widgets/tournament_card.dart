@@ -29,15 +29,29 @@ class TournamentCard extends StatelessWidget {
         ? '₹${tournament.prizePoolInRupees.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}'
         : (tournament.winningRewardCoins > 0
             ? '${tournament.winningRewardCoins} Coins'
-            : '₹10,000');
+            : (tournament.entryFeeCoins > 0 ? '₹${tournament.entryFeeCoins * 10}' : 'Rewards Pool'));
 
-    // Calculate dates & progress percentage
+    // Real date & progress calculation without fake date subtraction
     final now = DateTime.now();
-    final start = tournament.startsAt ?? now.subtract(const Duration(days: 4));
-    final end = tournament.endsAt ?? now.add(const Duration(days: 5));
-    final totalDays = (end.difference(start).inDays).clamp(1, 365);
-    final passedDays = (now.difference(start).inDays + 1).clamp(1, totalDays);
-    final progress = (passedDays / totalDays).clamp(0.05, 1.0);
+    final start = tournament.startsAt;
+    final end = tournament.endsAt;
+    final int totalDays;
+    final int passedDays;
+    final double progress;
+
+    if (start != null && end != null) {
+      totalDays = (end.difference(start).inDays + 1).clamp(1, 365);
+      passedDays = (now.difference(start).inDays + 1).clamp(1, totalDays);
+      progress = (passedDays / totalDays).clamp(0.0, 1.0);
+    } else if (start != null) {
+      totalDays = 1;
+      passedDays = now.isAfter(start) ? 1 : 0;
+      progress = passedDays.toDouble();
+    } else {
+      totalDays = 1;
+      passedDays = 1;
+      progress = 1.0;
+    }
     final progressPercent = (progress * 100).round();
 
     // Desktop view: Original desktop layout preserved
@@ -186,9 +200,7 @@ class TournamentCard extends StatelessWidget {
                       ),
                       _buildMetaChip(
                         icon: Icons.group_rounded,
-                        text: tournament.totalParticipants > 0
-                            ? '${tournament.totalParticipants}+'
-                            : '12,480+',
+                        text: '${tournament.totalParticipants} Participants',
                       ),
                       _buildMetaChip(
                         icon: Icons.monetization_on_rounded,
@@ -327,15 +339,13 @@ class TournamentCard extends StatelessWidget {
   }) {
     final datesText = tournament.datesFormatted.isNotEmpty
         ? tournament.datesFormatted
-        : '10 – 20 Nov';
+        : 'Live Today';
 
-    final participantsCount = tournament.totalParticipants > 0
-        ? '${tournament.totalParticipants}+'
-        : '12,480+';
+    final participantsCount = '${tournament.totalParticipants}';
 
     final subtitle = (tournament.syllabus != null && tournament.syllabus!.isNotEmpty)
         ? tournament.syllabus!
-        : 'Test Your Preparation • Compete • Win Rewards';
+        : 'Compete • Live Ranking • Rewards';
 
     return Container(
       decoration: BoxDecoration(

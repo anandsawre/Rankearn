@@ -18,6 +18,8 @@ class AppFormatters {
     return buffer.toString().split('').reversed.join();
   }
 
+  static String formatNumber(int number) => formatCoins(number);
+
   static String formatRupees(num amount) {
     return '₹${amount.toStringAsFixed(2)}';
   }

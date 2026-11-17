@@ -27,10 +27,10 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
     final entryFee = widget.tournament.entryFeeCoins;
     final isFree = entryFee == 0;
     final prizePool = widget.tournament.prizePoolInRupees > 0
-        ? '₹${widget.tournament.prizePoolInRupees.toInt()}'
+        ? '₹${widget.tournament.prizePoolInRupees.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}'
         : (widget.tournament.winningRewardCoins > 0
             ? '${widget.tournament.winningRewardCoins} Coins'
-            : '₹5,000');
+            : (widget.tournament.entryFeeCoins > 0 ? '₹${widget.tournament.entryFeeCoins * 10}' : 'Rewards Pool'));
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -76,9 +76,11 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  widget.tournament.startsAt != null
-                      ? 'Starts on ${widget.tournament.datesFormatted} • 10:00 AM'
-                      : 'Starts on 25 Nov • 10:00 AM',
+                  widget.tournament.datesFormatted.isNotEmpty
+                      ? 'Starts: ${widget.tournament.datesFormatted}'
+                      : (widget.tournament.startsAt != null
+                          ? 'Starts: ${widget.tournament.startsAt!.day}/${widget.tournament.startsAt!.month}/${widget.tournament.startsAt!.year}'
+                          : 'Coming Soon'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

@@ -266,10 +266,20 @@ class _TournamentScreenState extends State<TournamentScreen> {
     final displayTournaments = _filteredTournaments;
     final topUpcoming = _upcomingTournaments.isNotEmpty
         ? _upcomingTournaments.first
-        : (_allTournaments.isNotEmpty ? _allTournaments.last : null);
+        : null;
 
-    final rankStr = _userStats['rank']?.toString() ?? '#1';
-    final streakDays = (_userStats['streakDays'] as num?)?.toInt() ?? 7;
+    final rankStr = _userStats['rank']?.toString() ?? '-';
+    final streakDays = (_userStats['streakDays'] as num?)?.toInt() ?? 0;
+    final completedToday = (_userStats['completedToday'] as num?)?.toInt() ?? 0;
+
+    // Real total prize pool across all contests
+    final totalPrizePool = _allTournaments.fold<int>(
+      0,
+      (sum, t) => sum + (t.prizePoolInRupees > 0 ? t.prizePoolInRupees.toInt() : (t.prizePoolCoins ~/ 20)),
+    );
+    final totalRewardsStr = totalPrizePool > 0
+        ? '₹${AppFormatters.formatNumber(totalPrizePool)}'
+        : '₹0';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,11 +305,10 @@ class _TournamentScreenState extends State<TournamentScreen> {
               // 2. Four Stats Cards
               TournamentStatsCards(
                 isDesktop: true,
-                activeCount: running.isNotEmpty ? running.length : 3,
-                participationCount:
-                    _registeredIds.isNotEmpty ? _registeredIds.length : 6,
+                activeCount: running.length,
+                participationCount: _registeredIds.length,
                 myRank: rankStr,
-                totalRewards: '₹2,500',
+                totalRewards: totalRewardsStr,
               ),
               const SizedBox(height: AppSpacing.contestItemGap),
 
@@ -388,7 +397,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             leaderboardUsers: _leaderboardUsers,
             upcomingTournament: topUpcoming,
             streakDays: streakDays,
-            completedToday: 3,
+            completedToday: completedToday,
             onViewAllRankers: () => TournamentLeaderboardDialog.show(
               context,
               leaderboardUsers: _leaderboardUsers,
@@ -404,6 +413,15 @@ class _TournamentScreenState extends State<TournamentScreen> {
     final running = _runningTournaments;
     final upcoming = _upcomingTournaments;
     final displayTournaments = _filteredTournaments;
+
+    final rankStr = _userStats['rank']?.toString() ?? '-';
+    final totalPrizePool = _allTournaments.fold<int>(
+      0,
+      (sum, t) => sum + (t.prizePoolInRupees > 0 ? t.prizePoolInRupees.toInt() : (t.prizePoolCoins ~/ 20)),
+    );
+    final totalRewardsStr = totalPrizePool > 0
+        ? '₹${AppFormatters.formatNumber(totalPrizePool)}'
+        : '₹0';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,10 +441,10 @@ class _TournamentScreenState extends State<TournamentScreen> {
         // 2. Two Stats Cards
         TournamentStatsCards(
           isDesktop: false,
-          activeCount: running.isNotEmpty ? running.length : 3,
-          participationCount: _registeredIds.isNotEmpty ? _registeredIds.length : 6,
-          myRank: _userStats['rank']?.toString() ?? '#1',
-          totalRewards: '₹2,500',
+          activeCount: running.length,
+          participationCount: _registeredIds.length,
+          myRank: rankStr,
+          totalRewards: totalRewardsStr,
         ),
         const SizedBox(height: 14),
 
@@ -590,10 +608,34 @@ class _TournamentScreenState extends State<TournamentScreen> {
             tournament: upcoming.first,
             isDesktop: false,
           )
-        else if (_allTournaments.isNotEmpty)
-          UpcomingTournamentCard(
-            tournament: _allTournaments.last,
-            isDesktop: false,
+        else
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            decoration: BoxDecoration(
+              color: AppColors.contestUpcomingBg,
+              borderRadius: AppRadii.contestShortcut,
+              border: Border.all(color: AppColors.contestUpcomingBorder),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.event_available_rounded,
+                  color: AppColors.contestPurple,
+                  size: 22,
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'No upcoming contests right now. Stay tuned for announcements!',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.contestTextSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
 
         const SizedBox(height: AppSpacing.xxl),

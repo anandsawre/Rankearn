@@ -36,11 +36,20 @@ class TournamentDetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final entryFee = tournament.entryFeeCoins;
     final isFree = entryFee == 0;
-    final prizePool = tournament.prizePoolInRupees > 0
-        ? '₹${tournament.prizePoolInRupees.toInt()}'
-        : (tournament.winningRewardCoins > 0
-            ? '${tournament.winningRewardCoins} Coins'
-            : '₹10,000');
+    final prizePoolNum = tournament.prizePoolInRupees > 0
+        ? tournament.prizePoolInRupees.toInt()
+        : 0;
+    final prizeCoins = tournament.winningRewardCoins;
+    final String prizePool;
+    if (prizePoolNum > 0) {
+      prizePool = '₹${AppFormatters.formatNumber(prizePoolNum)}';
+    } else if (prizeCoins > 0) {
+      prizePool = '$prizeCoins Coins';
+    } else if (entryFee > 0) {
+      prizePool = '₹${entryFee * 10}';
+    } else {
+      prizePool = 'Rewards Pool';
+    }
 
     return AppBottomSheet(
       showDragHandle: true,
@@ -108,9 +117,7 @@ class TournamentDetailsDialog extends StatelessWidget {
                     icon: Icons.group_rounded,
                     iconColor: const Color(0xFF10B981),
                     label: 'Participants',
-                    value: tournament.totalParticipants > 0
-                        ? '${tournament.totalParticipants}+'
-                        : '12,480+',
+                    value: '${tournament.totalParticipants}',
                   ),
                 ),
                 Container(
@@ -165,15 +172,7 @@ class TournamentDetailsDialog extends StatelessWidget {
               border: Border.all(color: AppColors.borderSubtle),
             ),
             child: Column(
-              children: [
-                _buildPrizeRow('Rank 1', '₹5,000', const Color(0xFFF59E0B), isFirst: true),
-                const Divider(color: AppColors.borderSubtle, height: 16),
-                _buildPrizeRow('Rank 2', '₹2,500', const Color(0xFF8B5CF6)),
-                const Divider(color: AppColors.borderSubtle, height: 16),
-                _buildPrizeRow('Rank 3', '₹1,500', const Color(0xFFB45309)),
-                const Divider(color: AppColors.borderSubtle, height: 16),
-                _buildPrizeRow('Rank 4 - 10', '₹100 each', AppColors.textSecondary),
-              ],
+              children: _buildPrizeBreakdown(prizePoolNum, prizeCoins, entryFee),
             ),
           ),
 
@@ -354,6 +353,48 @@ class TournamentDetailsDialog extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  List<Widget> _buildPrizeBreakdown(int rupees, int coins, int entryFee) {
+    if (rupees > 0) {
+      final r1 = (rupees * 0.50).round();
+      final r2 = (rupees * 0.25).round();
+      final r3 = (rupees * 0.15).round();
+      final r4to10 = ((rupees * 0.10) / 7).round();
+      return [
+        _buildPrizeRow('Rank 1', '₹${AppFormatters.formatNumber(r1)}', const Color(0xFFF59E0B), isFirst: true),
+        const Divider(color: AppColors.borderSubtle, height: 16),
+        _buildPrizeRow('Rank 2', '₹${AppFormatters.formatNumber(r2)}', const Color(0xFF8B5CF6)),
+        const Divider(color: AppColors.borderSubtle, height: 16),
+        _buildPrizeRow('Rank 3', '₹${AppFormatters.formatNumber(r3)}', const Color(0xFFB45309)),
+        const Divider(color: AppColors.borderSubtle, height: 16),
+        _buildPrizeRow('Rank 4 - 10', '₹${AppFormatters.formatNumber(r4to10)} each', AppColors.textSecondary),
+      ];
+    } else if (coins > 0) {
+      final c1 = (coins * 0.50).round();
+      final c2 = (coins * 0.25).round();
+      final c3 = (coins * 0.15).round();
+      final c4to10 = ((coins * 0.10) / 7).round();
+      return [
+        _buildPrizeRow('Rank 1', '$c1 Coins', const Color(0xFFF59E0B), isFirst: true),
+        const Divider(color: AppColors.borderSubtle, height: 16),
+        _buildPrizeRow('Rank 2', '$c2 Coins', const Color(0xFF8B5CF6)),
+        const Divider(color: AppColors.borderSubtle, height: 16),
+        _buildPrizeRow('Rank 3', '$c3 Coins', const Color(0xFFB45309)),
+        const Divider(color: AppColors.borderSubtle, height: 16),
+        _buildPrizeRow('Rank 4 - 10', '$c4to10 Coins each', AppColors.textSecondary),
+      ];
+    } else {
+      return [
+        _buildPrizeRow('Rank 1', 'Gold E-Certificate + 500 Coins', const Color(0xFFF59E0B), isFirst: true),
+        const Divider(color: AppColors.borderSubtle, height: 16),
+        _buildPrizeRow('Rank 2', 'Silver E-Certificate + 250 Coins', const Color(0xFF8B5CF6)),
+        const Divider(color: AppColors.borderSubtle, height: 16),
+        _buildPrizeRow('Rank 3', 'Bronze E-Certificate + 100 Coins', const Color(0xFFB45309)),
+        const Divider(color: AppColors.borderSubtle, height: 16),
+        _buildPrizeRow('Rank 4 - 10', 'Merit Certificate + 50 Coins', AppColors.textSecondary),
+      ];
+    }
   }
 
   Widget _buildPrizeRow(String rank, String reward, Color rankColor, {bool isFirst = false}) {

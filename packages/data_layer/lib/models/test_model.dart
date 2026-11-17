@@ -51,9 +51,9 @@ class TestModel {
   String? get category => categoryId ?? examCategoryId;
   bool get isLiveContest => isTournament || testMode == 'tournament';
   num get prizePoolInRupees =>
-      prizePoolCoins > 0 ? (prizePoolCoins / 20) : 10000;
+      prizePoolCoins > 0 ? (prizePoolCoins / 20) : 0;
   int get winningRewardCoins =>
-      prizePoolCoins > 0 ? prizePoolCoins : 200000;
+      prizePoolCoins > 0 ? prizePoolCoins : 0;
   String? get thumbnailUrl => null;
 
   String get datesFormatted {
@@ -62,8 +62,15 @@ class TestModel {
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
       ];
-      final m = months[scheduledEndTime!.month - 1];
-      return '${scheduledStartTime!.day} – ${scheduledEndTime!.day} $m';
+      final startM = months[scheduledStartTime!.month - 1];
+      final endM = months[scheduledEndTime!.month - 1];
+      if (startM == endM) {
+        if (scheduledStartTime!.day == scheduledEndTime!.day) {
+          return '${scheduledStartTime!.day} $startM';
+        }
+        return '${scheduledStartTime!.day} – ${scheduledEndTime!.day} $startM';
+      }
+      return '${scheduledStartTime!.day} $startM – ${scheduledEndTime!.day} $endM';
     } else if (scheduledStartTime != null) {
       const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -72,7 +79,7 @@ class TestModel {
       final m = months[scheduledStartTime!.month - 1];
       return '${scheduledStartTime!.day} $m';
     }
-    return '10 – 20 Nov';
+    return '';
   }
 
   bool get isLive {
@@ -123,7 +130,9 @@ class TestModel {
       status: map['status']?.toString() ?? 'published',
       isTournament: map['is_tournament'] == true,
       entryFeeCoins: (map['entry_fee_coins'] as num?)?.toInt() ?? 0,
-      prizePoolCoins: (map['prize_pool_coins'] as num?)?.toInt() ?? 0,
+      prizePoolCoins: (map['prize_pool_coins'] as num?)?.toInt() ??
+          (map['prize_pool'] as num?)?.toInt() ??
+          0,
       totalParticipants: (map['total_participants'] as num?)?.toInt() ?? 0,
       scheduledStartTime: map['scheduled_start_time'] != null
           ? DateTime.tryParse(map['scheduled_start_time'].toString())?.toLocal()
@@ -132,7 +141,7 @@ class TestModel {
           ? DateTime.tryParse(map['scheduled_end_time'].toString())?.toLocal()
           : null,
       isResultDeclared: map['is_result_declared'] == true,
-      syllabus: map['syllabus']?.toString(),
+      syllabus: (map['syllabus'] ?? map['description'])?.toString(),
     );
   }
 

@@ -21,7 +21,8 @@ class ContestsRepository {
       final data = await client
           .from('tests')
           .select()
-          .eq('status', 'published')
+          .neq('status', 'archived')
+          .neq('status', 'draft')
           .or('is_tournament.eq.true,test_mode.eq.tournament')
           .order('created_at', ascending: false);
 
@@ -160,7 +161,17 @@ class ContestsRepository {
         } catch (_) {}
       }
 
-      // 3. Increment test total_participants count
+      // 3. Record in tournament_participants table
+      try {
+        await client.from('tournament_participants').upsert({
+          'test_id': testId,
+          'user_id': targetUserId,
+          'fee_paid': entryFee,
+          'status': 'registered',
+        }, onConflict: 'test_id,user_id');
+      } catch (_) {}
+
+      // 4. Increment test total_participants count
       try {
         final testDoc = await client
             .from('tests')
@@ -191,7 +202,21 @@ class ContestsRepository {
 
       final Set<String> registered = {};
 
-      // 1. Check wallet_transactions
+      // 1. Check tournament_participants table
+      try {
+        final tp = await client
+            .from('tournament_participants')
+            .select('test_id')
+            .eq('user_id', targetId);
+        for (final p in (tp as List)) {
+          final tid = p['test_id']?.toString();
+          if (tid != null && tid.isNotEmpty) {
+            registered.add(tid);
+          }
+        }
+      } catch (_) {}
+
+      // 2. Check wallet_transactions
       final txns = await client
           .from('wallet_transactions')
           .select('reference_id')
@@ -204,7 +229,7 @@ class ContestsRepository {
         }
       }
 
-      // 2. Check attempts
+      // 3. Check attempts
       final attempts = await client
           .from('attempts')
           .select('test_id')

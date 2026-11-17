@@ -169,7 +169,7 @@ class TournamentRightPanel extends StatelessWidget {
 
   Widget _buildDailyStreakCard() {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final activeCount = streakDays.clamp(1, 7);
+    final activeCount = streakDays.clamp(0, 7);
 
     return Container(
       decoration: BoxDecoration(

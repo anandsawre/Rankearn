@@ -278,9 +278,19 @@ class TestsRepository {
       final count = list.length;
       double totalAcc = 0;
       int totalTime = 0;
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      int completedToday = 0;
       for (final a in list) {
         totalAcc += (a['accuracy'] as num?)?.toDouble() ?? 0.0;
         totalTime += (a['time_taken_seconds'] as num?)?.toInt() ?? 0;
+        final createdAtStr = a['created_at']?.toString();
+        if (createdAtStr != null) {
+          final dt = DateTime.tryParse(createdAtStr)?.toLocal();
+          if (dt != null && !dt.isBefore(todayStart)) {
+            completedToday++;
+          }
+        }
       }
 
       final avgAcc = count > 0 ? (totalAcc / count) : 0.0;
@@ -302,16 +312,18 @@ class TestsRepository {
 
       return {
         'testsAttempted': count,
+        'completedToday': completedToday,
         'accuracy': avgAcc,
         'accuracyFormatted': count > 0 ? '${avgAcc.toStringAsFixed(1)}%' : '0%',
         'avgSpeedSeconds': avgTime,
         'avgSpeedFormatted': count > 0 ? '${avgTime}s' : '0s',
         'rank': rankStr,
-        'streakDays': count > 0 ? 1 : 0,
+        'streakDays': count > 0 ? (completedToday > 0 ? 1 : 0) : 0,
       };
     } catch (_) {
       return {
         'testsAttempted': 0,
+        'completedToday': 0,
         'accuracy': 0.0,
         'accuracyFormatted': '0%',
         'avgSpeedSeconds': 0,
