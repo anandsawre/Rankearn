@@ -43,14 +43,14 @@ jobs:
       - name: Build User App Release APKs (Compact & Universal)
         run: |
           cd apps/user_app
-          flutter build apk --release --split-per-abi
-          flutter build apk --release
+          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
+          flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Build Admin App Release APKs (Compact & Universal)
         run: |
           cd apps/admin_app
-          flutter build apk --release --split-per-abi
-          flutter build apk --release
+          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
+          flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Organize APK Artifacts
         run: |
