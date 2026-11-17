@@ -83,10 +83,12 @@ class AppBottomSheet extends StatelessWidget {
     bool isDismissible = true,
     bool enableDrag = true,
     bool isScrollControlled = true,
+    bool useRootNavigator = true,
     Color? barrierColor,
   }) {
     return showModalBottomSheet<T>(
       context: context,
+      useRootNavigator: useRootNavigator,
       isScrollControlled: isScrollControlled,
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -101,7 +103,8 @@ class AppBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Center(
+    return Align(
+      alignment: Alignment.bottomCenter,
       child: Container(
         constraints: BoxConstraints(
           maxHeight: screenHeight * maxHeightRatio,

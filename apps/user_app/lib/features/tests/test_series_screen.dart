@@ -2004,7 +2004,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 final String buttonLabel = isLive
                     ? (isRegistered ? 'START TEST NOW' : 'JOIN & WIN COINS')
                     : (isRegistered
-                        ? '✓ REGISTERED'
+                        ? 'REGISTERED'
                         : (t.entryFeeCoins > 0
                             ? 'PRE-REGISTER (${t.entryFeeCoins} COINS)'
                             : 'REGISTER FREE'));
