@@ -8,6 +8,13 @@ class DashboardScreen extends StatefulWidget {
   final UserProfile profile;
   final VoidCallback onStartTest;
   final void Function(TestModel test)? onStartTestModel;
+  final void Function(
+    TestModel test, {
+    List<QuestionModel>? customQuestions,
+    Map<String, int>? initialAnswers,
+    int? initialSecondsRemaining,
+    int? initialIndex,
+  })? onResumeTest;
   final VoidCallback onExploreTests;
   final VoidCallback onJoinContest;
   final VoidCallback onSpinWheel;
@@ -22,6 +29,7 @@ class DashboardScreen extends StatefulWidget {
     required this.profile,
     required this.onStartTest,
     this.onStartTestModel,
+    this.onResumeTest,
     required this.onExploreTests,
     required this.onJoinContest,
     required this.onSpinWheel,
@@ -37,6 +45,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  IncompleteTestModel? _incompleteTest;
   List<TestModel> _popularTests = [];
   List<TestModel> _tournaments = [];
   List<CategoryModel> _liveCategories = [];
@@ -52,6 +61,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadDashboardData();
   }
 
+  @override
+  void didUpdateWidget(covariant DashboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _loadIncompleteTest();
+  }
+
+  Future<void> _loadIncompleteTest() async {
+    final incomplete =
+        await IncompleteTestsRepository().getLatestIncompleteTest();
+    if (mounted) {
+      setState(() => _incompleteTest = incomplete);
+    }
+  }
+
   Future<void> _loadDashboardData() async {
     final testsRes = await TestsRepository().getTests();
     final tourRes = await ContestsRepository().getTournaments();
@@ -59,12 +82,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final bannersRes = await BannersRepository().getActiveBanners(displayMode: 'home_carousel');
     final stats = await TestsRepository().getUserStats(widget.profile.id);
     final lbRes = await ContestsRepository().getLeaderboardUsers(limit: 8);
+    final incomplete =
+        await IncompleteTestsRepository().getLatestIncompleteTest();
 
     if (!mounted) return;
     setState(() {
       _userStats = stats;
+      _incompleteTest = incomplete;
       if (testsRes is Success<List<TestModel>>) {
-        _popularTests = testsRes.data;
+        // Exclude active / upcoming live tests and tournaments from normal popular tests list
+        _popularTests = testsRes.data
+            .where(
+              (t) =>
+                  !t.isTournament &&
+                  t.testMode != 'live' &&
+                  t.testMode != 'tournament' &&
+                  !t.isLive &&
+                  !t.isUpcoming,
+            )
+            .toList();
       }
       if (tourRes is Success<List<TestModel>>) {
         _tournaments = tourRes.data;
@@ -118,6 +154,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _categoriesSub?.cancel();
     _bannersSub?.cancel();
     super.dispose();
+  }
+
+  void _resumeTest(IncompleteTestModel incomplete) {
+    if (widget.onResumeTest != null) {
+      widget.onResumeTest!(
+        incomplete.test,
+        customQuestions: incomplete.questions,
+        initialAnswers: incomplete.userAnswers,
+        initialSecondsRemaining: incomplete.secondsRemaining,
+        initialIndex: incomplete.currentIndex,
+      );
+    } else if (widget.onStartTestModel != null) {
+      widget.onStartTestModel!(incomplete.test);
+    } else {
+      widget.onStartTest();
+    }
   }
 
   void _triggerStartTest([TestModel? test]) {
@@ -688,23 +740,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 700;
 
-        final hasTest = _popularTests.isNotEmpty;
-        final activeTitle = hasTest
-            ? _popularTests.first.title
-            : 'Explore Mock Tests';
-        final activeSubtitle = hasTest
-            ? '${_popularTests.first.categoryId ?? "General"} • ${_popularTests.first.totalQuestions} Questions'
-            : 'Practice from hundreds of curated questions';
-        final activeTag = hasTest
-            ? (_popularTests.first.categoryId ?? 'Target Exam')
+        final hasIncomplete = _incompleteTest != null;
+        final activeTitle = hasIncomplete
+            ? _incompleteTest!.test.title
+            : 'Start a Practice Test';
+        final activeSubtitle = hasIncomplete
+            ? '${_incompleteTest!.test.categoryId ?? "General"} • ${_incompleteTest!.totalQuestions} Questions (${_incompleteTest!.answeredCount}/${_incompleteTest!.totalQuestions} answered)'
+            : 'Pick any mock, chapter or sectional test to begin';
+        final activeTag = hasIncomplete
+            ? (_incompleteTest!.test.examCategoryId ??
+                _incompleteTest!.test.categoryId ??
+                'In Progress')
             : 'Practice';
+        final double progressVal =
+            hasIncomplete ? _incompleteTest!.progress : 0.0;
+        final iconData = hasIncomplete
+            ? _resolveCategoryIcon(_incompleteTest!.test.categoryId ?? '')
+            : Icons.assignment_rounded;
 
         final continueCard = ContinueLearningCard(
           title: activeTitle,
           subtitle: activeSubtitle,
-          progress: hasTest ? 0.65 : 0.0,
+          progress: progressVal,
           tag: activeTag,
-          onContinue: () => _triggerStartTest(),
+          icon: iconData,
+          onContinue: () {
+            if (hasIncomplete) {
+              _resumeTest(_incompleteTest!);
+            } else {
+              widget.onExploreTests();
+            }
+          },
           onViewAll: widget.onExploreTests,
         );
 
@@ -1089,23 +1155,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // --- Desktop Specific Sidebar Components ---
   Widget _buildContinueLearningOnlySection() {
-    final hasTest = _popularTests.isNotEmpty;
-    final activeTitle = hasTest
-        ? _popularTests.first.title
-        : 'Explore Mock Tests';
-    final activeSubtitle = hasTest
-        ? '${_popularTests.first.categoryId ?? "General"} • ${_popularTests.first.totalQuestions} Questions'
-        : 'Practice from hundreds of curated questions';
-    final activeTag = hasTest
-        ? (_popularTests.first.categoryId ?? 'Target Exam')
+    final hasIncomplete = _incompleteTest != null;
+    final activeTitle = hasIncomplete
+        ? _incompleteTest!.test.title
+        : 'Start a Practice Test';
+    final activeSubtitle = hasIncomplete
+        ? '${_incompleteTest!.test.categoryId ?? "General"} • ${_incompleteTest!.totalQuestions} Questions (${_incompleteTest!.answeredCount}/${_incompleteTest!.totalQuestions} answered)'
+        : 'Pick any mock, chapter or sectional test to begin';
+    final activeTag = hasIncomplete
+        ? (_incompleteTest!.test.examCategoryId ??
+            _incompleteTest!.test.categoryId ??
+            'In Progress')
         : 'Practice';
+    final double progressVal = hasIncomplete ? _incompleteTest!.progress : 0.0;
+    final iconData = hasIncomplete
+        ? _resolveCategoryIcon(_incompleteTest!.test.categoryId ?? '')
+        : Icons.assignment_rounded;
 
     return ContinueLearningCard(
       title: activeTitle,
       subtitle: activeSubtitle,
-      progress: hasTest ? 0.65 : 0.0,
+      progress: progressVal,
       tag: activeTag,
-      onContinue: () => _triggerStartTest(),
+      icon: iconData,
+      onContinue: () {
+        if (hasIncomplete) {
+          _resumeTest(_incompleteTest!);
+        } else {
+          widget.onExploreTests();
+        }
+      },
       onViewAll: widget.onExploreTests,
     );
   }

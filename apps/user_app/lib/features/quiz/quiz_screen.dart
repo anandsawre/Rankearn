@@ -19,6 +19,9 @@ class QuizScreen extends StatefulWidget {
   final VoidCallback onExit;
   final void Function(int score, double accuracy)? onSubmitted;
   final UserProfile? userProfile;
+  final Map<String, int>? initialAnswers;
+  final int? initialSecondsRemaining;
+  final int? initialIndex;
 
   const QuizScreen({
     super.key,
@@ -27,6 +30,9 @@ class QuizScreen extends StatefulWidget {
     required this.onExit,
     this.onSubmitted,
     this.userProfile,
+    this.initialAnswers,
+    this.initialSecondsRemaining,
+    this.initialIndex,
   });
 
   @override
@@ -55,17 +61,115 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
-    _secondsRemaining = widget.test.durationMinutes * 60;
+    if (widget.initialSecondsRemaining != null &&
+        widget.initialSecondsRemaining! > 0) {
+      _secondsRemaining = widget.initialSecondsRemaining!;
+    } else {
+      _secondsRemaining = widget.test.durationMinutes * 60;
+    }
 
-    // Initialize all questions as notVisited except the first one
+    if (widget.initialIndex != null &&
+        widget.initialIndex! >= 0 &&
+        widget.initialIndex! < widget.questions.length) {
+      _currentIndex = widget.initialIndex!;
+    }
+
+    if (widget.initialAnswers != null && widget.initialAnswers!.isNotEmpty) {
+      _userAnswers.addAll(widget.initialAnswers!);
+    }
+
+    // Initialize all questions status
     for (int i = 0; i < widget.questions.length; i++) {
       final qId = widget.questions[i].id;
-      _statusMap[qId] = i == 0
-          ? QuestionStatus.notAnswered
-          : QuestionStatus.notVisited;
+      if (_userAnswers.containsKey(qId)) {
+        _statusMap[qId] = QuestionStatus.answered;
+      } else {
+        _statusMap[qId] = i == _currentIndex
+            ? QuestionStatus.notAnswered
+            : QuestionStatus.notVisited;
+      }
     }
 
     _startTimer();
+  }
+
+  Future<void> _saveCurrentProgress() async {
+    // Only save normal practice tests (not tournament/live)
+    if (widget.test.isTournament ||
+        widget.test.testMode == 'live' ||
+        widget.test.testMode == 'tournament' ||
+        widget.test.isLive ||
+        widget.test.isUpcoming) {
+      return;
+    }
+
+    final answered = _userAnswers.length;
+    final total = widget.questions.length;
+    final double prog = total > 0 ? (answered / total).clamp(0.0, 1.0) : 0.0;
+
+    final incomplete = IncompleteTestModel(
+      testId: widget.test.id,
+      test: widget.test,
+      questions: widget.questions,
+      userAnswers: Map<String, int>.from(_userAnswers),
+      secondsRemaining: _secondsRemaining,
+      currentIndex: _currentIndex,
+      answeredCount: answered,
+      totalQuestions: total,
+      progress: prog,
+      lastUpdated: DateTime.now(),
+    );
+
+    await IncompleteTestsRepository().saveProgress(incomplete);
+  }
+
+  void _confirmAndExit() {
+    setState(() => _isPaused = true);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dlgCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.save_outlined, color: Color(0xFF007BFF)),
+            SizedBox(width: 8),
+            Text(
+              'Leave Test?',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Your answered questions and remaining time will be saved in Continue Learning so you can resume anytime.',
+          style: TextStyle(color: Color(0xFF475569), fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dlgCtx).pop();
+              setState(() => _isPaused = false);
+            },
+            child: const Text('Resume Test'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF007BFF),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () async {
+              await _saveCurrentProgress();
+              if (dlgCtx.mounted) Navigator.of(dlgCtx).pop();
+              widget.onExit();
+            },
+            child: const Text('Save & Exit'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _startTimer() {
@@ -306,6 +410,9 @@ class _QuizScreenState extends State<QuizScreen> {
         isTournament: widget.test.isTournament,
       );
     }
+
+    // Clear any saved in-progress state since test is now submitted
+    IncompleteTestsRepository().clearProgress(widget.test.id);
 
     widget.onSubmitted?.call(correct, accuracy);
 
@@ -703,6 +810,26 @@ class _QuizScreenState extends State<QuizScreen> {
                   setState(() => _isPaused = false);
                 },
               ),
+              const SizedBox(height: 10),
+              AppButton(
+                label: 'SAVE & EXIT EXAM',
+                variant: AppButtonVariant.secondary,
+                size: AppButtonSize.large,
+                fullWidth: true,
+                height: 48,
+                backgroundColor: const Color(0xFFF1F5F9),
+                foregroundColor: const Color(0xFF475569),
+                borderRadius: BorderRadius.circular(14),
+                customTextStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+                onPressed: () async {
+                  await _saveCurrentProgress();
+                  if (ctx.mounted) Navigator.of(ctx).pop();
+                  widget.onExit();
+                },
+              ),
             ],
           ),
         ),
@@ -950,7 +1077,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
         final isDesktop = constraints.maxWidth >= 960;
 
-        return Scaffold(
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            _confirmAndExit();
+          },
+          child: Scaffold(
           key: _scaffoldKey,
           resizeToAvoidBottomInset: false,
           backgroundColor: const Color(0xFFF0F2F5),
@@ -1065,8 +1198,9 @@ class _QuizScreenState extends State<QuizScreen> {
               ],
             ),
           ),
-        );
-      },
+        ),
+      );
+    },
     );
   }
 
@@ -1127,6 +1261,28 @@ class _QuizScreenState extends State<QuizScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Save & Exit / Close Button
+              InkWell(
+                onTap: _confirmAndExit,
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+
               // Pause Button
               InkWell(
                 onTap: _showPauseDialog,

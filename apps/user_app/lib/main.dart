@@ -471,7 +471,13 @@ class _UserAppShellState extends State<UserAppShell> {
     ),
   ];
 
-  Future<void> _startQuiz(TestModel test, [List<QuestionModel>? customQuestions]) async {
+  Future<void> _startQuiz(
+    TestModel test, [
+    List<QuestionModel>? customQuestions,
+    Map<String, int>? initialAnswers,
+    int? initialSecondsRemaining,
+    int? initialIndex,
+  ]) async {
     List<QuestionModel> questions = customQuestions ?? [];
 
     if (questions.isEmpty) {
@@ -537,9 +543,15 @@ class _UserAppShellState extends State<UserAppShell> {
           test: test,
           questions: questions,
           userProfile: _profile,
-          onExit: () => Navigator.of(context).pop(),
+          initialAnswers: initialAnswers,
+          initialSecondsRemaining: initialSecondsRemaining,
+          initialIndex: initialIndex,
+          onExit: () {
+            Navigator.of(context).pop();
+            if (mounted) setState(() {});
+          },
           onSubmitted: (score, accuracy) {
-            // Submitted callback tracked
+            if (mounted) setState(() {});
           },
         ),
       ),
@@ -935,6 +947,21 @@ class _UserAppShellState extends State<UserAppShell> {
             profile: _profile,
             onStartTest: () => _startQuiz(_defaultMockTest),
             onStartTestModel: (test) => _startQuiz(test),
+            onResumeTest: (
+              test, {
+              customQuestions,
+              initialAnswers,
+              initialSecondsRemaining,
+              initialIndex,
+            }) {
+              _startQuiz(
+                test,
+                customQuestions,
+                initialAnswers,
+                initialSecondsRemaining,
+                initialIndex,
+              );
+            },
             onExploreTests: () => setState(() => _activeTab = UserNavTab.tests),
             onJoinContest: () => setState(() => _activeTab = UserNavTab.live),
             onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),

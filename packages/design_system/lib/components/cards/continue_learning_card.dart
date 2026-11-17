@@ -8,6 +8,7 @@ class ContinueLearningCard extends StatelessWidget {
   final String subtitle;
   final double progress; // 0.0 to 1.0
   final String tag;
+  final IconData? icon;
   final VoidCallback onContinue;
   final VoidCallback? onViewAll;
 
@@ -17,6 +18,7 @@ class ContinueLearningCard extends StatelessWidget {
     required this.subtitle,
     required this.progress,
     this.tag = 'RRB Technician',
+    this.icon,
     required this.onContinue,
     this.onViewAll,
   });
@@ -205,8 +207,8 @@ class ContinueLearningCard extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
-                              Icons.train_rounded,
+                            Icon(
+                              icon ?? Icons.assignment_rounded,
                               color: Colors.white,
                               size: 26,
                             ),

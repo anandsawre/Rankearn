@@ -20,6 +20,7 @@ export 'models/lucky_wheel_models.dart';
 export 'models/admin_dashboard_models.dart';
 export 'models/poll_model.dart';
 export 'models/banner_model.dart';
+export 'models/incomplete_test_model.dart';
 
 // Repositories
 export 'repositories/auth_repository.dart';
@@ -33,3 +34,4 @@ export 'repositories/lucky_wheel_repository.dart';
 export 'repositories/admin_dashboard_repository.dart';
 export 'repositories/polls_repository.dart';
 export 'repositories/banners_repository.dart';
+export 'repositories/incomplete_tests_repository.dart';
