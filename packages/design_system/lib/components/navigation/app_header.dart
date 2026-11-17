@@ -213,7 +213,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                               const SizedBox(width: 4),
                               _buildDesktopNavItem(
                                 icon: Icons.emoji_events_rounded,
-                                label: 'Tournament',
+                                label: 'Contest',
                                 tab: UserNavTab.tournament,
                               ),
                               const SizedBox(width: 4),

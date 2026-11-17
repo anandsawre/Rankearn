@@ -48,7 +48,7 @@ class TournamentRulesDialog extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Tournament Rules & Eligibility',
+                          'Contest Rules & Eligibility',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -87,7 +87,7 @@ class TournamentRulesDialog extends StatelessWidget {
                       number: '1',
                       title: 'Eligibility & Entry',
                       description:
-                          'Open to all verified registered users. Free tournaments require zero coins. Paid tournaments require the designated entry fee in Rankearn coins at the time of joining.',
+                          'Open to all verified registered users. Free contests require zero coins. Paid contests require the designated entry fee in Rankearn coins at the time of joining.',
                     ),
                     _buildRuleItem(
                       number: '2',
@@ -99,7 +99,7 @@ class TournamentRulesDialog extends StatelessWidget {
                       number: '3',
                       title: 'Single Official Attempt',
                       description:
-                          'Only your first submitted attempt during the active tournament window counts toward the All-India leaderboard ranking and reward distribution.',
+                          'Only your first submitted attempt during the active contest window counts toward the All-India leaderboard ranking and reward distribution.',
                     ),
                     _buildRuleItem(
                       number: '4',
@@ -111,7 +111,7 @@ class TournamentRulesDialog extends StatelessWidget {
                       number: '5',
                       title: 'Prize Pool Distribution',
                       description:
-                          'Official ranks are locked at tournament completion. Winning coins and cash vouchers are credited automatically to your Rankearn wallet within 2 hours of results verification.',
+                          'Official ranks are locked at contest completion. Winning coins and cash vouchers are credited automatically to your Rankearn wallet within 2 hours of results verification.',
                     ),
                   ],
                 ),

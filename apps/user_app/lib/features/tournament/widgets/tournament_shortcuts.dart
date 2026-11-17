@@ -22,7 +22,7 @@ class TournamentShortcuts extends StatelessWidget {
             child: _buildDesktopPill(
               keyName: 'all',
               icon: Icons.emoji_events_rounded,
-              label: 'All Tournaments',
+              label: 'All Contests',
             ),
           ),
           const SizedBox(width: 14),
@@ -30,7 +30,7 @@ class TournamentShortcuts extends StatelessWidget {
             child: _buildDesktopPill(
               keyName: 'my',
               icon: Icons.assignment_outlined,
-              label: 'My Tournaments',
+              label: 'My Contests',
             ),
           ),
           const SizedBox(width: 14),
@@ -67,7 +67,7 @@ class TournamentShortcuts extends StatelessWidget {
         Expanded(
           child: _buildMobilePod(
             keyName: 'all',
-            label: 'All\nTournaments',
+            label: 'All\nContests',
             icon: Icons.emoji_events_rounded,
             bgColor: const Color(0xFFF3E8FF), // Light purple
             iconBgColor: const Color(0xFF8B5CF6),
@@ -77,7 +77,7 @@ class TournamentShortcuts extends StatelessWidget {
         Expanded(
           child: _buildMobilePod(
             keyName: 'my',
-            label: 'My\nTournaments',
+            label: 'My\nContests',
             icon: Icons.assignment_outlined,
             bgColor: const Color(0xFFFFE4E6), // Light pink/red
             iconBgColor: const Color(0xFFF43F5E),

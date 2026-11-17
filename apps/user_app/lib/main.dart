@@ -1182,7 +1182,7 @@ class _UserAppShellState extends State<UserAppShell> {
                   ),
                   _buildDrawerNavItem(
                     icon: Icons.emoji_events_rounded,
-                    label: 'Live Tournaments',
+                    label: 'Live Contests',
                     tab: UserNavTab.tournament,
                   ),
                   _buildDrawerNavItem(

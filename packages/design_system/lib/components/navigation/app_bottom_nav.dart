@@ -55,7 +55,7 @@ class AppBottomNav extends StatelessWidget {
       (UserNavTab.tests, Icons.feed_outlined, 'Tests'),
       (UserNavTab.live, Icons.sensors_rounded, 'Live'),
       (UserNavTab.battle, Icons.sports_kabaddi_rounded, 'Battle'),
-      (UserNavTab.tournament, Icons.emoji_events_rounded, 'Tournament'),
+      (UserNavTab.tournament, Icons.emoji_events_rounded, 'Contest'),
       (UserNavTab.rewards, Icons.card_giftcard_rounded, 'Rewards'),
     ];
 

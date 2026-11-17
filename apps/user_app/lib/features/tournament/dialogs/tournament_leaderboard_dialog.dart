@@ -62,7 +62,7 @@ class TournamentLeaderboardDialog extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Tournament Leaderboard',
+                          'Contest Leaderboard',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,

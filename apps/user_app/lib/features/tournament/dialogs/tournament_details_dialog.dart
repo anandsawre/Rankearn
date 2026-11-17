@@ -267,7 +267,7 @@ class TournamentDetailsDialog extends StatelessWidget {
 
                     // Test Structure
                     const Text(
-                      'Tournament Structure',
+                      'Contest Structure',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -316,7 +316,7 @@ class TournamentDetailsDialog extends StatelessWidget {
                     size: 20,
                   ),
                   label: Text(
-                    isRegistered ? 'Start Tournament Quiz' : 'Participate Now',
+                    isRegistered ? 'Start Contest Quiz' : 'Participate Now',
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

@@ -130,7 +130,7 @@ class TournamentRightPanel extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '$completedToday/5 Tournaments',
+                              '$completedToday/5 Contests',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
@@ -159,7 +159,7 @@ class TournamentRightPanel extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Complete 5 tournaments today to earn 50 coins!',
+              'Complete 5 contests today to earn 50 coins!',
               style: TextStyle(
                 fontSize: 11,
                 color: Color(0xFF64748B),
@@ -312,7 +312,7 @@ class TournamentRightPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 const Text(
-                  'Top Tournament Rankers',
+                  'Top Contest Rankers',
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
@@ -455,7 +455,7 @@ class TournamentRightPanel extends StatelessWidget {
             ),
             SizedBox(width: 8),
             Text(
-              'Upcoming Tournament',
+              'Upcoming Contest',
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w800,

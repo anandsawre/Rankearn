@@ -107,7 +107,7 @@ class TournamentHeroBanner extends StatelessWidget {
                               ),
                               SizedBox(width: 5),
                               Text(
-                                'Tournaments',
+                                'Contests',
                                 style: TextStyle(
                                   color: Color(0xFF1E293B),
                                   fontWeight: FontWeight.w900,
@@ -124,8 +124,8 @@ class TournamentHeroBanner extends StatelessWidget {
                       // Title
                       Text(
                         isDesktop
-                            ? 'Compete in Live Tournaments'
-                            : 'Tournaments',
+                            ? 'Compete in Live Contests'
+                            : 'Contests',
                         style: TextStyle(
                           fontSize: isDesktop ? 26 : 21,
                           fontWeight: FontWeight.w900,
@@ -175,7 +175,7 @@ class TournamentHeroBanner extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Explore Tournaments',
+                                'Explore Contests',
                                 style: TextStyle(
                                   fontSize: isDesktop ? 13 : 11.5,
                                   fontWeight: FontWeight.w800,
