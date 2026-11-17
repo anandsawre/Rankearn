@@ -46,6 +46,34 @@ class TestModel {
 
   bool get isTournamentLive => isLive;
   int get registeredParticipants => totalParticipants;
+  DateTime? get startsAt => scheduledStartTime;
+  DateTime? get endsAt => scheduledEndTime;
+  String? get category => categoryId ?? examCategoryId;
+  bool get isLiveContest => isTournament || testMode == 'tournament';
+  num get prizePoolInRupees =>
+      prizePoolCoins > 0 ? (prizePoolCoins / 20) : 10000;
+  int get winningRewardCoins =>
+      prizePoolCoins > 0 ? prizePoolCoins : 200000;
+  String? get thumbnailUrl => null;
+
+  String get datesFormatted {
+    if (scheduledStartTime != null && scheduledEndTime != null) {
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      final m = months[scheduledEndTime!.month - 1];
+      return '${scheduledStartTime!.day} – ${scheduledEndTime!.day} $m';
+    } else if (scheduledStartTime != null) {
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      final m = months[scheduledStartTime!.month - 1];
+      return '${scheduledStartTime!.day} $m';
+    }
+    return '10 – 20 Nov';
+  }
 
   bool get isLive {
     final now = DateTime.now();

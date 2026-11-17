@@ -7,6 +7,7 @@ enum UserNavTab {
   tests,
   live,
   battle,
+  tournament,
   rewards,
   profile,
   // Backward compatibility aliases & new routes
@@ -54,6 +55,7 @@ class AppBottomNav extends StatelessWidget {
       (UserNavTab.tests, Icons.feed_outlined, 'Tests'),
       (UserNavTab.live, Icons.sensors_rounded, 'Live'),
       (UserNavTab.battle, Icons.sports_kabaddi_rounded, 'Battle'),
+      (UserNavTab.tournament, Icons.emoji_events_rounded, 'Tournament'),
       (UserNavTab.rewards, Icons.card_giftcard_rounded, 'Rewards'),
       (UserNavTab.profile, Icons.person_outline_rounded, 'Profile'),
     ];

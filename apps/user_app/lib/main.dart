@@ -17,6 +17,7 @@ import 'features/profile/profile_screen.dart';
 import 'features/rewards/rewards_hub_screen.dart';
 import 'features/auth/user_auth_screen.dart';
 import 'features/leaderboard/leaderboard_screen.dart';
+import 'features/tournament/screens/tournament_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1016,6 +1017,22 @@ class _UserAppShellState extends State<UserAppShell> {
             },
             onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
           ),
+          UserNavTab.tournament => TournamentScreen(
+            profile: _profile,
+            onStartTest: (test) => _startQuiz(test),
+            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
+            onOpenLeaderboard: () =>
+                setState(() => _activeTab = UserNavTab.leaderboard),
+            onOpenRewards: () =>
+                setState(() => _activeTab = UserNavTab.rewards),
+            onCoinDeducted: (fee) {
+              setState(() {
+                _profile = _profile.copyWith(
+                  coins: (_profile.coins - fee).clamp(0, 999999999),
+                );
+              });
+            },
+          ),
           UserNavTab.rewards => RewardsHubScreen(
             userCoins: _profile.coins,
             profile: _profile,
@@ -1162,6 +1179,11 @@ class _UserAppShellState extends State<UserAppShell> {
                     icon: Icons.sports_kabaddi_rounded,
                     label: '1v1 Quiz Battle',
                     tab: UserNavTab.battle,
+                  ),
+                  _buildDrawerNavItem(
+                    icon: Icons.emoji_events_rounded,
+                    label: 'Live Tournaments',
+                    tab: UserNavTab.tournament,
                   ),
                   _buildDrawerNavItem(
                     icon: Icons.emoji_events_outlined,
