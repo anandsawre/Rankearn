@@ -516,6 +516,7 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
       gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
       maxWidth: 960,
       scrollable: false,
+      contentPadding: const EdgeInsets.fromLTRB(22, 16, 22, 14),
       actions: [
         AppModalDialog.cancelButton(context, label: 'Close'),
         AppModalDialog.secondaryButton(
@@ -534,77 +535,94 @@ class _TournamentQuestionsDialogState extends State<TournamentQuestionsDialog> {
           child: const Text('Add Existing Test', style: TextStyle(fontFamily: AppTypography.fontHeading, fontSize: 12, fontWeight: FontWeight.w700)),
         ),
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 2. Search & Filter Bar
-          Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Dynamically compute list height to fit perfectly within available dialog space
+          final double maxBodyHeight = constraints.maxHeight.isFinite
+              ? constraints.maxHeight
+              : (MediaQuery.of(context).size.height * 0.88 - 230);
+
+          // 38px search bar height + 14px gap = 52px overhead
+          final double availableForList = maxBodyHeight - 52;
+          final double listHeight = availableForList > 100
+              ? availableForList.clamp(100.0, 560.0)
+              : math.max(60.0, availableForList);
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: SizedBox(
-                  height: 38,
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) => setState(() => _searchQuery = val),
-                    style: const TextStyle(fontSize: 12),
-                    decoration: AppModalDialog.inputDecoration(
-                      'Search questions by text, explanation, or options...',
-                      prefixIcon: const Icon(Icons.search_rounded, size: 17, color: Color(0xFF94A3B8)),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear_rounded, size: 16),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                              },
-                            )
-                          : null,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      focusColor: const Color(0xFF5636F5),
+              // 2. Search & Filter Bar
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 38,
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        style: const TextStyle(fontSize: 12),
+                        decoration: AppModalDialog.inputDecoration(
+                          'Search questions by text, explanation, or options...',
+                          prefixIcon: const Icon(Icons.search_rounded, size: 17, color: Color(0xFF94A3B8)),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 16),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          focusColor: const Color(0xFF5636F5),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
+                  const SizedBox(width: 12),
 
-              // Difficulty Filter
+                  // Difficulty Filter
+                  SizedBox(
+                    width: 160,
+                    child: AppDropdown<String>(
+                      value: _selectedDifficulty,
+                      items: const [
+                        AppDropdownItem(value: 'All', label: 'All Difficulties'),
+                        AppDropdownItem(value: 'Easy', label: 'Easy Level'),
+                        AppDropdownItem(value: 'Medium', label: 'Medium Level'),
+                        AppDropdownItem(value: 'Hard', label: 'Hard Level'),
+                        AppDropdownItem(value: 'Expert', label: 'Expert Level'),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedDifficulty = val);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // 3. Questions List / Empty State / Loader
               SizedBox(
-                width: 160,
-                child: AppDropdown<String>(
-                  value: _selectedDifficulty,
-                  items: const [
-                    AppDropdownItem(value: 'All', label: 'All Difficulties'),
-                    AppDropdownItem(value: 'Easy', label: 'Easy Level'),
-                    AppDropdownItem(value: 'Medium', label: 'Medium Level'),
-                    AppDropdownItem(value: 'Hard', label: 'Hard Level'),
-                    AppDropdownItem(value: 'Expert', label: 'Expert Level'),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedDifficulty = val);
-                  },
-                ),
+                height: listHeight,
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFF5636F5)))
+                    : filtered.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.separated(
+                            itemCount: filtered.length,
+                            physics: const BouncingScrollPhysics(),
+                            separatorBuilder: (_, index) => const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final q = filtered[index];
+                              return _buildQuestionCard(q);
+                            },
+                          ),
               ),
             ],
-          ),
-          const SizedBox(height: 14),
-
-          // 3. Questions List / Empty State / Loader
-          SizedBox(
-            height: 460,
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF5636F5)))
-                : filtered.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.separated(
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, index) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final q = filtered[index];
-                          return _buildQuestionCard(q);
-                        },
-                      ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
