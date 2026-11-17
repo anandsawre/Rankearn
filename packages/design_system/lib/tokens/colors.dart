@@ -373,4 +373,44 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  // --- Tournament & Contest Design System Tokens ---
+  static const Color contestHeroDark = Color(0xFF3B0764);
+  static const Color contestHeroMid = Color(0xFF6B21A8);
+  static const Color contestHeroLight = Color(0xFF7E22CE);
+  static const Color contestHeroGlow = Color(0xFFC084FC);
+  static const Color contestGold = Color(0xFFFDE047);
+  static const Color contestGoldText = Color(0xFF78350F);
+  static const Color contestTextPrimary = Color(0xFF0F172A);
+  static const Color contestTextSecondary = Color(0xFF64748B);
+  static const Color contestCardBg = Color(0xFFFFFFFF);
+  static const Color contestCardBorder = Color(0xFFE2E8F0);
+  static const Color contestWatermark = Color(0xFFF1F5F9);
+
+  static const Color contestBadgeRed = Color(0xFFEF4444);
+  static const Color contestActiveGreen = Color(0xFF10B981);
+  static const Color contestCoinAmber = Color(0xFFF59E0B);
+  static const Color contestBlue = Color(0xFF3B82F6);
+  static const Color contestPurple = Color(0xFF8B5CF6);
+  static const Color contestBronze = Color(0xFFB45309);
+
+  // Shortcut Pod Colors
+  static const Color contestShortcutPurpleBg = Color(0xFFF3E8FF);
+  static const Color contestShortcutPurpleIcon = Color(0xFF8B5CF6);
+  static const Color contestShortcutPinkBg = Color(0xFFFFE4E6);
+  static const Color contestShortcutPinkIcon = Color(0xFFF43F5E);
+  static const Color contestShortcutGreenBg = Color(0xFFDCFCE7);
+  static const Color contestShortcutGreenIcon = Color(0xFF10B981);
+  static const Color contestShortcutAmberBg = Color(0xFFFEF3C7);
+  static const Color contestShortcutAmberIcon = Color(0xFFF59E0B);
+
+  // Upcoming Contest Card
+  static const Color contestUpcomingBg = Color(0xFFFBF8FF);
+  static const Color contestUpcomingBorder = Color(0xFFE9D5FF);
+
+  static const LinearGradient contestHeroGradient = LinearGradient(
+    colors: [contestHeroDark, contestHeroMid, contestHeroLight],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
 }

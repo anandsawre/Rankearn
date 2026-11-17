@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 
-/// Upcoming Tournament Card with Remind Me CTA
+/// Upcoming Contest Card Tokenized with Centralized Design System
 class UpcomingTournamentCard extends StatefulWidget {
   final TestModel tournament;
   final bool isDesktop;
@@ -35,9 +35,9 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFBF8FF), // Soft purple tint
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE9D5FF)),
+        color: AppColors.contestUpcomingBg,
+        borderRadius: AppRadii.contestShortcut,
+        border: Border.all(color: AppColors.contestUpcomingBorder),
       ),
       child: Row(
         children: [
@@ -46,8 +46,8 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFF8B5CF6),
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.contestPurple,
+              borderRadius: AppRadii.contestThumbSm,
             ),
             alignment: Alignment.center,
             child: const Icon(
@@ -56,7 +56,7 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
               size: 22,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
 
           // Center Info
           Expanded(
@@ -71,7 +71,7 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                   style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF1E293B),
+                    color: AppColors.contestTextPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -82,7 +82,7 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF64748B),
+                    color: AppColors.contestTextSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -91,7 +91,7 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                     const Icon(
                       Icons.monetization_on_rounded,
                       size: 13,
-                      color: Color(0xFFF59E0B),
+                      color: AppColors.contestCoinAmber,
                     ),
                     const SizedBox(width: 3),
                     Text(
@@ -100,15 +100,15 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: isFree
-                            ? const Color(0xFF10B981)
-                            : const Color(0xFF0F172A),
+                            ? AppColors.contestActiveGreen
+                            : AppColors.contestTextPrimary,
                       ),
                     ),
                     const SizedBox(width: 10),
                     const Icon(
                       Icons.emoji_events_rounded,
                       size: 13,
-                      color: Color(0xFFF59E0B),
+                      color: AppColors.contestCoinAmber,
                     ),
                     const SizedBox(width: 3),
                     Text(
@@ -116,7 +116,7 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: AppColors.contestTextPrimary,
                       ),
                     ),
                   ],
@@ -124,7 +124,7 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
 
           // Right Remind Me Button
           InkWell(
@@ -143,16 +143,16 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                 ),
               );
             },
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: AppRadii.contestThumbSm,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
               decoration: BoxDecoration(
                 color: _isReminded
-                    ? const Color(0xFF8B5CF6)
-                    : const Color(0xFFFAF5FF),
-                borderRadius: BorderRadius.circular(10),
+                    ? AppColors.contestPurple
+                    : AppColors.contestUpcomingBg,
+                borderRadius: AppRadii.contestThumbSm,
                 border: Border.all(
-                  color: const Color(0xFF8B5CF6),
+                  color: AppColors.contestPurple,
                   width: 1,
                 ),
               ),
@@ -164,7 +164,7 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                         ? Icons.notifications_active_rounded
                         : Icons.notifications_none_rounded,
                     size: 15,
-                    color: _isReminded ? Colors.white : const Color(0xFF8B5CF6),
+                    color: _isReminded ? Colors.white : AppColors.contestPurple,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -172,7 +172,7 @@ class _UpcomingTournamentCardState extends State<UpcomingTournamentCard> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: _isReminded ? Colors.white : const Color(0xFF8B5CF6),
+                      color: _isReminded ? Colors.white : AppColors.contestPurple,
                     ),
                   ),
                 ],

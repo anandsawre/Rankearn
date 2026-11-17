@@ -51,4 +51,12 @@ class AppRadii {
   static const BorderRadius adminBadge = BorderRadius.all(Radius.circular(6.0));
   static const BorderRadius adminStatusPill = BorderRadius.all(Radius.circular(12.0));
   static const BorderRadius adminRoundPill = borderPill;
+
+  // --- Contest & Tournament Semantic Radii Tokens ---
+  static const BorderRadius contestHero = BorderRadius.all(Radius.circular(20.0));
+  static const BorderRadius contestCard = BorderRadius.all(Radius.circular(16.0));
+  static const BorderRadius contestShortcut = BorderRadius.all(Radius.circular(14.0));
+  static const BorderRadius contestPill = borderPill;
+  static const BorderRadius contestThumb = BorderRadius.all(Radius.circular(12.0));
+  static const BorderRadius contestThumbSm = BorderRadius.all(Radius.circular(10.0));
 }

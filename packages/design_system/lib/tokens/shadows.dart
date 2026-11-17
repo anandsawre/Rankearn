@@ -113,4 +113,45 @@ class AppShadows {
       offset: Offset(0, 4),
     ),
   ];
+
+  // --- Contest & Tournament Semantic Shadow Tokens ---
+  static const List<BoxShadow> contestHero = [
+    BoxShadow(
+      color: Color(0x286B21A8),
+      blurRadius: 18,
+      offset: Offset(0, 6),
+    ),
+  ];
+
+  static const List<BoxShadow> contestCard = [
+    BoxShadow(
+      color: Color(0x06000000),
+      blurRadius: 10,
+      offset: Offset(0, 2),
+    ),
+  ];
+
+  static const List<BoxShadow> contestCardMobile = [
+    BoxShadow(
+      color: Color(0x06000000),
+      blurRadius: 8,
+      offset: Offset(0, 2),
+    ),
+  ];
+
+  static const List<BoxShadow> contestPillActive = [
+    BoxShadow(
+      color: Color(0x2410B981),
+      blurRadius: 8,
+      offset: Offset(0, 2),
+    ),
+  ];
+
+  static const List<BoxShadow> contestTag = [
+    BoxShadow(
+      color: Color(0x33000000),
+      blurRadius: 4,
+      offset: Offset(0, 2),
+    ),
+  ];
 }

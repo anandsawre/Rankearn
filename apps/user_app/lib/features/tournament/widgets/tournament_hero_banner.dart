@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
-/// Purple Tournament Hero Banner matching Desktop and Mobile UI reference designs
+/// Purple Contest Hero Banner tokenized strictly with Centralized Design System
 class TournamentHeroBanner extends StatelessWidget {
   final bool isDesktop;
   final VoidCallback? onExploreTap;
@@ -16,24 +16,10 @@ class TournamentHeroBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF3B0764), // deep purple
-            Color(0xFF6B21A8),
-            Color(0xFF7E22CE),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x286B21A8),
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        gradient: AppColors.contestHeroGradient,
+        borderRadius: AppRadii.contestHero,
+        boxShadow: AppShadows.contestHero,
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -59,7 +45,7 @@ class TournamentHeroBanner extends StatelessWidget {
               height: 220,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFC084FC).withValues(alpha: 0.08),
+                color: AppColors.contestHeroGlow.withValues(alpha: 0.08),
               ),
             ),
           ),
@@ -67,7 +53,7 @@ class TournamentHeroBanner extends StatelessWidget {
           // Main Banner Content
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 32 : 18,
+              horizontal: isDesktop ? AppSpacing.xxxl : 18,
               vertical: isDesktop ? 28 : 18,
             ),
             child: Row(
@@ -86,34 +72,23 @@ class TournamentHeroBanner extends StatelessWidget {
                             horizontal: 10,
                             vertical: 4,
                           ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFDE047), // bright yellow
+                          decoration: const BoxDecoration(
+                            color: AppColors.contestGold,
                             borderRadius: AppRadii.borderPill,
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x33000000),
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
+                            boxShadow: AppShadows.contestTag,
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 Icons.emoji_events_rounded,
-                                color: Color(0xFF78350F),
+                                color: AppColors.contestGoldText,
                                 size: 14,
                               ),
                               SizedBox(width: 5),
                               Text(
                                 'Contests',
-                                style: TextStyle(
-                                  color: Color(0xFF1E293B),
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 11.5,
-                                  letterSpacing: 0.2,
-                                ),
+                                style: AppTypography.contestHeroTag,
                               ),
                             ],
                           ),
@@ -126,12 +101,9 @@ class TournamentHeroBanner extends StatelessWidget {
                         isDesktop
                             ? 'Compete in Live Contests'
                             : 'Contests',
-                        style: TextStyle(
-                          fontSize: isDesktop ? 26 : 21,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
+                        style: isDesktop
+                            ? AppTypography.contestHeroTitleDesktop
+                            : AppTypography.contestHeroTitleMobile,
                       ),
                       const SizedBox(height: 6),
 
@@ -160,30 +132,24 @@ class TournamentHeroBanner extends StatelessWidget {
                             horizontal: isDesktop ? 18 : 14,
                             vertical: isDesktop ? 9 : 7,
                           ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFDE047), // yellow button
+                          decoration: const BoxDecoration(
+                            color: AppColors.contestGold,
                             borderRadius: AppRadii.borderPill,
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x33000000),
-                                blurRadius: 6,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
+                            boxShadow: AppShadows.contestTag,
                           ),
-                          child: Row(
+                          child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 'Explore Contests',
                                 style: TextStyle(
-                                  fontSize: isDesktop ? 13 : 11.5,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF1E293B),
+                                  color: Color(0xFF1E293B),
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              const Icon(
+                              SizedBox(width: 4),
+                              Icon(
                                 Icons.arrow_forward_rounded,
                                 size: 14,
                                 color: Color(0xFF1E293B),
@@ -219,7 +185,7 @@ class TournamentHeroBanner extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFDE047).withValues(alpha: 0.35),
+                                  color: AppColors.contestGold.withValues(alpha: 0.35),
                                   blurRadius: 32,
                                   spreadRadius: 6,
                                 ),
@@ -236,7 +202,7 @@ class TournamentHeroBanner extends StatelessWidget {
                               errorBuilder: (_, _, _) => const Icon(
                                 Icons.emoji_events_rounded,
                                 size: 80,
-                                color: Color(0xFFFDE047),
+                                color: AppColors.contestGold,
                               ),
                             ),
                           ),

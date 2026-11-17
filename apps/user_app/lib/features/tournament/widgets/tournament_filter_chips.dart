@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 
-/// Category Filter Chips matching Desktop and Mobile UI reference designs
+/// Category Filter Chips Tokenized with Centralized Design System
 class TournamentFilterChips extends StatelessWidget {
   final String selectedFilter;
   final ValueChanged<String> onFilterChanged;
@@ -34,7 +34,7 @@ class TournamentFilterChips extends StatelessWidget {
           final isRunning = f.$1 == 'running';
 
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
             child: InkWell(
               onTap: () => onFilterChanged(f.$1),
               borderRadius: AppRadii.borderPill,
@@ -46,22 +46,15 @@ class TournamentFilterChips extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFF10B981) // emerald green when selected
-                      : Colors.white,
+                      ? AppColors.contestActiveGreen
+                      : AppColors.contestCardBg,
                   borderRadius: AppRadii.borderPill,
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFFE2E8F0),
+                        ? AppColors.contestActiveGreen
+                        : AppColors.contestCardBorder,
                   ),
-                  boxShadow: [
-                    if (isSelected)
-                      const BoxShadow(
-                        color: Color(0x2410B981),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                  ],
+                  boxShadow: isSelected ? AppShadows.contestPillActive : null,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -71,7 +64,7 @@ class TournamentFilterChips extends StatelessWidget {
                         width: 7,
                         height: 7,
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.white : const Color(0xFFEF4444),
+                          color: isSelected ? Colors.white : AppColors.contestBadgeRed,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -82,7 +75,7 @@ class TournamentFilterChips extends StatelessWidget {
                         size: 13,
                         color: isSelected
                             ? Colors.white
-                            : const Color(0xFF64748B),
+                            : AppColors.contestTextSecondary,
                       ),
                       const SizedBox(width: 6),
                     ],

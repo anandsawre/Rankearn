@@ -635,4 +635,74 @@ class AppTypography {
     color: AppColors.adminSecondaryText,
     fontFamilyFallback: fontFallbacks,
   );
+
+  // --- Contest & Tournament Typography Tokens ---
+  static const TextStyle contestHeroTitleDesktop = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 26,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.5,
+    color: Colors.white,
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle contestHeroTitleMobile = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 21,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.4,
+    color: Colors.white,
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle contestHeroTag = TextStyle(
+    fontFamily: fontBody,
+    color: Color(0xFF1E293B),
+    fontWeight: FontWeight.w900,
+    fontSize: 11.5,
+    letterSpacing: 0.2,
+    fontFamilyFallback: fontFallbacks,
+  );
+
+  static const TextStyle contestSectionTitle = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 16.5,
+    fontWeight: FontWeight.w900,
+    color: Color(0xFF0F172A),
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle contestCardTitle = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 16.5,
+    fontWeight: FontWeight.w800,
+    color: Color(0xFF0F172A),
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle contestCardTitleMobile = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 14.0,
+    fontWeight: FontWeight.w800,
+    color: Color(0xFF0F172A),
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle contestStatValue = TextStyle(
+    fontFamily: fontHeading,
+    fontSize: 20.0,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.5,
+    color: Color(0xFF0F172A),
+    fontFamilyFallback: headingFallbacks,
+  );
+
+  static const TextStyle contestStatLabel = TextStyle(
+    fontFamily: fontBody,
+    fontSize: 12.0,
+    fontWeight: FontWeight.w600,
+    color: Color(0xFF64748B),
+    height: 1.15,
+    fontFamilyFallback: fontFallbacks,
+  );
 }

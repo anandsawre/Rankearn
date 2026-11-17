@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
+import 'package:design_system/design_system.dart';
 import 'upcoming_tournament_card.dart';
 
-/// Desktop Right-side Information Panel
+/// Desktop Right-side Information Panel Tokenized with Centralized Design System
 class TournamentRightPanel extends StatelessWidget {
   final List<Map<String, dynamic>> leaderboardUsers;
   final TestModel? upcomingTournament;
@@ -26,17 +27,17 @@ class TournamentRightPanel extends StatelessWidget {
       children: [
         // 1. Today's Goal Card
         _buildTodaysGoalCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.contestItemGap),
 
         // 2. Daily Streak Card
         _buildDailyStreakCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.contestItemGap),
 
-        // 3. Top Tournament Rankers Card
+        // 3. Top Contest Rankers Card
         _buildTopRankersCard(context),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.contestItemGap),
 
-        // 4. Upcoming Tournament Card
+        // 4. Upcoming Contest Card
         if (upcomingTournament != null) ...[
           _buildUpcomingSection(),
         ],
@@ -49,19 +50,13 @@ class TournamentRightPanel extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: AppColors.contestCardBg,
+        borderRadius: AppRadii.contestCard,
+        border: Border.all(color: AppColors.contestCardBorder),
+        boxShadow: AppShadows.contestCard,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -69,16 +64,16 @@ class TournamentRightPanel extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.flag_rounded,
-                  color: Color(0xFF2563EB),
+                  color: AppColors.contestBlue,
                   size: 18,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 const Text(
                   "Today's Goal",
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.contestTextPrimary,
                   ),
                 ),
                 const Spacer(),
@@ -94,7 +89,7 @@ class TournamentRightPanel extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: const Color(0xFFF0FDF4), // soft green tint
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadii.contestThumb,
                 border: Border.all(color: const Color(0xFFDCFCE7)),
               ),
               child: Row(
@@ -109,7 +104,7 @@ class TournamentRightPanel extends StatelessWidget {
                     alignment: Alignment.center,
                     child: const Icon(
                       Icons.track_changes_rounded,
-                      color: Color(0xFFEF4444),
+                      color: AppColors.contestBadgeRed,
                       size: 22,
                     ),
                   ),
@@ -134,7 +129,7 @@ class TournamentRightPanel extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
+                                color: AppColors.contestTextPrimary,
                               ),
                             ),
                           ],
@@ -145,9 +140,9 @@ class TournamentRightPanel extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 6,
-                            backgroundColor: const Color(0xFFE2E8F0),
+                            backgroundColor: AppColors.contestCardBorder,
                             valueColor: const AlwaysStoppedAnimation<Color>(
-                              Color(0xFF10B981),
+                              AppColors.contestActiveGreen,
                             ),
                           ),
                         ),
@@ -162,7 +157,7 @@ class TournamentRightPanel extends StatelessWidget {
               'Complete 5 contests today to earn 50 coins!',
               style: TextStyle(
                 fontSize: 11,
-                color: Color(0xFF64748B),
+                color: AppColors.contestTextSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -178,19 +173,13 @@ class TournamentRightPanel extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: AppColors.contestCardBg,
+        borderRadius: AppRadii.contestCard,
+        border: Border.all(color: AppColors.contestCardBorder),
+        boxShadow: AppShadows.contestCard,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -210,7 +199,7 @@ class TournamentRightPanel extends StatelessWidget {
                     size: 16,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -218,7 +207,7 @@ class TournamentRightPanel extends StatelessWidget {
                       'Daily Streak',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF64748B),
+                        color: AppColors.contestTextSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -230,7 +219,7 @@ class TournamentRightPanel extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.contestTextPrimary,
                   ),
                 ),
               ],
@@ -248,8 +237,8 @@ class TournamentRightPanel extends StatelessWidget {
                       height: 26,
                       decoration: BoxDecoration(
                         color: isCompleted
-                            ? const Color(0xFF10B981)
-                            : const Color(0xFFF1F5F9),
+                            ? AppColors.contestActiveGreen
+                            : AppColors.contestWatermark,
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
@@ -287,19 +276,13 @@ class TournamentRightPanel extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: AppColors.contestCardBg,
+        borderRadius: AppRadii.contestCard,
+        border: Border.all(color: AppColors.contestCardBorder),
+        boxShadow: AppShadows.contestCard,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -307,16 +290,16 @@ class TournamentRightPanel extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.military_tech_rounded,
-                  color: Color(0xFFF59E0B),
+                  color: AppColors.contestCoinAmber,
                   size: 20,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 const Text(
                   'Top Contest Rankers',
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
+                    color: AppColors.contestTextPrimary,
                   ),
                 ),
                 const Spacer(),
@@ -327,7 +310,7 @@ class TournamentRightPanel extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF2563EB),
+                      color: AppColors.contestBlue,
                     ),
                   ),
                 ),
@@ -419,7 +402,7 @@ class TournamentRightPanel extends StatelessWidget {
                           const Icon(
                             Icons.monetization_on_rounded,
                             size: 14,
-                            color: Color(0xFFF59E0B),
+                            color: AppColors.contestCoinAmber,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -427,7 +410,7 @@ class TournamentRightPanel extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
+                              color: AppColors.contestTextPrimary,
                             ),
                           ),
                         ],
@@ -451,15 +434,15 @@ class TournamentRightPanel extends StatelessWidget {
             Icon(
               Icons.calendar_month_rounded,
               size: 18,
-              color: Color(0xFF8B5CF6),
+              color: AppColors.contestPurple,
             ),
-            SizedBox(width: 8),
+            SizedBox(width: AppSpacing.sm),
             Text(
               'Upcoming Contest',
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: AppColors.contestTextPrimary,
               ),
             ),
           ],
@@ -476,23 +459,23 @@ class TournamentRightPanel extends StatelessWidget {
   Color _getRankBadgeColor(int rank) {
     switch (rank) {
       case 1:
-        return const Color(0xFFF59E0B);
+        return AppColors.contestCoinAmber;
       case 2:
-        return const Color(0xFF8B5CF6);
+        return AppColors.contestPurple;
       case 3:
-        return const Color(0xFFB45309);
+        return AppColors.contestBronze;
       default:
-        return const Color(0xFFF1F5F9);
+        return AppColors.contestWatermark;
     }
   }
 
   Color _getAvatarBg(int index) {
     const colors = [
-      Color(0xFF3B82F6),
+      AppColors.contestBlue,
       Color(0xFFEC4899),
       Color(0xFFF97316),
-      Color(0xFF10B981),
-      Color(0xFF8B5CF6),
+      AppColors.contestActiveGreen,
+      AppColors.contestPurple,
     ];
     return colors[index % colors.length];
   }

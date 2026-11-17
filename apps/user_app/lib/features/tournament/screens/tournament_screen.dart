@@ -336,7 +336,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.brandPurple),
@@ -355,8 +355,8 @@ class _TournamentScreenState extends State<TournamentScreen> {
                           parent: BouncingScrollPhysics(),
                         ),
                         padding: EdgeInsets.symmetric(
-                          horizontal: isDesktop ? 24 : 16,
-                          vertical: isDesktop ? 20 : 12,
+                          horizontal: isDesktop ? AppSpacing.pagePaddingDesktop : AppSpacing.cardPadding,
+                          vertical: isDesktop ? AppSpacing.xl : AppSpacing.md,
                         ),
                         child: isDesktop
                             ? _buildDesktopLayout()
@@ -391,7 +391,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             });
           },
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: AppSpacing.contestItemGap),
 
         // 2. Four Stats Cards
         TournamentStatsCards(
@@ -401,7 +401,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
           myRank: rankStr,
           totalRewards: '₹2,500',
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: AppSpacing.contestItemGap),
 
         // 3. Quick Navigation Shortcuts
         TournamentShortcuts(
@@ -409,7 +409,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
           activeShortcut: _activeShortcut,
           onShortcutTap: _onShortcutTap,
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: AppSpacing.contestSectionGap),
 
         // 4. Main Body: Left Content + Right Panel
         Row(
@@ -430,7 +430,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
                           vertical: 4,
                         ),
                         decoration: const BoxDecoration(
-                          color: Color(0xFFEDE9FE),
+                          color: AppColors.contestShortcutPurpleBg,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -439,14 +439,10 @@ class _TournamentScreenState extends State<TournamentScreen> {
                           color: AppColors.brandPurple,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         'Contests (${displayTournaments.length})',
-                        style: const TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFF0F172A),
-                        ),
+                        style: AppTypography.contestSectionTitle,
                       ),
                       const Spacer(),
                       TournamentFilterChips(
@@ -461,7 +457,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.contestItemGap),
 
                   // Tournament Cards List
                   if (displayTournaments.isEmpty)
@@ -574,7 +570,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
               width: 26,
               height: 26,
               decoration: const BoxDecoration(
-                color: Color(0xFFF3E8FF),
+                color: AppColors.contestShortcutPurpleBg,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -584,13 +580,13 @@ class _TournamentScreenState extends State<TournamentScreen> {
                 size: 16,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             const Text(
               'Running Contests',
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF0F172A),
+                color: AppColors.contestTextPrimary,
               ),
             ),
             const Spacer(),
@@ -656,7 +652,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
               width: 26,
               height: 26,
               decoration: const BoxDecoration(
-                color: Color(0xFFF3E8FF),
+                color: AppColors.contestShortcutPurpleBg,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -666,13 +662,13 @@ class _TournamentScreenState extends State<TournamentScreen> {
                 size: 15,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             const Text(
               'Upcoming Contests',
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF0F172A),
+                color: AppColors.contestTextPrimary,
               ),
             ),
             const Spacer(),
@@ -712,7 +708,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             isDesktop: false,
           ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
       ],
     );
   }
@@ -722,9 +718,9 @@ class _TournamentScreenState extends State<TournamentScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: AppColors.contestCardBg,
+        borderRadius: AppRadii.contestCard,
+        border: Border.all(color: AppColors.contestCardBorder),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -733,7 +729,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             width: 56,
             height: 56,
             decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
+              color: AppColors.contestWatermark,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
@@ -757,7 +753,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             'No contests match the selected filter category.',
             style: TextStyle(
               fontSize: 12.5,
-              color: Color(0xFF64748B),
+              color: AppColors.contestTextSecondary,
             ),
           ),
           const SizedBox(height: 16),

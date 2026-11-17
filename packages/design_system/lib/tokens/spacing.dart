@@ -53,4 +53,11 @@ class AppSpacing {
   static const double adminGapItem = 18.0;
   static const double adminGapSmall = 12.0;
   static const double adminGridSpacing = 16.0;
+
+  // --- Contest & Tournament Semantic Spacing Tokens ---
+  static const double contestSectionGap = 20.0;
+  static const double contestItemGap = 16.0;
+  static const double contestItemGapCompact = 12.0;
+  static const double contestCardPadding = 16.0;
+  static const double contestCardPaddingMobile = 14.0;
 }

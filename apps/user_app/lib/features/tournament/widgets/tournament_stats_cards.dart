@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:design_system/design_system.dart';
 
-/// Responsive Statistics Cards (4 cards on Desktop, 2 on Mobile)
+/// Responsive Statistics Cards Tokenized with Centralized Design System
 class TournamentStatsCards extends StatelessWidget {
   final bool isDesktop;
   final int activeCount;
@@ -25,37 +26,37 @@ class TournamentStatsCards extends StatelessWidget {
           Expanded(
             child: _buildDesktopCard(
               icon: Icons.emoji_events_rounded,
-              iconBgColor: const Color(0xFFF59E0B),
+              iconBgColor: AppColors.contestCoinAmber,
               watermarkIcon: Icons.emoji_events_rounded,
               title: 'Active\nContests',
               value: activeCount.toString(),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: _buildDesktopCard(
               icon: Icons.people_alt_rounded,
-              iconBgColor: const Color(0xFF3B82F6),
+              iconBgColor: AppColors.contestBlue,
               watermarkIcon: Icons.people_alt_rounded,
               title: 'My Participation',
               value: participationCount.toString(),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: _buildDesktopCard(
               icon: Icons.workspace_premium_rounded,
-              iconBgColor: const Color(0xFF8B5CF6),
+              iconBgColor: AppColors.contestPurple,
               watermarkIcon: Icons.workspace_premium_rounded,
               title: 'My Rank',
               value: myRank,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: _buildDesktopCard(
               icon: Icons.card_giftcard_rounded,
-              iconBgColor: const Color(0xFF10B981),
+              iconBgColor: AppColors.contestActiveGreen,
               watermarkIcon: Icons.card_giftcard_rounded,
               title: 'Total Rewards',
               value: totalRewards,
@@ -71,16 +72,16 @@ class TournamentStatsCards extends StatelessWidget {
         Expanded(
           child: _buildMobileCard(
             icon: Icons.emoji_events_rounded,
-            iconBgColor: const Color(0xFFF59E0B),
+            iconBgColor: AppColors.contestCoinAmber,
             title: 'Active\nContests',
             value: activeCount.toString(),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _buildMobileCard(
             icon: Icons.people_alt_rounded,
-            iconBgColor: const Color(0xFF3B82F6),
+            iconBgColor: AppColors.contestBlue,
             title: 'My Participation',
             value: participationCount.toString(),
           ),
@@ -99,16 +100,10 @@ class TournamentStatsCards extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: AppColors.contestCardBg,
+        borderRadius: AppRadii.contestCard,
+        border: Border.all(color: AppColors.contestCardBorder),
+        boxShadow: AppShadows.contestCard,
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -120,7 +115,7 @@ class TournamentStatsCards extends StatelessWidget {
             child: Icon(
               watermarkIcon,
               size: 54,
-              color: const Color(0xFFF1F5F9),
+              color: AppColors.contestWatermark,
             ),
           ),
           Row(
@@ -130,7 +125,7 @@ class TournamentStatsCards extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: iconBgColor,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadii.contestThumb,
                 ),
                 alignment: Alignment.center,
                 child: Icon(icon, color: Colors.white, size: 24),
@@ -144,22 +139,12 @@ class TournamentStatsCards extends StatelessWidget {
                     Text(
                       title,
                       maxLines: 2,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF64748B),
-                        height: 1.15,
-                      ),
+                      style: AppTypography.contestStatLabel,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       value,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F172A),
-                        letterSpacing: -0.5,
-                      ),
+                      style: AppTypography.contestStatValue,
                     ),
                   ],
                 ),
@@ -180,16 +165,10 @@ class TournamentStatsCards extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: AppColors.contestCardBg,
+        borderRadius: AppRadii.contestCard,
+        border: Border.all(color: AppColors.contestCardBorder),
+        boxShadow: AppShadows.contestCardMobile,
       ),
       child: Stack(
         clipBehavior: Clip.none,
@@ -200,7 +179,7 @@ class TournamentStatsCards extends StatelessWidget {
             child: Icon(
               icon,
               size: 46,
-              color: const Color(0xFFF1F5F9),
+              color: AppColors.contestWatermark,
             ),
           ),
           Row(
@@ -210,7 +189,7 @@ class TournamentStatsCards extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   color: iconBgColor,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadii.contestThumbSm,
                 ),
                 alignment: Alignment.center,
                 child: Icon(icon, color: Colors.white, size: 22),
@@ -227,7 +206,7 @@ class TournamentStatsCards extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF64748B),
+                        color: AppColors.contestTextSecondary,
                         height: 1.15,
                       ),
                     ),
@@ -237,7 +216,7 @@ class TournamentStatsCards extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F172A),
+                        color: AppColors.contestTextPrimary,
                       ),
                     ),
                   ],
