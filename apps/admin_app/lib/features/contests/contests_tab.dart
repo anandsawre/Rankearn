@@ -348,7 +348,6 @@ class _ContestsTabState extends State<ContestsTab> {
           'duration_minutes': updatedItem.durationMinutes,
           'total_questions': updatedItem.questionsCount,
           'entry_fee_coins': updatedItem.entryFeeCoins,
-          'prize_pool_coins': updatedItem.rewardCoins,
           'is_tournament': false, // Strictly false for Live Quiz!
           'test_mode': 'mock',
           'status': updatedItem.status == LiveQuizStatus.draft ? 'draft' : 'published',
@@ -709,7 +708,6 @@ class _ContestsTabState extends State<ContestsTab> {
         'duration_minutes': durationMins,
         'total_questions': newQuiz.questionsCount,
         'entry_fee_coins': entryFee,
-        'prize_pool_coins': rewardCoins,
         'is_tournament': false,
         'test_mode': 'mock',
         'status': 'published',
@@ -1007,7 +1005,6 @@ class _ContestsTabState extends State<ContestsTab> {
                       'is_tournament': false, // Strictly false!
                       'test_mode': 'mock',
                       'entry_fee_coins': dup.entryFeeCoins,
-                      'prize_pool_coins': dup.rewardCoins,
                       'status': 'draft',
                       'total_participants': 0,
                       'created_at': DateTime.now().toUtc().toIso8601String(),
