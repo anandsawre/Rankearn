@@ -378,135 +378,130 @@ class _TournamentScreenState extends State<TournamentScreen> {
     final rankStr = _userStats['rank']?.toString() ?? '#1';
     final streakDays = (_userStats['streakDays'] as num?)?.toInt() ?? 7;
 
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Purple Hero Banner
-        TournamentHeroBanner(
-          isDesktop: true,
-          onExploreTap: () {
-            setState(() {
-              _activeShortcut = 'all';
-              _selectedFilter = 'all';
-            });
-          },
-        ),
-        const SizedBox(height: AppSpacing.contestItemGap),
+        // Left Content Section (Hero Banner, Stats, Shortcuts, Contests List)
+        Expanded(
+          flex: 71,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Purple Hero Banner
+              TournamentHeroBanner(
+                isDesktop: true,
+                onExploreTap: () {
+                  setState(() {
+                    _activeShortcut = 'all';
+                    _selectedFilter = 'all';
+                  });
+                },
+              ),
+              const SizedBox(height: AppSpacing.contestItemGap),
 
-        // 2. Four Stats Cards
-        TournamentStatsCards(
-          isDesktop: true,
-          activeCount: running.isNotEmpty ? running.length : 3,
-          participationCount: _registeredIds.isNotEmpty ? _registeredIds.length : 6,
-          myRank: rankStr,
-          totalRewards: '₹2,500',
-        ),
-        const SizedBox(height: AppSpacing.contestItemGap),
+              // 2. Four Stats Cards
+              TournamentStatsCards(
+                isDesktop: true,
+                activeCount: running.isNotEmpty ? running.length : 3,
+                participationCount:
+                    _registeredIds.isNotEmpty ? _registeredIds.length : 6,
+                myRank: rankStr,
+                totalRewards: '₹2,500',
+              ),
+              const SizedBox(height: AppSpacing.contestItemGap),
 
-        // 3. Quick Navigation Shortcuts
-        TournamentShortcuts(
-          isDesktop: true,
-          activeShortcut: _activeShortcut,
-          onShortcutTap: _onShortcutTap,
-        ),
-        const SizedBox(height: AppSpacing.contestSectionGap),
+              // 3. Quick Navigation Shortcuts
+              TournamentShortcuts(
+                isDesktop: true,
+                activeShortcut: _activeShortcut,
+                onShortcutTap: _onShortcutTap,
+              ),
+              const SizedBox(height: AppSpacing.contestSectionGap),
 
-        // 4. Main Body: Left Content + Right Panel
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left Content Section (Tournaments List)
-            Expanded(
-              flex: 68,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // 4. Title & Filter Chips Row
+              Row(
                 children: [
-                  // Title & Filter Chips Row
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: const BoxDecoration(
-                          color: AppColors.contestShortcutPurpleBg,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.flag_rounded,
-                          size: 16,
-                          color: AppColors.brandPurple,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        'Contests (${displayTournaments.length})',
-                        style: AppTypography.contestSectionTitle,
-                      ),
-                      const Spacer(),
-                      TournamentFilterChips(
-                        selectedFilter: _selectedFilter,
-                        totalCount: displayTournaments.length,
-                        onFilterChanged: (filter) {
-                          setState(() {
-                            _activeShortcut = 'all';
-                            _selectedFilter = filter;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.contestItemGap),
-
-                  // Tournament Cards List
-                  if (displayTournaments.isEmpty)
-                    _buildEmptyState()
-                  else
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: displayTournaments.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 14),
-                      itemBuilder: (context, index) {
-                        final tourney = displayTournaments[index];
-                        final isReg = _registeredIds.contains(tourney.id);
-
-                        return TournamentCard(
-                          tournament: tourney,
-                          isDesktop: true,
-                          isRegistered: isReg,
-                          onParticipate: () => _handleParticipate(tourney),
-                          onViewDetails: () => TournamentDetailsDialog.show(
-                            context,
-                            tournament: tourney,
-                            isRegistered: isReg,
-                            onParticipate: () => _handleParticipate(tourney),
-                          ),
-                        );
-                      },
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
+                    decoration: const BoxDecoration(
+                      color: AppColors.contestShortcutPurpleBg,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.flag_rounded,
+                      size: 16,
+                      color: AppColors.brandPurple,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Contests (${displayTournaments.length})',
+                    style: AppTypography.contestSectionTitle,
+                  ),
+                  const Spacer(),
+                  TournamentFilterChips(
+                    selectedFilter: _selectedFilter,
+                    totalCount: displayTournaments.length,
+                    onFilterChanged: (filter) {
+                      setState(() {
+                        _activeShortcut = 'all';
+                        _selectedFilter = filter;
+                      });
+                    },
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(width: 22),
+              const SizedBox(height: AppSpacing.contestItemGap),
 
-            // Right Information Panel
-            SizedBox(
-              width: 320,
-              child: TournamentRightPanel(
-                leaderboardUsers: _leaderboardUsers,
-                upcomingTournament: topUpcoming,
-                streakDays: streakDays,
-                completedToday: 3,
-                onViewAllRankers: () => TournamentLeaderboardDialog.show(
-                  context,
-                  leaderboardUsers: _leaderboardUsers,
-                  currentUserId: widget.profile.id,
+              // 5. Contest Cards List
+              if (displayTournaments.isEmpty)
+                _buildEmptyState()
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: displayTournaments.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 14),
+                  itemBuilder: (context, index) {
+                    final tourney = displayTournaments[index];
+                    final isReg = _registeredIds.contains(tourney.id);
+
+                    return TournamentCard(
+                      tournament: tourney,
+                      isDesktop: true,
+                      isRegistered: isReg,
+                      onParticipate: () => _handleParticipate(tourney),
+                      onViewDetails: () => TournamentDetailsDialog.show(
+                        context,
+                        tournament: tourney,
+                        isRegistered: isReg,
+                        onParticipate: () => _handleParticipate(tourney),
+                      ),
+                    );
+                  },
                 ),
-              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 24),
+
+        // Right Information Panel Column (Starts at the top next to Hero Banner)
+        Expanded(
+          flex: 29,
+          child: TournamentRightPanel(
+            leaderboardUsers: _leaderboardUsers,
+            upcomingTournament: topUpcoming,
+            streakDays: streakDays,
+            completedToday: 3,
+            onViewAllRankers: () => TournamentLeaderboardDialog.show(
+              context,
+              leaderboardUsers: _leaderboardUsers,
+              currentUserId: widget.profile.id,
             ),
-          ],
+          ),
         ),
       ],
     );

@@ -169,20 +169,21 @@ class TournamentCard extends StatelessWidget {
                   const SizedBox(height: 8),
 
                   // Meta Row
-                  Row(
+                  Wrap(
+                    spacing: AppSpacing.lg,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       _buildMetaChip(
                         icon: Icons.calendar_today_rounded,
                         text: tournament.datesFormatted,
                       ),
-                      const SizedBox(width: AppSpacing.lg),
                       _buildMetaChip(
                         icon: Icons.group_rounded,
                         text: tournament.totalParticipants > 0
                             ? '${tournament.totalParticipants}+'
                             : '12,480+',
                       ),
-                      const SizedBox(width: AppSpacing.lg),
                       _buildMetaChip(
                         icon: Icons.monetization_on_rounded,
                         iconColor: AppColors.contestCoinAmber,
@@ -192,7 +193,6 @@ class TournamentCard extends StatelessWidget {
                             : AppColors.contestTextPrimary,
                         isBoldText: true,
                       ),
-                      const SizedBox(width: AppSpacing.lg),
                       _buildMetaChip(
                         icon: Icons.emoji_events_rounded,
                         iconColor: AppColors.contestCoinAmber,
