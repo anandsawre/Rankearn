@@ -79,8 +79,8 @@ class AppHeroBanner extends StatelessWidget {
     this.leadingEmblem,
     this.ctaLabel,
     this.onCtaPressed,
-    this.ctaColor = const Color(0xFFFFD633),
-    this.ctaTextColor = const Color(0xFF101A3A),
+    this.ctaColor = AppColors.brandYellow,
+    this.ctaTextColor = AppColors.textPrimary,
     this.ctaIcon = Icons.arrow_forward_rounded,
     this.imageAssetPath,
     this.floatingMascotBadge,
@@ -720,7 +720,7 @@ class AppHeroBanner extends StatelessWidget {
             fontWeight: FontWeight.w900,
             letterSpacing: -0.6,
             height: 1.1,
-            fontFamily: 'Inter',
+            fontFamily: AppTypography.fontHeading,
           ),
           children: [
             TextSpan(
@@ -729,7 +729,7 @@ class AppHeroBanner extends StatelessWidget {
             ),
             TextSpan(
               text: 'Earn Rewards',
-              style: TextStyle(color: Color(0xFFFFD633)),
+              style: TextStyle(color: AppColors.brandYellow),
             ),
           ],
         ),

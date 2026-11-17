@@ -184,7 +184,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
                       width: isSelected ? 18 : 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
+                        color: isSelected ? AppColors.primary : AppColors.borderStrong,
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
@@ -231,11 +231,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
   Widget _buildFallbackBanner(BannerItemData banner) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF5636F5), Color(0xFF7628E8), Color(0xFF4C16A8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: AppColors.adminBannerGradient,
       ),
       padding: const EdgeInsets.all(20),
       child: Row(

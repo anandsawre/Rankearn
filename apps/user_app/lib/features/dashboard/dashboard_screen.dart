@@ -274,7 +274,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTopBanner(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppRadii.borderMd,
                       ),
                       const SizedBox(height: 20),
                       LivePollCard(profile: widget.profile),
@@ -334,7 +334,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildTopBanner(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadii.borderMd,
               ),
               const SizedBox(height: 18),
               LivePollCard(profile: widget.profile),
