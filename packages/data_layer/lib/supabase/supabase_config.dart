@@ -22,18 +22,17 @@ class SupabaseConfig {
 
     await Supabase.initialize(
       url: url,
-      publishableKey: anonKey,
+      anonKey: anonKey,
       authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.pkce,
+        detectSessionInUri: false,
       ),
     );
     _initialized = true;
   }
 
-  static bool get isInitialized => _initialized;
+  static bool get isInitialized => _initialized || clientSafe != null;
 
   static SupabaseClient? get clientSafe {
-    if (!_initialized) return null;
     try {
       return Supabase.instance.client;
     } catch (_) {

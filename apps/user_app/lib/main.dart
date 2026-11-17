@@ -36,19 +36,40 @@ void main() async {
     debugPrint('Supabase initialization: $e');
   }
 
-  runApp(const ProviderScope(child: RankearnUserApp(autoCheckSession: true)));
+  // Restore authenticated user session before runApp to eliminate re-login on APK reopen
+  UserProfile? initialProfile;
+  try {
+    final authRepo = AuthRepository();
+    final res = await authRepo.restoreSession();
+    if (res case Success(:final data)) {
+      initialProfile = data;
+    } else {
+      initialProfile = await authRepo.getLocalProfile();
+    }
+  } catch (_) {}
+
+  runApp(
+    ProviderScope(
+      child: RankearnUserApp(
+        initialProfile: initialProfile,
+        showAuthInitially: initialProfile == null,
+      ),
+    ),
+  );
 }
 
 class RankearnUserApp extends StatefulWidget {
   final List<TestModel>? initialTests;
   final bool? showAuthInitially;
   final bool autoCheckSession;
+  final UserProfile? initialProfile;
 
   const RankearnUserApp({
     super.key,
     this.initialTests,
     this.showAuthInitially,
     this.autoCheckSession = false,
+    this.initialProfile,
   });
 
   @override
@@ -65,19 +86,17 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
   @override
   void initState() {
     super.initState();
-    if (widget.showAuthInitially != null) {
-      _showAuth = widget.showAuthInitially!;
-    } else if (widget.autoCheckSession) {
-      _showAuth = false;
+    _currentUser = widget.initialProfile;
+    _showAuth = widget.showAuthInitially ?? (_currentUser == null);
+    _isCheckingSession = false;
+
+    // If initialProfile was not loaded synchronously and autoCheckSession is true, check async
+    if (_currentUser == null && widget.autoCheckSession) {
       _isCheckingSession = true;
       _checkSession();
-    } else {
-      _showAuth = false;
     }
 
-    if (widget.autoCheckSession) {
-      _subscribeAuth();
-    }
+    _subscribeAuth();
   }
 
   Future<void> _checkSession() async {
@@ -97,6 +116,15 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
       debugPrint('Session check error: $e');
     }
     if (mounted) {
+      final cached = await _authRepository.getLocalProfile();
+      if (cached != null) {
+        setState(() {
+          _currentUser = cached;
+          _showAuth = false;
+          _isCheckingSession = false;
+        });
+        return;
+      }
       setState(() {
         _currentUser = null;
         _showAuth = true;
@@ -110,19 +138,6 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
       authState,
     ) async {
       final session = authState.session;
-      final event = authState.event;
-
-      // Only force show auth screen if explicitly signed out
-      if (event.name == 'signedOut') {
-        await _authRepository.clearLocalProfile();
-        if (mounted) {
-          setState(() {
-            _currentUser = null;
-            _showAuth = true;
-          });
-        }
-        return;
-      }
 
       if (session != null) {
         final res = await _authRepository.getProfile(session.user.id);
@@ -249,6 +264,7 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
                 } catch (e) {
                   debugPrint('Logout error: $e');
                 }
+                await _authRepository.clearLocalProfile();
                 if (mounted) {
                   setState(() {
                     _showAuth = true;

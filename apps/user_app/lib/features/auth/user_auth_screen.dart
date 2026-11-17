@@ -132,7 +132,6 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     try {
       if (_mode == AuthScreenMode.login) {
         final identifier = email;
-        final isPhone = !identifier.contains('@') && RegExp(r'^[+0-9\s\-]+$').hasMatch(identifier);
 
         final res = await _authRepository.signInWithIdentifier(
           identifier: identifier,
@@ -142,24 +141,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         if (res is Success<UserProfile>) {
           _handleSuccess(res.data);
           return;
-        } else if (res is Failure) {
-          final isDbOffline = !SupabaseConfig.isInitialized || SupabaseConfig.clientSafe == null;
-          if (isDbOffline && password.length >= 6) {
-            final mockProfile = UserProfile(
-              id: 'usr_authenticated_session',
-              name: isPhone ? 'Student Aspirant' : 'Vikram Singh',
-              email: isPhone ? '${identifier.replaceAll(RegExp(r'\D'), '')}@phone.rankearn.in' : identifier,
-              phone: isPhone ? identifier : null,
-              coins: 1250,
-              subscriptionStatus: 'active',
-              examPreparingFor: _selectedExamGoal ?? '70th BPSC Aspirant',
-              state: 'Bihar, India',
-              createdAt: DateTime.now(),
-            );
-            _handleSuccess(mockProfile);
-            return;
-          }
-          final rawMsg = (res as Failure).message;
+        } else if (res is Failure<UserProfile>) {
+          final rawMsg = res.message;
           setState(() {
             _needsEmailVerification = rawMsg.toLowerCase().contains('email not confirmed');
             _errorMessage = _formatAuthError(rawMsg);
@@ -180,25 +163,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         if (res is Success<UserProfile>) {
           _handleSuccess(res.data);
           return;
-        } else if (res is Failure) {
-          final isDbOffline = !SupabaseConfig.isInitialized || SupabaseConfig.clientSafe == null;
-          if (isDbOffline && email.contains('@') && password.length >= 6) {
-            final newProfile = UserProfile(
-              id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-              name: name,
-              email: email,
-              phone: phone.isNotEmpty ? phone : null,
-              coins: 100,
-              subscriptionStatus: 'free',
-              examPreparingFor: _selectedExamGoal ?? 'Competitive Aspirant',
-              state: 'India',
-              referralCode: referralCode.isNotEmpty ? referralCode.toUpperCase() : null,
-              createdAt: DateTime.now(),
-            );
-            _handleSuccess(newProfile);
-            return;
-          }
-          final rawMsg = (res as Failure).message;
+        } else if (res is Failure<UserProfile>) {
+          final rawMsg = res.message;
           setState(() {
             _needsEmailVerification = rawMsg.toLowerCase().contains('email not confirmed');
             _errorMessage = _formatAuthError(rawMsg);

@@ -161,7 +161,7 @@ class AuthRepository {
         password: password,
         data: {
           'name': name.trim(),
-          'phone': ?cleanPhone,
+          if (cleanPhone != null) 'phone': cleanPhone,
           if (examGoal != null && examGoal.trim().isNotEmpty) 'exam_goal': examGoal.trim(),
           if (referralCode != null && referralCode.trim().isNotEmpty)
             'referral_code': referralCode.trim().toUpperCase(),
@@ -173,14 +173,8 @@ class AuthRepository {
         return const Failure('Signup failed: No user returned');
       }
 
-      final profileRes = await getProfile(user.id);
-      if (profileRes is Success<UserProfile>) {
-        await saveLocalProfile(profileRes.data);
-        return profileRes;
-      }
-
-      // Fallback profile if database trigger is slightly delayed or session is pending confirmation
-      final fallbackProfile = UserProfile(
+      // Explicitly upsert profile into database so user row ALWAYS exists
+      final newProfile = UserProfile(
         id: user.id,
         name: name.trim(),
         email: user.email ?? trimmedEmail,
@@ -194,11 +188,17 @@ class AuthRepository {
       );
 
       try {
-        await client.from('profiles').upsert(fallbackProfile.toMap());
+        await client.from('profiles').upsert(newProfile.toMap());
       } catch (_) {}
-      await saveLocalProfile(fallbackProfile);
 
-      return Success(fallbackProfile);
+      final profileRes = await getProfile(user.id);
+      if (profileRes is Success<UserProfile>) {
+        await saveLocalProfile(profileRes.data);
+        return profileRes;
+      }
+
+      await saveLocalProfile(newProfile);
+      return Success(newProfile);
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {
@@ -278,8 +278,26 @@ class AuthRepository {
       final profileRes = await getProfile(user.id);
       if (profileRes is Success<UserProfile>) {
         await saveLocalProfile(profileRes.data);
+        return profileRes;
       }
-      return profileRes;
+
+      final meta = user.userMetadata ?? {};
+      final fallbackProfile = UserProfile(
+        id: user.id,
+        name: meta['name']?.toString() ?? meta['full_name']?.toString() ?? user.email?.split('@').first ?? 'Rankearn Aspirant',
+        email: user.email ?? 'aspirant@rankearn.in',
+        phone: user.phone ?? meta['phone']?.toString(),
+        coins: 100,
+        subscriptionStatus: 'free',
+        examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+        state: 'India',
+        createdAt: DateTime.now(),
+      );
+      try {
+        await client.from('profiles').upsert(fallbackProfile.toMap());
+      } catch (_) {}
+      await saveLocalProfile(fallbackProfile);
+      return Success(fallbackProfile);
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {
@@ -319,8 +337,26 @@ class AuthRepository {
       final profileRes = await getProfile(user.id);
       if (profileRes is Success<UserProfile>) {
         await saveLocalProfile(profileRes.data);
+        return profileRes;
       }
-      return profileRes;
+
+      final meta = user.userMetadata ?? {};
+      final fallbackProfile = UserProfile(
+        id: user.id,
+        name: meta['name']?.toString() ?? meta['full_name']?.toString() ?? user.email?.split('@').first ?? 'Rankearn Aspirant',
+        email: user.email ?? 'aspirant@rankearn.in',
+        phone: user.phone ?? meta['phone']?.toString(),
+        coins: 100,
+        subscriptionStatus: 'free',
+        examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+        state: 'India',
+        createdAt: DateTime.now(),
+      );
+      try {
+        await client.from('profiles').upsert(fallbackProfile.toMap());
+      } catch (_) {}
+      await saveLocalProfile(fallbackProfile);
+      return Success(fallbackProfile);
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {
@@ -380,8 +416,26 @@ class AuthRepository {
       final profileRes = await getProfile(user.id);
       if (profileRes is Success<UserProfile>) {
         await saveLocalProfile(profileRes.data);
+        return profileRes;
       }
-      return profileRes;
+
+      final meta = user.userMetadata ?? {};
+      final fallbackProfile = UserProfile(
+        id: user.id,
+        name: meta['name']?.toString() ?? meta['full_name']?.toString() ?? user.email?.split('@').first ?? 'Rankearn Aspirant',
+        email: user.email ?? 'aspirant@rankearn.in',
+        phone: user.phone ?? meta['phone']?.toString(),
+        coins: 100,
+        subscriptionStatus: 'free',
+        examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+        state: 'India',
+        createdAt: DateTime.now(),
+      );
+      try {
+        await client.from('profiles').upsert(fallbackProfile.toMap());
+      } catch (_) {}
+      await saveLocalProfile(fallbackProfile);
+      return Success(fallbackProfile);
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {
