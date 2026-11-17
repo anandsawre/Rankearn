@@ -354,20 +354,13 @@ class _TournamentScreenState extends State<TournamentScreen> {
                         physics: const AlwaysScrollableScrollPhysics(
                           parent: BouncingScrollPhysics(),
                         ),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1320),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isDesktop ? 24 : 16,
-                                vertical: isDesktop ? 20 : 12,
-                              ),
-                              child: isDesktop
-                                  ? _buildDesktopLayout()
-                                  : _buildMobileLayout(),
-                            ),
-                          ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isDesktop ? 24 : 16,
+                          vertical: isDesktop ? 20 : 12,
                         ),
+                        child: isDesktop
+                            ? _buildDesktopLayout()
+                            : _buildMobileLayout(),
                       ),
                     );
                   },
