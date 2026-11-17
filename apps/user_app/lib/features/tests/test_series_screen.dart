@@ -506,6 +506,15 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
 
   List<TestModel> get _filteredTests {
     return _tests.where((test) {
+      // Exclude active live tests and upcoming tests from the general practice catalog.
+      // Active and upcoming live tests belong strictly in the Live tab / Upcoming section.
+      // Once a live contest/test has concluded (test.isPast == true), it is archived and can be practiced here.
+      if (((test.isLive || test.isUpcoming) && !test.isPast) ||
+          (test.isTournament && !test.isPast) ||
+          (test.testMode == 'live' && !test.isPast)) {
+        return false;
+      }
+
       if (_searchQuery.isNotEmpty &&
           !test.title.toLowerCase().contains(_searchQuery.toLowerCase())) {
         return false;
