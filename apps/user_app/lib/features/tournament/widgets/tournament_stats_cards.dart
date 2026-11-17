@@ -30,7 +30,7 @@ class TournamentStatsCards extends StatelessWidget {
               icon: Icons.emoji_events_rounded,
               iconBgColor: AppColors.contestCoinAmber,
               watermarkIcon: Icons.emoji_events_rounded,
-              title: 'Active\nTournaments',
+              title: 'Active\nContests',
               value: activeCount.toString(),
             ),
           ),
@@ -77,7 +77,7 @@ class TournamentStatsCards extends StatelessWidget {
               child: _buildMobileCard(
                 icon: Icons.emoji_events_rounded,
                 iconBgColor: AppColors.contestCoinAmber,
-                title: 'Active Tournaments',
+                title: 'Active Contests',
                 value: activeCount.toString(),
               ),
             ),

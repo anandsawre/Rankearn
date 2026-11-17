@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart';
 import '../dialogs/tournament_details_dialog.dart';
+import '../dialogs/tournament_join_dialog.dart';
 import '../dialogs/tournament_leaderboard_dialog.dart';
 import '../dialogs/tournament_rules_dialog.dart';
 import '../widgets/tournament_card.dart';
@@ -97,7 +98,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Failed to load tournaments. Please check your network.';
+        _errorMessage = 'Failed to load contests. Please check your network.';
         _isLoading = false;
       });
     }
@@ -148,120 +149,12 @@ class _TournamentScreenState extends State<TournamentScreen> {
     }
 
     final entryFee = tournament.entryFeeCoins;
-    final isFree = entryFee == 0;
 
-    // Show Confirmation Dialog
-    final shouldProceed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: AppRadii.borderLg),
-        backgroundColor: Colors.white,
-        title: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: isFree
-                    ? const Color(0xFFE6F8EF)
-                    : const Color(0xFFFEF3C7),
-                borderRadius: AppRadii.borderMd,
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                isFree
-                    ? Icons.celebration_rounded
-                    : Icons.monetization_on_rounded,
-                color: isFree
-                    ? AppColors.brandGreen
-                    : const Color(0xFFD97706),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Join Tournament',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              tournament.title,
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isFree
-                  ? 'Registration is completely FREE! Compete for the All-India leaderboard rank and prize pool.'
-                  : 'Entry Fee: $entryFee Coins will be deducted from your Rankearn wallet balance (${widget.profile.coins} Coins available).',
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
-            ),
-            if (!isFree && widget.profile.coins < entryFee) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: AppRadii.borderMd,
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.error_outline_rounded,
-                        color: Color(0xFFDC2626), size: 18),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Insufficient coin balance! Please earn or top up coins to participate.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFB91C1C),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: (!isFree && widget.profile.coins < entryFee)
-                ? null
-                : () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.brandGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: AppRadii.borderMd,
-              ),
-              elevation: 0,
-            ),
-            child: Text(isFree ? 'Confirm & Join' : 'Pay $entryFee Coins & Join'),
-          ),
-        ],
-      ),
+    // Show Tokenized Bottom Sheet Confirmation Dialog
+    final shouldProceed = await TournamentJoinDialog.show(
+      context,
+      tournament: tournament,
+      userCoins: widget.profile.coins,
     );
 
     if (shouldProceed != true) return;
@@ -438,7 +331,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'Tournaments (${displayTournaments.length})',
+                    'Contests (${displayTournaments.length})',
                     style: AppTypography.contestSectionTitle,
                   ),
                   const Spacer(),
@@ -577,7 +470,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             ),
             const SizedBox(width: AppSpacing.sm),
             const Text(
-              'Running Tournaments',
+              'Running Contests',
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w900,
@@ -659,7 +552,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
             ),
             const SizedBox(width: AppSpacing.sm),
             const Text(
-              'Upcoming Tournaments',
+              'Upcoming Contests',
               style: TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w900,
@@ -736,7 +629,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
           ),
           const SizedBox(height: 14),
           const Text(
-            'No Tournaments Found',
+            'No Contests Found',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
@@ -745,7 +638,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'No tournaments match the selected filter category.',
+            'No contests match the selected filter category.',
             style: TextStyle(
               fontSize: 12.5,
               color: AppColors.contestTextSecondary,
@@ -767,7 +660,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
                 borderRadius: AppRadii.borderMd,
               ),
             ),
-            child: const Text('Show All Tournaments'),
+            child: const Text('Show All Contests'),
           ),
         ],
       ),

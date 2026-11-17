@@ -153,7 +153,7 @@ class TournamentCard extends StatelessWidget {
                             borderRadius: AppRadii.borderPill,
                           ),
                           child: const Text(
-                            'LIVE TOURNAMENT',
+                            'LIVE CONTEST',
                             style: TextStyle(
                               color: AppColors.brandPurple,
                               fontSize: 9.5,
@@ -362,7 +362,7 @@ class TournamentCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Top Section: Header & Curved Trophy Illustration
+          // 1. Top Section: Title & Right-aligned Animated Live Badge
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -370,80 +370,6 @@ class TournamentCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Badges Row (Wrap to prevent overflow on narrow screens)
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        // Running Tournament Pill
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3E8FF),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.emoji_events_rounded,
-                                size: 12,
-                                color: Color(0xFF7C3AED),
-                              ),
-                              SizedBox(width: 3),
-                              Text(
-                                'Running Tournament',
-                                style: TextStyle(
-                                  color: Color(0xFF6D28D9),
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Live Pill
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDCFCE7),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 5,
-                                height: 5,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF16A34A),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 3),
-                              const Text(
-                                'Live',
-                                style: TextStyle(
-                                  color: Color(0xFF15803D),
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Title
                     Text(
                       tournament.title,
                       maxLines: 2,
@@ -457,8 +383,6 @@ class TournamentCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-
-                    // Subtitle
                     Text(
                       subtitle,
                       maxLines: 1,
@@ -473,196 +397,154 @@ class TournamentCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-
-              // Curved Purple Wave with Trophy Graphic
-              Container(
-                width: 78,
-                height: 64,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(14),
-                    bottomLeft: Radius.circular(28),
-                    topLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                  ),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFDE047).withValues(alpha: 0.45),
-                            blurRadius: 14,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Image.asset(
-                      'assets/images/daily_tasks_trophy.png',
-                      width: 42,
-                      height: 42,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.emoji_events_rounded,
-                        color: Color(0xFFFDE047),
-                        size: 34,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildLiveBadge(),
             ],
           ),
 
           const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 12),
 
-          // 2. 3-Column Metadata Row (Calendar, Participants, Total Rewards)
-          Row(
-            children: [
-              // 1. Calendar
-              Expanded(
-                child: Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF3E8FF),
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.calendar_month_rounded,
-                        color: Color(0xFF7C3AED),
-                        size: 15,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        datesText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
+          // 2. 3-Column Metadata Pod (Calendar, Participants, Total Rewards)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                // 1. Calendar
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3E8FF),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.calendar_month_rounded,
+                          color: Color(0xFF7C3AED),
+                          size: 15,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Vertical Divider 1
-              Container(
-                width: 1,
-                height: 24,
-                color: const Color(0xFFE2E8F0),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-              ),
-
-              // 2. Participants
-              Expanded(
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.people_alt_rounded,
-                      color: Color(0xFF7C3AED),
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            participantsCount,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
-                            ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          datesText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
                           ),
-                          const Text(
-                            'Participants',
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
-              // Vertical Divider 2
-              Container(
-                width: 1,
-                height: 24,
-                color: const Color(0xFFE2E8F0),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-              ),
+                // Vertical Divider 1
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: const Color(0xFFE2E8F0),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                ),
 
-              // 3. Total Rewards
-              Expanded(
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.card_giftcard_rounded,
-                      color: Color(0xFFF43F5E),
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            prizePool,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          const Text(
-                            'Total Rewards',
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
+                // 2. Participants
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.people_alt_rounded,
+                        color: Color(0xFF7C3AED),
+                        size: 18,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              participantsCount,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const Text(
+                              'Participants',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+
+                // Vertical Divider 2
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: const Color(0xFFE2E8F0),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+
+                // 3. Total Rewards
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.card_giftcard_rounded,
+                        color: Color(0xFFF43F5E),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              prizePool,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const Text(
+                              'Total Rewards',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 12),
@@ -732,7 +614,7 @@ class TournamentCard extends StatelessWidget {
             children: [
               _buildMobileBenefitPod(
                 icon: Icons.track_changes_rounded,
-                label: 'Daily Quiz',
+                label: 'Daily\nQuiz',
                 bgColor: const Color(0xFFEFF6FF),
                 borderColor: const Color(0xFFDBEAFE),
                 iconColor: const Color(0xFF0284C7),
@@ -784,13 +666,6 @@ class TournamentCard extends StatelessWidget {
                         end: Alignment.centerRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1014,6 +889,103 @@ class TournamentCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLiveBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDC2626), // Vibrant Crimson Red
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.9),
+          width: 1.2,
+        ),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _LiveWaveDot(),
+          SizedBox(width: 4),
+          Text(
+            'LIVE',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Animated pulsing ripple dot for the LIVE badge
+class _LiveWaveDot extends StatefulWidget {
+  const _LiveWaveDot();
+
+  @override
+  State<_LiveWaveDot> createState() => _LiveWaveDotState();
+}
+
+class _LiveWaveDotState extends State<_LiveWaveDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final val = _controller.value;
+        return SizedBox(
+          width: 14,
+          height: 14,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Opacity(
+                opacity: (1.0 - val).clamp(0.0, 1.0),
+                child: Container(
+                  width: 6.0 + (val * 8.0),
+                  height: 6.0 + (val * 8.0),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Container(
+                width: 5,
+                height: 5,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

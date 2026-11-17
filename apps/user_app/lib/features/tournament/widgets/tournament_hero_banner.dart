@@ -87,7 +87,7 @@ class TournamentHeroBanner extends StatelessWidget {
                               ),
                               SizedBox(width: 5),
                               Text(
-                                'Mega Tournaments',
+                                'Mega Contests',
                                 style: AppTypography.contestHeroTag,
                               ),
                             ],
@@ -99,8 +99,8 @@ class TournamentHeroBanner extends StatelessWidget {
                       // Title
                       Text(
                         isDesktop
-                            ? 'All-India Mega Tournaments'
-                            : 'Tournaments',
+                            ? 'All-India Mega Contests'
+                            : 'Contests',
                         style: isDesktop
                             ? AppTypography.contestHeroTitleDesktop
                             : AppTypography.contestHeroTitleMobile,
@@ -142,7 +142,7 @@ class TournamentHeroBanner extends StatelessWidget {
                             children: [
                               Flexible(
                                 child: Text(
-                                  isDesktop ? 'Explore Tournaments' : 'Explore',
+                                  isDesktop ? 'Explore Contests' : 'Explore',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(

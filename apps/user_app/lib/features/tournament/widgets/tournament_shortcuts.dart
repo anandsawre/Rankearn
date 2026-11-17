@@ -23,7 +23,7 @@ class TournamentShortcuts extends StatelessWidget {
             child: _buildDesktopPill(
               keyName: 'all',
               icon: Icons.emoji_events_rounded,
-              label: 'All Tournaments',
+              label: 'All Contests',
             ),
           ),
           const SizedBox(width: AppSpacing.sm * 1.75),
@@ -31,7 +31,7 @@ class TournamentShortcuts extends StatelessWidget {
             child: _buildDesktopPill(
               keyName: 'my',
               icon: Icons.assignment_outlined,
-              label: 'My Tournaments',
+              label: 'My Contests',
             ),
           ),
           const SizedBox(width: AppSpacing.sm * 1.75),
@@ -68,7 +68,7 @@ class TournamentShortcuts extends StatelessWidget {
         Expanded(
           child: _buildMobilePod(
             keyName: 'all',
-            label: 'All\nTournaments',
+            label: 'All\nContests',
             icon: Icons.emoji_events_rounded,
             bgColor: AppColors.contestShortcutPurpleBg,
             iconBgColor: AppColors.contestShortcutPurpleIcon,
@@ -78,7 +78,7 @@ class TournamentShortcuts extends StatelessWidget {
         Expanded(
           child: _buildMobilePod(
             keyName: 'my',
-            label: 'My\nTournaments',
+            label: 'My\nContests',
             icon: Icons.assignment_outlined,
             bgColor: AppColors.contestShortcutPinkBg,
             iconBgColor: AppColors.contestShortcutPinkIcon,
@@ -88,7 +88,7 @@ class TournamentShortcuts extends StatelessWidget {
         Expanded(
           child: _buildMobilePod(
             keyName: 'leaderboard',
-            label: 'Leaderboard\n',
+            label: 'Leader\nboard',
             icon: Icons.bar_chart_rounded,
             bgColor: AppColors.contestShortcutGreenBg,
             iconBgColor: AppColors.contestShortcutGreenIcon,
