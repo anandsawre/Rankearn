@@ -856,15 +856,10 @@ class _QuestionsTabState extends State<QuestionsTab> {
                 children: [
                   tableCard,
                   const SizedBox(height: 14),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: donutCard),
-                      const SizedBox(width: 12),
-                      Expanded(child: difficultyCard),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
+                  donutCard,
+                  const SizedBox(height: 12),
+                  difficultyCard,
+                  const SizedBox(height: 12),
                   activityCard,
                 ],
               ),

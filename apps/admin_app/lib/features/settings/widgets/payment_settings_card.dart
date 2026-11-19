@@ -34,16 +34,10 @@ class PaymentSettingsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.adminCardBackground,
         borderRadius: AppRadii.adminCard,
         border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: AppShadows.adminCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,14 +69,9 @@ class PaymentSettingsCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Enable Payments', style: AppTypography.adminFieldLabelSmall),
-              Transform.scale(
-                scale: 0.8,
-                child: Switch(
-                  value: enablePayments,
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: AppColors.adminPurple,
-                  onChanged: onEnablePaymentsChanged,
-                ),
+              AppSwitch.primary(
+                value: enablePayments,
+                onChanged: onEnablePaymentsChanged,
               ),
             ],
           ),
@@ -166,7 +155,7 @@ class PaymentSettingsCard extends StatelessWidget {
             height: 24,
             decoration: BoxDecoration(
               color: badgeColor,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: AppRadii.adminBadge,
             ),
             alignment: Alignment.center,
             child: Text(
@@ -181,14 +170,9 @@ class PaymentSettingsCard extends StatelessWidget {
               style: AppTypography.adminTablePrimary.copyWith(fontSize: 13),
             ),
           ),
-          Transform.scale(
-            scale: 0.75,
-            child: Switch(
-              value: enabled,
-              activeThumbColor: Colors.white,
-              activeTrackColor: AppColors.adminPurple,
-              onChanged: onChanged,
-            ),
+          AppSwitch.small(
+            value: enabled,
+            onChanged: onChanged,
           ),
         ],
       ),

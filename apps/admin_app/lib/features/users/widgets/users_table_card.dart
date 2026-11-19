@@ -546,6 +546,7 @@ class _UsersTableCardState extends State<UsersTableCard> {
   Widget _buildFilterButton(bool hasActiveFilter) {
     return AdminTableFiltersButton(
       onTap: _openFilterDialog,
+      isActive: hasActiveFilter,
     );
   }
 

@@ -854,6 +854,7 @@ class _TestsTabState extends State<TestsTab> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1100;
+    final isMobile = screenWidth < 768;
 
     final seriesTrend = _computeTrend(
       _allItems.map((i) => i.createdAt).toList(),
@@ -1056,6 +1057,24 @@ class _TestsTabState extends State<TestsTab> {
                         ),
                       ],
                     ),
+                  ),
+                ],
+              )
+            else if (isMobile)
+              Column(
+                children: [
+                  tableCard,
+                  const SizedBox(height: 16),
+                  SubjectWiseChartCard(
+                    totalCount: _totalTestSeries,
+                    slices: _subjectSlices,
+                    isLoading: _isLoading && _allItems.isEmpty,
+                  ),
+                  const SizedBox(height: 16),
+                  RecentActivityCard(
+                    activities: _recentActivities,
+                    isLoading: _isLoading && _allItems.isEmpty,
+                    onViewAll: _isLoading ? null : _loadFromSupabase,
                   ),
                 ],
               )

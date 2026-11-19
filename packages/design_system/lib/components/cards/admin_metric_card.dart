@@ -115,61 +115,59 @@ class AdminMetricCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          value,
-                          style: AppTypography.adminMetricValue,
-                          maxLines: 1,
-                        ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        value,
+                        style: AppTypography.adminMetricValue,
+                        maxLines: 1,
                       ),
-                    ),
-                    if (growth != null && growth!.isNotEmpty) ...[
-                      const SizedBox(width: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isGrowthPositive
-                              ? AppColors.adminSuccessLight
-                              : AppColors.adminDangerLight,
-                          borderRadius: AppRadii.badge,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isGrowthPositive
-                                  ? Icons.arrow_upward_rounded
-                                  : Icons.arrow_downward_rounded,
-                              size: 9,
-                              color: isGrowthPositive
-                                  ? AppColors.adminSuccess
-                                  : AppColors.adminDanger,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              growth!,
-                              style: AppTypography.adminBadge.copyWith(
-                                fontSize: 9.5,
+                      if (growth != null && growth!.isNotEmpty) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isGrowthPositive
+                                ? AppColors.adminSuccessLight
+                                : AppColors.adminDangerLight,
+                            borderRadius: AppRadii.badge,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isGrowthPositive
+                                    ? Icons.arrow_upward_rounded
+                                    : Icons.arrow_downward_rounded,
+                                size: 9,
                                 color: isGrowthPositive
                                     ? AppColors.adminSuccess
                                     : AppColors.adminDanger,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 2),
+                              Text(
+                                growth!,
+                                style: AppTypography.adminBadge.copyWith(
+                                  fontSize: 9.5,
+                                  color: isGrowthPositive
+                                      ? AppColors.adminSuccess
+                                      : AppColors.adminDanger,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
+                      if (badge != null) ...[
+                        const SizedBox(width: 4),
+                        badge!,
+                      ],
                     ],
-                    if (badge != null) ...[
-                      const SizedBox(width: 4),
-                      badge!,
-                    ],
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(

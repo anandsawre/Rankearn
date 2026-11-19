@@ -12,14 +12,14 @@ class FeaturesControlCard extends StatelessWidget {
   });
 
   static const List<Map<String, dynamic>> featuresList = [
-    {'key': '1v1_battle', 'label': '1v1 Battle', 'icon': Icons.emoji_events_rounded, 'color': Color(0xFFF59E0B)},
-    {'key': 'multiplayer_battle', 'label': 'Multiplayer Battle', 'icon': Icons.group_rounded, 'color': Color(0xFF6366F1)},
-    {'key': 'live_quiz', 'label': 'Live Quiz', 'icon': Icons.play_arrow_rounded, 'color': Color(0xFF10B981)},
-    {'key': 'mock_test_series', 'label': 'Mock Test Series', 'icon': Icons.description_rounded, 'color': Color(0xFF0284C7)},
-    {'key': 'fortune_wheel', 'label': 'Fortune Wheel', 'icon': Icons.adjust_rounded, 'color': Color(0xFFEC4899)},
-    {'key': 'referral_earn', 'label': 'Referral & Earn', 'icon': Icons.share_rounded, 'color': Color(0xFFF97316)},
-    {'key': 'live_poll', 'label': 'Live Poll', 'icon': Icons.poll_rounded, 'color': Color(0xFF8B5CF6)},
-    {'key': 'community', 'label': 'Community', 'icon': Icons.forum_rounded, 'color': Color(0xFF0D9488)},
+    {'key': '1v1_battle', 'label': '1v1 Battle', 'icon': Icons.emoji_events_rounded, 'color': AppColors.adminWarning},
+    {'key': 'multiplayer_battle', 'label': 'Multiplayer Battle', 'icon': Icons.group_rounded, 'color': AppColors.brandPurple},
+    {'key': 'live_quiz', 'label': 'Live Quiz', 'icon': Icons.play_arrow_rounded, 'color': AppColors.adminSuccess},
+    {'key': 'mock_test_series', 'label': 'Mock Test Series', 'icon': Icons.description_rounded, 'color': AppColors.adminSky},
+    {'key': 'fortune_wheel', 'label': 'Fortune Wheel', 'icon': Icons.adjust_rounded, 'color': AppColors.brandPink},
+    {'key': 'referral_earn', 'label': 'Referral & Earn', 'icon': Icons.share_rounded, 'color': AppColors.adminOrange},
+    {'key': 'live_poll', 'label': 'Live Poll', 'icon': Icons.poll_rounded, 'color': AppColors.adminViolet},
+    {'key': 'community', 'label': 'Community', 'icon': Icons.forum_rounded, 'color': AppColors.adminTeal},
   ];
 
   @override
@@ -27,16 +27,10 @@ class FeaturesControlCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.adminCardBackground,
         borderRadius: AppRadii.adminCard,
         border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: AppShadows.adminCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,7 +40,7 @@ class FeaturesControlCard extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.adminPurpleLight,
                   borderRadius: AppRadii.adminControl,
                 ),
@@ -62,8 +56,7 @@ class FeaturesControlCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-
+          const SizedBox(height: AppSpacing.md),
           ...featuresList.map((f) {
             final key = f['key'] as String;
             final label = f['label'] as String;
@@ -72,25 +65,20 @@ class FeaturesControlCard extends StatelessWidget {
             final isEnabled = featureStates[key] ?? true;
 
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
               child: Row(
                 children: [
                   Icon(icon, size: 18, color: iconColor),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       label,
                       style: AppTypography.adminTablePrimary.copyWith(fontSize: 13),
                     ),
                   ),
-                  Transform.scale(
-                    scale: 0.8,
-                    child: Switch(
-                      value: isEnabled,
-                      activeThumbColor: Colors.white,
-                      activeTrackColor: AppColors.adminPurple,
-                      onChanged: (val) => onFeatureToggled(key, val),
-                    ),
+                  AppSwitch.primary(
+                    value: isEnabled,
+                    onChanged: (val) => onFeatureToggled(key, val),
                   ),
                 ],
               ),

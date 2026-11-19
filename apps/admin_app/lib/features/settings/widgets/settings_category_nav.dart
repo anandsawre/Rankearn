@@ -40,7 +40,7 @@ class SettingsCategoryNav extends StatelessWidget {
                 duration: const Duration(milliseconds: 160),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.adminPurple : Colors.white,
+                  color: isSelected ? AppColors.adminPurple : AppColors.adminCardBackground,
                   borderRadius: AppRadii.adminControl,
                   border: Border.all(
                     color: isSelected ? AppColors.adminPurple : AppColors.adminBorder,
@@ -66,11 +66,9 @@ class SettingsCategoryNav extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       cat['label'] as String,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: isSelected ? Colors.white : AppColors.adminPrimaryText,
-                      ),
+                      style: isSelected
+                          ? AppTypography.adminTabActive.copyWith(color: Colors.white)
+                          : AppTypography.adminTabInactive,
                     ),
                   ],
                 ),

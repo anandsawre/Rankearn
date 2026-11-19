@@ -20,16 +20,10 @@ class AppearanceBrandingCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.adminCardBackground,
         borderRadius: AppRadii.adminCard,
         border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: AppShadows.adminCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,16 +54,16 @@ class AppearanceBrandingCard extends StatelessWidget {
           // Primary Color
           Row(
             children: [
-              const SizedBox(
+              SizedBox(
                 width: 90,
-                child: Text('Primary Color', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.adminSecondaryText)),
+                child: Text('Primary Color', style: AppTypography.adminTableSecondary.copyWith(fontSize: 12, fontWeight: FontWeight.w600)),
               ),
               Container(
                 width: 22,
                 height: 22,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF7C3AED),
-                  borderRadius: BorderRadius.circular(4),
+                decoration: const BoxDecoration(
+                  color: AppColors.adminPurple,
+                  borderRadius: BorderRadius.all(Radius.circular(4)),
                 ),
               ),
               const SizedBox(width: 8),
@@ -86,16 +80,16 @@ class AppearanceBrandingCard extends StatelessWidget {
           // Secondary Color
           Row(
             children: [
-              const SizedBox(
+              SizedBox(
                 width: 90,
-                child: Text('Secondary Color', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.adminSecondaryText)),
+                child: Text('Secondary Color', style: AppTypography.adminTableSecondary.copyWith(fontSize: 12, fontWeight: FontWeight.w600)),
               ),
               Container(
                 width: 22,
                 height: 22,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFA855F7),
-                  borderRadius: BorderRadius.circular(4),
+                decoration: const BoxDecoration(
+                  color: AppColors.adminViolet,
+                  borderRadius: BorderRadius.all(Radius.circular(4)),
                 ),
               ),
               const SizedBox(width: 8),
@@ -128,7 +122,7 @@ class AppearanceBrandingCard extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.emoji_events_rounded, color: Color(0xFFF59E0B), size: 20),
+                          const Icon(Icons.emoji_events_rounded, color: AppColors.coinGold, size: 20),
                           const Spacer(),
                           InkWell(
                             onTap: onUploadLogo,
@@ -158,9 +152,9 @@ class AppearanceBrandingCard extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          const Text(
+                          Text(
                             'Rankearn',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.adminPrimaryText),
+                            style: AppTypography.adminBadge.copyWith(color: AppColors.adminPrimaryText),
                           ),
                           const Spacer(),
                           InkWell(

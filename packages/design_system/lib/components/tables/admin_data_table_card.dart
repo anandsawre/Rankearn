@@ -155,9 +155,10 @@ class AdminDataTableCard extends StatelessWidget {
           // ── 1. Header Controls Bar ──
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Builder(
-              builder: (context) {
-                final isNarrow = MediaQuery.sizeOf(context).width < 1100;
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 640;
+                final isTablet = constraints.maxWidth >= 640 && constraints.maxWidth < 1050;
 
                 final titleWidget = Row(
                   mainAxisSize: MainAxisSize.min,
@@ -179,14 +180,17 @@ class AdminDataTableCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                     ],
-                    Text(
-                      '$title ($totalCount)',
-                      style: TextStyle(
-                        fontFamily: AppTypography.fontHeading,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.3,
+                    Flexible(
+                      child: Text(
+                        '$title ($totalCount)',
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.3,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -198,11 +202,11 @@ class AdminDataTableCard extends StatelessWidget {
                         initialQuery: searchQuery,
                         hintText: searchHint,
                         onChanged: onSearchChanged!,
+                        width: isMobile ? double.infinity : 220,
                       )
                     : null;
 
-                final controls = <Widget>[
-                  ?searchWidget,
+                final secondaryControls = <Widget>[
                   ...?filterControls,
                   if (showDateRange && onDateRangeTap != null)
                     AdminTableDateRangeButton(
@@ -213,35 +217,124 @@ class AdminDataTableCard extends StatelessWidget {
                     AdminTableFiltersButton(
                       onTap: onFiltersTap ?? () {},
                     ),
-                  ...?headerActions,
                 ];
 
-                if (isNarrow) {
+                // ── Mobile Layout (< 640px) ──
+                if (isMobile) {
                   return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      titleWidget,
-                      if (controls.isNotEmpty) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          if (headerActions != null && headerActions!.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                for (int i = 0; i < headerActions!.length; i++) ...[
+                                  if (i > 0) const SizedBox(width: 8),
+                                  headerActions![i],
+                                ],
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (searchWidget != null) ...[
                         const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: controls,
+                        searchWidget,
+                      ],
+                      if (secondaryControls.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (int i = 0; i < secondaryControls.length; i++) ...[
+                                if (i > 0) const SizedBox(width: 8),
+                                secondaryControls[i],
+                              ],
+                            ],
+                          ),
                         ),
                       ],
                     ],
                   );
                 }
 
+                // ── Tablet Layout (640px - 1050px) ──
+                if (isTablet) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          if (headerActions != null && headerActions!.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                for (int i = 0; i < headerActions!.length; i++) ...[
+                                  if (i > 0) const SizedBox(width: 8),
+                                  headerActions![i],
+                                ],
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          if (searchWidget != null) ...[
+                            searchWidget,
+                            const SizedBox(width: 8),
+                          ],
+                          if (secondaryControls.isNotEmpty)
+                            Expanded(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    for (int i = 0; i < secondaryControls.length; i++) ...[
+                                      if (i > 0) const SizedBox(width: 8),
+                                      secondaryControls[i],
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                // ── Desktop Wide Layout (>= 1050px) ──
+                final allControls = <Widget>[
+                  ?searchWidget,
+                  ...secondaryControls,
+                  ...?headerActions,
+                ];
+
                 return SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
                   child: Row(
                     children: [
                       titleWidget,
-                      if (controls.isNotEmpty) const SizedBox(width: 16),
-                      for (int i = 0; i < controls.length; i++) ...[
+                      if (allControls.isNotEmpty) const SizedBox(width: 16),
+                      for (int i = 0; i < allControls.length; i++) ...[
                         if (i > 0) const SizedBox(width: 8),
-                        controls[i],
+                        allControls[i],
                       ],
                     ],
                   ),
@@ -335,9 +428,10 @@ class AdminDataTableCard extends StatelessWidget {
           // ── 3. Table Pagination Footer ──
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Builder(
-              builder: (context) {
-                final isNarrow = MediaQuery.sizeOf(context).width < 750;
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 750;
+                final isVeryNarrow = constraints.maxWidth < 480;
                 final startIdx = totalCount == 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
                 final endIdx = math.min(currentPage * rowsPerPage, totalCount);
 
@@ -447,6 +541,21 @@ class AdminDataTableCard extends StatelessWidget {
                     ),
                   ],
                 );
+
+                if (isVeryNarrow) {
+                  return Column(
+                    children: [
+                      infoText,
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: pageControls,
+                      ),
+                      const SizedBox(height: 8),
+                      pageSizeSelector,
+                    ],
+                  );
+                }
 
                 if (isNarrow) {
                   return Column(
@@ -609,7 +718,8 @@ class AdminTableSearchField extends StatefulWidget {
   final String? initialQuery;
   final String hintText;
   final ValueChanged<String> onChanged;
-  final double width;
+  final double? width;
+  final double height;
 
   const AdminTableSearchField({
     super.key,
@@ -618,6 +728,7 @@ class AdminTableSearchField extends StatefulWidget {
     this.hintText = 'Search...',
     required this.onChanged,
     this.width = 210,
+    this.height = 32,
   });
 
   @override
@@ -653,10 +764,13 @@ class _AdminTableSearchFieldState extends State<AdminTableSearchField> {
   Widget build(BuildContext context) {
     return SizedBox(
       width: widget.width,
-      height: 32,
+      height: widget.height,
       child: TextField(
         controller: _internalController,
-        onChanged: widget.onChanged,
+        onChanged: (val) {
+          widget.onChanged(val);
+          setState(() {});
+        },
         style: TextStyle(
           fontFamily: AppTypography.fontHeading,
           fontSize: 11,
@@ -675,6 +789,22 @@ class _AdminTableSearchFieldState extends State<AdminTableSearchField> {
             color: AppColors.textMuted,
           ),
           prefixIconConstraints: const BoxConstraints(minWidth: 28),
+          suffixIcon: _internalController.text.isNotEmpty
+              ? InkWell(
+                  onTap: () {
+                    _internalController.clear();
+                    widget.onChanged('');
+                    setState(() {});
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    size: 14,
+                    color: AppColors.textMuted,
+                  ),
+                )
+              : null,
+          suffixIconConstraints: const BoxConstraints(minWidth: 26, minHeight: 26),
           filled: true,
           fillColor: const Color(0xFFF8FAFC),
           contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
@@ -852,8 +982,13 @@ class AdminTableDateRangeButton extends StatelessWidget {
 /// Stylized "Filters" button for Table Header.
 class AdminTableFiltersButton extends StatelessWidget {
   final VoidCallback onTap;
+  final bool isActive;
 
-  const AdminTableFiltersButton({super.key, required this.onTap});
+  const AdminTableFiltersButton({
+    super.key,
+    required this.onTap,
+    this.isActive = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -864,22 +999,26 @@ class AdminTableFiltersButton extends StatelessWidget {
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: isActive ? AppColors.brandPurple.withValues(alpha: 0.08) : const Color(0xFFF8FAFC),
           borderRadius: AppRadii.borderSm,
-          border: Border.all(color: AppColors.borderSubtle),
+          border: Border.all(color: isActive ? AppColors.brandPurple : AppColors.borderSubtle),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.filter_list_rounded, size: 15, color: AppColors.textSecondary),
+            Icon(
+              Icons.filter_list_rounded,
+              size: 15,
+              color: isActive ? AppColors.brandPurple : AppColors.textSecondary,
+            ),
             const SizedBox(width: 6),
             Text(
               'Filters',
               style: TextStyle(
                 fontFamily: AppTypography.fontHeading,
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color: isActive ? AppColors.brandPurple : AppColors.textPrimary,
               ),
             ),
           ],

@@ -32,16 +32,10 @@ class AdvancedSettingsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.adminCardBackground,
         borderRadius: AppRadii.adminCard,
         border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: AppShadows.adminCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,14 +101,9 @@ class AdvancedSettingsCard extends StatelessWidget {
               style: AppTypography.adminTablePrimary.copyWith(fontSize: 13),
             ),
           ),
-          Transform.scale(
-            scale: 0.8,
-            child: Switch(
-              value: value,
-              activeThumbColor: Colors.white,
-              activeTrackColor: AppColors.adminPurple,
-              onChanged: onChanged,
-            ),
+          AppSwitch.primary(
+            value: value,
+            onChanged: onChanged,
           ),
         ],
       ),

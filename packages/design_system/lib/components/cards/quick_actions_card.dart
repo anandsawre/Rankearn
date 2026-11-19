@@ -116,34 +116,41 @@ class QuickActionsCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: isCompact ? 20 : 24,
-                    height: isCompact ? 20 : 24,
-                    decoration: BoxDecoration(
-                      color: AppColors.coinGold,
-                      borderRadius: BorderRadius.circular(isCompact ? 5 : 7),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: isCompact ? 20 : 24,
+                      height: isCompact ? 20 : 24,
+                      decoration: BoxDecoration(
+                        color: AppColors.coinGold,
+                        borderRadius: BorderRadius.circular(isCompact ? 5 : 7),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        titleIcon ?? Icons.bolt_rounded,
+                        color: Colors.white,
+                        size: isCompact ? 13 : 16,
+                      ),
                     ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      titleIcon ?? Icons.bolt_rounded,
-                      color: Colors.white,
-                      size: isCompact ? 13 : 16,
+                    SizedBox(width: isCompact ? 6 : 8),
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontSize: isCompact ? 13 : 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: isCompact ? 6 : 8),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontHeading,
-                      fontSize: isCompact ? 13 : 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 borderRadius: BorderRadius.circular(7),
                 onTap: onCustomize,

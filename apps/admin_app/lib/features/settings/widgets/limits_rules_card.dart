@@ -20,16 +20,10 @@ class LimitsRulesCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.adminCardBackground,
         borderRadius: AppRadii.adminCard,
         border: Border.all(color: AppColors.adminBorder),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: AppShadows.adminCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +67,7 @@ class LimitsRulesCard extends StatelessWidget {
             controller: coinLimitController,
             hintText: '1,000',
             keyboardType: TextInputType.number,
-            prefixIcon: const Icon(Icons.paid_outlined, size: 18, color: Color(0xFFF59E0B)),
+            prefixIcon: const Icon(Icons.paid_outlined, size: 18, color: AppColors.coinGold),
           ),
           const SizedBox(height: 10),
 

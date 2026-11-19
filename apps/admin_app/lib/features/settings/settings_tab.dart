@@ -463,80 +463,189 @@ class _SettingsTabState extends State<SettingsTab> {
           LayoutBuilder(
             builder: (context, constraints) {
               final double width = constraints.maxWidth;
-              final int columns = width >= 1650
-                  ? 5
-                  : (width >= 1250
-                      ? 3
-                      : (width >= 700
-                          ? 2
-                          : 1));
-              final double cardWidth = (width - (columns - 1) * 14) / columns;
+              final int columns = width >= 1150
+                  ? 3
+                  : (width >= 720
+                      ? 2
+                      : 1);
 
-              final cards = [
-                _buildPlatformInfoCard(),
-                _buildFeaturesControlCard(),
-                _buildRewardsSettingsCard(),
-                _buildBattleSettingsCard(),
-                _buildPaymentSettingsCard(),
-                _buildNotificationSettingsCard(),
-                _buildLimitsRulesCard(),
-                _buildAppearanceBrandingCard(),
-                _buildAdvancedSettingsCard(),
-              ];
+              final List<Widget> cards;
+              switch (_activeCategory) {
+                case 'features':
+                  cards = [_buildFeaturesControlCard()];
+                  break;
+                case 'rewards':
+                  cards = [_buildRewardsSettingsCard()];
+                  break;
+                case 'battles':
+                  cards = [_buildBattleSettingsCard()];
+                  break;
+                case 'payments':
+                  cards = [_buildPaymentSettingsCard()];
+                  break;
+                case 'notifications':
+                  cards = [_buildNotificationSettingsCard()];
+                  break;
+                case 'limits':
+                  cards = [_buildLimitsRulesCard()];
+                  break;
+                case 'appearance':
+                  cards = [_buildAppearanceBrandingCard()];
+                  break;
+                case 'advanced':
+                  cards = [_buildAdvancedSettingsCard()];
+                  break;
+                case 'all':
+                default:
+                  cards = [
+                    _buildPlatformInfoCard(),
+                    _buildFeaturesControlCard(),
+                    _buildRewardsSettingsCard(),
+                    _buildBattleSettingsCard(),
+                    _buildPaymentSettingsCard(),
+                    _buildNotificationSettingsCard(),
+                    _buildLimitsRulesCard(),
+                    _buildAppearanceBrandingCard(),
+                    _buildAdvancedSettingsCard(),
+                  ];
+                  break;
+              }
 
-              return Wrap(
-                spacing: 14,
-                runSpacing: 16,
-                children: cards.map((c) => SizedBox(width: cardWidth, child: c)).toList(),
+              final List<List<Widget>> cardRows = [];
+              for (int i = 0; i < cards.length; i += columns) {
+                final end = (i + columns < cards.length) ? i + columns : cards.length;
+                cardRows.add(cards.sublist(i, end));
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (int r = 0; r < cardRows.length; r++) ...[
+                    if (r > 0) const SizedBox(height: 16),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (int c = 0; c < cardRows[r].length; c++) ...[
+                            if (c > 0) const SizedBox(width: 14),
+                            Expanded(child: cardRows[r][c]),
+                          ],
+                          for (int c = cardRows[r].length; c < columns; c++) ...[
+                            const SizedBox(width: 14),
+                            const Expanded(child: SizedBox.shrink()),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               );
             },
           ),
           const SizedBox(height: 24),
 
           // 4. Bottom Footer Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: AppRadii.adminCard,
-              border: Border.all(color: AppColors.adminBorder),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x06000000),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                AppButton.adminSecondary(
-                  label: 'Reset to Default',
-                  leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
-                  onPressed: _resetToDefault,
-                ),
-                Row(
-                  children: const [
-                    Icon(Icons.info_outline_rounded, size: 16, color: AppColors.adminSecondaryText),
-                    SizedBox(width: 8),
-                    Text(
-                      'Changes will be applied across the platform for all users.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.adminSecondaryText,
+          LayoutBuilder(
+            builder: (context, footerConstraints) {
+              final isNarrow = footerConstraints.maxWidth < 780;
+              if (isNarrow) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.adminCardBackground,
+                    borderRadius: AppRadii.adminCard,
+                    border: Border.all(color: AppColors.adminBorder),
+                    boxShadow: AppShadows.adminCard,
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.adminSecondaryText),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'Changes will be applied across the platform for all users.',
+                              style: AppTypography.adminTableSecondary.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AppButton.adminSecondary(
+                              label: 'Reset to Default',
+                              leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
+                              onPressed: _resetToDefault,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: AppButton.adminPrimary(
+                              label: 'Update Settings',
+                              leadingIcon: const Icon(Icons.save_rounded, size: 16),
+                              onPressed: _updateSettings,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.adminCardBackground,
+                  borderRadius: AppRadii.adminCard,
+                  border: Border.all(color: AppColors.adminBorder),
+                  boxShadow: AppShadows.adminCard,
+                ),
+                child: Row(
+                  children: [
+                    AppButton.adminSecondary(
+                      label: 'Reset to Default',
+                      leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
+                      onPressed: _resetToDefault,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.adminSecondaryText),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'Changes will be applied across the platform for all users.',
+                              style: AppTypography.adminTableSecondary.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    AppButton.adminPrimary(
+                      label: 'Update Settings',
+                      leadingIcon: const Icon(Icons.save_rounded, size: 16),
+                      onPressed: _updateSettings,
                     ),
                   ],
                 ),
-                AppButton.adminPrimary(
-                  label: 'Update Settings',
-                  leadingIcon: const Icon(Icons.save_rounded, size: 16),
-                  onPressed: _updateSettings,
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -545,22 +654,26 @@ class _SettingsTabState extends State<SettingsTab> {
           Positioned.fill(
             child: Container(
               color: Colors.black.withValues(alpha: 0.15),
-              child: const Center(
-                child: Card(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.adminPurple),
-                        ),
-                        SizedBox(width: 12),
-                        Text('Saving settings to Supabase...', style: AppTypography.adminTablePrimary),
-                      ],
-                    ),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.adminCardBackground,
+                    borderRadius: AppRadii.adminCardInner,
+                    border: Border.all(color: AppColors.adminBorder),
+                    boxShadow: AppShadows.adminCard,
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.adminPurple),
+                      ),
+                      SizedBox(width: 12),
+                      Text('Saving settings to Supabase...', style: AppTypography.adminTablePrimary),
+                    ],
                   ),
                 ),
               ),

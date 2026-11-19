@@ -4,6 +4,7 @@ import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 import '../../tokens/spacing.dart';
 import '../../tokens/typography.dart';
+import '../../tokens/shadows.dart';
 
 /// Rankearn Reusable Form & Text Field
 /// Supports standard external labels, floating animated labels on border edge,
@@ -95,7 +96,7 @@ class AppTextField extends StatefulWidget {
     this.enabled = true,
     this.maxLines = 1,
     this.focusNode,
-    this.fillColor = Colors.white,
+    this.fillColor = AppColors.adminCardBackground,
     this.borderRadius,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     this.isDense = true,
@@ -238,8 +239,8 @@ class _AppTextFieldState extends State<AppTextField> {
         filled: true,
         isDense: widget.isDense,
         fillColor: widget.enabled
-            ? (widget.fillColor ?? Colors.white)
-            : (widget.fillColor ?? Colors.white).withValues(alpha: 0.6),
+            ? (widget.fillColor ?? AppColors.adminCardBackground)
+            : (widget.fillColor ?? AppColors.adminCardBackground).withValues(alpha: 0.6),
         contentPadding: widget.contentPadding ?? const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: effectiveRadius,
@@ -283,8 +284,8 @@ class _AppTextFieldState extends State<AppTextField> {
     final effectiveHintStyle = widget.hintStyle ?? AppTypography.adminHint;
     final effectiveLabelStyle = widget.labelStyle ?? AppTypography.adminFieldLabel;
     final effectiveFillColor = widget.enabled
-        ? (widget.fillColor ?? Colors.white)
-        : (widget.fillColor ?? Colors.white).withAlpha(128);
+        ? (widget.fillColor ?? AppColors.adminCardBackground)
+        : (widget.fillColor ?? AppColors.adminCardBackground).withAlpha(128);
     final isMultiline = (widget.maxLines > 1);
     final effectiveHeight = widget.height ?? (isMultiline ? null : AppSpacing.adminControlHeight);
 
@@ -324,17 +325,18 @@ class _AppTextFieldState extends State<AppTextField> {
     }
 
     // ── Content padding ──────────────────────────────────────────────────────
-    // Single-line: symmetric vertical=0 so Flutter centers text naturally.
-    // When prefixIcon present, left=0 (icon padding handles it), else left=14.
+    // Balanced vertical padding ensures text is vertically centered inside 44px container
     EdgeInsetsGeometry contentPadding;
     if (widget.contentPadding != null) {
       contentPadding = widget.contentPadding!;
     } else if (isMultiline) {
       contentPadding = const EdgeInsets.symmetric(horizontal: 14, vertical: 10);
     } else {
-      contentPadding = EdgeInsets.symmetric(
-        horizontal: widget.prefixIcon != null ? 0 : 14,
-        vertical: 0,
+      contentPadding = EdgeInsets.only(
+        left: widget.prefixIcon != null ? 0 : 14,
+        right: (widget.suffixIcon != null || widget.isPassword) ? 0 : 14,
+        top: 11,
+        bottom: 11,
       );
     }
 
@@ -360,6 +362,7 @@ class _AppTextFieldState extends State<AppTextField> {
         constraints: effectiveHeight != null
             ? BoxConstraints.tightFor(height: effectiveHeight)
             : const BoxConstraints(minHeight: 44.0),
+        alignment: isMultiline ? Alignment.topLeft : Alignment.centerLeft,
         decoration: BoxDecoration(
           color: effectiveFillColor,
           borderRadius: effectiveRadius,
@@ -375,13 +378,7 @@ class _AppTextFieldState extends State<AppTextField> {
                     offset: const Offset(0, 2),
                   ),
                 ]
-              : const [
-                  BoxShadow(
-                    color: Color(0x0B0F172A),
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+              : AppShadows.subtle,
         ),
         // ── Single TextFormField fills the entire box ────────────────────────
         // isCollapsed: false  → Flutter Web properly centers RenderEditable
