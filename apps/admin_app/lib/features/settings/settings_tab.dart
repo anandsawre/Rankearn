@@ -280,31 +280,19 @@ class _SettingsTabState extends State<SettingsTab> {
   }
 
   Future<void> _resetToDefault() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppModalDialog.confirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset All Settings to Defaults?'),
-        content: const Text(
-          'This will overwrite all active system configurations in the database with standard default parameters. Are you sure you want to proceed?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.adminWarning,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Reset to Defaults'),
-          ),
-        ],
-      ),
+      title: 'Reset All Settings to Defaults?',
+      subtitle: 'System configuration reset',
+      message: 'This will overwrite all active system configurations in the database with standard default parameters. Are you sure you want to proceed?',
+      confirmLabel: 'Reset to Defaults',
+      cancelLabel: 'Cancel',
+      isDestructive: true,
+      iconData: Icons.restore_rounded,
+      gradientColors: const [Color(0xFFD97706), Color(0xFFF59E0B)],
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     setState(() {
       _nameController.text = 'Rankearn';

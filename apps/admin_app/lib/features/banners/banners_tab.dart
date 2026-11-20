@@ -281,23 +281,18 @@ class _BannersTabState extends State<BannersTab> {
   }
 
   void _deleteBanner(Map<String, dynamic> item) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppModalDialog.confirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Banner'),
-        content: Text('Are you sure you want to delete banner "${item['title'] ?? 'this banner'}"? This action cannot be undone.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.adminDanger),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Banner',
+      subtitle: 'Permanent deletion warning',
+      message: 'Are you sure you want to delete banner "${item['title'] ?? 'this banner'}"? This action cannot be undone.',
+      confirmLabel: 'Delete Banner',
+      cancelLabel: 'Cancel',
+      isDestructive: true,
+      iconData: Icons.delete_outline_rounded,
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     final id = item['id']?.toString();
     setState(() {
@@ -439,17 +434,19 @@ class _BannersTabState extends State<BannersTab> {
   }
 
   void _showBannerAnalytics(Map<String, dynamic> item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.insights_rounded, color: AppColors.adminPurple),
-            const SizedBox(width: 10),
-            Expanded(child: Text(item['title']?.toString() ?? 'Banner Analytics', style: AppTypography.adminCardTitle)),
-          ],
-        ),
-        content: Column(
+      builder: (ctx) => AppModalDialog(
+        title: item['title']?.toString() ?? 'Banner Analytics',
+        subtitle: 'Performance & Impression Metrics',
+        iconData: Icons.insights_rounded,
+        gradientColors: const [Color(0xFF5636F5), Color(0xFF7C3AED)],
+        maxWidth: 480,
+        fullScreenOnMobile: false,
+        actions: [
+          AppModalDialog.cancelButton(ctx, label: 'Close'),
+        ],
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildStatTile('Total Impressions', item['views']?.toString() ?? '42.5k'),
@@ -459,9 +456,6 @@ class _BannersTabState extends State<BannersTab> {
             _buildStatTile('Target Route', item['link']?.toString() ?? '/tests'),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
-        ],
       ),
     );
   }

@@ -91,6 +91,83 @@ class AppModalDialog extends StatelessWidget {
     );
   }
 
+  /// Displays a standardized tokenized confirmation dialog.
+  /// Ideal for delete, danger, or critical confirmation prompts across Rankearn.
+  static Future<bool> confirm({
+    required BuildContext context,
+    required String title,
+    required String message,
+    String? subtitle,
+    String confirmLabel = 'Confirm',
+    String cancelLabel = 'Cancel',
+    IconData iconData = Icons.warning_amber_rounded,
+    bool isDestructive = false,
+    List<Color>? gradientColors,
+    double maxWidth = 460,
+  }) async {
+    final colors = gradientColors ??
+        (isDestructive
+            ? const [Color(0xFFDC2626), Color(0xFFEF4444)]
+            : defaultGradientColors);
+
+    final res = await show<bool>(
+      context: context,
+      builder: (ctx) => AppModalDialog(
+        title: title,
+        subtitle: subtitle ?? (isDestructive ? 'Permanent action warning' : null),
+        iconData: iconData,
+        gradientColors: colors,
+        maxWidth: maxWidth,
+        fullScreenOnMobile: false,
+        actions: [
+          secondaryButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              cancelLabel,
+              style: const TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDestructive ? const Color(0xFFDC2626) : defaultPrimaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: AppRadii.borderSm),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              elevation: 0,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              confirmLabel,
+              style: const TextStyle(
+                fontFamily: AppTypography.fontHeading,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(
+            message,
+            style: const TextStyle(
+              fontSize: 13.5,
+              height: 1.5,
+              color: Color(0xFF334155),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+    return res == true;
+  }
+
   /// Default header gradient colors (vibrant orange gradient)
   static const List<Color> defaultGradientColors = [
     Color(0xFFFF9500),
@@ -362,13 +439,13 @@ class AppModalDialog extends StatelessWidget {
   static bool _isDestructiveGradient(List<Color>? colors) {
     if (colors == null || colors.isEmpty) return false;
     final c0 = colors[0].toARGB32();
-    return c0 == 0xFFDC2626 || c0 == 0xFFEF4444 || c0 == 0xFFE11D48;
+    return c0 == 0xFFDC2626 || c0 == 0xFFEF4444 || c0 == 0xFFE11D48 || c0 == 0xFFF43F5E;
   }
 
   /// Checks whether a button color is explicitly destructive (danger/delete)
   static bool _isDestructiveButton(Color bg) {
     final argb = bg.toARGB32();
-    return argb == 0xFFDC2626 || argb == 0xFFEF4444 || argb == 0xFFE11D48;
+    return argb == 0xFFDC2626 || argb == 0xFFEF4444 || argb == 0xFFE11D48 || argb == 0xFFF43F5E;
   }
 
   /// Automatically standardizes action buttons to the unified orange theme.
