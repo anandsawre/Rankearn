@@ -411,34 +411,32 @@ class _PollsTabState extends State<PollsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1100;
-    final isTablet = screenWidth >= 768 && screenWidth < 1100;
-
     final hasActivePoll = _activeLivePoll != null && _activeLivePoll!.isLive;
     // Data displayed in Center and Right: if active poll exists, show it; otherwise preview the form poll draft!
     final displayPoll = hasActivePoll ? _activeLivePoll! : _formPoll;
 
-    return Container(
-      color: AppColors.pollBackground, // Crisp lavender/white background token
-      width: double.infinity,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // TOP SUB-HEADER BAR: Live Poll Dashboard | Polls History (N) | Active Session Pill
-            _buildTopSubHeader(hasActivePoll),
-            const SizedBox(height: 18),
+    return SingleChildScrollView(
+      padding: AppSpacing.pagePadding(context),
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // TOP SUB-HEADER BAR: Live Poll Dashboard | Polls History (N) | Active Session Pill
+          _buildTopSubHeader(hasActivePoll),
+          const SizedBox(height: 18),
 
-            // MAIN CONTENT BASED ON SELECTED TAB
-            if (_selectedTab == 0)
-              _buildDashboardView(isDesktop, isTablet, displayPoll, hasActivePoll)
-            else
-              _buildHistoryView(),
-          ],
-        ),
+          // MAIN CONTENT BASED ON SELECTED TAB
+          if (_selectedTab == 0)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth >= 1050;
+                final isTablet = constraints.maxWidth >= 720 && constraints.maxWidth < 1050;
+                return _buildDashboardView(isDesktop, isTablet, displayPoll, hasActivePoll);
+              },
+            )
+          else
+            _buildHistoryView(),
+        ],
       ),
     );
   }
@@ -547,6 +545,7 @@ class _PollsTabState extends State<PollsTab> {
 
         if (isMobile) {
           return Container(
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -579,6 +578,7 @@ class _PollsTabState extends State<PollsTab> {
         }
 
         return Container(
+          width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -663,6 +663,7 @@ class _PollsTabState extends State<PollsTab> {
           Expanded(
             flex: 1,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 LivePollPreviewPanel(pollData: displayPoll),
                 const SizedBox(height: 18),
@@ -686,6 +687,7 @@ class _PollsTabState extends State<PollsTab> {
 
     // Mobile single column
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         LivePollPreviewPanel(pollData: displayPoll),
         const SizedBox(height: 16),
@@ -769,7 +771,7 @@ class _PollsTabState extends State<PollsTab> {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -797,6 +799,7 @@ class _PollsTabState extends State<PollsTab> {
             final isCurrentlyLive = poll.isActive && !poll.isExpired;
 
             return Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,

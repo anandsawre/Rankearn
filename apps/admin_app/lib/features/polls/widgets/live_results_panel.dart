@@ -43,6 +43,7 @@ class LiveResultsPanel extends StatelessWidget {
       children: [
         // 1. TOP CARD: LIVE RESULTS + DONUT CHART
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.surface,
@@ -228,6 +229,7 @@ class LiveResultsPanel extends StatelessWidget {
 
         // 2. BOTTOM CARD: POLL CONTROLS
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.surface,

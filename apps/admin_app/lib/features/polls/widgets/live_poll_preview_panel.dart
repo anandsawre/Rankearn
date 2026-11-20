@@ -50,6 +50,7 @@ class LivePollPreviewPanel extends StatelessWidget {
       children: [
         // 1. TOP HERO POLL CANVAS
         Container(
+          width: double.infinity,
           decoration: const BoxDecoration(
             borderRadius: AppRadii.pollCanvas,
             gradient: AppColors.pollCanvasGradient,
@@ -189,15 +190,17 @@ class LivePollPreviewPanel extends StatelessWidget {
                             children: [
                               // Subtle background progress indicator when not leading
                               if (!isLeading && pollData.showLiveResult && pct > 0)
-                                Positioned(
-                                  left: 0,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    width: pct * 3.5, // Visual indicator
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withAlpha(15),
-                                      borderRadius: AppRadii.pollOption,
+                                Positioned.fill(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: FractionallySizedBox(
+                                      widthFactor: (pct / 100.0).clamp(0.0, 1.0),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withAlpha(15),
+                                          borderRadius: AppRadii.pollOption,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),

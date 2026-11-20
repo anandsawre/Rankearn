@@ -7,6 +7,7 @@ import 'package:admin_app/features/settings/settings_tab.dart';
 import 'package:admin_app/features/feedback/feedback_tab.dart';
 import 'package:admin_app/features/support/support_tab.dart';
 import 'package:admin_app/features/posts/posts_tab.dart';
+import 'package:admin_app/features/polls/polls_tab.dart';
 
 void main() {
   testWidgets('NotificationsTab renders Hero banner, 5 KPI cards, Create Card, Delivery Analytics & Table', (tester) async {
@@ -352,5 +353,35 @@ void main() {
     expect(find.text('Growth (7 Days)'), findsOneWidget);
     expect(find.text('Total Posts'), findsOneWidget);
     expect(find.text('Total Comments'), findsOneWidget);
+  });
+
+  testWidgets('PollsTab renders with full-width layout matching Dashboard page padding and cards', (tester) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: PollsTab(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify sub-header bar
+    expect(find.text('Live Poll Dashboard'), findsOneWidget);
+    expect(find.textContaining('Polls History'), findsOneWidget);
+
+    // Verify Create Poll panel
+    expect(find.text('Create Poll'), findsOneWidget);
+    expect(find.text('Launch Live Poll'), findsOneWidget);
+
+    // Verify Live Preview panel
+    expect(find.text('LIVE POLL'), findsOneWidget);
+
+    // Verify Live Results panel
+    expect(find.text('Live Results'), findsOneWidget);
+    expect(find.text('Poll Controls'), findsOneWidget);
   });
 }

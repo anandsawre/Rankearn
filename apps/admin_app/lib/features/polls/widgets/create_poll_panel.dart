@@ -139,6 +139,7 @@ class _CreatePollPanelState extends State<CreatePollPanel> {
     final poll = widget.pollData;
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.pollCard,
