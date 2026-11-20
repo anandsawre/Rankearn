@@ -365,13 +365,10 @@ class _ReferralsTabState extends State<ReferralsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1200;
-
     return SingleChildScrollView(
-      padding: AppSpacing.adminPagePadding,
+      padding: AppSpacing.pagePadding(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. Hero Banner (Left 58%) + Quick Actions (Right 42%)
           LayoutBuilder(
@@ -423,52 +420,51 @@ class _ReferralsTabState extends State<ReferralsTab> {
           const SizedBox(height: AppSpacing.adminGapCard),
 
           // 3. Settings & Share Preview Section
-          if (isDesktop)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 5,
-                  child: ReferralSettingsCard(
-                    referrerRewardController: _referrerRewardController,
-                    signupBonusController: _signupBonusController,
-                    minWithdrawalController: _minWithdrawalController,
-                    enableProgram: _enableProgram,
-                    onEnableProgramChanged: (val) => setState(() => _enableProgram = val),
-                    autoCredit: _autoCredit,
-                    onAutoCreditChanged: (val) => setState(() => _autoCredit = val),
-                    rewardOnFirstTx: _rewardOnFirstTx,
-                    onRewardOnFirstTxChanged: (val) => setState(() => _rewardOnFirstTx = val),
-                    isSaving: _isSavingSettings,
-                    onReset: _resetSettings,
-                    onSave: _saveSettings,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.adminGapCard),
-                const SizedBox(
-                  width: 400,
-                  child: ReferralSharePreviewCard(),
-                ),
-              ],
-            )
-          else ...[
-            ReferralSettingsCard(
-              referrerRewardController: _referrerRewardController,
-              signupBonusController: _signupBonusController,
-              minWithdrawalController: _minWithdrawalController,
-              enableProgram: _enableProgram,
-              onEnableProgramChanged: (val) => setState(() => _enableProgram = val),
-              autoCredit: _autoCredit,
-              onAutoCreditChanged: (val) => setState(() => _autoCredit = val),
-              rewardOnFirstTx: _rewardOnFirstTx,
-              onRewardOnFirstTxChanged: (val) => setState(() => _rewardOnFirstTx = val),
-              isSaving: _isSavingSettings,
-              onReset: _resetSettings,
-              onSave: _saveSettings,
-            ),
-            const SizedBox(height: AppSpacing.adminGapCard),
-            const ReferralSharePreviewCard(),
-          ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final settingsCard = ReferralSettingsCard(
+                referrerRewardController: _referrerRewardController,
+                signupBonusController: _signupBonusController,
+                minWithdrawalController: _minWithdrawalController,
+                enableProgram: _enableProgram,
+                onEnableProgramChanged: (val) => setState(() => _enableProgram = val),
+                autoCredit: _autoCredit,
+                onAutoCreditChanged: (val) => setState(() => _autoCredit = val),
+                rewardOnFirstTx: _rewardOnFirstTx,
+                onRewardOnFirstTxChanged: (val) => setState(() => _rewardOnFirstTx = val),
+                isSaving: _isSavingSettings,
+                onReset: _resetSettings,
+                onSave: _saveSettings,
+              );
+              const previewCard = ReferralSharePreviewCard();
+
+              if (constraints.maxWidth > 1080) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: settingsCard,
+                    ),
+                    const SizedBox(width: AppSpacing.adminGapCard),
+                    const SizedBox(
+                      width: 400,
+                      child: previewCard,
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    settingsCard,
+                    const SizedBox(height: AppSpacing.adminGapCard),
+                    previewCard,
+                  ],
+                );
+              }
+            },
+          ),
           const SizedBox(height: AppSpacing.adminGapCard),
 
           // 4. Analytics Performance Chart

@@ -17,6 +17,7 @@ class ReferralSharePreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: const BoxDecoration(
         color: AppColors.adminCardBackground,
         borderRadius: AppRadii.adminCard,

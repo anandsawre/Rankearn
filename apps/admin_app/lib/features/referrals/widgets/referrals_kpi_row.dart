@@ -115,6 +115,7 @@ class ReferralsKpiRow extends StatelessWidget {
         }
 
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (int i = 0; i < cards.length; i++) ...[
               if (i > 0) SizedBox(height: AppSpacing.adminGridSpacing),

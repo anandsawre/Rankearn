@@ -386,13 +386,10 @@ class _NotificationsTabState extends State<NotificationsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1200;
-
     return SingleChildScrollView(
-      padding: AppSpacing.adminPagePadding,
+      padding: AppSpacing.pagePadding(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. Hero Banner (Left) + Quick Actions (Right)
           LayoutBuilder(
@@ -473,75 +470,64 @@ class _NotificationsTabState extends State<NotificationsTab> {
           const SizedBox(height: AppSpacing.adminGapCard),
 
           // 3. Main Composition & Analytics Split
-          if (isDesktop)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left Column: Create Notification Form
-                Expanded(
-                  flex: 5,
-                  child: CreateNotificationCard(
-                    titleController: _titleController,
-                    messageController: _messageController,
-                    actionLabelController: _actionLabelController,
-                    actionUrlController: _actionUrlController,
-                    selectedChannel: _selectedChannel,
-                    onChannelChanged: (ch) => setState(() => _selectedChannel = ch),
-                    targetAudience: _targetAudience,
-                    onAudienceChanged: (aud) => setState(() => _targetAudience = aud),
-                    notificationType: _notificationType,
-                    onTypeChanged: (tp) => setState(() => _notificationType = tp),
-                    isScheduled: _isScheduled,
-                    onScheduleToggled: (sc) => setState(() => _isScheduled = sc),
-                    scheduledDateTime: _scheduledDateTime,
-                    onDateTimeChanged: (dt) => setState(() => _scheduledDateTime = dt),
-                    hasActionButton: _hasActionButton,
-                    onActionButtonToggled: (ab) => setState(() => _hasActionButton = ab),
-                    isSubmitting: _isDispatching,
-                    onSendNow: _dispatchNotification,
-                    onSaveDraft: _saveDraft,
-                    onReset: _resetForm,
-                  ),
-                ),
-                const SizedBox(width: 24),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final createCard = CreateNotificationCard(
+                titleController: _titleController,
+                messageController: _messageController,
+                actionLabelController: _actionLabelController,
+                actionUrlController: _actionUrlController,
+                selectedChannel: _selectedChannel,
+                onChannelChanged: (ch) => setState(() => _selectedChannel = ch),
+                targetAudience: _targetAudience,
+                onAudienceChanged: (aud) => setState(() => _targetAudience = aud),
+                notificationType: _notificationType,
+                onTypeChanged: (tp) => setState(() => _notificationType = tp),
+                isScheduled: _isScheduled,
+                onScheduleToggled: (sc) => setState(() => _isScheduled = sc),
+                scheduledDateTime: _scheduledDateTime,
+                onDateTimeChanged: (dt) => setState(() => _scheduledDateTime = dt),
+                hasActionButton: _hasActionButton,
+                onActionButtonToggled: (ab) => setState(() => _hasActionButton = ab),
+                isSubmitting: _isDispatching,
+                onSendNow: _dispatchNotification,
+                onSaveDraft: _saveDraft,
+                onReset: _resetForm,
+              );
+              final analyticsCard = NotificationDeliveryAnalyticsCard(
+                onQuickAction: _handleQuickAction,
+              );
 
-                // Right Column: Delivery Analytics Donut + Quick Actions
-                SizedBox(
-                  width: 400,
-                  child: NotificationDeliveryAnalyticsCard(
-                    onQuickAction: _handleQuickAction,
-                  ),
-                ),
-              ],
-            )
-          else ...[
-            CreateNotificationCard(
-              titleController: _titleController,
-              messageController: _messageController,
-              actionLabelController: _actionLabelController,
-              actionUrlController: _actionUrlController,
-              selectedChannel: _selectedChannel,
-              onChannelChanged: (ch) => setState(() => _selectedChannel = ch),
-              targetAudience: _targetAudience,
-              onAudienceChanged: (aud) => setState(() => _targetAudience = aud),
-              notificationType: _notificationType,
-              onTypeChanged: (tp) => setState(() => _notificationType = tp),
-              isScheduled: _isScheduled,
-              onScheduleToggled: (sc) => setState(() => _isScheduled = sc),
-              scheduledDateTime: _scheduledDateTime,
-              onDateTimeChanged: (dt) => setState(() => _scheduledDateTime = dt),
-              hasActionButton: _hasActionButton,
-              onActionButtonToggled: (ab) => setState(() => _hasActionButton = ab),
-              isSubmitting: _isDispatching,
-              onSendNow: _dispatchNotification,
-              onSaveDraft: _saveDraft,
-              onReset: _resetForm,
-            ),
-            const SizedBox(height: 24),
-            NotificationDeliveryAnalyticsCard(
-              onQuickAction: _handleQuickAction,
-            ),
-          ],
+              if (constraints.maxWidth > 1080) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left Column: Create Notification Form
+                    Expanded(
+                      flex: 5,
+                      child: createCard,
+                    ),
+                    const SizedBox(width: 24),
+
+                    // Right Column: Delivery Analytics Donut + Quick Actions
+                    SizedBox(
+                      width: 400,
+                      child: analyticsCard,
+                    ),
+                  ],
+                );
+              } else {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    createCard,
+                    const SizedBox(height: 24),
+                    analyticsCard,
+                  ],
+                );
+              }
+            },
+          ),
           const SizedBox(height: 28),
 
           // 4. Notifications Data Table Card

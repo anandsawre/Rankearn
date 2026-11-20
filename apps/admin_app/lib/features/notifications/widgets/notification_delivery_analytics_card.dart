@@ -44,9 +44,11 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
     ];
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Delivery Analytics Card with Donut Chart
         Container(
+          width: double.infinity,
           decoration: const BoxDecoration(
             color: AppColors.adminCardBackground,
             borderRadius: AppRadii.adminCard,
@@ -130,6 +132,7 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
 
         // 2. Quick Actions Card
         Container(
+          width: double.infinity,
           decoration: const BoxDecoration(
             color: AppColors.adminCardBackground,
             borderRadius: AppRadii.adminCard,

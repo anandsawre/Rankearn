@@ -135,6 +135,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: const BoxDecoration(
         color: AppColors.adminCardBackground,
         borderRadius: AppRadii.adminCard,
@@ -414,39 +415,69 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           ],
           const SizedBox(height: 24),
 
-          // Action Buttons: Reset, Save as Draft, Send Now
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AppButton.adminGhost(
+          // Action Buttons: Reset, Save as Draft, Send Now (Adaptive)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 460;
+
+              final resetButton = AppButton.adminGhost(
                 label: 'Reset Form',
                 leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
                 onPressed: widget.isSubmitting ? null : widget.onReset,
-              ),
-              Row(
-                children: [
-                  AppButton.adminSecondary(
-                    label: 'Save Draft',
-                    leadingIcon: const Icon(Icons.drafts_outlined, size: 16),
-                    onPressed: widget.isSubmitting ? null : widget.onSaveDraft,
-                  ),
-                  const SizedBox(width: 12),
-                  AppButton.adminPrimary(
-                    label: widget.isSubmitting
-                        ? 'Dispatching...'
-                        : widget.isScheduled
-                            ? 'Schedule Notification'
-                            : 'Send Now',
-                    isLoading: widget.isSubmitting,
-                    leadingIcon: Icon(
-                      widget.isScheduled ? Icons.schedule_send_rounded : Icons.send_rounded,
-                      size: 16,
+              );
+
+              final saveDraftButton = AppButton.adminSecondary(
+                label: 'Save Draft',
+                leadingIcon: const Icon(Icons.drafts_outlined, size: 16),
+                onPressed: widget.isSubmitting ? null : widget.onSaveDraft,
+              );
+
+              final primaryButton = AppButton.adminPrimary(
+                label: widget.isSubmitting
+                    ? 'Dispatching...'
+                    : widget.isScheduled
+                        ? 'Schedule Notification'
+                        : 'Send Now',
+                isLoading: widget.isSubmitting,
+                leadingIcon: Icon(
+                  widget.isScheduled ? Icons.schedule_send_rounded : Icons.send_rounded,
+                  size: 16,
+                ),
+                onPressed: widget.isSubmitting ? null : widget.onSendNow,
+              );
+
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: resetButton),
+                        const SizedBox(width: 10),
+                        Expanded(child: saveDraftButton),
+                      ],
                     ),
-                    onPressed: widget.isSubmitting ? null : widget.onSendNow,
+                    const SizedBox(height: 10),
+                    primaryButton,
+                  ],
+                );
+              }
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  resetButton,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      saveDraftButton,
+                      const SizedBox(width: 12),
+                      primaryButton,
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ],
       ),
