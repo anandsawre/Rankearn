@@ -115,6 +115,7 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.adminCardBackground,
         borderRadius: AppRadii.adminCard,

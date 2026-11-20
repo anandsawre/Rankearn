@@ -483,9 +483,9 @@ class _BannersTabState extends State<BannersTab> {
     final overallCtr = totalViewsSum > 0 ? (totalClicksSum / totalViewsSum * 100) : 19.1;
 
     return SingleChildScrollView(
-      padding: AppSpacing.adminPagePadding,
+      padding: AppSpacing.pagePadding(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. Hero Banner (Left) + Quick Actions (Right)
           LayoutBuilder(
@@ -623,7 +623,7 @@ class _BannersTabState extends State<BannersTab> {
                 );
               } else {
                 return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     createCard,
                     const SizedBox(height: 20),

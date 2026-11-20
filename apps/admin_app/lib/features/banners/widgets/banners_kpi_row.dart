@@ -33,9 +33,6 @@ class BannersKpiRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1200;
-
     final statusCards = [
       AdminMetricCard(
         title: 'Total Banners',
@@ -126,38 +123,47 @@ class BannersKpiRow extends StatelessWidget {
       ),
     ];
 
-    if (isDesktop) {
-      return Column(
-        children: [
-          Row(
-            children: [
-              for (int i = 0; i < statusCards.length; i++) ...[
-                if (i > 0) SizedBox(width: AppSpacing.adminGridSpacing),
-                Expanded(child: statusCards[i]),
-              ],
-            ],
-          ),
-          SizedBox(height: AppSpacing.adminGridSpacing),
-          Row(
-            children: [
-              for (int i = 0; i < performanceCards.length; i++) ...[
-                if (i > 0) SizedBox(width: AppSpacing.adminGridSpacing),
-                Expanded(child: performanceCards[i]),
-              ],
-            ],
-          ),
-        ],
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 1050;
 
-    final allCards = [...statusCards, ...performanceCards];
-    return Wrap(
-      spacing: AppSpacing.adminGridSpacing,
-      runSpacing: AppSpacing.adminGridSpacing,
-      children: allCards.map((c) {
-        final width = screenWidth >= 768 ? (screenWidth - 48 - AppSpacing.adminGridSpacing) / 2 : double.infinity;
-        return SizedBox(width: width, child: c);
-      }).toList(),
+        if (isDesktop) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  for (int i = 0; i < statusCards.length; i++) ...[
+                    if (i > 0) SizedBox(width: AppSpacing.adminGridSpacing),
+                    Expanded(child: statusCards[i]),
+                  ],
+                ],
+              ),
+              SizedBox(height: AppSpacing.adminGridSpacing),
+              Row(
+                children: [
+                  for (int i = 0; i < performanceCards.length; i++) ...[
+                    if (i > 0) SizedBox(width: AppSpacing.adminGridSpacing),
+                    Expanded(child: performanceCards[i]),
+                  ],
+                ],
+              ),
+            ],
+          );
+        }
+
+        final allCards = [...statusCards, ...performanceCards];
+        final cardWidth = constraints.maxWidth >= 640
+            ? (constraints.maxWidth - AppSpacing.adminGridSpacing) / 2
+            : constraints.maxWidth;
+        return Wrap(
+          spacing: AppSpacing.adminGridSpacing,
+          runSpacing: AppSpacing.adminGridSpacing,
+          children: allCards.map((c) {
+            return SizedBox(width: cardWidth, child: c);
+          }).toList(),
+        );
+      },
     );
   }
 }
