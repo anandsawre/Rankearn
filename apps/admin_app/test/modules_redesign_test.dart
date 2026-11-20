@@ -190,7 +190,7 @@ void main() {
     expect(find.text('System Settings'), findsOneWidget);
 
     // Verify Category Pills
-    expect(find.text('General'), findsOneWidget);
+    expect(find.text('Platform Info'), findsOneWidget);
     expect(find.text('Features'), findsOneWidget);
     expect(find.text('Rewards & Coins'), findsOneWidget);
     expect(find.text('Battles & Games'), findsOneWidget);

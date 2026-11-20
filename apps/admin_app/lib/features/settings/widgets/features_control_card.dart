@@ -5,12 +5,14 @@ class FeaturesControlCard extends StatelessWidget {
   final Map<String, bool> featureStates;
   final void Function(String key, bool value) onFeatureToggled;
   final VoidCallback? onSave;
+  final String? togglingKey;
 
   const FeaturesControlCard({
     super.key,
     required this.featureStates,
     required this.onFeatureToggled,
     this.onSave,
+    this.togglingKey,
   });
 
   static const List<Map<String, dynamic>> featuresList = [
@@ -55,10 +57,25 @@ class FeaturesControlCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      'App Features Control',
-                      style: AppTypography.adminCardTitle,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'App Features Control',
+                          style: AppTypography.adminCardTitle,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Toggles sync instantly with live Supabase',
+                          style: AppTypography.adminTableSecondary.copyWith(
+                            fontSize: 11,
+                            color: AppColors.adminSuccess,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -70,6 +87,7 @@ class FeaturesControlCard extends StatelessWidget {
                 final icon = f['icon'] as IconData;
                 final iconColor = f['color'] as Color;
                 final isEnabled = featureStates[key] ?? true;
+                final isSaving = togglingKey == key;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
@@ -83,10 +101,23 @@ class FeaturesControlCard extends StatelessWidget {
                           style: AppTypography.adminTablePrimary.copyWith(fontSize: 13),
                         ),
                       ),
-                      AppSwitch.primary(
-                        value: isEnabled,
-                        onChanged: (val) => onFeatureToggled(key, val),
-                      ),
+                      if (isSaving)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.brandPurple,
+                            ),
+                          ),
+                        )
+                      else
+                        AppSwitch.primary(
+                          value: isEnabled,
+                          onChanged: (val) => onFeatureToggled(key, val),
+                        ),
                     ],
                   ),
                 );

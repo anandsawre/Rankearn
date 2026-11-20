@@ -35,3 +35,4 @@ export 'repositories/admin_dashboard_repository.dart';
 export 'repositories/polls_repository.dart';
 export 'repositories/banners_repository.dart';
 export 'repositories/incomplete_tests_repository.dart';
+export 'repositories/feature_flags_repository.dart';

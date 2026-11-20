@@ -25,6 +25,7 @@ class DashboardScreen extends StatefulWidget {
   final void Function(String category)? onFilterSubject;
   final VoidCallback? onDailyStreakTap;
   final VoidCallback? onLeaderboardTap;
+  final Map<String, bool>? featureFlags;
 
   const DashboardScreen({
     super.key,
@@ -40,6 +41,7 @@ class DashboardScreen extends StatefulWidget {
     this.onFilterSubject,
     this.onDailyStreakTap,
     this.onLeaderboardTap,
+    this.featureFlags,
   });
 
   @override
@@ -58,10 +60,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Map<String, dynamic>> _leaderboardUsers = [];
   StreamSubscription<List<CategoryModel>>? _categoriesSub;
   StreamSubscription<List<BannerModel>>? _bannersSub;
+  StreamSubscription<Map<String, bool>>? _flagsSub;
+  Map<String, bool> _localFlags = {};
+
+  bool _isFeatureEnabled(String key) {
+    if (widget.featureFlags != null && widget.featureFlags!.containsKey(key)) {
+      return widget.featureFlags![key]!;
+    }
+    if (_localFlags.containsKey(key)) {
+      return _localFlags[key]!;
+    }
+    return FeatureFlagsRepository().isEnabled(key);
+  }
 
   @override
   void initState() {
     super.initState();
+    _localFlags = Map<String, bool>.from(FeatureFlagsRepository().currentFlags);
+    _flagsSub = FeatureFlagsRepository().flagsStream.listen(
+      (flags) {
+        if (mounted) setState(() => _localFlags = flags);
+      },
+      onError: (_) {},
+    );
     _loadDashboardData();
   }
 
@@ -162,6 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void dispose() {
     _categoriesSub?.cancel();
     _bannersSub?.cancel();
+    _flagsSub?.cancel();
     super.dispose();
   }
 
@@ -365,8 +387,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _buildTopBanner(
                         borderRadius: AppRadii.borderMd,
                       ),
-                      const SizedBox(height: 20),
-                      LivePollCard(profile: widget.profile),
+                      if (_isFeatureEnabled('live_poll')) ...[
+                        const SizedBox(height: 20),
+                        LivePollCard(profile: widget.profile),
+                      ],
                       _buildUserStatsSection(),
                       const SizedBox(height: 24),
                       _buildContinueLearningOnlySection(),
@@ -423,8 +447,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildTopBanner(
                 borderRadius: AppRadii.borderMd,
               ),
-              const SizedBox(height: 18),
-              LivePollCard(profile: widget.profile),
+              if (_isFeatureEnabled('live_poll')) ...[
+                const SizedBox(height: 18),
+                LivePollCard(profile: widget.profile),
+              ],
               _buildUserStatsSection(),
               const SizedBox(height: 20),
               _buildContinueLearningAndGoalSection(),
@@ -709,10 +735,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 650;
+        final showFortune = _isFeatureEnabled('fortune_wheel');
 
         final dailyChallengeCard = PromoBannerCard.dailyChallenge(
           onPlay: widget.onStartTest,
         );
+
+        if (!showFortune) {
+          return dailyChallengeCard;
+        }
 
         final fortuneWheelCard = PromoBannerCard.fortuneWheel(
           onSpin: widget.onSpinWheel,
@@ -741,6 +772,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // --- 7. Upcoming Live Tests & Tournaments ---
   Widget _buildUpcomingLiveTestsSection() {
+    if (!_isFeatureEnabled('live_quiz')) {
+      return const SizedBox.shrink();
+    }
     final liveEvents = <({
       String title,
       String dateTime,

@@ -105,3 +105,14 @@ INSERT INTO public.app_configs (key, value) VALUES
     "worker_url": "https://testkarlo.alleduupdated.workers.dev"
   }'::jsonb)
 ON CONFLICT (key) DO NOTHING;
+
+-- 5. Add app_configs to Realtime publication if available
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.app_configs;
+  END IF;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN OTHERS THEN NULL;
+END $$;

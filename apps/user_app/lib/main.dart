@@ -316,14 +316,32 @@ class _UserAppShellState extends State<UserAppShell> {
         );
     _syncProfileWithDatabase();
     _syncPlatformConfigs();
+    _flagsSub = _flagsRepo.streamFeatureFlags().listen(
+      (updated) {
+        if (mounted) setState(() => _featureFlags = updated);
+      },
+      onError: (_) {},
+    );
   }
 
   bool _isUnderMaintenance = false;
+  final FeatureFlagsRepository _flagsRepo = FeatureFlagsRepository();
+  StreamSubscription<Map<String, bool>>? _flagsSub;
+  Map<String, bool> _featureFlags = Map<String, bool>.from(FeatureFlagsRepository.defaultFlags);
+
+  @override
+  void dispose() {
+    _flagsSub?.cancel();
+    super.dispose();
+  }
 
   Future<void> _syncPlatformConfigs() async {
     final client = SupabaseConfig.clientSafe;
     if (client == null) return;
     try {
+      final flags = await _flagsRepo.getFeatureFlags();
+      if (mounted) setState(() => _featureFlags = flags);
+
       final res = await client.from('app_configs').select();
       if (res.isNotEmpty) {
         for (final row in res) {
@@ -880,6 +898,53 @@ class _UserAppShellState extends State<UserAppShell> {
     );
   }
 
+  void _navigateToTab(UserNavTab tab) {
+    if (tab == UserNavTab.spin && !(_featureFlags['fortune_wheel'] ?? true)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Fortune Wheel is currently paused by administrator.'),
+          backgroundColor: Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
+    if (tab == UserNavTab.battle &&
+        !(_featureFlags['1v1_battle'] ?? true) &&
+        !(_featureFlags['multiplayer_battle'] ?? true)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Battle Arena is currently paused by administrator.'),
+          backgroundColor: Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
+    if ((tab == UserNavTab.tests || tab == UserNavTab.categories) &&
+        !(_featureFlags['mock_test_series'] ?? true)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Mock Test Series are currently paused by administrator.'),
+          backgroundColor: Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
+    if ((tab == UserNavTab.live || tab == UserNavTab.tournament) &&
+        !(_featureFlags['live_quiz'] ?? true)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Live Contests are currently paused by administrator.'),
+          backgroundColor: Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
+    setState(() => _activeTab = tab);
+    if (tab == UserNavTab.wallet || tab == UserNavTab.home) {
+      _syncProfileWithDatabase();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isPro = _profile.subscriptionStatus == 'premium';
@@ -914,33 +979,22 @@ class _UserAppShellState extends State<UserAppShell> {
                 unreadNotifications: _unreadNotifications,
                 showMenuButton: true,
                 currentTab: _activeTab,
-                onTabSelected: (tab) {
-                  setState(() => _activeTab = tab);
-                  if (tab == UserNavTab.wallet || tab == UserNavTab.home) {
-                    _syncProfileWithDatabase();
-                  }
-                },
+                onTabSelected: _navigateToTab,
                 onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
                 onNotificationTap: _openNotificationsModal,
                 onSupportTap: _openSupportDialog,
                 onCoinsTap: () {
-                  setState(() => _activeTab = UserNavTab.wallet);
-                  _syncProfileWithDatabase();
+                  _navigateToTab(UserNavTab.wallet);
                 },
                 onAddCoinsTap: _openBuyCoinsModal,
                 onProfileTap: () =>
-                    setState(() => _activeTab = UserNavTab.profile),
+                    _navigateToTab(UserNavTab.profile),
               ),
         bottomNavigationBar: isDesktop
             ? null
             : AppBottomNav(
                 currentTab: _activeTab,
-                onTabSelected: (tab) {
-                  setState(() => _activeTab = tab);
-                  if (tab == UserNavTab.wallet || tab == UserNavTab.home) {
-                    _syncProfileWithDatabase();
-                  }
-                },
+                onTabSelected: _navigateToTab,
               ),
         body: Column(
           children: [
@@ -966,6 +1020,7 @@ class _UserAppShellState extends State<UserAppShell> {
               child: switch (_activeTab) {
           UserNavTab.home => DashboardScreen(
             profile: _profile,
+            featureFlags: _featureFlags,
             onStartTest: () => _startQuiz(_defaultMockTest),
             onStartTestModel: (test) => _startQuiz(test),
             onResumeTest: (
@@ -983,11 +1038,11 @@ class _UserAppShellState extends State<UserAppShell> {
                 initialIndex,
               );
             },
-            onExploreTests: () => setState(() => _activeTab = UserNavTab.tests),
-            onJoinContest: () => setState(() => _activeTab = UserNavTab.live),
-            onSpinWheel: () => setState(() => _activeTab = UserNavTab.spin),
-            onOpenWallet: () => setState(() => _activeTab = UserNavTab.wallet),
-            onOpenBattle: () => setState(() => _activeTab = UserNavTab.battle),
+            onExploreTests: () => _navigateToTab(UserNavTab.tests),
+            onJoinContest: () => _navigateToTab(UserNavTab.live),
+            onSpinWheel: () => _navigateToTab(UserNavTab.spin),
+            onOpenWallet: () => _navigateToTab(UserNavTab.wallet),
+            onOpenBattle: () => _navigateToTab(UserNavTab.battle),
           ),
           UserNavTab.categories => TestSeriesScreen(
             userCoins: _profile.coins,
@@ -1213,36 +1268,41 @@ class _UserAppShellState extends State<UserAppShell> {
                     label: 'Home Dashboard',
                     tab: UserNavTab.home,
                   ),
-                  _buildDrawerNavItem(
-                    icon: Icons.feed_outlined,
-                    label: 'Test Series & Mocks',
-                    tab: UserNavTab.tests,
-                  ),
-                  _buildDrawerNavItem(
-                    icon: Icons.sensors_rounded,
-                    label: 'Live Tests & Contests',
-                    tab: UserNavTab.live,
-                  ),
-                  _buildDrawerNavItem(
-                    icon: Icons.sports_kabaddi_rounded,
-                    label: '1v1 Quiz Battle',
-                    tab: UserNavTab.battle,
-                  ),
-                  _buildDrawerNavItem(
-                    icon: Icons.emoji_events_rounded,
-                    label: 'Live Contests',
-                    tab: UserNavTab.tournament,
-                  ),
+                  if (_featureFlags['mock_test_series'] ?? true)
+                    _buildDrawerNavItem(
+                      icon: Icons.feed_outlined,
+                      label: 'Test Series & Mocks',
+                      tab: UserNavTab.tests,
+                    ),
+                  if (_featureFlags['live_quiz'] ?? true)
+                    _buildDrawerNavItem(
+                      icon: Icons.sensors_rounded,
+                      label: 'Live Tests & Contests',
+                      tab: UserNavTab.live,
+                    ),
+                  if ((_featureFlags['1v1_battle'] ?? true) || (_featureFlags['multiplayer_battle'] ?? true))
+                    _buildDrawerNavItem(
+                      icon: Icons.sports_kabaddi_rounded,
+                      label: '1v1 Quiz Battle',
+                      tab: UserNavTab.battle,
+                    ),
+                  if (_featureFlags['live_quiz'] ?? true)
+                    _buildDrawerNavItem(
+                      icon: Icons.emoji_events_rounded,
+                      label: 'Live Contests',
+                      tab: UserNavTab.tournament,
+                    ),
                   _buildDrawerNavItem(
                     icon: Icons.emoji_events_outlined,
                     label: 'Leaderboard Rankings',
                     tab: UserNavTab.leaderboard,
                   ),
-                  _buildDrawerNavItem(
-                    icon: Icons.card_giftcard_rounded,
-                    label: 'Fortune Wheel & Rewards',
-                    tab: UserNavTab.rewards,
-                  ),
+                  if ((_featureFlags['fortune_wheel'] ?? true) || (_featureFlags['referral_earn'] ?? true))
+                    _buildDrawerNavItem(
+                      icon: Icons.card_giftcard_rounded,
+                      label: 'Fortune Wheel & Rewards',
+                      tab: UserNavTab.rewards,
+                    ),
                   _buildDrawerNavItem(
                     icon: Icons.account_balance_wallet_rounded,
                     label: 'Wallet & Coins',
@@ -1472,7 +1532,7 @@ class _UserAppShellState extends State<UserAppShell> {
       ),
       onTap: () {
         Navigator.pop(context);
-        setState(() => _activeTab = tab);
+        _navigateToTab(tab);
       },
     );
   }

@@ -57,6 +57,15 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
 
   // --- Interactive Matchmaking Flow (Screen 1: Finding Opponent Radar) ---
   void _startMatchmaking({required String battleType, required int entryFee}) {
+    if (!FeatureFlagsRepository().isEnabled('1v1_battle')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ 1v1 Quiz Battles are currently paused by administrator.'),
+          backgroundColor: Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
     if (widget.userCoins < entryFee) {
       _showInsufficientCoinsDialog(entryFee);
       return;
@@ -85,6 +94,15 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
     int fee = 50,
     int prizePool = 2250,
   }) {
+    if (!FeatureFlagsRepository().isEnabled('multiplayer_battle')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Multiplayer Battles are currently paused by administrator.'),
+          backgroundColor: Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
     if (widget.userCoins < fee) {
       _showInsufficientCoinsDialog(fee);
       return;
@@ -147,6 +165,15 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
 
   // --- Custom Room Dialog ---
   void _openCustomRoomDialog() {
+    if (!FeatureFlagsRepository().isEnabled('multiplayer_battle')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Custom Rooms & Multiplayer are currently paused by administrator.'),
+          backgroundColor: Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (context) => _CustomRoomDialog(

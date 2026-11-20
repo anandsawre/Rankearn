@@ -28,6 +28,7 @@ class _SettingsTabState extends State<SettingsTab> {
   String _activeCategory = 'all';
   bool _isLoading = true;
   bool _isSaving = false;
+  String? _togglingFeatureKey;
 
   // 1. Platform Information
   final _nameController = TextEditingController(text: 'Rankearn');
@@ -938,15 +939,63 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
+  Future<void> _handleFeatureToggle(String key, bool val) async {
+    setState(() {
+      _features[key] = val;
+      _togglingFeatureKey = key;
+    });
+
+    final featureMeta = FeaturesControlCard.featuresList.firstWhere(
+      (f) => f['key'] == key,
+      orElse: () => {'label': key},
+    );
+    final featureName = featureMeta['label']?.toString() ?? key;
+
+    final success = await FeatureFlagsRepository().setFeatureFlag(key, val);
+
+    if (mounted) {
+      setState(() {
+        _togglingFeatureKey = null;
+        if (!success) {
+          _features[key] = !val;
+        }
+      });
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? '✅ $featureName is now ${val ? "ENABLED" : "DISABLED"} (synced to live Supabase)'
+                : '❌ Failed to update $featureName. Please check connection.',
+          ),
+          backgroundColor: success ? AppColors.adminSuccess : AppColors.adminDanger,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   Widget _buildFeaturesControlCard() {
     return FeaturesControlCard(
       featureStates: _features,
-      onFeatureToggled: (key, val) => setState(() => _features[key] = val),
-      onSave: () => _saveSingleSetting(
-        'feature_flags',
-        _features,
-        'App Feature Flags',
-      ),
+      togglingKey: _togglingFeatureKey,
+      onFeatureToggled: _handleFeatureToggle,
+      onSave: () async {
+        final success = await FeatureFlagsRepository().setAllFeatureFlags(_features);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                success
+                    ? '✅ All App Feature Flags saved to Supabase!'
+                    : '❌ Failed to save Feature Flags',
+              ),
+              backgroundColor: success ? AppColors.adminSuccess : AppColors.adminDanger,
+            ),
+          );
+        }
+      },
     );
   }
 
