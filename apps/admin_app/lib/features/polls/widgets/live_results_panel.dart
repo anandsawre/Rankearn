@@ -54,10 +54,14 @@ class LiveResultsPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header: Bar chart icon + Title + Auto Refresh switch
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                runSpacing: 8,
+                spacing: 8,
                 children: [
                   const Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.bar_chart_rounded, color: AppColors.pollPurplePrimary, size: 22),
                       SizedBox(width: 8),
@@ -72,6 +76,7 @@ class LiveResultsPanel extends StatelessWidget {
                     ],
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
                         'Auto Refresh',
@@ -238,12 +243,16 @@ class LiveResultsPanel extends StatelessWidget {
                 children: [
                   Icon(Icons.settings_rounded, color: AppColors.pollPurplePrimary, size: 20),
                   SizedBox(width: 8),
-                  Text(
-                    'Poll Controls',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                  Expanded(
+                    child: Text(
+                      'Poll Controls',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -260,16 +269,19 @@ class LiveResultsPanel extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.error,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
                         shape: const RoundedRectangleBorder(
                           borderRadius: AppRadii.button,
                         ),
                         elevation: 0,
                       ),
-                      icon: const Icon(Icons.stop_rounded, size: 16),
-                      label: const Text(
-                        'End Poll',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      icon: const Icon(Icons.stop_rounded, size: 15),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'End Poll',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
                   ),
@@ -282,7 +294,7 @@ class LiveResultsPanel extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.warning,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
                         shape: const RoundedRectangleBorder(
                           borderRadius: AppRadii.button,
                         ),
@@ -290,11 +302,14 @@ class LiveResultsPanel extends StatelessWidget {
                       ),
                       icon: Icon(
                         pollData.isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                        size: 16,
+                        size: 15,
                       ),
-                      label: Text(
-                        pollData.isPaused ? 'Resume' : 'Pause',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          pollData.isPaused ? 'Resume' : 'Pause',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
                   ),
@@ -307,16 +322,19 @@ class LiveResultsPanel extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.pollPurplePrimary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
                         shape: const RoundedRectangleBorder(
                           borderRadius: AppRadii.button,
                         ),
                         elevation: 0,
                       ),
-                      icon: const Icon(Icons.refresh_rounded, size: 16),
-                      label: const Text(
-                        'Restart',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                      icon: const Icon(Icons.refresh_rounded, size: 15),
+                      label: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'Restart',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
                   ),
@@ -380,15 +398,17 @@ class LiveResultsPanel extends StatelessWidget {
             children: [
               Icon(icon, size: 18, color: AppColors.textSecondary),
               const SizedBox(height: 4),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

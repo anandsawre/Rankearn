@@ -9,6 +9,7 @@ class RewardsSettingsCard extends StatelessWidget {
   final TextEditingController spinMaxController;
   final TextEditingController minWithdrawalController;
   final TextEditingController coinRateController;
+  final VoidCallback? onSave;
 
   const RewardsSettingsCard({
     super.key,
@@ -19,6 +20,7 @@ class RewardsSettingsCard extends StatelessWidget {
     required this.spinMaxController,
     required this.minWithdrawalController,
     required this.coinRateController,
+    this.onSave,
   });
 
   @override
@@ -33,105 +35,123 @@ class RewardsSettingsCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.adminPurpleLight,
-                  borderRadius: AppRadii.adminControl,
-                ),
-                child: const Icon(Icons.toll_rounded, size: 18, color: AppColors.adminPurple),
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.adminPurpleLight,
+                      borderRadius: AppRadii.adminControl,
+                    ),
+                    child: const Icon(Icons.toll_rounded, size: 18, color: AppColors.adminPurple),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Rewards & Coins Settings',
+                      style: AppTypography.adminCardTitle,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Rewards & Coins Settings',
-                  style: AppTypography.adminCardTitle,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              const SizedBox(height: 14),
+
+              Text('Signup Bonus (Coins)', style: AppTypography.adminFieldLabelSmall),
+              const SizedBox(height: 6),
+              AppTextField(
+                controller: signupBonusController,
+                hintText: '100',
+                keyboardType: TextInputType.number,
+                prefixIcon: const Icon(Icons.monetization_on_outlined, size: 18, color: AppColors.coinGold),
+              ),
+              const SizedBox(height: 10),
+
+              Text('Referral Reward (per user)', style: AppTypography.adminFieldLabelSmall),
+              const SizedBox(height: 6),
+              AppTextField(
+                controller: referralRewardController,
+                hintText: '10',
+                keyboardType: TextInputType.number,
+                prefixIcon: const Icon(Icons.monetization_on_outlined, size: 18, color: AppColors.coinGold),
+              ),
+              const SizedBox(height: 10),
+
+              Text('Battle Win Reward (default)', style: AppTypography.adminFieldLabelSmall),
+              const SizedBox(height: 6),
+              AppTextField(
+                controller: battleRewardController,
+                hintText: '50',
+                keyboardType: TextInputType.number,
+                prefixIcon: const Icon(Icons.monetization_on_outlined, size: 18, color: AppColors.coinGold),
+              ),
+              const SizedBox(height: 10),
+
+              Text('Spin Reward (Min – Max)', style: AppTypography.adminFieldLabelSmall),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      controller: spinMinController,
+                      hintText: '5',
+                      keyboardType: TextInputType.number,
+                      prefixIcon: const Icon(Icons.casino_outlined, size: 18, color: AppColors.adminSecondaryText),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: AppTextField(
+                      controller: spinMaxController,
+                      hintText: '50',
+                      keyboardType: TextInputType.number,
+                      prefixIcon: const Icon(Icons.casino_outlined, size: 18, color: AppColors.adminSecondaryText),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              Text('Minimum Withdrawal (Coins)', style: AppTypography.adminFieldLabelSmall),
+              const SizedBox(height: 6),
+              AppTextField(
+                controller: minWithdrawalController,
+                hintText: '1000',
+                keyboardType: TextInputType.number,
+                prefixIcon: const Icon(Icons.account_balance_wallet_outlined, size: 18, color: AppColors.adminPurple),
+              ),
+              const SizedBox(height: 10),
+
+              Text('Coin to Cash Rate', style: AppTypography.adminFieldLabelSmall),
+              const SizedBox(height: 6),
+              AppTextField(
+                controller: coinRateController,
+                hintText: '100 Coins = ₹1',
+                prefixIcon: const Icon(Icons.currency_rupee_rounded, size: 18, color: AppColors.adminSuccess),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-
-          Text('Signup Bonus (Coins)', style: AppTypography.adminFieldLabelSmall),
-          const SizedBox(height: 6),
-          AppTextField(
-            controller: signupBonusController,
-            hintText: '100',
-            keyboardType: TextInputType.number,
-            prefixIcon: const Icon(Icons.monetization_on_outlined, size: 18, color: AppColors.coinGold),
-          ),
-          const SizedBox(height: 10),
-
-          Text('Referral Reward (per user)', style: AppTypography.adminFieldLabelSmall),
-          const SizedBox(height: 6),
-          AppTextField(
-            controller: referralRewardController,
-            hintText: '10',
-            keyboardType: TextInputType.number,
-            prefixIcon: const Icon(Icons.monetization_on_outlined, size: 18, color: AppColors.coinGold),
-          ),
-          const SizedBox(height: 10),
-
-          Text('Battle Win Reward (default)', style: AppTypography.adminFieldLabelSmall),
-          const SizedBox(height: 6),
-          AppTextField(
-            controller: battleRewardController,
-            hintText: '50',
-            keyboardType: TextInputType.number,
-            prefixIcon: const Icon(Icons.monetization_on_outlined, size: 18, color: AppColors.coinGold),
-          ),
-          const SizedBox(height: 10),
-
-          Text('Spin Reward (Min – Max)', style: AppTypography.adminFieldLabelSmall),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Expanded(
-                child: AppTextField(
-                  controller: spinMinController,
-                  hintText: '5',
-                  keyboardType: TextInputType.number,
-                  prefixIcon: const Icon(Icons.casino_outlined, size: 18, color: AppColors.adminSecondaryText),
+          if (onSave != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: AppButton.adminPrimary(
+                  label: 'Save Rewards Settings',
+                  leadingIcon: const Icon(Icons.save_rounded, size: 16),
+                  onPressed: onSave,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: AppTextField(
-                  controller: spinMaxController,
-                  hintText: '50',
-                  keyboardType: TextInputType.number,
-                  prefixIcon: const Icon(Icons.casino_outlined, size: 18, color: AppColors.adminSecondaryText),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          Text('Minimum Withdrawal (Coins)', style: AppTypography.adminFieldLabelSmall),
-          const SizedBox(height: 6),
-          AppTextField(
-            controller: minWithdrawalController,
-            hintText: '1000',
-            keyboardType: TextInputType.number,
-            prefixIcon: const Icon(Icons.account_balance_wallet_outlined, size: 18, color: AppColors.adminPurple),
-          ),
-          const SizedBox(height: 10),
-
-          Text('Coin to Cash Rate', style: AppTypography.adminFieldLabelSmall),
-          const SizedBox(height: 6),
-          AppTextField(
-            controller: coinRateController,
-            hintText: '100 Coins = ₹1',
-            prefixIcon: const Icon(Icons.currency_rupee_rounded, size: 18, color: AppColors.adminSuccess),
-          ),
+            ),
         ],
       ),
     );
   }
 }
-

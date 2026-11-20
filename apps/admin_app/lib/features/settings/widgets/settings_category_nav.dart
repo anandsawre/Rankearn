@@ -12,7 +12,8 @@ class SettingsCategoryNav extends StatelessWidget {
   });
 
   static const categories = [
-    {'id': 'all', 'label': 'General', 'icon': Icons.settings_rounded},
+    {'id': 'all', 'label': 'All Settings', 'icon': Icons.dashboard_rounded},
+    {'id': 'platform', 'label': 'Platform Info', 'icon': Icons.info_outline_rounded},
     {'id': 'features', 'label': 'Features', 'icon': Icons.dashboard_customize_rounded},
     {'id': 'rewards', 'label': 'Rewards & Coins', 'icon': Icons.toll_rounded},
     {'id': 'battles', 'label': 'Battles & Games', 'icon': Icons.sports_esports_rounded},

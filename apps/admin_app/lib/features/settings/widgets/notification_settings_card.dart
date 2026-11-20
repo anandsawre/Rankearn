@@ -10,6 +10,7 @@ class NotificationSettingsCard extends StatelessWidget {
   final ValueChanged<bool> onEnableInAppChanged;
   final ValueChanged<bool> onEnableEmailChanged;
   final ValueChanged<bool> onEnableSmsChanged;
+  final VoidCallback? onSave;
 
   const NotificationSettingsCard({
     super.key,
@@ -21,6 +22,7 @@ class NotificationSettingsCard extends StatelessWidget {
     required this.onEnableInAppChanged,
     required this.onEnableEmailChanged,
     required this.onEnableSmsChanged,
+    this.onSave,
   });
 
   @override
@@ -35,37 +37,56 @@ class NotificationSettingsCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.adminPurpleLight,
-                  borderRadius: AppRadii.adminControl,
-                ),
-                child: const Icon(Icons.notifications_none_rounded, size: 18, color: AppColors.adminPurple),
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.adminPurpleLight,
+                      borderRadius: AppRadii.adminControl,
+                    ),
+                    child: const Icon(Icons.notifications_none_rounded, size: 18, color: AppColors.adminPurple),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Notification Settings',
+                      style: AppTypography.adminCardTitle,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Notification Settings',
-                  style: AppTypography.adminCardTitle,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              const SizedBox(height: 14),
+
+              _buildToggleRow('Enable Push Notification', enablePush, onEnablePushChanged),
+              const SizedBox(height: 6),
+              _buildToggleRow('Enable In-App Notification', enableInApp, onEnableInAppChanged),
+              const SizedBox(height: 6),
+              _buildToggleRow('Enable Email Notification', enableEmail, onEnableEmailChanged),
+              const SizedBox(height: 6),
+              _buildToggleRow('Enable SMS (OTP/Alerts)', enableSms, onEnableSmsChanged),
             ],
           ),
-          const SizedBox(height: 14),
-
-          _buildToggleRow('Enable Push Notification', enablePush, onEnablePushChanged),
-          const SizedBox(height: 6),
-          _buildToggleRow('Enable In-App Notification', enableInApp, onEnableInAppChanged),
-          const SizedBox(height: 6),
-          _buildToggleRow('Enable Email Notification', enableEmail, onEnableEmailChanged),
-          const SizedBox(height: 6),
-          _buildToggleRow('Enable SMS (OTP/Alerts)', enableSms, onEnableSmsChanged),
+          if (onSave != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: AppButton.adminPrimary(
+                  label: 'Save Notification Settings',
+                  leadingIcon: const Icon(Icons.save_rounded, size: 16),
+                  onPressed: onSave,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -92,4 +113,3 @@ class NotificationSettingsCard extends StatelessWidget {
     );
   }
 }
-

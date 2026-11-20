@@ -72,8 +72,11 @@ class LivePollPreviewPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Top Bar: LIVE POLL + Viewer Count
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         // Red LIVE POLL badge
                         Container(
@@ -264,56 +267,74 @@ class LivePollPreviewPanel extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        // 2. BOTTOM 4 METRICS CARDS ROW
-        Row(
-          children: [
-            // Metric 1: Total Votes
-            Expanded(
-              child: _buildMetricCard(
-                icon: Icons.people_alt_rounded,
-                iconColor: AppColors.pollPurplePrimary,
-                iconBg: AppColors.pollPurpleLight,
-                value: _formatNumber(pollData.totalVotes),
-                label: 'Total Votes',
-              ),
-            ),
-            const SizedBox(width: 12),
+        // 2. BOTTOM 4 METRICS CARDS (Responsive: 2x2 grid on mobile, 4-in-a-row on desktop)
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 600;
 
-            // Metric 2: Live Viewers
-            Expanded(
-              child: _buildMetricCard(
-                icon: Icons.visibility_rounded,
-                iconColor: AppColors.pollLeadingGreen,
-                iconBg: const Color(0xFFDCFCE7),
-                value: _formatNumber(pollData.liveViewers),
-                label: 'Live Viewers',
-              ),
-            ),
-            const SizedBox(width: 12),
+            final card1 = _buildMetricCard(
+              icon: Icons.people_alt_rounded,
+              iconColor: AppColors.pollPurplePrimary,
+              iconBg: AppColors.pollPurpleLight,
+              value: _formatNumber(pollData.totalVotes),
+              label: 'Total Votes',
+            );
+            final card2 = _buildMetricCard(
+              icon: Icons.visibility_rounded,
+              iconColor: AppColors.pollLeadingGreen,
+              iconBg: const Color(0xFFDCFCE7),
+              value: _formatNumber(pollData.liveViewers),
+              label: 'Live Viewers',
+            );
+            final card3 = _buildMetricCard(
+              icon: Icons.bar_chart_rounded,
+              iconColor: AppColors.coinGold,
+              iconBg: AppColors.coinGoldLight,
+              value: '$leadingPct%',
+              label: 'Leading Option',
+            );
+            final card4 = _buildMetricCard(
+              icon: Icons.access_time_rounded,
+              iconColor: AppColors.brandBlue,
+              iconBg: AppColors.brandBlueLight,
+              value: _formatTimer(pollData.remainingSeconds),
+              label: 'Time Left',
+            );
 
-            // Metric 3: Leading Option
-            Expanded(
-              child: _buildMetricCard(
-                icon: Icons.bar_chart_rounded,
-                iconColor: AppColors.coinGold,
-                iconBg: AppColors.coinGoldLight,
-                value: '$leadingPct%',
-                label: 'Leading Option',
-              ),
-            ),
-            const SizedBox(width: 12),
+            if (isNarrow) {
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: card1),
+                      const SizedBox(width: 10),
+                      Expanded(child: card2),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(child: card3),
+                      const SizedBox(width: 10),
+                      Expanded(child: card4),
+                    ],
+                  ),
+                ],
+              );
+            }
 
-            // Metric 4: Time Left
-            Expanded(
-              child: _buildMetricCard(
-                icon: Icons.access_time_rounded,
-                iconColor: AppColors.brandBlue,
-                iconBg: AppColors.brandBlueLight,
-                value: _formatTimer(pollData.remainingSeconds),
-                label: 'Time Left',
-              ),
-            ),
-          ],
+            return Row(
+              children: [
+                Expanded(child: card1),
+                const SizedBox(width: 12),
+                Expanded(child: card2),
+                const SizedBox(width: 12),
+                Expanded(child: card3),
+                const SizedBox(width: 12),
+                Expanded(child: card4),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -327,7 +348,7 @@ class LivePollPreviewPanel extends StatelessWidget {
     required String label,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadii.borderMd,
@@ -337,38 +358,41 @@ class LivePollPreviewPanel extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: iconBg,
               borderRadius: AppRadii.borderSm,
             ),
-            child: Icon(icon, color: iconColor, size: 20),
+            child: Icon(icon, color: iconColor, size: 18),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.3,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.3,
+                    ),
+                    maxLines: 1,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   label,
                   style: const TextStyle(
                     fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

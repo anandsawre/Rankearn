@@ -163,13 +163,17 @@ class _CreatePollPanelState extends State<CreatePollPanel> {
                 child: const Icon(Icons.add, color: Colors.white, size: 20),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'Create Poll',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.3,
+              const Expanded(
+                child: Text(
+                  'Create Poll',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -218,12 +222,15 @@ class _CreatePollPanelState extends State<CreatePollPanel> {
                               ]
                             : null,
                       ),
-                      child: Text(
-                        t.label,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: isSelected ? Colors.white : AppColors.textSecondary,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          t.label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected ? Colors.white : AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ),
@@ -466,9 +473,11 @@ class _CreatePollPanelState extends State<CreatePollPanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Show Live Result',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              const Expanded(
+                child: Text(
+                  'Show Live Result',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                ),
               ),
               Switch(
                 value: poll.showLiveResult,
@@ -486,9 +495,11 @@ class _CreatePollPanelState extends State<CreatePollPanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Allow Option Change',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              const Expanded(
+                child: Text(
+                  'Allow Option Change',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                ),
               ),
               Switch(
                 value: poll.allowOptionChange,

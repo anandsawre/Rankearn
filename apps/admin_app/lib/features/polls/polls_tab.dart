@@ -445,119 +445,158 @@ class _PollsTabState extends State<PollsTab> {
 
   /// Top Sub-Header Bar matching reference screenshot exactly
   Widget _buildTopSubHeader(bool hasActivePoll) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppRadii.borderLg,
-        border: Border.all(color: AppColors.borderSubtle),
-        boxShadow: AppShadows.subtle,
-      ),
-      child: Row(
-        children: [
-          // Tab 1: Live Poll Dashboard Button
-          InkWell(
-            onTap: () => setState(() => _selectedTab = 0),
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: _selectedTab == 0 ? AppColors.pollPurplePrimary : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.grid_view_rounded,
-                    size: 16,
-                    color: _selectedTab == 0 ? Colors.white : AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Live Poll Dashboard',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: _selectedTab == 0 ? Colors.white : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 750;
 
-          // Tab 2: Polls History (N) Button
-          InkWell(
-            onTap: () {
-              setState(() => _selectedTab = 1);
-              _loadHistory();
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: _selectedTab == 1 ? AppColors.pollPurplePrimary : Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: _selectedTab == 1 ? null : Border.all(color: AppColors.borderSubtle),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.history_rounded,
-                    size: 16,
-                    color: _selectedTab == 1 ? Colors.white : AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Polls History (${_historyPolls.length})',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: _selectedTab == 1 ? Colors.white : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const Spacer(),
-
-          // Status Badge Pill on the Right
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        final tab1 = InkWell(
+          onTap: () => setState(() => _selectedTab = 0),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: hasActivePoll ? const Color(0xFFECFDF5) : const Color(0xFFF1F5F9),
-              borderRadius: AppRadii.borderPill,
-              border: Border.all(
-                color: hasActivePoll ? const Color(0xFFA7F3D0) : const Color(0xFFCBD5E1),
-              ),
+              color: _selectedTab == 0 ? AppColors.pollPurplePrimary : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.circle,
-                  size: 8,
-                  color: hasActivePoll ? const Color(0xFF059669) : const Color(0xFF94A3B8),
+                  Icons.grid_view_rounded,
+                  size: 16,
+                  color: _selectedTab == 0 ? Colors.white : AppColors.textSecondary,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Text(
-                  hasActivePoll ? 'Active Poll Session' : 'No Active Poll',
+                  'Live Poll Dashboard',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: hasActivePoll ? const Color(0xFF065F46) : const Color(0xFF64748B),
+                    color: _selectedTab == 0 ? Colors.white : AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        );
+
+        final tab2 = InkWell(
+          onTap: () {
+            setState(() => _selectedTab = 1);
+            _loadHistory();
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: _selectedTab == 1 ? AppColors.pollPurplePrimary : Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: _selectedTab == 1 ? null : Border.all(color: AppColors.borderSubtle),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.history_rounded,
+                  size: 16,
+                  color: _selectedTab == 1 ? Colors.white : AppColors.textSecondary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Polls History (${_historyPolls.length})',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: _selectedTab == 1 ? Colors.white : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+        final statusBadge = Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: hasActivePoll ? const Color(0xFFECFDF5) : const Color(0xFFF1F5F9),
+            borderRadius: AppRadii.borderPill,
+            border: Border.all(
+              color: hasActivePoll ? const Color(0xFFA7F3D0) : const Color(0xFFCBD5E1),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.circle,
+                size: 8,
+                color: hasActivePoll ? const Color(0xFF059669) : const Color(0xFF94A3B8),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                hasActivePoll ? 'Active Poll Session' : 'No Active Poll',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: hasActivePoll ? const Color(0xFF065F46) : const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        if (isMobile) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: AppRadii.borderLg,
+              border: Border.all(color: AppColors.borderSubtle),
+              boxShadow: AppShadows.subtle,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: [
+                      tab1,
+                      const SizedBox(width: 8),
+                      tab2,
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: statusBadge,
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: AppRadii.borderLg,
+            border: Border.all(color: AppColors.borderSubtle),
+            boxShadow: AppShadows.subtle,
+          ),
+          child: Row(
+            children: [
+              tab1,
+              const SizedBox(width: 8),
+              tab2,
+              const Spacer(),
+              statusBadge,
+            ],
+          ),
+        );
+      },
     );
   }
 

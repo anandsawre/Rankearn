@@ -31,7 +31,7 @@ class SettingsQuickActions extends StatelessWidget {
       compact: true,
       actions: [
         QuickActionItemData(
-          label: 'Save\nSettings',
+          label: 'Save All\nSettings',
           icon: Icons.save_rounded,
           iconColor: AppColors.brandPurple,
           cardColor: AppColors.brandPurpleLight,
@@ -59,8 +59,8 @@ class SettingsQuickActions extends StatelessWidget {
           onTap: onToggleMaintenance,
         ),
         QuickActionItemData(
-          label: 'Backup\nDatabase',
-          icon: Icons.cloud_upload_outlined,
+          label: 'Export\nConfig',
+          icon: Icons.cloud_download_outlined,
           iconColor: AppColors.adminSuccess,
           cardColor: AppColors.adminSuccessLight,
           onTap: onBackupDatabase,

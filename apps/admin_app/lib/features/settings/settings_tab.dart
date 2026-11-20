@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
@@ -14,6 +15,7 @@ import 'widgets/notification_settings_card.dart';
 import 'widgets/limits_rules_card.dart';
 import 'widgets/appearance_branding_card.dart';
 import 'widgets/advanced_settings_card.dart';
+import '../payments/dialogs/payment_settings_dialog.dart';
 
 class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key});
@@ -55,8 +57,8 @@ class _SettingsTabState extends State<SettingsTab> {
   final _coinRateController = TextEditingController(text: '100 Coins = ₹1');
 
   // 4. Battle & Games
-  String _questionTime = '3Seconds';
-  String _battleDuration = '1Minutes';
+  String _questionTime = '10Seconds';
+  String _battleDuration = '2Minutes';
   final _maxPlayersController = TextEditingController(text: '100');
   final _entryFeeController = TextEditingController(text: '10 Coins');
   final _winningRewardController = TextEditingController(text: '50 Coins');
@@ -76,13 +78,15 @@ class _SettingsTabState extends State<SettingsTab> {
 
   // 7. Limits & Rules
   final _battleLimitController = TextEditingController(text: '20');
-  final _coinLimitController = TextEditingController(text: '1,000');
-  final _withdrawalLimitController = TextEditingController(text: '5,000');
+  final _coinLimitController = TextEditingController(text: '1000');
+  final _withdrawalLimitController = TextEditingController(text: '5000');
   final _suspensionThresholdController = TextEditingController(text: '3 Violations');
 
   // 8. Appearance & Branding
   final _primaryColorController = TextEditingController(text: '#7C3AED');
   final _secondaryColorController = TextEditingController(text: '#A855F7');
+  final _logoUrlController = TextEditingController();
+  final _faviconUrlController = TextEditingController();
 
   // 9. Advanced Settings
   bool _maintenanceMode = false;
@@ -97,7 +101,7 @@ class _SettingsTabState extends State<SettingsTab> {
     _loadSettingsFromSupabase();
   }
 
-  Future<void> _loadSettingsFromSupabase() async {
+  Future<void> _loadSettingsFromSupabase({bool showFeedback = false}) async {
     final client = SupabaseConfig.clientSafe;
     if (client == null) {
       if (mounted) setState(() => _isLoading = false);
@@ -133,7 +137,11 @@ class _SettingsTabState extends State<SettingsTab> {
             if (map['min_withdrawal'] != null) _minWithdrawalController.text = map['min_withdrawal'].toString();
             if (map['coin_rate'] != null) _coinRateController.text = map['coin_rate'].toString();
           } else if (key == 'battle_settings') {
-            if (map['question_time'] != null) _questionTime = map['question_time'].toString();
+            if (map['question_time'] != null) {
+              _questionTime = map['question_time'].toString();
+            } else if (map['timePerQuestion'] != null) {
+              _questionTime = '${map['timePerQuestion']}Seconds';
+            }
             if (map['battle_duration'] != null) _battleDuration = map['battle_duration'].toString();
             if (map['max_players'] != null) _maxPlayersController.text = map['max_players'].toString();
             if (map['entry_fee'] != null) _entryFeeController.text = map['entry_fee'].toString();
@@ -141,7 +149,11 @@ class _SettingsTabState extends State<SettingsTab> {
           } else if (key == 'payment_settings') {
             if (map['enable_payments'] is bool) _enablePayments = map['enable_payments'] as bool;
             if (map['default_gateway'] != null) _defaultGateway = map['default_gateway'].toString();
-            if (map['enable_razorpay'] is bool) _enableRazorpay = map['enable_razorpay'] as bool;
+            if (map['enable_razorpay'] is bool) {
+              _enableRazorpay = map['enable_razorpay'] as bool;
+            } else if (map['enableRazorpay'] is bool) {
+              _enableRazorpay = map['enableRazorpay'] as bool;
+            }
             if (map['enable_cashfree'] is bool) _enableCashfree = map['enable_cashfree'] as bool;
             if (map['enable_payu'] is bool) _enablePayU = map['enable_payu'] as bool;
           } else if (key == 'notification_settings') {
@@ -157,6 +169,8 @@ class _SettingsTabState extends State<SettingsTab> {
           } else if (key == 'appearance_branding') {
             if (map['primary_color'] != null) _primaryColorController.text = map['primary_color'].toString();
             if (map['secondary_color'] != null) _secondaryColorController.text = map['secondary_color'].toString();
+            if (map['logo_url'] != null) _logoUrlController.text = map['logo_url'].toString();
+            if (map['favicon_url'] != null) _faviconUrlController.text = map['favicon_url'].toString();
           } else if (key == 'advanced_settings') {
             if (map['maintenance_mode'] is bool) _maintenanceMode = map['maintenance_mode'] as bool;
             if (map['debug_mode'] is bool) _debugMode = map['debug_mode'] as bool;
@@ -166,9 +180,29 @@ class _SettingsTabState extends State<SettingsTab> {
           }
         }
       }
-      if (mounted) setState(() => _isLoading = false);
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (showFeedback) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🔄 Latest configuration synced from Supabase database!'),
+              backgroundColor: AppColors.adminSuccess,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (showFeedback) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Error loading configuration: $e'),
+              backgroundColor: AppColors.adminDanger,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -194,11 +228,83 @@ class _SettingsTabState extends State<SettingsTab> {
     _suspensionThresholdController.dispose();
     _primaryColorController.dispose();
     _secondaryColorController.dispose();
+    _logoUrlController.dispose();
+    _faviconUrlController.dispose();
     _workerUrlController.dispose();
     super.dispose();
   }
 
+  Future<void> _saveSingleSetting(String key, Map<String, dynamic> data, String friendlyName) async {
+    final client = SupabaseConfig.clientSafe;
+    if (client == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Database client not connected'), backgroundColor: AppColors.adminDanger),
+      );
+      return;
+    }
+
+    try {
+      // Merge with existing document if present so partial updates do not overwrite other keys
+      final existingRes = await client.from('app_configs').select('value').eq('key', key).maybeSingle();
+      final existingMap = (existingRes != null && existingRes['value'] is Map)
+          ? Map<String, dynamic>.from(existingRes['value'] as Map)
+          : <String, dynamic>{};
+
+      existingMap.addAll(data);
+
+      await client.from('app_configs').upsert({
+        'key': key,
+        'value': existingMap,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ $friendlyName saved to Supabase!'),
+            backgroundColor: AppColors.adminSuccess,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Failed to save $friendlyName: $e'),
+            backgroundColor: AppColors.adminDanger,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _resetToDefault() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset All Settings to Defaults?'),
+        content: const Text(
+          'This will overwrite all active system configurations in the database with standard default parameters. Are you sure you want to proceed?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.adminWarning,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Reset to Defaults'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
     setState(() {
       _nameController.text = 'Rankearn';
       _taglineController.text = 'India\'s 1st Learning with Earning Platform';
@@ -212,8 +318,8 @@ class _SettingsTabState extends State<SettingsTab> {
       _spinMaxController.text = '50';
       _minWithdrawalController.text = '1000';
       _coinRateController.text = '100 Coins = ₹1';
-      _questionTime = '3Seconds';
-      _battleDuration = '1Minutes';
+      _questionTime = '10Seconds';
+      _battleDuration = '2Minutes';
       _maxPlayersController.text = '100';
       _entryFeeController.text = '10 Coins';
       _winningRewardController.text = '50 Coins';
@@ -226,125 +332,271 @@ class _SettingsTabState extends State<SettingsTab> {
       _enableInApp = true;
       _enableEmail = false;
       _enableSms = false;
+      _battleLimitController.text = '20';
+      _coinLimitController.text = '1000';
+      _withdrawalLimitController.text = '5000';
+      _suspensionThresholdController.text = '3 Violations';
+      _primaryColorController.text = '#7C3AED';
+      _secondaryColorController.text = '#A855F7';
+      _logoUrlController.clear();
+      _faviconUrlController.clear();
       _maintenanceMode = false;
       _debugMode = false;
       _autoBackup = true;
       _activityLogs = true;
+      _workerUrlController.text = 'https://testkarlo.alleduupdated.workers.dev';
     });
 
     await _updateSettings();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings restored to defaults and saved to Supabase.')),
-      );
-    }
   }
 
   Future<void> _updateSettings() async {
     setState(() => _isSaving = true);
     final client = SupabaseConfig.clientSafe;
-    if (client != null) {
-      final now = DateTime.now().toIso8601String();
-      try {
-        await Future.wait([
-          client.from('app_configs').upsert({
-            'key': 'platform_info',
-            'value': {
-              'name': _nameController.text.trim(),
-              'tagline': _taglineController.text.trim(),
-              'email': _emailController.text.trim(),
-              'whatsapp': _whatsappController.text.trim(),
-            },
-            'updated_at': now,
-          }),
-          client.from('app_configs').upsert({
-            'key': 'feature_flags',
-            'value': _features,
-            'updated_at': now,
-          }),
-          client.from('app_configs').upsert({
-            'key': 'rewards_settings',
-            'value': {
-              'signup_bonus': _signupBonusController.text.trim(),
-              'referral_reward': _referralRewardController.text.trim(),
-              'battle_reward': _battleRewardController.text.trim(),
-              'spin_min': _spinMinController.text.trim(),
-              'spin_max': _spinMaxController.text.trim(),
-              'min_withdrawal': _minWithdrawalController.text.trim(),
-              'coin_rate': _coinRateController.text.trim(),
-            },
-            'updated_at': now,
-          }),
-          client.from('app_configs').upsert({
-            'key': 'battle_settings',
-            'value': {
-              'question_time': _questionTime,
-              'battle_duration': _battleDuration,
-              'max_players': _maxPlayersController.text.trim(),
-              'entry_fee': _entryFeeController.text.trim(),
-              'winning_reward': _winningRewardController.text.trim(),
-            },
-            'updated_at': now,
-          }),
-          client.from('app_configs').upsert({
-            'key': 'payment_settings',
-            'value': {
-              'enable_payments': _enablePayments,
-              'default_gateway': _defaultGateway,
-              'enable_razorpay': _enableRazorpay,
-              'enable_cashfree': _enableCashfree,
-              'enable_payu': _enablePayU,
-            },
-            'updated_at': now,
-          }),
-          client.from('app_configs').upsert({
-            'key': 'notification_settings',
-            'value': {
-              'enable_push': _enablePush,
-              'enable_in_app': _enableInApp,
-              'enable_email': _enableEmail,
-              'enable_sms': _enableSms,
-            },
-            'updated_at': now,
-          }),
-          client.from('app_configs').upsert({
-            'key': 'limits_rules',
-            'value': {
-              'battle_limit': _battleLimitController.text.trim(),
-              'coin_limit': _coinLimitController.text.trim(),
-              'withdrawal_limit': _withdrawalLimitController.text.trim(),
-              'suspension_threshold': _suspensionThresholdController.text.trim(),
-            },
-            'updated_at': now,
-          }),
-          client.from('app_configs').upsert({
-            'key': 'appearance_branding',
-            'value': {
-              'primary_color': _primaryColorController.text.trim(),
-              'secondary_color': _secondaryColorController.text.trim(),
-            },
-            'updated_at': now,
-          }),
-          client.from('app_configs').upsert({
-            'key': 'advanced_settings',
-            'value': {
-              'maintenance_mode': _maintenanceMode,
-              'debug_mode': _debugMode,
-              'auto_backup': _autoBackup,
-              'activity_logs': _activityLogs,
-              'worker_url': _workerUrlController.text.trim(),
-            },
-            'updated_at': now,
-          }),
-        ]);
-      } catch (_) {}
+    if (client == null) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Database connection not initialized'),
+            backgroundColor: AppColors.adminDanger,
+          ),
+        );
+      }
+      return;
     }
 
+    final now = DateTime.now().toUtc().toIso8601String();
+    try {
+      // 1. Prepare merged payment settings preserving existing UPI/gateway fields
+      final paymentRes = await client.from('app_configs').select('value').eq('key', 'payment_settings').maybeSingle();
+      final paymentMap = (paymentRes != null && paymentRes['value'] is Map)
+          ? Map<String, dynamic>.from(paymentRes['value'] as Map)
+          : <String, dynamic>{};
+
+      paymentMap['enable_payments'] = _enablePayments;
+      paymentMap['default_gateway'] = _defaultGateway;
+      paymentMap['enable_razorpay'] = _enableRazorpay;
+      paymentMap['enable_cashfree'] = _enableCashfree;
+      paymentMap['enable_payu'] = _enablePayU;
+
+      await Future.wait([
+        client.from('app_configs').upsert({
+          'key': 'platform_info',
+          'value': {
+            'name': _nameController.text.trim(),
+            'tagline': _taglineController.text.trim(),
+            'email': _emailController.text.trim(),
+            'whatsapp': _whatsappController.text.trim(),
+          },
+          'updated_at': now,
+        }),
+        client.from('app_configs').upsert({
+          'key': 'feature_flags',
+          'value': _features,
+          'updated_at': now,
+        }),
+        client.from('app_configs').upsert({
+          'key': 'rewards_settings',
+          'value': {
+            'signup_bonus': _signupBonusController.text.trim(),
+            'referral_reward': _referralRewardController.text.trim(),
+            'battle_reward': _battleRewardController.text.trim(),
+            'spin_min': _spinMinController.text.trim(),
+            'spin_max': _spinMaxController.text.trim(),
+            'min_withdrawal': _minWithdrawalController.text.trim(),
+            'coin_rate': _coinRateController.text.trim(),
+          },
+          'updated_at': now,
+        }),
+        client.from('app_configs').upsert({
+          'key': 'battle_settings',
+          'value': {
+            'question_time': _questionTime,
+            'battle_duration': _battleDuration,
+            'max_players': _maxPlayersController.text.trim(),
+            'entry_fee': _entryFeeController.text.trim(),
+            'winning_reward': _winningRewardController.text.trim(),
+          },
+          'updated_at': now,
+        }),
+        client.from('app_configs').upsert({
+          'key': 'payment_settings',
+          'value': paymentMap,
+          'updated_at': now,
+        }),
+        client.from('app_configs').upsert({
+          'key': 'notification_settings',
+          'value': {
+            'enable_push': _enablePush,
+            'enable_in_app': _enableInApp,
+            'enable_email': _enableEmail,
+            'enable_sms': _enableSms,
+          },
+          'updated_at': now,
+        }),
+        client.from('app_configs').upsert({
+          'key': 'limits_rules',
+          'value': {
+            'battle_limit': _battleLimitController.text.trim(),
+            'coin_limit': _coinLimitController.text.trim(),
+            'withdrawal_limit': _withdrawalLimitController.text.trim(),
+            'suspension_threshold': _suspensionThresholdController.text.trim(),
+          },
+          'updated_at': now,
+        }),
+        client.from('app_configs').upsert({
+          'key': 'appearance_branding',
+          'value': {
+            'primary_color': _primaryColorController.text.trim(),
+            'secondary_color': _secondaryColorController.text.trim(),
+            'logo_url': _logoUrlController.text.trim(),
+            'favicon_url': _faviconUrlController.text.trim(),
+          },
+          'updated_at': now,
+        }),
+        client.from('app_configs').upsert({
+          'key': 'advanced_settings',
+          'value': {
+            'maintenance_mode': _maintenanceMode,
+            'debug_mode': _debugMode,
+            'auto_backup': _autoBackup,
+            'activity_logs': _activityLogs,
+            'worker_url': _workerUrlController.text.trim(),
+          },
+          'updated_at': now,
+        }),
+      ]);
+
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ All platform configuration documents successfully saved to Supabase!'),
+            backgroundColor: AppColors.adminSuccess,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error saving platform configurations: $e'),
+            backgroundColor: AppColors.adminDanger,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportDatabaseConfig() async {
+    final client = SupabaseConfig.clientSafe;
+    Map<String, dynamic> exportData = {};
+
+    try {
+      if (client != null) {
+        final rows = await client.from('app_configs').select();
+        for (final row in rows) {
+          final key = row['key']?.toString();
+          if (key != null) {
+            exportData[key] = row['value'];
+          }
+        }
+      }
+    } catch (_) {}
+
+    // If database query is empty, export active in-memory configurations
+    if (exportData.isEmpty) {
+      exportData = {
+        'platform_info': {
+          'name': _nameController.text.trim(),
+          'tagline': _taglineController.text.trim(),
+          'email': _emailController.text.trim(),
+          'whatsapp': _whatsappController.text.trim(),
+        },
+        'feature_flags': _features,
+        'rewards_settings': {
+          'signup_bonus': _signupBonusController.text.trim(),
+          'referral_reward': _referralRewardController.text.trim(),
+          'battle_reward': _battleRewardController.text.trim(),
+          'spin_min': _spinMinController.text.trim(),
+          'spin_max': _spinMaxController.text.trim(),
+          'min_withdrawal': _minWithdrawalController.text.trim(),
+          'coin_rate': _coinRateController.text.trim(),
+        },
+        'battle_settings': {
+          'question_time': _questionTime,
+          'battle_duration': _battleDuration,
+          'max_players': _maxPlayersController.text.trim(),
+          'entry_fee': _entryFeeController.text.trim(),
+          'winning_reward': _winningRewardController.text.trim(),
+        },
+        'payment_settings': {
+          'enable_payments': _enablePayments,
+          'default_gateway': _defaultGateway,
+          'enable_razorpay': _enableRazorpay,
+          'enable_cashfree': _enableCashfree,
+          'enable_payu': _enablePayU,
+        },
+        'notification_settings': {
+          'enable_push': _enablePush,
+          'enable_in_app': _enableInApp,
+          'enable_email': _enableEmail,
+          'enable_sms': _enableSms,
+        },
+        'limits_rules': {
+          'battle_limit': _battleLimitController.text.trim(),
+          'coin_limit': _coinLimitController.text.trim(),
+          'withdrawal_limit': _withdrawalLimitController.text.trim(),
+          'suspension_threshold': _suspensionThresholdController.text.trim(),
+        },
+        'appearance_branding': {
+          'primary_color': _primaryColorController.text.trim(),
+          'secondary_color': _secondaryColorController.text.trim(),
+          'logo_url': _logoUrlController.text.trim(),
+          'favicon_url': _faviconUrlController.text.trim(),
+        },
+        'advanced_settings': {
+          'maintenance_mode': _maintenanceMode,
+          'debug_mode': _debugMode,
+          'auto_backup': _autoBackup,
+          'activity_logs': _activityLogs,
+          'worker_url': _workerUrlController.text.trim(),
+        },
+      };
+    }
+
+    final fullSnapshot = {
+      'metadata': {
+        'platform': 'Rankearn',
+        'exported_at': DateTime.now().toUtc().toIso8601String(),
+        'source': 'Supabase public.app_configs',
+        'sections_count': exportData.length,
+      },
+      'configurations': exportData,
+    };
+
+    final jsonString = const JsonEncoder.withIndent('  ').convert(fullSnapshot);
+    await Clipboard.setData(ClipboardData(text: jsonString));
+
     if (mounted) {
-      setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ All platform configuration documents saved to Supabase!')),
+        SnackBar(
+          content: Text('📋 System configuration exported to clipboard (${exportData.length} sections, valid JSON)!'),
+          backgroundColor: AppColors.adminSuccess,
+        ),
       );
+    }
+  }
+
+  void _openPaymentSettingsDialog() async {
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => const PaymentSettingsDialog(),
+    );
+    if (updated == true && mounted) {
+      _loadSettingsFromSupabase();
     }
   }
 
@@ -372,288 +624,264 @@ class _SettingsTabState extends State<SettingsTab> {
                   final heroCard = SettingsHeroCard(
                     onResetDefaults: _resetToDefault,
                     onUpdateSettings: _updateSettings,
+                    onRefresh: () => _loadSettingsFromSupabase(showFeedback: true),
                   );
                   final quickActions = SettingsQuickActions(
                     onUpdateSettings: _updateSettings,
                     onResetDefaults: _resetToDefault,
-                    onConfigurePayments: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Configuring Payment Gateway API credentials...')),
-                      );
-                    },
+                    onConfigurePayments: _openPaymentSettingsDialog,
                     onToggleMaintenance: () async {
                       final newVal = !_maintenanceMode;
                       setState(() => _maintenanceMode = newVal);
-                      final client = SupabaseConfig.clientSafe;
-                      if (client != null) {
-                        await client.from('app_configs').upsert({
-                          'key': 'advanced_settings',
-                          'value': {
-                            'maintenance_mode': newVal,
-                            'debug_mode': _debugMode,
-                            'auto_backup': _autoBackup,
-                            'activity_logs': _activityLogs,
-                            'worker_url': _workerUrlController.text.trim(),
-                          },
-                          'updated_at': DateTime.now().toIso8601String(),
-                        });
-                      }
-                      if (!mounted) return;
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(newVal
-                              ? '⚠️ Maintenance Mode ACTIVATED in live database'
-                              : '✅ Maintenance Mode DEACTIVATED in live database'),
-                        ),
+                      await _saveSingleSetting(
+                        'advanced_settings',
+                        {
+                          'maintenance_mode': newVal,
+                          'debug_mode': _debugMode,
+                          'auto_backup': _autoBackup,
+                          'activity_logs': _activityLogs,
+                          'worker_url': _workerUrlController.text.trim(),
+                        },
+                        newVal ? 'Maintenance Mode (ACTIVATED)' : 'Maintenance Mode (DEACTIVATED)',
                       );
                     },
-                onBackupDatabase: () {
-                  final configJson = {
-                    'platform_info': {'name': _nameController.text, 'email': _emailController.text},
-                    'feature_flags': _features,
-                    'rewards_settings': {'signup_bonus': _signupBonusController.text, 'coin_rate': _coinRateController.text},
-                    'maintenance_mode': _maintenanceMode,
-                    'timestamp': DateTime.now().toIso8601String(),
-                  };
-                  Clipboard.setData(ClipboardData(text: configJson.toString()));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('📋 System configuration exported to clipboard as JSON!')),
+                    onBackupDatabase: _exportDatabaseConfig,
+                  );
+
+                  if (constraints.maxWidth > 980) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 58,
+                          child: heroCard,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 42,
+                          child: quickActions,
+                        ),
+                      ],
+                    );
+                  } else {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        heroCard,
+                        const SizedBox(height: 16),
+                        quickActions,
+                      ],
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 18),
+
+              // 2. Horizontal Category Pills Nav
+              SettingsCategoryNav(
+                activeCategory: _activeCategory,
+                onCategoryChanged: (cat) => setState(() => _activeCategory = cat),
+              ),
+              const SizedBox(height: 20),
+
+              // 3. Grid of Settings Cards
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final double width = constraints.maxWidth;
+                  final int columns = width >= 1150
+                      ? 3
+                      : (width >= 720
+                          ? 2
+                          : 1);
+
+                  final List<Widget> cards;
+                  switch (_activeCategory) {
+                    case 'platform':
+                      cards = [_buildPlatformInfoCard()];
+                      break;
+                    case 'features':
+                      cards = [_buildFeaturesControlCard()];
+                      break;
+                    case 'rewards':
+                      cards = [_buildRewardsSettingsCard()];
+                      break;
+                    case 'battles':
+                      cards = [_buildBattleSettingsCard()];
+                      break;
+                    case 'payments':
+                      cards = [_buildPaymentSettingsCard()];
+                      break;
+                    case 'notifications':
+                      cards = [_buildNotificationSettingsCard()];
+                      break;
+                    case 'limits':
+                      cards = [_buildLimitsRulesCard()];
+                      break;
+                    case 'appearance':
+                      cards = [_buildAppearanceBrandingCard()];
+                      break;
+                    case 'advanced':
+                      cards = [_buildAdvancedSettingsCard()];
+                      break;
+                    case 'all':
+                    default:
+                      cards = [
+                        _buildPlatformInfoCard(),
+                        _buildFeaturesControlCard(),
+                        _buildRewardsSettingsCard(),
+                        _buildBattleSettingsCard(),
+                        _buildPaymentSettingsCard(),
+                        _buildNotificationSettingsCard(),
+                        _buildLimitsRulesCard(),
+                        _buildAppearanceBrandingCard(),
+                        _buildAdvancedSettingsCard(),
+                      ];
+                      break;
+                  }
+
+                  final List<List<Widget>> cardRows = [];
+                  for (int i = 0; i < cards.length; i += columns) {
+                    final end = (i + columns < cards.length) ? i + columns : cards.length;
+                    cardRows.add(cards.sublist(i, end));
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (int r = 0; r < cardRows.length; r++) ...[
+                        if (r > 0) const SizedBox(height: 16),
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (int c = 0; c < cardRows[r].length; c++) ...[
+                                if (c > 0) const SizedBox(width: 14),
+                                Expanded(child: cardRows[r][c]),
+                              ],
+                              for (int c = cardRows[r].length; c < columns; c++) ...[
+                                const SizedBox(width: 14),
+                                const Expanded(child: SizedBox.shrink()),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   );
                 },
-              );
+              ),
+              const SizedBox(height: 24),
 
-              if (constraints.maxWidth > 980) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 58,
-                      child: heroCard,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 42,
-                      child: quickActions,
-                    ),
-                  ],
-                );
-              } else {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    heroCard,
-                    const SizedBox(height: 16),
-                    quickActions,
-                  ],
-                );
-              }
-            },
-          ),
-          const SizedBox(height: 18),
-
-          // 2. Horizontal Category Pills Nav
-          SettingsCategoryNav(
-            activeCategory: _activeCategory,
-            onCategoryChanged: (cat) => setState(() => _activeCategory = cat),
-          ),
-          const SizedBox(height: 20),
-
-          // 3. Grid of Settings Cards
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final double width = constraints.maxWidth;
-              final int columns = width >= 1150
-                  ? 3
-                  : (width >= 720
-                      ? 2
-                      : 1);
-
-              final List<Widget> cards;
-              switch (_activeCategory) {
-                case 'features':
-                  cards = [_buildFeaturesControlCard()];
-                  break;
-                case 'rewards':
-                  cards = [_buildRewardsSettingsCard()];
-                  break;
-                case 'battles':
-                  cards = [_buildBattleSettingsCard()];
-                  break;
-                case 'payments':
-                  cards = [_buildPaymentSettingsCard()];
-                  break;
-                case 'notifications':
-                  cards = [_buildNotificationSettingsCard()];
-                  break;
-                case 'limits':
-                  cards = [_buildLimitsRulesCard()];
-                  break;
-                case 'appearance':
-                  cards = [_buildAppearanceBrandingCard()];
-                  break;
-                case 'advanced':
-                  cards = [_buildAdvancedSettingsCard()];
-                  break;
-                case 'all':
-                default:
-                  cards = [
-                    _buildPlatformInfoCard(),
-                    _buildFeaturesControlCard(),
-                    _buildRewardsSettingsCard(),
-                    _buildBattleSettingsCard(),
-                    _buildPaymentSettingsCard(),
-                    _buildNotificationSettingsCard(),
-                    _buildLimitsRulesCard(),
-                    _buildAppearanceBrandingCard(),
-                    _buildAdvancedSettingsCard(),
-                  ];
-                  break;
-              }
-
-              final List<List<Widget>> cardRows = [];
-              for (int i = 0; i < cards.length; i += columns) {
-                final end = (i + columns < cards.length) ? i + columns : cards.length;
-                cardRows.add(cards.sublist(i, end));
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (int r = 0; r < cardRows.length; r++) ...[
-                    if (r > 0) const SizedBox(height: 16),
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (int c = 0; c < cardRows[r].length; c++) ...[
-                            if (c > 0) const SizedBox(width: 14),
-                            Expanded(child: cardRows[r][c]),
-                          ],
-                          for (int c = cardRows[r].length; c < columns; c++) ...[
-                            const SizedBox(width: 14),
-                            const Expanded(child: SizedBox.shrink()),
-                          ],
-                        ],
+              // 4. Bottom Footer Bar
+              LayoutBuilder(
+                builder: (context, footerConstraints) {
+                  final isNarrow = footerConstraints.maxWidth < 780;
+                  if (isNarrow) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.adminCardBackground,
+                        borderRadius: AppRadii.adminCard,
+                        border: Border.all(color: AppColors.adminBorder),
+                        boxShadow: AppShadows.adminCard,
                       ),
-                    ),
-                  ],
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-
-          // 4. Bottom Footer Bar
-          LayoutBuilder(
-            builder: (context, footerConstraints) {
-              final isNarrow = footerConstraints.maxWidth < 780;
-              if (isNarrow) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.adminCardBackground,
-                    borderRadius: AppRadii.adminCard,
-                    border: Border.all(color: AppColors.adminBorder),
-                    boxShadow: AppShadows.adminCard,
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
-                          const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.adminSecondaryText),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              'Changes will be applied across the platform for all users.',
-                              style: AppTypography.adminTableSecondary.copyWith(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.adminSecondaryText),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'Changes will be applied across the platform for all users.',
+                                  style: AppTypography.adminTableSecondary.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppButton.adminSecondary(
-                              label: 'Reset to Default',
-                              leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
-                              onPressed: _resetToDefault,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: AppButton.adminPrimary(
-                              label: 'Update Settings',
-                              leadingIcon: const Icon(Icons.save_rounded, size: 16),
-                              onPressed: _updateSettings,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.adminCardBackground,
-                  borderRadius: AppRadii.adminCard,
-                  border: Border.all(color: AppColors.adminBorder),
-                  boxShadow: AppShadows.adminCard,
-                ),
-                child: Row(
-                  children: [
-                    AppButton.adminSecondary(
-                      label: 'Reset to Default',
-                      leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
-                      onPressed: _resetToDefault,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.adminSecondaryText),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              'Changes will be applied across the platform for all users.',
-                              style: AppTypography.adminTableSecondary.copyWith(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AppButton.adminSecondary(
+                                  label: 'Reset to Default',
+                                  leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
+                                  onPressed: _resetToDefault,
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: AppButton.adminPrimary(
+                                  label: 'Update Settings',
+                                  leadingIcon: const Icon(Icons.save_rounded, size: 16),
+                                  onPressed: _updateSettings,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
+                    );
+                  }
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: AppColors.adminCardBackground,
+                      borderRadius: AppRadii.adminCard,
+                      border: Border.all(color: AppColors.adminBorder),
+                      boxShadow: AppShadows.adminCard,
                     ),
-                    const SizedBox(width: 12),
-                    AppButton.adminPrimary(
-                      label: 'Update Settings',
-                      leadingIcon: const Icon(Icons.save_rounded, size: 16),
-                      onPressed: _updateSettings,
+                    child: Row(
+                      children: [
+                        AppButton.adminSecondary(
+                          label: 'Reset to Default',
+                          leadingIcon: const Icon(Icons.refresh_rounded, size: 16),
+                          onPressed: _resetToDefault,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.info_outline_rounded, size: 16, color: AppColors.adminSecondaryText),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'Changes will be applied across the platform for all users.',
+                                  style: AppTypography.adminTableSecondary.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        AppButton.adminPrimary(
+                          label: 'Update Settings',
+                          leadingIcon: const Icon(Icons.save_rounded, size: 16),
+                          onPressed: _updateSettings,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            },
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
-    if (_isSaving)
+        ),
+        if (_isSaving)
           Positioned.fill(
             child: Container(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: Colors.black.withValues(alpha: 0.2),
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -672,7 +900,7 @@ class _SettingsTabState extends State<SettingsTab> {
                         child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.adminPurple),
                       ),
                       SizedBox(width: 12),
-                      Text('Saving settings to Supabase...', style: AppTypography.adminTablePrimary),
+                      Text('Saving all configurations to Supabase...', style: AppTypography.adminTablePrimary),
                     ],
                   ),
                 ),
@@ -697,11 +925,16 @@ class _SettingsTabState extends State<SettingsTab> {
           _whatsappController.text = '+91 9876543210';
         });
       },
-      onSave: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Platform information saved successfully!')),
-        );
-      },
+      onSave: () => _saveSingleSetting(
+        'platform_info',
+        {
+          'name': _nameController.text.trim(),
+          'tagline': _taglineController.text.trim(),
+          'email': _emailController.text.trim(),
+          'whatsapp': _whatsappController.text.trim(),
+        },
+        'Platform Information',
+      ),
     );
   }
 
@@ -709,6 +942,11 @@ class _SettingsTabState extends State<SettingsTab> {
     return FeaturesControlCard(
       featureStates: _features,
       onFeatureToggled: (key, val) => setState(() => _features[key] = val),
+      onSave: () => _saveSingleSetting(
+        'feature_flags',
+        _features,
+        'App Feature Flags',
+      ),
     );
   }
 
@@ -721,6 +959,19 @@ class _SettingsTabState extends State<SettingsTab> {
       spinMaxController: _spinMaxController,
       minWithdrawalController: _minWithdrawalController,
       coinRateController: _coinRateController,
+      onSave: () => _saveSingleSetting(
+        'rewards_settings',
+        {
+          'signup_bonus': _signupBonusController.text.trim(),
+          'referral_reward': _referralRewardController.text.trim(),
+          'battle_reward': _battleRewardController.text.trim(),
+          'spin_min': _spinMinController.text.trim(),
+          'spin_max': _spinMaxController.text.trim(),
+          'min_withdrawal': _minWithdrawalController.text.trim(),
+          'coin_rate': _coinRateController.text.trim(),
+        },
+        'Rewards & Coin Settings',
+      ),
     );
   }
 
@@ -737,6 +988,17 @@ class _SettingsTabState extends State<SettingsTab> {
       onBattleDurationChanged: (v) {
         if (v != null) setState(() => _battleDuration = v);
       },
+      onSave: () => _saveSingleSetting(
+        'battle_settings',
+        {
+          'question_time': _questionTime,
+          'battle_duration': _battleDuration,
+          'max_players': _maxPlayersController.text.trim(),
+          'entry_fee': _entryFeeController.text.trim(),
+          'winning_reward': _winningRewardController.text.trim(),
+        },
+        'Battle & Game Settings',
+      ),
     );
   }
 
@@ -754,11 +1016,18 @@ class _SettingsTabState extends State<SettingsTab> {
       onEnableRazorpayChanged: (v) => setState(() => _enableRazorpay = v),
       onEnableCashfreeChanged: (v) => setState(() => _enableCashfree = v),
       onEnablePayUChanged: (v) => setState(() => _enablePayU = v),
-      onConfigureKeys: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment gateway API keys are up to date.')),
-        );
-      },
+      onConfigureKeys: _openPaymentSettingsDialog,
+      onSave: () => _saveSingleSetting(
+        'payment_settings',
+        {
+          'enable_payments': _enablePayments,
+          'default_gateway': _defaultGateway,
+          'enable_razorpay': _enableRazorpay,
+          'enable_cashfree': _enableCashfree,
+          'enable_payu': _enablePayU,
+        },
+        'Payment Settings',
+      ),
     );
   }
 
@@ -772,6 +1041,16 @@ class _SettingsTabState extends State<SettingsTab> {
       onEnableInAppChanged: (v) => setState(() => _enableInApp = v),
       onEnableEmailChanged: (v) => setState(() => _enableEmail = v),
       onEnableSmsChanged: (v) => setState(() => _enableSms = v),
+      onSave: () => _saveSingleSetting(
+        'notification_settings',
+        {
+          'enable_push': _enablePush,
+          'enable_in_app': _enableInApp,
+          'enable_email': _enableEmail,
+          'enable_sms': _enableSms,
+        },
+        'Notification Settings',
+      ),
     );
   }
 
@@ -781,6 +1060,16 @@ class _SettingsTabState extends State<SettingsTab> {
       coinLimitController: _coinLimitController,
       withdrawalLimitController: _withdrawalLimitController,
       suspensionThresholdController: _suspensionThresholdController,
+      onSave: () => _saveSingleSetting(
+        'limits_rules',
+        {
+          'battle_limit': _battleLimitController.text.trim(),
+          'coin_limit': _coinLimitController.text.trim(),
+          'withdrawal_limit': _withdrawalLimitController.text.trim(),
+          'suspension_threshold': _suspensionThresholdController.text.trim(),
+        },
+        'Limits & Rules',
+      ),
     );
   }
 
@@ -788,16 +1077,18 @@ class _SettingsTabState extends State<SettingsTab> {
     return AppearanceBrandingCard(
       primaryColorController: _primaryColorController,
       secondaryColorController: _secondaryColorController,
-      onUploadLogo: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Upload new App Logo...')),
-        );
-      },
-      onUploadFavicon: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Upload new Favicon...')),
-        );
-      },
+      logoUrlController: _logoUrlController,
+      faviconUrlController: _faviconUrlController,
+      onSave: () => _saveSingleSetting(
+        'appearance_branding',
+        {
+          'primary_color': _primaryColorController.text.trim(),
+          'secondary_color': _secondaryColorController.text.trim(),
+          'logo_url': _logoUrlController.text.trim(),
+          'favicon_url': _faviconUrlController.text.trim(),
+        },
+        'Appearance & Branding',
+      ),
     );
   }
 
@@ -812,11 +1103,28 @@ class _SettingsTabState extends State<SettingsTab> {
       onDebugChanged: (v) => setState(() => _debugMode = v),
       onAutoBackupChanged: (v) => setState(() => _autoBackup = v),
       onActivityLogsChanged: (v) => setState(() => _activityLogs = v),
-      onSaveWorkerUrl: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Worker URL updated!')),
-        );
-      },
+      onSaveWorkerUrl: () => _saveSingleSetting(
+        'advanced_settings',
+        {
+          'maintenance_mode': _maintenanceMode,
+          'debug_mode': _debugMode,
+          'auto_backup': _autoBackup,
+          'activity_logs': _activityLogs,
+          'worker_url': _workerUrlController.text.trim(),
+        },
+        'Edge Worker / AI Proxy URL',
+      ),
+      onSave: () => _saveSingleSetting(
+        'advanced_settings',
+        {
+          'maintenance_mode': _maintenanceMode,
+          'debug_mode': _debugMode,
+          'auto_backup': _autoBackup,
+          'activity_logs': _activityLogs,
+          'worker_url': _workerUrlController.text.trim(),
+        },
+        'Advanced Settings',
+      ),
     );
   }
 }

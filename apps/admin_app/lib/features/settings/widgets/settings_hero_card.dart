@@ -5,11 +5,13 @@ import 'package:design_system/design_system.dart';
 class SettingsHeroCard extends StatelessWidget {
   final VoidCallback? onResetDefaults;
   final VoidCallback? onUpdateSettings;
+  final VoidCallback? onRefresh;
 
   const SettingsHeroCard({
     super.key,
     this.onResetDefaults,
     this.onUpdateSettings,
+    this.onRefresh,
   });
 
   @override
@@ -17,9 +19,9 @@ class SettingsHeroCard extends StatelessWidget {
     return AdminHeroCard(
       title: 'System Settings',
       subtitle1: 'Configure and manage your platform, features, rewards, payments and general settings.',
-      subtitle2: 'All operational parameters and rules are synced across candidates and admin nodes.',
-      onSync: onUpdateSettings,
-      syncTooltip: 'Update system settings',
+      subtitle2: 'All operational parameters and rules are synced across candidate apps and admin nodes.',
+      onSync: onRefresh ?? onUpdateSettings,
+      syncTooltip: 'Sync & reload live settings from database',
       trailing: SizedBox(
         width: 100,
         height: 100,

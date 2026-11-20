@@ -4,11 +4,13 @@ import 'package:design_system/design_system.dart';
 class FeaturesControlCard extends StatelessWidget {
   final Map<String, bool> featureStates;
   final void Function(String key, bool value) onFeatureToggled;
+  final VoidCallback? onSave;
 
   const FeaturesControlCard({
     super.key,
     required this.featureStates,
     required this.onFeatureToggled,
+    this.onSave,
   });
 
   static const List<Map<String, dynamic>> featuresList = [
@@ -34,59 +36,77 @@ class FeaturesControlCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: const BoxDecoration(
-                  color: AppColors.adminPurpleLight,
-                  borderRadius: AppRadii.adminControl,
-                ),
-                child: const Icon(Icons.dashboard_customize_rounded, size: 18, color: AppColors.adminPurple),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'App Features Control',
-                  style: AppTypography.adminCardTitle,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ...featuresList.map((f) {
-            final key = f['key'] as String;
-            final label = f['label'] as String;
-            final icon = f['icon'] as IconData;
-            final iconColor = f['color'] as Color;
-            final isEnabled = featureStates[key] ?? true;
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-              child: Row(
+              Row(
                 children: [
-                  Icon(icon, size: 18, color: iconColor),
-                  const SizedBox(width: AppSpacing.sm),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: const BoxDecoration(
+                      color: AppColors.adminPurpleLight,
+                      borderRadius: AppRadii.adminControl,
+                    ),
+                    child: const Icon(Icons.dashboard_customize_rounded, size: 18, color: AppColors.adminPurple),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      label,
-                      style: AppTypography.adminTablePrimary.copyWith(fontSize: 13),
+                      'App Features Control',
+                      style: AppTypography.adminCardTitle,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  AppSwitch.primary(
-                    value: isEnabled,
-                    onChanged: (val) => onFeatureToggled(key, val),
                   ),
                 ],
               ),
-            );
-          }),
+              const SizedBox(height: AppSpacing.md),
+              ...featuresList.map((f) {
+                final key = f['key'] as String;
+                final label = f['label'] as String;
+                final icon = f['icon'] as IconData;
+                final iconColor = f['color'] as Color;
+                final isEnabled = featureStates[key] ?? true;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Row(
+                    children: [
+                      Icon(icon, size: 18, color: iconColor),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: AppTypography.adminTablePrimary.copyWith(fontSize: 13),
+                        ),
+                      ),
+                      AppSwitch.primary(
+                        value: isEnabled,
+                        onChanged: (val) => onFeatureToggled(key, val),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+          if (onSave != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: AppButton.adminPrimary(
+                  label: 'Save Feature Flags',
+                  leadingIcon: const Icon(Icons.save_rounded, size: 16),
+                  onPressed: onSave,
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
-
