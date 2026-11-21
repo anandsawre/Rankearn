@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   read_by UUID[] DEFAULT '{}',
   target_segment VARCHAR(30) DEFAULT 'all', -- 'all', 'students', 'teachers', etc.
   clicks BIGINT NOT NULL DEFAULT 0,
+  status VARCHAR(20) NOT NULL DEFAULT 'sent', -- 'sent', 'scheduled', 'draft'
+  scheduled_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
 

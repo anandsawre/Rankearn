@@ -70,16 +70,22 @@ class _NotificationsTabState extends State<NotificationsTab> {
             final readsStr = readCount > 0 ? '$readCount reads' : (isRead ? 'Read' : 'Delivered');
             final ctrStr = clicks > 0 ? '$clicks clicks' : '0.0%';
 
+            final status = (n['status']?.toString() ?? 'sent').toLowerCase();
+            final isScheduledItem = status == 'scheduled';
+            final displayDate = isScheduledItem && n['scheduled_at'] != null
+                ? n['scheduled_at'].toString().split('T').first
+                : (n['created_at'] != null ? n['created_at'].toString().split('T').first : 'Recent');
+
             return {
               'id': n['id']?.toString() ?? '',
               'title': n['title']?.toString() ?? 'Notification Broadcast',
               'body': n['message']?.toString() ?? '',
               'segment': _formatSegment(n['target_segment']?.toString() ?? 'all'),
               'type': n['type']?.toString() ?? 'alert',
-              'status': 'sent',
-              'date': n['created_at'] != null ? n['created_at'].toString().split('T').first : 'Recent',
-              'reads': readsStr,
-              'ctr': ctrStr,
+              'status': status,
+              'date': displayDate,
+              'reads': isScheduledItem ? 'Pending' : readsStr,
+              'ctr': isScheduledItem ? '0.0%' : ctrStr,
               'action_url': n['action_url']?.toString() ?? '',
             };
           }).toList();
@@ -180,7 +186,10 @@ class _NotificationsTabState extends State<NotificationsTab> {
     setState(() => _isDispatching = true);
 
     final newId = 'notif-${DateTime.now().millisecondsSinceEpoch}';
-    final isSched = _isScheduled && _scheduledDateTime != null;
+    final isSched = _isScheduled;
+    final scheduledTime = isSched
+        ? (_scheduledDateTime ?? DateTime.now().add(const Duration(hours: 1)))
+        : null;
 
     final newItem = {
       'id': newId,
@@ -190,7 +199,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
       'type': _notificationType,
       'status': isSched ? 'scheduled' : 'sent',
       'date': isSched
-          ? _scheduledDateTime!.toLocal().toString().substring(0, 16)
+          ? scheduledTime!.toLocal().toString().substring(0, 16)
           : 'Just Now',
       'reads': isSched ? 'Pending' : '0 (0%)',
       'ctr': '0.0%',
@@ -211,9 +220,11 @@ class _NotificationsTabState extends State<NotificationsTab> {
           'target_segment': _targetAudience,
           'action_url': _hasActionButton ? _actionUrlController.text.trim() : null,
           'is_read': false,
+          'status': isSched ? 'scheduled' : 'sent',
+          'scheduled_at': isSched ? scheduledTime!.toUtc().toIso8601String() : null,
         });
 
-        // Trigger Google FCM v1 Edge Function for instant push broadcast
+        // Trigger Google FCM v1 Edge Function strictly for INSTANT dispatches (never for scheduled)
         if (!isSched && _selectedChannel != 'email') {
           try {
             final funcRes = await client.functions.invoke(

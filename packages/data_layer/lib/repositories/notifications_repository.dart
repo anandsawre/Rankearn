@@ -12,16 +12,16 @@ class NotificationsRepository {
   SupabaseClient? get _effectiveClient => _client ?? SupabaseConfig.clientSafe;
 
   /// Fetch notifications history for user/global
-  Future<List<Map<String, dynamic>>> fetchNotifications({int limit = 25}) async {
+  Future<List<Map<String, dynamic>>> fetchNotifications({int limit = 25, bool onlyActive = true}) async {
     final client = _effectiveClient;
     if (client == null) return [];
 
     try {
-      final res = await client
-          .from('notifications')
-          .select()
-          .order('created_at', ascending: false)
-          .limit(limit);
+      var query = client.from('notifications').select();
+      if (onlyActive) {
+        query = query.neq('status', 'scheduled').neq('status', 'draft');
+      }
+      final res = await query.order('created_at', ascending: false).limit(limit);
 
       return List<Map<String, dynamic>>.from(res as List);
     } catch (e) {
@@ -46,7 +46,11 @@ class NotificationsRepository {
         callback: (payload) {
           final record = payload.newRecord;
           if (record.isNotEmpty && !controller.isClosed) {
-            controller.add(Map<String, dynamic>.from(record));
+            final status = (record['status'] ?? 'sent').toString().toLowerCase();
+            // Only deliver active sent broadcasts (ignore scheduled / drafts)
+            if (status != 'scheduled' && status != 'draft') {
+              controller.add(Map<String, dynamic>.from(record));
+            }
           }
         },
       ).subscribe();
