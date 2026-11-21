@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
@@ -281,7 +282,8 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
 
   @override
   void dispose() {
-    _closeDropdown(animated: false);
+    _isOpen = false;
+    _removeOverlay();
     _animationController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -295,20 +297,46 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
     }
   }
 
+  void _removeOverlay() {
+    if (_overlayEntry != null) {
+      try {
+        _overlayEntry?.remove();
+      } catch (_) {}
+      _overlayEntry = null;
+    }
+  }
+
   void _openDropdown() {
-    if (_isOpen || !widget.enabled) return;
+    if (!widget.enabled) return;
+    if (_isOpen) {
+      _closeDropdown();
+      return;
+    }
+
+    _removeOverlay();
 
     final overlay = Overlay.of(context, rootOverlay: true);
     final renderBox =
         _fieldKey.currentContext?.findRenderObject() as RenderBox? ??
         context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
+    if (renderBox == null || !renderBox.hasSize) return;
 
     final size = renderBox.size;
     final offset = renderBox.localToGlobal(Offset.zero);
     final screenHeight = MediaQuery.of(context).size.height;
     final spaceBelow = screenHeight - (offset.dy + size.height);
-    final openUpward = spaceBelow < 200 && offset.dy > spaceBelow;
+    final spaceAbove = offset.dy;
+    final maxHeight = widget.menuMaxHeight ?? 240.0;
+    final estimatedHeight = math.min(
+      widget.items.length * 40.0 + 16.0,
+      maxHeight,
+    );
+    final openUpward = spaceBelow < estimatedHeight && spaceAbove > spaceBelow;
+
+    final availableHeight = openUpward
+        ? math.min(maxHeight, spaceAbove - 16.0)
+        : math.min(maxHeight, spaceBelow - 16.0);
+    final effectiveMaxHeight = math.max(60.0, availableHeight);
 
     final effectiveRadius = widget.borderRadius ?? AppRadii.borderSm;
     final effectiveDropdownColor = widget.dropdownColor ?? AppColors.surface;
@@ -328,19 +356,25 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
             // Full-screen backdrop to dismiss on outside tap
             Positioned.fill(
               child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
+                behavior: HitTestBehavior.opaque,
                 onTap: _closeDropdown,
               ),
             ),
-            // Positioned Anchored Dropdown Menu directly flush beneath the input box
+            // Positioned Anchored Dropdown Menu directly flush beneath or above the input box
             Positioned(
               width: size.width,
               child: CompositedTransformFollower(
                 link: _layerLink,
                 showWhenUnlinked: false,
+                targetAnchor: openUpward
+                    ? Alignment.topLeft
+                    : Alignment.bottomLeft,
+                followerAnchor: openUpward
+                    ? Alignment.bottomLeft
+                    : Alignment.topLeft,
                 offset: openUpward
-                    ? Offset(0, -(widget.menuMaxHeight ?? 240) - 1)
-                    : Offset(0, size.height + 1),
+                    ? const Offset(0, -3)
+                    : const Offset(0, 3),
                 child: Material(
                   color: Colors.transparent,
                   child: FadeTransition(
@@ -352,7 +386,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
                           : Alignment.topCenter,
                       child: Container(
                         constraints: BoxConstraints(
-                          maxHeight: widget.menuMaxHeight ?? 240,
+                          maxHeight: effectiveMaxHeight,
                         ),
                         decoration: BoxDecoration(
                           color: effectiveDropdownColor,
@@ -451,23 +485,20 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
   }
 
   void _closeDropdown({bool animated = true}) {
-    if (!_isOpen) return;
+    if (!_isOpen && _overlayEntry == null) return;
+    if (mounted) {
+      setState(() => _isOpen = false);
+    } else {
+      _isOpen = false;
+    }
 
     if (animated && _animationController.status != AnimationStatus.dismissed) {
       _animationController.reverse().then((_) {
-        if (!mounted) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _overlayEntry?.remove();
-          _overlayEntry = null;
-          if (mounted) setState(() => _isOpen = false);
-        });
+        _removeOverlay();
       });
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _overlayEntry?.remove();
-        _overlayEntry = null;
-        if (mounted) setState(() => _isOpen = false);
-      });
+      _animationController.value = 0.0;
+      _removeOverlay();
     }
   }
 
@@ -515,19 +546,16 @@ class _AppDropdownState<T> extends State<AppDropdown<T>>
             : SystemMouseCursors.basic,
         onEnter: (_) {
           if (widget.enabled && !_isHovered && mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) setState(() => _isHovered = true);
-            });
+            setState(() => _isHovered = true);
           }
         },
         onExit: (_) {
           if (widget.enabled && _isHovered && mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) setState(() => _isHovered = false);
-            });
+            setState(() => _isHovered = false);
           }
         },
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: widget.enabled ? _toggleDropdown : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
@@ -797,7 +825,8 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
 
   @override
   void dispose() {
-    _closeDropdown(animated: false);
+    _isOpen = false;
+    _removeOverlay();
     _animationController.dispose();
     super.dispose();
   }
@@ -810,14 +839,28 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
     }
   }
 
+  void _removeOverlay() {
+    if (_overlayEntry != null) {
+      try {
+        _overlayEntry?.remove();
+      } catch (_) {}
+      _overlayEntry = null;
+    }
+  }
+
   void _openDropdown() {
-    if (_isOpen) return;
+    if (_isOpen) {
+      _closeDropdown();
+      return;
+    }
+
+    _removeOverlay();
 
     final overlay = Overlay.of(context, rootOverlay: true);
     final renderBox =
         _fieldKey.currentContext?.findRenderObject() as RenderBox? ??
         context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
+    if (renderBox == null || !renderBox.hasSize) return;
 
     final size = renderBox.size;
     final minWidth = size.width < 140 ? 140.0 : size.width;
@@ -836,7 +879,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
           children: [
             Positioned.fill(
               child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
+                behavior: HitTestBehavior.opaque,
                 onTap: _closeDropdown,
               ),
             ),
@@ -946,23 +989,20 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
   }
 
   void _closeDropdown({bool animated = true}) {
-    if (!_isOpen) return;
+    if (!_isOpen && _overlayEntry == null) return;
+    if (mounted) {
+      setState(() => _isOpen = false);
+    } else {
+      _isOpen = false;
+    }
 
     if (animated && _animationController.status != AnimationStatus.dismissed) {
       _animationController.reverse().then((_) {
-        if (!mounted) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _overlayEntry?.remove();
-          _overlayEntry = null;
-          if (mounted) setState(() => _isOpen = false);
-        });
+        _removeOverlay();
       });
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _overlayEntry?.remove();
-        _overlayEntry = null;
-        if (mounted) setState(() => _isOpen = false);
-      });
+      _animationController.value = 0.0;
+      _removeOverlay();
     }
   }
 
@@ -1000,6 +1040,7 @@ class _AppDropdownFilterState<T> extends State<AppDropdownFilter<T>>
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: _toggleDropdown,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),

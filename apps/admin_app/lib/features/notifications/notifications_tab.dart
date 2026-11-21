@@ -264,32 +264,38 @@ class _NotificationsTabState extends State<NotificationsTab> {
   }
 
   void _showViewDetailsDialog(Map<String, dynamic> item) {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.notifications_active_rounded, color: AppColors.adminPurple),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                item['title']?.toString() ?? 'Notification Details',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
+      builder: (ctx) => AppModalDialog(
+        title: item['title']?.toString() ?? 'Notification Details',
+        subtitle: 'Broadcast details & delivery metrics',
+        iconData: Icons.notifications_active_rounded,
+        gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
+        maxWidth: 480,
+        fullScreenOnMobile: false,
+        actions: [
+          AppModalDialog.cancelButton(ctx, label: 'Close'),
+        ],
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              item['body']?.toString() ?? '',
-              style: const TextStyle(fontSize: 14, color: AppColors.adminPrimaryText),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.adminBackground,
+                borderRadius: AppRadii.adminControl,
+                border: Border.all(color: AppColors.adminBorder),
+              ),
+              child: Text(
+                item['body']?.toString() ?? '',
+                style: AppTypography.adminTablePrimary,
+              ),
             ),
             const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 8),
+            const Divider(color: AppColors.adminBorder, height: 1),
+            const SizedBox(height: 12),
             _buildDetailRow('Audience:', item['segment']?.toString() ?? 'All'),
             _buildDetailRow('Type:', item['type']?.toString() ?? 'Alert'),
             _buildDetailRow('Status:', item['status']?.toString() ?? 'Sent'),
@@ -298,12 +304,6 @@ class _NotificationsTabState extends State<NotificationsTab> {
               _buildDetailRow('Action URL:', item['action_url'].toString()),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }
@@ -314,16 +314,16 @@ class _NotificationsTabState extends State<NotificationsTab> {
       child: Row(
         children: [
           SizedBox(
-            width: 90,
+            width: 100,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.adminSecondaryText),
+              style: AppTypography.adminTableSecondary.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.adminPrimaryText),
+              style: AppTypography.adminTablePrimary,
             ),
           ),
         ],
@@ -332,32 +332,54 @@ class _NotificationsTabState extends State<NotificationsTab> {
   }
 
   void _showSettingsDialog() {
-    showDialog(
+    AppModalDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Notification Channel Settings', style: TextStyle(fontWeight: FontWeight.w800)),
-        content: const Column(
+      builder: (ctx) => AppModalDialog(
+        title: 'Channel Settings',
+        subtitle: 'FCM delivery & background sync configuration',
+        iconData: Icons.settings_suggest_rounded,
+        gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
+        maxWidth: 480,
+        fullScreenOnMobile: false,
+        actions: [
+          AppModalDialog.cancelButton(ctx, label: 'Done'),
+        ],
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Firebase Cloud Messaging (FCM) is active and securely routed via Supabase database triggers.',
-              style: TextStyle(fontSize: 13, color: AppColors.adminSecondaryText),
+              style: AppTypography.adminCardSubtitle,
             ),
-            SizedBox(height: 12),
-            Text('• Provider: Firebase Cloud Messaging v1 API', style: TextStyle(fontSize: 12)),
-            Text('• Rate Limiting: 1,000 dispatches / min', style: TextStyle(fontSize: 12)),
-            Text('• Channels: Push, In-App Modal, Web Notifications', style: TextStyle(fontSize: 12)),
+            const SizedBox(height: 14),
+            _buildConfigRow('Provider', 'Firebase Cloud Messaging v1 API'),
+            _buildConfigRow('Rate Limiting', '1,000 dispatches / min'),
+            _buildConfigRow('Channels', 'Push, In-App Modal, Web Notifications'),
           ],
         ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.adminPurple,
-              foregroundColor: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildConfigRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text('• ', style: AppTypography.adminTableSecondary),
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: AppTypography.adminTableSecondary.copyWith(fontWeight: FontWeight.w700),
             ),
-            child: const Text('Done'),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: AppTypography.adminTablePrimary,
+            ),
           ),
         ],
       ),
@@ -365,6 +387,16 @@ class _NotificationsTabState extends State<NotificationsTab> {
   }
 
   void _deleteNotification(Map<String, dynamic> item) async {
+    final confirmed = await AppModalDialog.confirm(
+      context: context,
+      title: 'Delete Notification',
+      subtitle: 'Permanent deletion warning',
+      message: 'Are you sure you want to delete "${item['title'] ?? 'this notification'}"? This action cannot be undone.',
+      confirmLabel: 'Delete Notification',
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
     final id = item['id']?.toString();
     setState(() {
       _history.removeWhere((x) => x['id'] == id);
@@ -507,7 +539,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
                       flex: 5,
                       child: createCard,
                     ),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: AppSpacing.adminGapCard),
 
                     // Right Column: Delivery Analytics Donut + Quick Actions
                     SizedBox(
@@ -521,14 +553,14 @@ class _NotificationsTabState extends State<NotificationsTab> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     createCard,
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.adminGapCard),
                     analyticsCard,
                   ],
                 );
               }
             },
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: AppSpacing.adminGapCard),
 
           // 4. Notifications Data Table Card
           NotificationsDataTable(

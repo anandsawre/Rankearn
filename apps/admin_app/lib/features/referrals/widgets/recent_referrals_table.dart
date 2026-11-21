@@ -53,318 +53,219 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
         ? filtered.sublist(startIndex, endIndex)
         : <Map<String, dynamic>>[];
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.adminCard,
-        border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
-        boxShadow: AppShadows.adminCard,
-      ),
-      padding: AppSpacing.adminCardPaddingCompact,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Table Title, Filter & Search
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 768;
-              if (isWide) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStatusTabs(),
-                    _buildSearchInput(),
-                  ],
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return AdminDataTableCard(
+      title: 'Referral Logs',
+      totalCount: widget.referrals.length,
+      icon: Icons.people_outline_rounded,
+      iconBgColor: AppColors.adminPurpleLight,
+      iconColor: AppColors.adminPurple,
+      searchHint: 'Search referee or code...',
+      searchQuery: _searchQuery,
+      onSearchChanged: (v) => setState(() {
+        _searchQuery = v;
+        _currentPage = 1;
+      }),
+      currentPage: _currentPage,
+      totalPages: totalPages,
+      rowsPerPage: _rowsPerPage,
+      onPageChanged: (page) => setState(() => _currentPage = page),
+      itemLabel: 'referrals',
+      minWidth: 850.0,
+      isLoading: widget.isLoading,
+      emptyWidget: _buildEmptyState(),
+      filterControls: [
+        AdminTableDropdown<String>(
+          value: _statusFilter,
+          width: 150,
+          prefixIcon: const Icon(Icons.filter_alt_outlined, size: 14, color: AppColors.adminPurple),
+          items: const ['all', 'credited', 'pending', 'rejected'],
+          itemLabel: (tab) {
+            switch (tab) {
+              case 'credited':
+                return 'Credited';
+              case 'pending':
+                return 'Pending';
+              case 'rejected':
+                return 'Rejected';
+              case 'all':
+              default:
+                return 'All';
+            }
+          },
+          onChanged: (tab) => setState(() {
+            _statusFilter = tab;
+            _currentPage = 1;
+          }),
+        ),
+      ],
+      columns: const [
+        DataColumn(label: Text('REFERRED USER', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('REFERRED BY', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('SIGNUP DATE', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('REWARD', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('STATUS', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('ACTIONS', style: AppTypography.adminTableHead)),
+      ],
+      rows: pagedItems.map((item) {
+        final refereeName = item['refereeName']?.toString() ?? 'Candidate';
+        final refereeEmail = item['refereeEmail']?.toString() ?? 'candidate@rankearn.in';
+        final referrerName = item['referrerName']?.toString() ?? 'Top Referrer';
+        final code = item['code']?.toString() ?? 'REF-EARN';
+        final date = item['date']?.toString() ?? 'Recent';
+        final bonusCoins = item['bonusCoins'] ?? 50;
+        final status = item['status']?.toString() ?? 'credited';
+
+        return DataRow(
+          cells: [
+            // Referred User (Avatar + Name & Email)
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildStatusTabs(),
-                  const SizedBox(height: 12),
-                  _buildSearchInput(),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 18),
-
-          if (widget.isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child: CircularProgressIndicator(color: AppColors.adminPurple),
-              ),
-            )
-          else if (filtered.isEmpty)
-            _buildEmptyState()
-          else
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 850),
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(AppColors.adminBackground),
-                  headingTextStyle: AppTypography.adminTableHead,
-                  dataRowMinHeight: 64,
-                  dataRowMaxHeight: 70,
-                  horizontalMargin: 16,
-                  columnSpacing: 18,
-                  columns: const [
-                    DataColumn(label: Text('REFERRED USER')),
-                    DataColumn(label: Text('REFERRED BY')),
-                    DataColumn(label: Text('SIGNUP DATE')),
-                    DataColumn(label: Text('REWARD')),
-                    DataColumn(label: Text('STATUS')),
-                    DataColumn(label: Text('ACTIONS')),
-                  ],
-                  rows: pagedItems.map((item) {
-                    final refereeName = item['refereeName']?.toString() ?? 'Candidate';
-                    final refereeEmail = item['refereeEmail']?.toString() ?? 'candidate@rankearn.in';
-                    final referrerName = item['referrerName']?.toString() ?? 'Top Referrer';
-                    final code = item['code']?.toString() ?? 'REF-EARN';
-                    final date = item['date']?.toString() ?? 'Recent';
-                    final bonusCoins = item['bonusCoins'] ?? 50;
-                    final status = item['status']?.toString() ?? 'credited';
-
-                    return DataRow(
-                      cells: [
-                        // Referred User (Avatar + Name & Email)
-                        DataCell(
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 18,
-                                backgroundColor: AppColors.adminPurpleLight,
-                                child: Text(
-                                  refereeName.isNotEmpty ? refereeName[0].toUpperCase() : 'U',
-                                  style: AppTypography.adminTablePrimary.copyWith(color: AppColors.adminPurple),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    refereeName,
-                                    style: AppTypography.adminTablePrimary,
-                                  ),
-                                  Text(
-                                    refereeEmail,
-                                    style: AppTypography.adminTableSecondary,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Referred By (Name & Code)
-                        DataCell(
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                referrerName,
-                                style: AppTypography.adminTablePrimary,
-                              ),
-                              Container(
-                                margin: const EdgeInsets.only(top: 2),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.adminPurpleLight.withAlpha(90),
-                                  borderRadius: AppRadii.adminBadge,
-                                ),
-                                child: Text(
-                                  code,
-                                  style: AppTypography.adminBadge.copyWith(color: AppColors.adminPurple),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Signup Date
-                        DataCell(
-                          Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.adminSecondaryText),
-                              const SizedBox(width: 6),
-                              Text(
-                                date,
-                                style: AppTypography.adminTableSecondary.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.adminPrimaryText,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Reward
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.adminAmberLight,
-                              borderRadius: AppRadii.adminBadge,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.monetization_on_rounded, size: 13, color: AppColors.adminAmber),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '+$bonusCoins Coins',
-                                  style: AppTypography.adminBadge.copyWith(color: AppColors.adminAmberDark),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Status Badge
-                        DataCell(_buildStatusBadge(status)),
-
-                        // Actions
-                        DataCell(
-                          IconButton(
-                            icon: const Icon(Icons.visibility_outlined, size: 16),
-                            color: AppColors.adminPurple,
-                            tooltip: 'View Details',
-                            onPressed: () => widget.onViewDetails?.call(item),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          const SizedBox(height: 16),
-
-          // Pagination
-          if (filtered.isNotEmpty)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Showing ${startIndex + 1} to $endIndex of $totalItems referrals',
-                  style: const TextStyle(fontSize: 12, color: AppColors.adminSecondaryText),
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left_rounded, size: 20),
-                      onPressed: _currentPage > 1
-                          ? () => setState(() => _currentPage--)
-                          : null,
-                      color: AppColors.adminPurple,
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.adminPurpleLight,
+                    child: Text(
+                      refereeName.isNotEmpty ? refereeName[0].toUpperCase() : 'U',
+                      style: AppTypography.adminTablePrimary.copyWith(color: AppColors.adminPurple),
                     ),
-                    Text(
-                      'Page $_currentPage of $totalPages',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.adminPrimaryText,
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        refereeName,
+                        style: AppTypography.adminTablePrimary,
                       ),
+                      Text(
+                        refereeEmail,
+                        style: AppTypography.adminTableSecondary,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Referred By (Name & Code)
+            DataCell(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    referrerName,
+                    style: AppTypography.adminTablePrimary,
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.adminPurpleLight.withAlpha(90),
+                      borderRadius: AppRadii.adminBadge,
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right_rounded, size: 20),
-                      onPressed: _currentPage < totalPages
-                          ? () => setState(() => _currentPage++)
-                          : null,
-                      color: AppColors.adminPurple,
+                    child: Text(
+                      code,
+                      style: AppTypography.adminBadge.copyWith(color: AppColors.adminPurple),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Signup Date
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.adminSecondaryText),
+                  const SizedBox(width: 6),
+                  Text(
+                    date,
+                    style: AppTypography.adminTableSecondary.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.adminPrimaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Reward
+            DataCell(
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.adminAmberLight,
+                  borderRadius: AppRadii.adminBadge,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.monetization_on_rounded, size: 13, color: AppColors.adminAmber),
+                    const SizedBox(width: 4),
+                    Text(
+                      '+$bonusCoins Coins',
+                      style: AppTypography.adminBadge.copyWith(color: AppColors.adminAmberDark),
                     ),
                   ],
                 ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusTabs() {
-    final tabs = [
-      {'id': 'all', 'label': 'All Referrals'},
-      {'id': 'credited', 'label': 'Credited'},
-      {'id': 'pending', 'label': 'Pending'},
-      {'id': 'rejected', 'label': 'Rejected'},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.adminBackground,
-        borderRadius: AppRadii.adminControl,
-        border: Border.all(color: AppColors.adminBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: tabs.map((t) {
-          final isSelected = _statusFilter == t['id'];
-          return InkWell(
-            onTap: () => setState(() {
-              _statusFilter = t['id']!;
-              _currentPage = 1;
-            }),
-            borderRadius: AppRadii.adminTab,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: AppRadii.adminTab,
-                boxShadow: isSelected ? AppShadows.adminSubtle : null,
-              ),
-              child: Text(
-                t['label']!,
-                style: isSelected ? AppTypography.adminTabActive : AppTypography.adminTabInactive,
               ),
             ),
-          );
-        }).toList(),
-      ),
-    );
-  }
 
-  Widget _buildSearchInput() {
-    return SizedBox(
-      width: 240,
-      height: 40,
-      child: AppTextField.search(
-        hintText: 'Search referee or code...',
-        onChanged: (v) => setState(() {
-          _searchQuery = v;
-          _currentPage = 1;
-        }),
-      ),
+            // Status Badge
+            DataCell(_buildStatusBadge(status)),
+
+            // Actions
+            DataCell(
+              AdminTableActionButton(
+                icon: Icons.visibility_outlined,
+                color: AppColors.adminPurple,
+                tooltip: 'View Details',
+                onTap: () => widget.onViewDetails?.call(item),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
   Widget _buildStatusBadge(String status) {
     Color bg;
     Color fg;
-    IconData icon;
+    Widget iconWidget;
 
     switch (status.toLowerCase()) {
       case 'pending':
         bg = AppColors.adminAmberLight;
         fg = AppColors.adminAmber;
-        icon = Icons.hourglass_top_rounded;
+        iconWidget = Icon(Icons.hourglass_top_rounded, size: 12, color: fg);
         break;
       case 'rejected':
         bg = AppColors.adminDangerLight;
         fg = AppColors.adminDanger;
-        icon = Icons.cancel_outlined;
+        iconWidget = Icon(Icons.cancel_outlined, size: 12, color: fg);
         break;
       default: // credited
         bg = AppColors.adminSuccessLight;
         fg = AppColors.adminSuccess;
-        icon = Icons.check_circle_outline_rounded;
+        iconWidget = Container(
+          width: 13,
+          height: 13,
+          decoration: const BoxDecoration(
+            color: AppColors.adminSuccess,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.check_rounded,
+            size: 9.5,
+            color: Colors.white,
+          ),
+        );
     }
 
     return Container(
@@ -376,7 +277,7 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: fg),
+          iconWidget,
           const SizedBox(width: 4),
           Text(
             status.toUpperCase(),
@@ -388,39 +289,41 @@ class _RecentReferralsTableState extends State<RecentReferralsTable> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.adminPurpleLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.group_off_outlined, color: AppColors.adminPurple, size: 28),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(
+              color: AppColors.adminPurpleLight,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 14),
-            const Text(
-              'No Referral Records Found',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.adminPrimaryText,
-              ),
+            child: const Icon(Icons.people_outline_rounded, color: AppColors.adminPurple, size: 28),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'No Referrals Found',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.adminPrimaryText,
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'No referral logs match the current search or filter query.',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.adminSecondaryText,
-              ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'No referral activity matches your search or current filter criteria.',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.adminSecondaryText,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

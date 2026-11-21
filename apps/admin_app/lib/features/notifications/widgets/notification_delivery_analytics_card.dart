@@ -38,7 +38,7 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
       DonutSlice(
         label: 'Unopened',
         percentage: unopenedPct,
-        color: const Color(0xFFCBD5E1),
+        color: AppColors.adminNeutral.withValues(alpha: 0.35),
         count: totalUnopened,
       ),
     ];
@@ -234,10 +234,9 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
                 Flexible(
                   child: Text(
                     label,
-                    style: const TextStyle(
+                    style: AppTypography.adminTablePrimary.copyWith(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.adminPrimaryText,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -251,19 +250,12 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: color,
-                ),
+                style: AppTypography.adminTableNumber.copyWith(color: color),
               ),
               const SizedBox(width: 6),
               Text(
                 '($count)',
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.adminSecondaryText,
-                ),
+                style: AppTypography.adminTableSecondary.copyWith(fontSize: 11),
               ),
             ],
           ),
@@ -302,18 +294,14 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: AppTypography.adminTablePrimary.copyWith(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.adminPrimaryText,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.adminSecondaryText,
-                    ),
+                    style: AppTypography.adminTableSecondary.copyWith(fontSize: 11),
                   ),
                 ],
               ),

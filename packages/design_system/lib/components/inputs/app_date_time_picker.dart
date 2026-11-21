@@ -37,15 +37,35 @@ class AppDatePicker extends StatelessWidget {
     return '$y-$m-$d';
   }
 
-  Future<void> _pick(BuildContext context) async {
-    if (!enabled) return;
-    final picked = await AppModalDialog.show<DateTime>(
+  /// Displays the centralized tokenized Date Picker modal dialog.
+  static Future<DateTime?> show({
+    required BuildContext context,
+    DateTime? initialDate,
+    DateTime? firstDate,
+    DateTime? lastDate,
+    Color? primaryColor,
+    List<Color>? gradientColors,
+  }) {
+    final now = DateTime.now();
+    return AppModalDialog.show<DateTime>(
       context: context,
       builder: (ctx) => _AppDatePickerDialog(
-        initialDate: value,
-        firstDate: firstDate ?? DateTime(2024),
+        initialDate: initialDate ?? now,
+        firstDate: firstDate ?? DateTime(2020),
         lastDate: lastDate ?? DateTime(2035),
+        primaryColor: primaryColor,
+        gradientColors: gradientColors,
       ),
+    );
+  }
+
+  Future<void> _pick(BuildContext context) async {
+    if (!enabled) return;
+    final picked = await show(
+      context: context,
+      initialDate: value,
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
     if (picked != null) {
       onChanged(picked);
@@ -110,11 +130,15 @@ class _AppDatePickerDialog extends StatefulWidget {
   final DateTime initialDate;
   final DateTime firstDate;
   final DateTime lastDate;
+  final Color? primaryColor;
+  final List<Color>? gradientColors;
 
   const _AppDatePickerDialog({
     required this.initialDate,
     required this.firstDate,
     required this.lastDate,
+    this.primaryColor,
+    this.gradientColors,
   });
 
   @override
@@ -159,16 +183,19 @@ class _AppDatePickerDialogState extends State<_AppDatePickerDialog> {
     final weekdayStr = dayNames[_selectedDate.weekday % 7];
     final monthStr = _months[_selectedDate.month - 1].substring(0, 3);
     final formattedSelected = '$weekdayStr, $monthStr ${_selectedDate.day}, ${_selectedDate.year}';
+    final effectivePrimary = widget.primaryColor ?? AppModalDialog.defaultPrimaryColor;
 
     return AppModalDialog(
       title: 'Select Date',
       subtitle: formattedSelected,
       iconData: Icons.calendar_month_rounded,
+      gradientColors: widget.gradientColors,
       maxWidth: 390,
       actions: [
         AppModalDialog.cancelButton(context),
         AppModalDialog.primaryButton(
           onPressed: () => Navigator.of(context).pop(_selectedDate),
+          backgroundColor: effectivePrimary,
           child: const Text(
             'Confirm Date',
             style: TextStyle(
@@ -280,17 +307,18 @@ class _AppDatePickerDialogState extends State<_AppDatePickerDialog> {
             cellDate.day == today.day;
         final isOutOfRange = cellDate.isBefore(widget.firstDate) || cellDate.isAfter(widget.lastDate);
 
+        final effectivePrimary = widget.primaryColor ?? AppModalDialog.defaultPrimaryColor;
         Color? bgColor;
         Color textColor = AppColors.textPrimary;
         BoxBorder? border;
 
         if (isSelected) {
-          bgColor = AppModalDialog.defaultPrimaryColor;
+          bgColor = effectivePrimary;
           textColor = Colors.white;
         } else if (isToday) {
-          bgColor = AppColors.brandOrangeLight;
-          border = Border.all(color: AppModalDialog.defaultPrimaryColor, width: 1.5);
-          textColor = AppModalDialog.defaultPrimaryColor;
+          bgColor = effectivePrimary.withValues(alpha: 0.12);
+          border = Border.all(color: effectivePrimary, width: 1.5);
+          textColor = effectivePrimary;
         }
 
         return InkWell(
@@ -346,11 +374,28 @@ class AppTimePicker extends StatelessWidget {
     return '$h:$m';
   }
 
+  /// Displays the centralized tokenized Time Picker modal dialog.
+  static Future<TimeOfDay?> show({
+    required BuildContext context,
+    TimeOfDay? initialTime,
+    Color? primaryColor,
+    List<Color>? gradientColors,
+  }) {
+    return AppModalDialog.show<TimeOfDay>(
+      context: context,
+      builder: (ctx) => _AppTimePickerDialog(
+        initialTime: initialTime ?? TimeOfDay.now(),
+        primaryColor: primaryColor,
+        gradientColors: gradientColors,
+      ),
+    );
+  }
+
   Future<void> _pick(BuildContext context) async {
     if (!enabled) return;
-    final picked = await AppModalDialog.show<TimeOfDay>(
+    final picked = await show(
       context: context,
-      builder: (ctx) => _AppTimePickerDialog(initialTime: value),
+      initialTime: value,
     );
     if (picked != null) {
       onChanged(picked);
@@ -410,11 +455,60 @@ class AppTimePicker extends StatelessWidget {
   }
 }
 
+/// Centralized tokenized Date & Time Picker that prompts Date then Time with matching design tokens.
+class AppDateTimePicker {
+  AppDateTimePicker._();
+
+  static Future<DateTime?> show({
+    required BuildContext context,
+    DateTime? initialDateTime,
+    DateTime? firstDate,
+    DateTime? lastDate,
+    Color? primaryColor,
+    List<Color>? gradientColors,
+  }) async {
+    final now = DateTime.now();
+    final initial = initialDateTime ?? now;
+    final pickedDate = await AppDatePicker.show(
+      context: context,
+      initialDate: initial,
+      firstDate: firstDate ?? now,
+      lastDate: lastDate ?? now.add(const Duration(days: 365)),
+      primaryColor: primaryColor,
+      gradientColors: gradientColors,
+    );
+    if (pickedDate == null || !context.mounted) return null;
+
+    final initialTime = TimeOfDay.fromDateTime(initial);
+    final pickedTime = await AppTimePicker.show(
+      context: context,
+      initialTime: initialTime,
+      primaryColor: primaryColor,
+      gradientColors: gradientColors,
+    );
+    if (pickedTime == null) return null;
+
+    return DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+  }
+}
+
 /// Custom branded Time Picker Dialog
 class _AppTimePickerDialog extends StatefulWidget {
   final TimeOfDay initialTime;
+  final Color? primaryColor;
+  final List<Color>? gradientColors;
 
-  const _AppTimePickerDialog({required this.initialTime});
+  const _AppTimePickerDialog({
+    required this.initialTime,
+    this.primaryColor,
+    this.gradientColors,
+  });
 
   @override
   State<_AppTimePickerDialog> createState() => _AppTimePickerDialogState();
@@ -450,16 +544,19 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
     final mStr = _selectedMinute.toString().padLeft(2, '0');
     final amPmStr = _isAm ? 'AM' : 'PM';
     final subtitle = '$hStr:$mStr $amPmStr (24-Hour: ${_computedTime.hour.toString().padLeft(2, '0')}:${_computedTime.minute.toString().padLeft(2, '0')})';
+    final effectivePrimary = widget.primaryColor ?? AppModalDialog.defaultPrimaryColor;
 
     return AppModalDialog(
       title: 'Select Time',
       subtitle: subtitle,
       iconData: Icons.alarm_rounded,
+      gradientColors: widget.gradientColors,
       maxWidth: 390,
       actions: [
         AppModalDialog.cancelButton(context),
         AppModalDialog.primaryButton(
           onPressed: () => Navigator.of(context).pop(_computedTime),
+          backgroundColor: effectivePrimary,
           child: const Text(
             'Confirm Time',
             style: TextStyle(
@@ -488,6 +585,7 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
                 _buildTimeBox(
                   value: hStr,
                   label: 'Hour',
+                  primaryColor: effectivePrimary,
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
@@ -504,6 +602,7 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
                 _buildTimeBox(
                   value: mStr,
                   label: 'Minute',
+                  primaryColor: effectivePrimary,
                 ),
                 const SizedBox(width: 16),
                 // AM / PM Toggle
@@ -515,9 +614,9 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
                   ),
                   child: Column(
                     children: [
-                      _buildPeriodButton('AM', _isAm, () => setState(() => _isAm = true)),
+                      _buildPeriodButton('AM', _isAm, () => setState(() => _isAm = true), effectivePrimary),
                       Container(height: 1, width: 44, color: AppColors.border),
-                      _buildPeriodButton('PM', !_isAm, () => setState(() => _isAm = false)),
+                      _buildPeriodButton('PM', !_isAm, () => setState(() => _isAm = false), effectivePrimary),
                     ],
                   ),
                 ),
@@ -555,10 +654,10 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
                   height: 32,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isSel ? AppModalDialog.defaultPrimaryColor : AppColors.surfaceSubtle,
+                    color: isSel ? effectivePrimary : AppColors.surfaceSubtle,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isSel ? AppModalDialog.defaultPrimaryColor : AppColors.border,
+                      color: isSel ? effectivePrimary : AppColors.border,
                     ),
                   ),
                   child: Text(
@@ -604,10 +703,10 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
                   height: 32,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isSel ? AppModalDialog.defaultPrimaryColor : AppColors.surfaceSubtle,
+                    color: isSel ? effectivePrimary : AppColors.surfaceSubtle,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isSel ? AppModalDialog.defaultPrimaryColor : AppColors.border,
+                      color: isSel ? effectivePrimary : AppColors.border,
                     ),
                   ),
                   child: Text(
@@ -627,7 +726,7 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
     );
   }
 
-  Widget _buildTimeBox({required String value, required String label}) {
+  Widget _buildTimeBox({required String value, required String label, required Color primaryColor}) {
     return Container(
       width: 64,
       height: 54,
@@ -635,7 +734,7 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppModalDialog.defaultPrimaryColor.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A0F172A),
@@ -656,7 +755,7 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
     );
   }
 
-  Widget _buildPeriodButton(String label, bool isSelected, VoidCallback onTap) {
+  Widget _buildPeriodButton(String label, bool isSelected, VoidCallback onTap, Color primaryColor) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(7),
@@ -664,13 +763,13 @@ class _AppTimePickerDialogState extends State<_AppTimePickerDialog> {
         width: 44,
         padding: const EdgeInsets.symmetric(vertical: 6),
         alignment: Alignment.center,
-        color: isSelected ? AppColors.brandOrangeLight : Colors.transparent,
+        color: isSelected ? primaryColor.withValues(alpha: 0.14) : Colors.transparent,
         child: Text(
           label,
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? AppModalDialog.defaultPrimaryColor : AppColors.textMuted,
+            color: isSelected ? primaryColor : AppColors.textMuted,
           ),
         ),
       ),

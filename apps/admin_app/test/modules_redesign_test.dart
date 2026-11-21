@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:design_system/design_system.dart';
+import 'package:admin_app/features/notifications/widgets/notifications_data_table.dart';
 import 'package:admin_app/features/notifications/notifications_tab.dart';
 import 'package:admin_app/features/referrals/referrals_tab.dart';
 import 'package:admin_app/features/banners/banners_tab.dart';
@@ -49,11 +51,10 @@ void main() {
     expect(find.text('Total Clicks'), findsOneWidget);
     expect(find.text('CTR (Click Rate)'), findsOneWidget);
 
-    // Verify Create Notification Card & Channel pills
+    // Verify Create Notification Card & Channel selector
     expect(find.text('Create Notification'), findsOneWidget);
+    expect(find.textContaining('Notification Title *'), findsOneWidget);
     expect(find.text('Push Notification'), findsOneWidget);
-    expect(find.text('In-App Notification'), findsOneWidget);
-    expect(find.text('Email Alert'), findsOneWidget);
 
     // Verify Delivery Analytics & Quick Actions
     expect(find.text('Delivery Analytics'), findsOneWidget);
@@ -63,7 +64,7 @@ void main() {
     // Verify Table
     expect(find.text('Grand Scholarship Test'), findsOneWidget);
     expect(find.text('All'), findsWidgets);
-    expect(find.text('Sent'), findsWidgets);
+    expect(find.text('SENT'), findsWidgets);
   });
 
   testWidgets('ReferralsTab renders Hero banner, KPI row, Settings, Share preview, Trends & Table', (tester) async {
@@ -383,5 +384,42 @@ void main() {
     // Verify Live Results panel
     expect(find.text('Live Results'), findsOneWidget);
     expect(find.text('Poll Controls'), findsOneWidget);
+  });
+
+  testWidgets('NotificationsDataTable renders search and dropdown filter on mobile without overflow', (tester) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final mockHistory = [
+      {
+        'id': 'notif-1',
+        'title': 'Grand Scholarship Test',
+        'body': 'Win up to 100% scholarship',
+        'segment': 'All Users',
+        'type': 'alert',
+        'status': 'sent',
+        'date': '2026-11-15',
+        'reads': '1.8k',
+        'ctr': '28.4%',
+      },
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: NotificationsDataTable(
+              notifications: mockHistory,
+              isLoading: false,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppDropdown<String>), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -327,5 +327,110 @@ void main() {
 
       expect((tfIcon.center.dy - tfText.center.dy).abs(), lessThanOrEqualTo(2.5));
     });
+
+    testWidgets('AppDropdown popover menu anchors directly adjacent to input without large gap', (WidgetTester tester) async {
+      final dropdownKey = UniqueKey();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 50),
+                child: SizedBox(
+                  width: 200,
+                  child: AppDropdown<String>(
+                    key: dropdownKey,
+                    value: 'all',
+                    items: const [
+                      AppDropdownItem(value: 'all', label: 'All'),
+                      AppDropdownItem(value: 'sent', label: 'Sent'),
+                      AppDropdownItem(value: 'scheduled', label: 'Scheduled'),
+                      AppDropdownItem(value: 'draft', label: 'Draft'),
+                    ],
+                    onChanged: (_) {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Tap to open dropdown (should open upward because it is at bottom of viewport)
+      await tester.tap(find.byKey(dropdownKey));
+      await tester.pumpAndSettle();
+
+      final dropdownBox = tester.getRect(find.byKey(dropdownKey));
+      final menuFinder = find.byType(ListView);
+      expect(menuFinder, findsOneWidget);
+      final menuBox = tester.getRect(menuFinder);
+
+      // The gap between menu bottom and dropdown top should be snug (around 3-8px), not 80px+
+      final gap = dropdownBox.top - menuBox.bottom;
+      expect(gap, greaterThanOrEqualTo(0));
+      expect(gap, lessThanOrEqualTo(10.0));
+    });
+
+    testWidgets('AppDropdown opens reliably on empty space taps and re-opens without delay', (WidgetTester tester) async {
+      final dropdownKey = GlobalKey();
+      String selected = 'all';
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return Center(
+                  child: SizedBox(
+                    width: 260,
+                    child: AppDropdown<String>(
+                      key: dropdownKey,
+                      value: selected,
+                      items: const [
+                        AppDropdownItem(value: 'all', label: 'All Users'),
+                        AppDropdownItem(value: 'students', label: 'Students'),
+                        AppDropdownItem(value: 'teachers', label: 'Teachers'),
+                      ],
+                      onChanged: (v) => setState(() => selected = v!),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Tap on the right side (empty space near the chevron) of the dropdown box
+      final dropdownRect = tester.getRect(find.byKey(dropdownKey));
+      final rightSideOffset = Offset(dropdownRect.right - 20, dropdownRect.center.dy);
+      await tester.tapAt(rightSideOffset);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Students'), findsOneWidget);
+
+      // Select 'Students'
+      await tester.tap(find.text('Students'));
+      await tester.pumpAndSettle();
+
+      expect(selected, 'students');
+      expect(find.byType(ListView), findsNothing);
+
+      // Immediately tap on the empty space again to re-open
+      await tester.tapAt(rightSideOffset);
+      await tester.pumpAndSettle();
+
+      // Menu should open cleanly
+      expect(find.byType(ListView), findsOneWidget);
+      expect(find.text('Teachers'), findsOneWidget);
+
+      // Tap outside (top left corner) to dismiss
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ListView), findsNothing);
+    });
   });
 }

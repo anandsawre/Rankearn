@@ -61,313 +61,196 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
         ? filtered.sublist(startIndex, endIndex)
         : <Map<String, dynamic>>[];
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.adminCardBackground,
-        borderRadius: AppRadii.adminCard,
-        border: Border.fromBorderSide(BorderSide(color: AppColors.adminBorder)),
-        boxShadow: AppShadows.adminCard,
-      ),
-      padding: AppSpacing.adminCardPaddingCompact,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Table Header: Title, Tabs & Search
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 768;
-              if (isWide) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return AdminDataTableCard(
+      title: 'Notification History',
+      totalCount: widget.notifications.length,
+      icon: Icons.notifications_active_rounded,
+      iconBgColor: AppColors.adminPurpleLight,
+      iconColor: AppColors.adminPurple,
+      searchHint: 'Search notifications...',
+      searchQuery: _searchQuery,
+      onSearchChanged: (v) => setState(() {
+        _searchQuery = v;
+        _currentPage = 1;
+      }),
+      currentPage: _currentPage,
+      totalPages: totalPages,
+      rowsPerPage: _rowsPerPage,
+      onPageChanged: (page) => setState(() => _currentPage = page),
+      itemLabel: 'notifications',
+      minWidth: 920.0,
+      isLoading: widget.isLoading,
+      emptyWidget: _buildEmptyState(),
+      filterControls: [
+        AdminTableDropdown<String>(
+          value: _activeTab,
+          width: 150,
+          prefixIcon: const Icon(Icons.filter_alt_outlined, size: 14, color: AppColors.adminPurple),
+          items: const ['all', 'sent', 'scheduled', 'draft'],
+          itemLabel: (tab) {
+            switch (tab) {
+              case 'sent':
+                return 'Sent';
+              case 'scheduled':
+                return 'Scheduled';
+              case 'draft':
+                return 'Draft';
+              case 'all':
+              default:
+                return 'All';
+            }
+          },
+          onChanged: (tab) => setState(() {
+            _activeTab = tab;
+            _currentPage = 1;
+          }),
+        ),
+      ],
+      columns: const [
+        DataColumn(label: Text('NOTIFICATION', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('TYPE', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('AUDIENCE', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('STATUS', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('SENT / SCHEDULE', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('READS', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('CTR', style: AppTypography.adminTableHead)),
+        DataColumn(label: Text('ACTIONS', style: AppTypography.adminTableHead)),
+      ],
+      rows: pagedItems.map((item) {
+        final title = item['title']?.toString() ?? 'Notification';
+        final body = item['body']?.toString() ?? '';
+        final type = item['type']?.toString() ?? 'info';
+        final segment = item['segment']?.toString() ?? 'All Users';
+        final status = item['status']?.toString() ?? 'sent';
+        final date = item['date']?.toString() ?? 'Recent';
+        final reads = item['reads']?.toString() ?? '1.2k (85%)';
+        final ctr = item['ctr']?.toString() ?? '24.5%';
+
+        return DataRow(
+          cells: [
+            // Notification Title & Message
+            DataCell(
+              SizedBox(
+                width: 240,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildSubTabs(),
-                    _buildSearchInput(),
+                    Text(
+                      title,
+                      style: AppTypography.adminTablePrimary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      body,
+                      style: AppTypography.adminTableSecondary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
-                );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSubTabs(),
-                  const SizedBox(height: 12),
-                  _buildSearchInput(),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 18),
-
-          // Data Table
-          if (widget.isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child: CircularProgressIndicator(color: AppColors.adminPurple),
-              ),
-            )
-          else if (filtered.isEmpty)
-            _buildEmptyState()
-          else
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 900),
-                child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(AppColors.adminBackground),
-                  headingTextStyle: AppTypography.adminTableHead,
-                  dataRowMinHeight: 64,
-                  dataRowMaxHeight: 72,
-                  horizontalMargin: 16,
-                  columnSpacing: 18,
-                  columns: const [
-                    DataColumn(label: Text('NOTIFICATION')),
-                    DataColumn(label: Text('TYPE')),
-                    DataColumn(label: Text('AUDIENCE')),
-                    DataColumn(label: Text('STATUS')),
-                    DataColumn(label: Text('SENT / SCHEDULE')),
-                    DataColumn(label: Text('READS')),
-                    DataColumn(label: Text('CTR')),
-                    DataColumn(label: Text('ACTIONS')),
-                  ],
-                  rows: pagedItems.map((item) {
-                    final title = item['title']?.toString() ?? 'Notification';
-                    final body = item['body']?.toString() ?? '';
-                    final type = item['type']?.toString() ?? 'info';
-                    final segment = item['segment']?.toString() ?? 'All Users';
-                    final status = item['status']?.toString() ?? 'sent';
-                    final date = item['date']?.toString() ?? 'Recent';
-                    final reads = item['reads']?.toString() ?? '1.2k (85%)';
-                    final ctr = item['ctr']?.toString() ?? '24.5%';
-
-                    return DataRow(
-                      cells: [
-                        // Notification Title & Message
-                        DataCell(
-                          SizedBox(
-                            width: 240,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  title,
-                                  style: AppTypography.adminTablePrimary,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  body,
-                                  style: AppTypography.adminTableSecondary,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Type Badge
-                        DataCell(_buildTypeBadge(type)),
-
-                        // Audience
-                        DataCell(
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.adminBackground,
-                              borderRadius: AppRadii.adminBadge,
-                              border: Border.all(color: AppColors.adminBorder),
-                            ),
-                            child: Text(
-                              segment,
-                              style: AppTypography.adminTableSecondary.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.adminPrimaryText,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Status Badge
-                        DataCell(_buildStatusBadge(status)),
-
-                        // Sent / Schedule Date
-                        DataCell(
-                          Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.adminSecondaryText),
-                              const SizedBox(width: 6),
-                              Text(
-                                date,
-                                style: AppTypography.adminTableSecondary.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.adminPrimaryText,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Reads
-                        DataCell(
-                          Text(
-                            reads,
-                            style: AppTypography.adminTableNumber,
-                          ),
-                        ),
-
-                        // CTR
-                        DataCell(
-                          Text(
-                            ctr,
-                            style: AppTypography.adminTableAccent,
-                          ),
-                        ),
-
-                        // Actions
-                        DataCell(
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildActionButton(
-                                icon: Icons.visibility_outlined,
-                                color: AppColors.adminPurple,
-                                tooltip: 'View Details',
-                                onTap: () => widget.onView?.call(item),
-                              ),
-                              const SizedBox(width: 4),
-                              _buildActionButton(
-                                icon: Icons.edit_outlined,
-                                color: const Color(0xFF2563EB),
-                                tooltip: 'Edit',
-                                onTap: () => widget.onEdit?.call(item),
-                              ),
-                              const SizedBox(width: 4),
-                              _buildActionButton(
-                                icon: Icons.content_copy_rounded,
-                                color: const Color(0xFF0D9488),
-                                tooltip: 'Duplicate',
-                                onTap: () => widget.onDuplicate?.call(item),
-                              ),
-                              const SizedBox(width: 4),
-                              _buildActionButton(
-                                icon: Icons.delete_outline_rounded,
-                                color: AppColors.adminDanger,
-                                tooltip: 'Delete',
-                                onTap: () => widget.onDelete?.call(item),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
                 ),
               ),
             ),
-          const SizedBox(height: 16),
 
-          // Pagination
-          if (filtered.isNotEmpty)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Showing ${startIndex + 1} to $endIndex of $totalItems notifications',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.adminSecondaryText,
+            // Type Badge
+            DataCell(_buildTypeBadge(type)),
+
+            // Audience
+            DataCell(
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.adminBackground,
+                  borderRadius: AppRadii.adminBadge,
+                  border: Border.all(color: AppColors.adminBorder),
+                ),
+                child: Text(
+                  segment,
+                  style: AppTypography.adminTableSecondary.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.adminPrimaryText,
                   ),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left_rounded, size: 20),
-                      onPressed: _currentPage > 1
-                          ? () => setState(() => _currentPage--)
-                          : null,
-                      color: AppColors.adminPurple,
-                    ),
-                    Text(
-                      'Page $_currentPage of $totalPages',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.adminPrimaryText,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right_rounded, size: 20),
-                      onPressed: _currentPage < totalPages
-                          ? () => setState(() => _currentPage++)
-                          : null,
-                      color: AppColors.adminPurple,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubTabs() {
-    final tabs = [
-      {'id': 'all', 'label': 'All'},
-      {'id': 'sent', 'label': 'Sent'},
-      {'id': 'scheduled', 'label': 'Scheduled'},
-      {'id': 'draft', 'label': 'Draft'},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.adminBackground,
-        borderRadius: AppRadii.adminControl,
-        border: Border.all(color: AppColors.adminBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: tabs.map((t) {
-          final isSelected = _activeTab == t['id'];
-          return InkWell(
-            onTap: () => setState(() {
-              _activeTab = t['id']!;
-              _currentPage = 1;
-            }),
-            borderRadius: AppRadii.adminTab,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: AppRadii.adminTab,
-                boxShadow: isSelected ? AppShadows.adminSubtle : null,
-              ),
-              child: Text(
-                t['label']!,
-                style: isSelected ? AppTypography.adminTabActive : AppTypography.adminTabInactive,
               ),
             ),
-          );
-        }).toList(),
-      ),
-    );
-  }
 
-  Widget _buildSearchInput() {
-    return SizedBox(
-      width: 240,
-      height: 40,
-      child: AppTextField.search(
-        hintText: 'Search notifications...',
-        onChanged: (v) => setState(() {
-          _searchQuery = v;
-          _currentPage = 1;
-        }),
-      ),
+            // Status Badge
+            DataCell(_buildStatusBadge(status)),
+
+            // Sent / Schedule Date
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.adminSecondaryText),
+                  const SizedBox(width: 6),
+                  Text(
+                    date,
+                    style: AppTypography.adminTableSecondary.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.adminPrimaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Reads
+            DataCell(
+              Text(
+                reads,
+                style: AppTypography.adminTableNumber,
+              ),
+            ),
+
+            // CTR
+            DataCell(
+              Text(
+                ctr,
+                style: AppTypography.adminTableAccent,
+              ),
+            ),
+
+            // Actions
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AdminTableActionButton(
+                    icon: Icons.visibility_outlined,
+                    color: AppColors.adminPurple,
+                    tooltip: 'View Details',
+                    onTap: () => widget.onView?.call(item),
+                  ),
+                  const SizedBox(width: 4),
+                  AdminTableActionButton(
+                    icon: Icons.edit_outlined,
+                    color: AppColors.adminBlue,
+                    tooltip: 'Edit',
+                    onTap: () => widget.onEdit?.call(item),
+                  ),
+                  const SizedBox(width: 4),
+                  AdminTableActionButton(
+                    icon: Icons.content_copy_rounded,
+                    color: AppColors.adminTeal,
+                    tooltip: 'Duplicate',
+                    onTap: () => widget.onDuplicate?.call(item),
+                  ),
+                  const SizedBox(width: 4),
+                  AdminTableActionButton(
+                    icon: Icons.delete_outline_rounded,
+                    color: AppColors.adminDanger,
+                    tooltip: 'Delete',
+                    onTap: () => widget.onDelete?.call(item),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -412,23 +295,36 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
   Widget _buildStatusBadge(String status) {
     Color bg;
     Color fg;
-    IconData icon;
+    Widget iconWidget;
 
     switch (status.toLowerCase()) {
       case 'scheduled':
         bg = AppColors.adminSkyLight;
         fg = AppColors.adminSky;
-        icon = Icons.schedule_rounded;
+        iconWidget = Icon(Icons.schedule_rounded, size: 12, color: fg);
         break;
       case 'draft':
         bg = AppColors.adminNeutralLight;
         fg = AppColors.adminNeutral;
-        icon = Icons.drafts_outlined;
+        iconWidget = Icon(Icons.drafts_outlined, size: 12, color: fg);
         break;
       default: // sent
         bg = AppColors.adminSuccessLight;
         fg = AppColors.adminSuccess;
-        icon = Icons.check_circle_outline_rounded;
+        iconWidget = Container(
+          width: 13,
+          height: 13,
+          decoration: const BoxDecoration(
+            color: AppColors.adminSuccess,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.check_rounded,
+            size: 9.5,
+            color: Colors.white,
+          ),
+        );
     }
 
     return Container(
@@ -440,7 +336,7 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: fg),
+          iconWidget,
           const SizedBox(width: 4),
           Text(
             status.toUpperCase(),
@@ -451,63 +347,35 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color color,
-    required String tooltip,
-    required VoidCallback onTap,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadii.adminControl,
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withAlpha(20),
-            borderRadius: AppRadii.adminControl,
-          ),
-          child: Icon(icon, size: 15, color: color),
-        ),
-      ),
-    );
-  }
-
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.adminPurpleLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.notifications_off_outlined, color: AppColors.adminPurple, size: 28),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(
+              color: AppColors.adminPurpleLight,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 14),
-            const Text(
-              'No Notifications Found',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.adminPrimaryText,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'No notifications match your search or current filter criteria.',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.adminSecondaryText,
-              ),
-            ),
-          ],
-        ),
+            child: const Icon(Icons.notifications_off_outlined, color: AppColors.adminPurple, size: 28),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'No Notifications Found',
+            style: AppTypography.adminSectionTitle,
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'No notifications match your search or current filter criteria.',
+            style: AppTypography.adminTableSecondary,
+          ),
+        ],
       ),
     );
   }

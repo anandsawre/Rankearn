@@ -52,82 +52,28 @@ class CreateNotificationCard extends StatefulWidget {
 }
 
 class _CreateNotificationCardState extends State<CreateNotificationCard> {
-  int _charCount = 0;
-  static const int _maxChars = 250;
-
   @override
   void initState() {
     super.initState();
-    _charCount = widget.messageController.text.length;
-    widget.messageController.addListener(_onMessageChanged);
-  }
-
-  void _onMessageChanged() {
-    if (mounted) {
-      setState(() {
-        _charCount = widget.messageController.text.length;
-      });
-    }
   }
 
   @override
   void dispose() {
-    widget.messageController.removeListener(_onMessageChanged);
     super.dispose();
   }
 
   Future<void> _pickDateTime() async {
     final now = DateTime.now();
-    final pickedDate = await showDatePicker(
+    final scheduled = await AppDateTimePicker.show(
       context: context,
-      initialDate: widget.scheduledDateTime ?? now.add(const Duration(hours: 1)),
+      initialDateTime: widget.scheduledDateTime ?? now.add(const Duration(hours: 1)),
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.adminPurple,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.adminPrimaryText,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      primaryColor: AppColors.adminPurple,
+      gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
     );
 
-    if (pickedDate == null || !mounted) return;
-
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: widget.scheduledDateTime != null
-          ? TimeOfDay.fromDateTime(widget.scheduledDateTime!)
-          : TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.adminPurple,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.adminPrimaryText,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedTime != null) {
-      final scheduled = DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        pickedTime.hour,
-        pickedTime.minute,
-      );
+    if (scheduled != null && mounted) {
       widget.onDateTimeChanged(scheduled);
     }
   }
@@ -183,46 +129,46 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           ),
           const SizedBox(height: 22),
 
-          // Channel Selector
-          const Text(
-            'NOTIFICATION CHANNEL',
-            style: AppTypography.adminSectionCategory,
-          ),
-          const SizedBox(height: 10),
-          _buildChannelPills(),
-          const SizedBox(height: 20),
+          // Notification Title & Channel Row
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 550;
+              final titleField = AppTextField(
+                controller: widget.titleController,
+                hintText: 'Notification Title * (e.g. 🏆 Mega Scholarship Test Live Now!)',
+                prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),
+              );
 
-          // Notification Title
-          AppTextField(
-            label: 'Notification Title *',
-            controller: widget.titleController,
-            hintText: 'e.g. 🏆 Mega Scholarship Test Live Now!',
-            prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),
+              final channelDropdown = SizedBox(
+                width: isWide ? 230 : double.infinity,
+                child: _buildChannelSelector(),
+              );
+
+              if (isWide) {
+                return Row(
+                  children: [
+                    Expanded(child: titleField),
+                    const SizedBox(width: 14),
+                    channelDropdown,
+                  ],
+                );
+              }
+
+              return Column(
+                children: [
+                  titleField,
+                  const SizedBox(height: 12),
+                  channelDropdown,
+                ],
+              );
+            },
           ),
           const SizedBox(height: 18),
 
-          // Notification Message + Character Counter
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Notification Message *',
-                style: AppTypography.adminFieldLabel,
-              ),
-              Text(
-                '$_charCount/$_maxChars',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: _charCount > _maxChars ? AppColors.adminDanger : AppColors.adminSecondaryText,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+          // Notification Message
           AppTextField(
             controller: widget.messageController,
-            hintText: 'Enter complete message details visible on the candidate\'s screen...',
+            hintText: 'Notification Message * (Enter complete message details visible on the candidate\'s screen...)',
             maxLines: 4,
           ),
           const SizedBox(height: 18),
@@ -268,27 +214,18 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                     children: [
                       Text(
                         'Schedule Send',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.adminPrimaryText,
-                        ),
+                        style: AppTypography.adminFieldLabel,
                       ),
                       Text(
                         'Send automatically at a scheduled date and time',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.adminSecondaryText,
-                        ),
+                        style: AppTypography.adminTableSecondary,
                       ),
                     ],
                   ),
                 ],
               ),
-              Switch(
+              AppSwitch.primary(
                 value: widget.isScheduled,
-                activeThumbColor: Colors.white,
-                activeTrackColor: AppColors.adminPurple,
                 onChanged: widget.onScheduleToggled,
               ),
             ],
@@ -315,8 +252,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                         widget.scheduledDateTime != null
                             ? 'Scheduled for: ${widget.scheduledDateTime!.toLocal().toString().substring(0, 16)}'
                             : 'Select Date & Time for Scheduled Dispatch',
-                        style: const TextStyle(
-                          fontSize: 13,
+                        style: AppTypography.adminTablePrimary.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppColors.adminPurple,
                         ),
@@ -343,27 +279,18 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                     children: [
                       Text(
                         'Add Action Button (CTA)',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.adminPrimaryText,
-                        ),
+                        style: AppTypography.adminFieldLabel,
                       ),
                       Text(
                         'Attach deep link or web redirect to notification',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.adminSecondaryText,
-                        ),
+                        style: AppTypography.adminTableSecondary,
                       ),
                     ],
                   ),
                 ],
               ),
-              Switch(
+              AppSwitch.success(
                 value: widget.hasActionButton,
-                activeThumbColor: Colors.white,
-                activeTrackColor: AppColors.adminSuccess,
                 onChanged: widget.onActionButtonToggled,
               ),
             ],
@@ -484,80 +411,54 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
     );
   }
 
-  Widget _buildChannelPills() {
+  Widget _buildChannelSelector() {
     final channels = [
       {'id': 'push', 'label': 'Push Notification', 'icon': Icons.notifications_active_outlined},
       {'id': 'inapp', 'label': 'In-App Notification', 'icon': Icons.chat_bubble_outline_rounded},
       {'id': 'email', 'label': 'Email Alert', 'icon': Icons.email_outlined},
     ];
 
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: channels.map((c) {
-        final isSelected = widget.selectedChannel == c['id'];
-        return InkWell(
-          onTap: () => widget.onChannelChanged(c['id'] as String),
-          borderRadius: AppRadii.adminControl,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.adminPurple : Colors.white,
-              borderRadius: AppRadii.adminControl,
-              border: Border.all(
-                color: isSelected ? AppColors.adminPurple : AppColors.adminBorder,
-                width: 1.2,
-              ),
-              boxShadow: isSelected ? AppShadows.adminSubtle : null,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  c['icon'] as IconData,
-                  size: 16,
-                  color: isSelected ? Colors.white : AppColors.adminSecondaryText,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  c['label'] as String,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.adminPrimaryText,
-                  ),
-                ),
-              ],
-            ),
-          ),
+    return AppDropdown<String>(
+      key: const ValueKey('notif_dropdown_channel'),
+      inlineLabel: true,
+      value: widget.selectedChannel,
+      height: AppSpacing.adminControlHeight,
+      borderRadius: AppRadii.adminControl,
+      items: channels.map((c) {
+        return AppDropdownItem<String>(
+          value: c['id'] as String,
+          label: c['label'] as String,
+          icon: c['icon'] as IconData,
         );
       }).toList(),
+      onChanged: (v) {
+        if (v != null) widget.onChannelChanged(v);
+      },
     );
   }
 
   Widget _buildAudienceSelector() {
     final audiences = [
-      {'value': 'all', 'label': 'All Users'},
-      {'value': 'students', 'label': 'Students'},
-      {'value': 'teachers', 'label': 'Teachers'},
-      {'value': 'active', 'label': 'Active Users'},
-      {'value': 'inactive', 'label': 'Inactive Users'},
-      {'value': 'quiz_participants', 'label': 'Quiz Participants'},
-      {'value': 'specific', 'label': 'Specific Users'},
+      {'value': 'all', 'label': 'All Users', 'icon': Icons.groups_outlined},
+      {'value': 'students', 'label': 'Students', 'icon': Icons.school_outlined},
+      {'value': 'teachers', 'label': 'Teachers', 'icon': Icons.person_pin_outlined},
+      {'value': 'active', 'label': 'Active Users', 'icon': Icons.offline_bolt_outlined},
+      {'value': 'inactive', 'label': 'Inactive Users', 'icon': Icons.bedtime_outlined},
+      {'value': 'quiz_participants', 'label': 'Quiz Participants', 'icon': Icons.quiz_outlined},
+      {'value': 'specific', 'label': 'Specific Users', 'icon': Icons.person_search_outlined},
     ];
 
     return AppDropdown<String>(
-      inlineLabel: false,
-      label: 'Target Audience *',
-      labelStyle: AppTypography.adminFieldLabel,
+      key: const ValueKey('notif_dropdown_audience'),
+      inlineLabel: true,
       value: widget.targetAudience,
       height: AppSpacing.adminControlHeight,
       borderRadius: AppRadii.adminControl,
       items: audiences.map((a) {
         return AppDropdownItem<String>(
-          value: a['value']!,
-          label: a['label']!,
+          value: a['value'] as String,
+          label: a['label'] as String,
+          icon: a['icon'] as IconData,
         );
       }).toList(),
       onChanged: (v) {
@@ -568,25 +469,25 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
 
   Widget _buildTypeSelector() {
     final types = [
-      {'value': 'alert', 'label': 'Alert (High Priority)'},
-      {'value': 'promotional', 'label': 'Promotional / Offer'},
-      {'value': 'contest', 'label': 'Contest / Battle'},
-      {'value': 'update', 'label': 'Product Update'},
-      {'value': 'reminder', 'label': 'Quiz Reminder'},
-      {'value': 'system', 'label': 'System Broadcast'},
+      {'value': 'alert', 'label': 'Alert (High Priority)', 'icon': Icons.warning_amber_rounded},
+      {'value': 'promotional', 'label': 'Promotional / Offer', 'icon': Icons.local_offer_outlined},
+      {'value': 'contest', 'label': 'Contest / Battle', 'icon': Icons.emoji_events_outlined},
+      {'value': 'update', 'label': 'Product Update', 'icon': Icons.system_update_alt_rounded},
+      {'value': 'reminder', 'label': 'Quiz Reminder', 'icon': Icons.alarm_on_rounded},
+      {'value': 'system', 'label': 'System Broadcast', 'icon': Icons.cell_tower_rounded},
     ];
 
     return AppDropdown<String>(
-      inlineLabel: false,
-      label: 'Notification Type *',
-      labelStyle: AppTypography.adminFieldLabel,
+      key: const ValueKey('notif_dropdown_type'),
+      inlineLabel: true,
       value: widget.notificationType,
       height: AppSpacing.adminControlHeight,
       borderRadius: AppRadii.adminControl,
       items: types.map((t) {
         return AppDropdownItem<String>(
-          value: t['value']!,
-          label: t['label']!,
+          value: t['value'] as String,
+          label: t['label'] as String,
+          icon: t['icon'] as IconData,
         );
       }).toList(),
       onChanged: (v) {

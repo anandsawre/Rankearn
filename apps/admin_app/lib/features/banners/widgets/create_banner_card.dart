@@ -81,26 +81,15 @@ class _CreateBannerCardState extends State<CreateBannerCard> {
 
   Future<void> _pickDate(bool isStart) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await AppDatePicker.show(
       context: context,
       initialDate: isStart
           ? (widget.startDate ?? now)
           : (widget.endDate ?? now.add(const Duration(days: 7))),
-      firstDate: now.subtract(const Duration(days: 30)),
+      firstDate: isStart ? now.subtract(const Duration(days: 30)) : (widget.startDate ?? now),
       lastDate: now.add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.adminPurple,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppColors.adminPrimaryText,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      primaryColor: AppColors.adminPurple,
+      gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
     );
 
     if (picked != null) {
