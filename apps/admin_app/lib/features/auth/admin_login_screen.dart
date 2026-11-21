@@ -1191,8 +1191,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const GoogleLogo(size: 17),
-                    const SizedBox(width: 8),
+                    const GoogleLogo(size: 18),
+                    const SizedBox(width: 10),
                     Text(
                       'Continue with Google',
                       style: TextStyle(
