@@ -45,7 +45,7 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        stops: isDesktop ? const [0.0, 0.35, 0.70, 1.0] : const [0.0, 0.30, 0.65, 1.0],
+        stops: isDesktop ? const [0.0, 0.35, 0.70, 1.0] : const [0.0, 0.30, 0.55, 1.0],
         colors: isDesktop
             ? const [
                 Color(0xFFF0F4FF), // Crisp top-left periwinkle tint
@@ -55,9 +55,9 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
               ]
             : const [
                 Color(0xFFF0F4FF), // Crisp top periwinkle tint
-                Color(0xFFE0E7FE), // Soft mid indigo wash
-                Color(0xFFC7D2FE), // Rich lavender indigo
-                Color(0xFF818CF8), // Deep vibrant periwinkle bottom
+                Color(0xFFEEF2FF), // Soft mid indigo wash
+                Color(0xFF4F46E5), // Rich vibrant royal blue
+                Color(0xFF3730A3), // Deep indigo bottom (full bleed)
               ],
       ).createShader(baseRect);
     canvas.drawRect(baseRect, basePaint);
@@ -301,9 +301,9 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
                 const Color(0xFFC7D2FE).withAlpha(90),
               ]
             : [
-                const Color(0xFF6366F1).withAlpha(200),
-                const Color(0xFF818CF8).withAlpha(180),
-                const Color(0xFF4F46E5).withAlpha(170),
+                const Color(0xFF6366F1),
+                const Color(0xFF4F46E5),
+                const Color(0xFF3730A3),
               ],
       ).createShader(Rect.fromLTWH(0, h * 0.60, w, h * 0.40));
     canvas.drawPath(wave3, wave3Paint);
@@ -401,22 +401,22 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
     } else {
       // Mobile: Rich full-bleed oceanic wave filling the lower portion with zero transparency gap
       final mobileWave = Path()
-        ..moveTo(0, h * 0.65)
+        ..moveTo(0, h * 0.50)
         ..cubicTo(
-          w * 0.25, h * 0.60,
-          w * 0.50, h * 0.70,
-          w * 0.75, h * 0.65,
+          w * 0.25, h * 0.45,
+          w * 0.50, h * 0.54,
+          w * 0.75, h * 0.48,
         )
         ..cubicTo(
-          w * 0.88, h * 0.62,
-          w * 0.95, h * 0.68,
-          w, h * 0.70,
+          w * 0.88, h * 0.45,
+          w * 0.95, h * 0.50,
+          w, h * 0.52,
         )
         ..lineTo(w, h)
         ..lineTo(0, h)
         ..close();
 
-      canvas.drawShadow(mobileWave, const Color(0x33312E81), 24, true);
+      canvas.drawShadow(mobileWave, const Color(0x331E1B4B), 24, true);
 
       final mobileWavePaint = Paint()
         ..shader = const LinearGradient(
@@ -424,25 +424,25 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
           end: Alignment.bottomCenter,
           colors: [
             Color(0xFF6366F1), // Rich energetic indigo
-            Color(0xFF818CF8), // Vibrant periwinkle
-            Color(0xFF60A5FA), // Sky blue
-            Color(0xFF4F46E5), // Deep indigo bottom
+            Color(0xFF4F46E5), // Vibrant royal blue
+            Color(0xFF4338CA), // Deep rich blue
+            Color(0xFF3730A3), // Solid oceanic indigo to bottom
           ],
-          stops: [0.0, 0.35, 0.70, 1.0],
-        ).createShader(Rect.fromLTWH(0, h * 0.60, w, h * 0.40));
+          stops: [0.0, 0.30, 0.65, 1.0],
+        ).createShader(Rect.fromLTWH(0, h * 0.45, w, h * 0.55));
       canvas.drawPath(mobileWave, mobileWavePaint);
 
       final mobileCrest = Path()
-        ..moveTo(0, h * 0.65)
+        ..moveTo(0, h * 0.50)
         ..cubicTo(
-          w * 0.25, h * 0.60,
-          w * 0.50, h * 0.70,
-          w * 0.75, h * 0.65,
+          w * 0.25, h * 0.45,
+          w * 0.50, h * 0.54,
+          w * 0.75, h * 0.48,
         )
         ..cubicTo(
-          w * 0.88, h * 0.62,
-          w * 0.95, h * 0.68,
-          w, h * 0.70,
+          w * 0.88, h * 0.45,
+          w * 0.95, h * 0.50,
+          w, h * 0.52,
         );
 
       final mobileCrestPaint = Paint()
@@ -455,7 +455,7 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
             Colors.white.withAlpha(255),
           ],
           stops: const [0.0, 0.5, 1.0],
-        ).createShader(Rect.fromLTWH(0, h * 0.60, w, 20));
+        ).createShader(Rect.fromLTWH(0, h * 0.45, w, 20));
       canvas.drawPath(mobileCrest, mobileCrestPaint);
     }
 
