@@ -398,9 +398,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildMiddleBlock(hFactor, vScale),
-        const SizedBox(height: 18),
-        _buildBottomBlock(hFactor, vScale),
+        _buildMiddleBlock(hFactor, vScale, isMobile: true),
       ],
     );
   }
@@ -478,7 +476,11 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   // ==========================================
   // BLOCK 2: MIDDLE (FEATURE GRID + 3D SCENE)
   // ==========================================
-  Widget _buildMiddleBlock(double hFactor, double Function(double, double) vScale) {
+  Widget _buildMiddleBlock(
+    double hFactor,
+    double Function(double, double) vScale, {
+    bool isMobile = false,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.maxWidth;
@@ -534,30 +536,32 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 ),
               ],
             ),
-            SizedBox(height: vScale(6, 11)),
-            Row(
-              children: [
-                Expanded(
-                  child: AuthFeatureTile(
-                    icon: Icons.bar_chart_rounded,
-                    iconBgColor: const Color(0xFF8B5CF6),
-                    title: 'Analytics',
-                    description: 'Track performance and growth',
-                    verticalPadding: vScale(7, 11),
+            if (!isMobile) ...[
+              SizedBox(height: vScale(6, 11)),
+              Row(
+                children: [
+                  Expanded(
+                    child: AuthFeatureTile(
+                      icon: Icons.bar_chart_rounded,
+                      iconBgColor: const Color(0xFF8B5CF6),
+                      title: 'Analytics',
+                      description: 'Track performance and growth',
+                      verticalPadding: vScale(7, 11),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: AuthFeatureTile(
-                    icon: Icons.settings_rounded,
-                    iconBgColor: const Color(0xFF0EA5E9),
-                    title: 'Platform Settings',
-                    description: 'Configure and customize your platform',
-                    verticalPadding: vScale(7, 11),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: AuthFeatureTile(
+                      icon: Icons.settings_rounded,
+                      iconBgColor: const Color(0xFF0EA5E9),
+                      title: 'Platform Settings',
+                      description: 'Configure and customize your platform',
+                      verticalPadding: vScale(7, 11),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
         );
 
