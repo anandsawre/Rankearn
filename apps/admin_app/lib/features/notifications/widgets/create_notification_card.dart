@@ -141,7 +141,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
               final isWide = constraints.maxWidth >= 550;
               final titleField = AppTextField(
                 controller: widget.titleController,
-                hintText: 'Notification Title * (e.g. 🏆 Mega Scholarship Test Live Now!)',
+                hintText: 'Notification Title * (Optional for image-only in-app pop-up)',
                 prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),
               );
 
@@ -174,7 +174,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           // Notification Message
           AppTextField(
             controller: widget.messageController,
-            hintText: 'Notification Message * (Enter complete message details visible on the candidate\'s screen...)',
+            hintText: 'Notification Message (Optional: Enter message or leave empty for image-only banner)',
             maxLines: 4,
           ),
           const SizedBox(height: 18),

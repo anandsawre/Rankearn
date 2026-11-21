@@ -149,19 +149,20 @@ class _NotificationsTabState extends State<NotificationsTab> {
   }
 
   void _saveDraft() {
-    if (_titleController.text.trim().isEmpty) {
+    final title = _titleController.text.trim();
+    final rawImg = _hasImage ? _imageUrlController.text.trim() : '';
+    final imageUrl = rawImg.isNotEmpty ? rawImg : null;
+
+    if (title.isEmpty && imageUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a notification title to save draft')),
+        const SnackBar(content: Text('Please enter a notification title or attach an image to save draft')),
       );
       return;
     }
 
-    final rawImg = _hasImage ? _imageUrlController.text.trim() : '';
-    final imageUrl = rawImg.isNotEmpty ? rawImg : null;
-
     final newDraft = {
       'id': 'draft-${DateTime.now().millisecondsSinceEpoch}',
-      'title': _titleController.text.trim(),
+      'title': title.isNotEmpty ? title : 'Image Announcement',
       'body': _messageController.text.trim(),
       'image_url': imageUrl,
       'segment': _formatSegment(_targetAudience),
@@ -185,10 +186,12 @@ class _NotificationsTabState extends State<NotificationsTab> {
   Future<void> _dispatchNotification() async {
     final title = _titleController.text.trim();
     final body = _messageController.text.trim();
+    final rawImg = _hasImage ? _imageUrlController.text.trim() : '';
+    final imageUrl = rawImg.isNotEmpty ? rawImg : null;
 
-    if (title.isEmpty) {
+    if (title.isEmpty && imageUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide a notification title')),
+        const SnackBar(content: Text('Please provide a notification title or attach an image')),
       );
       return;
     }
@@ -200,12 +203,12 @@ class _NotificationsTabState extends State<NotificationsTab> {
     final scheduledTime = isSched
         ? (_scheduledDateTime ?? DateTime.now().add(const Duration(hours: 1)))
         : null;
-    final rawImg = _hasImage ? _imageUrlController.text.trim() : '';
-    final imageUrl = rawImg.isNotEmpty ? rawImg : null;
+
+    final displayTitle = title.isNotEmpty ? title : (imageUrl != null ? 'Image Announcement' : 'Notification');
 
     final newItem = {
       'id': newId,
-      'title': title,
+      'title': displayTitle,
       'body': body,
       'image_url': imageUrl,
       'segment': _formatSegment(_targetAudience),
@@ -245,7 +248,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
             final funcRes = await client.functions.invoke(
               'send-push',
               body: {
-                'title': title,
+                'title': displayTitle,
                 'body': body,
                 'imageUrl': imageUrl,
                 'targetTopic': _targetAudience == 'all' ? 'all_users' : _targetAudience,
