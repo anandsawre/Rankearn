@@ -39,8 +39,34 @@ class NotificationPreviewCard extends StatefulWidget {
     this.showHeaderModeSwitcher = true,
   });
 
-  /// Centralized mode switcher pill: renders [In-App Pop-up] and [Push Notification] buttons.
-  /// Can be used directly in modal dialog footers or standalone bars with exact 38px height matching admin buttons.
+  /// Centralized mode buttons: renders [In-App Pop-up] and [Push Notification] as separate standalone buttons
+  /// matching the exact height, border radius, and appearance of admin buttons (e.g. Close Preview).
+  static List<Widget> buildModeButtons({
+    required NotificationPreviewMode mode,
+    required ValueChanged<NotificationPreviewMode> onChanged,
+    bool? compact,
+  }) {
+    final isCompact = compact ?? false;
+    return [
+      _buildStandaloneButton(
+        isSelected: mode == NotificationPreviewMode.inAppPopup,
+        label: isCompact ? 'In-App' : 'In-App Pop-up',
+        icon: Icons.chat_bubble_outline_rounded,
+        onTap: () => onChanged(NotificationPreviewMode.inAppPopup),
+        isMobile: isCompact,
+      ),
+      _buildStandaloneButton(
+        isSelected: mode == NotificationPreviewMode.pushNotification,
+        label: isCompact ? 'Push' : 'Push Notification',
+        icon: Icons.notifications_active_outlined,
+        onTap: () => onChanged(NotificationPreviewMode.pushNotification),
+        isMobile: isCompact,
+      ),
+    ];
+  }
+
+  /// Convenience widget returning the two separate standalone mode buttons side-by-side in a responsive row.
+  /// Each button is completely independent with its own border, radius, and elevation matching Close button.
   static Widget buildModeSwitcher({
     required NotificationPreviewMode mode,
     required ValueChanged<NotificationPreviewMode> onChanged,
@@ -49,83 +75,87 @@ class NotificationPreviewCard extends StatefulWidget {
     return Builder(
       builder: (context) {
         final isMobile = compact ?? (MediaQuery.sizeOf(context).width < 640);
-        return Container(
-          height: 38,
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            color: AppColors.adminBackground,
-            borderRadius: AppRadii.adminControl,
-            border: Border.all(color: AppColors.adminBorder),
-          ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _buildModeButtonWidget(
-                  isSelected: mode == NotificationPreviewMode.inAppPopup,
-                  label: isMobile ? 'In-App' : 'In-App Pop-up',
-                  icon: Icons.chat_bubble_outline_rounded,
-                  onTap: () => onChanged(NotificationPreviewMode.inAppPopup),
-                  isMobile: isMobile,
-                ),
-                const SizedBox(width: 4),
-                _buildModeButtonWidget(
-                  isSelected: mode == NotificationPreviewMode.pushNotification,
-                  label: isMobile ? 'Push' : 'Push Notification',
-                  icon: Icons.notifications_active_outlined,
-                  onTap: () => onChanged(NotificationPreviewMode.pushNotification),
-                  isMobile: isMobile,
-                ),
-              ],
-            ),
+        return FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildStandaloneButton(
+                isSelected: mode == NotificationPreviewMode.inAppPopup,
+                label: isMobile ? 'In-App' : 'In-App Pop-up',
+                icon: Icons.chat_bubble_outline_rounded,
+                onTap: () => onChanged(NotificationPreviewMode.inAppPopup),
+                isMobile: isMobile,
+              ),
+              SizedBox(width: isMobile ? 6 : 8),
+              _buildStandaloneButton(
+                isSelected: mode == NotificationPreviewMode.pushNotification,
+                label: isMobile ? 'Push' : 'Push Notification',
+                icon: Icons.notifications_active_outlined,
+                onTap: () => onChanged(NotificationPreviewMode.pushNotification),
+                isMobile: isMobile,
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  static Widget _buildModeButtonWidget({
+  static Widget _buildStandaloneButton({
     required bool isSelected,
     required String label,
     required IconData icon,
     required VoidCallback onTap,
     bool isMobile = false,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(7),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        height: 32,
-        alignment: Alignment.center,
-        padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 10),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.adminPurple : Colors.transparent,
-          borderRadius: BorderRadius.circular(7),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 14,
-              color: isSelected ? Colors.white : AppColors.adminSecondaryText,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      height: 38,
+      decoration: BoxDecoration(
+        color: isSelected ? null : Colors.white,
+        gradient: isSelected ? AppColors.adminPurpleGradient : null,
+        borderRadius: AppRadii.adminControl,
+        border: isSelected ? null : Border.all(color: AppColors.adminBorder),
+        boxShadow: isSelected
+            ? AppShadows.adminPrimaryButton
+            : const [
+                BoxShadow(
+                  color: Color(0x0B0F172A),
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadii.adminControl,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: isMobile ? 7 : 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 15,
+                  color: isSelected ? Colors.white : AppColors.adminSecondaryText,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  label,
+                  style: isSelected
+                      ? AppTypography.adminButtonPrimary
+                      : AppTypography.adminButtonSecondary,
+                  maxLines: 1,
+                ),
+              ],
             ),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? Colors.white : AppColors.adminSecondaryText,
-              ),
-              maxLines: 1,
-            ),
-          ],
+          ),
         ),
       ),
     );
