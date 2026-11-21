@@ -36,6 +36,42 @@
 
   <title>admin_app</title>
   <link rel="manifest" href="manifest.json">
+
+  <script>
+    // Browser Desktop Notification Support
+    window.requestNotificationPermission = function() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(function(perm) {
+          console.log('Browser notification permission status:', perm);
+        });
+      }
+    };
+
+    window.showBrowserNotification = function(title, body, url) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          var notif = new Notification(title, {
+            body: body,
+            icon: 'favicon.png',
+            badge: 'favicon.png'
+          });
+          notif.onclick = function() {
+            window.focus();
+            if (url) {
+              window.location.href = url;
+            }
+          };
+        } catch (e) {
+          console.warn('Browser desktop notification error:', e);
+        }
+      }
+    };
+
+    // Prompt permission on first interaction
+    window.addEventListener('click', function() {
+      window.requestNotificationPermission();
+    }, { once: true });
+  </script>
 </head>
 <body>
   <!--

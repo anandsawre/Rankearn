@@ -18,6 +18,7 @@ import 'features/rewards/rewards_hub_screen.dart';
 import 'features/auth/user_auth_screen.dart';
 import 'features/leaderboard/leaderboard_screen.dart';
 import 'features/tournament/screens/tournament_screen.dart';
+import 'features/notifications/web_notification_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -316,6 +317,8 @@ class _UserAppShellState extends State<UserAppShell> {
         );
     _syncProfileWithDatabase();
     _syncPlatformConfigs();
+    _loadNotifications();
+    _subscribeRealtimeNotifications();
     _flagsSub = _flagsRepo.streamFeatureFlags().listen(
       (updated) {
         if (mounted) setState(() => _featureFlags = updated);
@@ -329,10 +332,168 @@ class _UserAppShellState extends State<UserAppShell> {
   StreamSubscription<Map<String, bool>>? _flagsSub;
   Map<String, bool> _featureFlags = Map<String, bool>.from(FeatureFlagsRepository.defaultFlags);
 
+  final NotificationsRepository _notificationsRepo = NotificationsRepository();
+  StreamSubscription<Map<String, dynamic>>? _notificationsSub;
+  List<Map<String, dynamic>> _notificationsList = [];
+
   @override
   void dispose() {
     _flagsSub?.cancel();
+    _notificationsSub?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadNotifications() async {
+    try {
+      final list = await _notificationsRepo.fetchNotifications(limit: 25);
+      if (mounted) {
+        final currentUserId = SupabaseConfig.clientSafe?.auth.currentUser?.id;
+        final unreadCount = list.where((n) {
+          final isRead = n['is_read'] == true;
+          final readBy = n['read_by'] is List ? (n['read_by'] as List) : [];
+          if (currentUserId != null && readBy.contains(currentUserId)) {
+            return false;
+          }
+          return !isRead;
+        }).length;
+
+        setState(() {
+          _notificationsList = list;
+          _unreadNotifications = unreadCount;
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _subscribeRealtimeNotifications() {
+    _notificationsSub?.cancel();
+    _notificationsSub = _notificationsRepo.streamIncomingNotifications().listen((notif) {
+      if (!mounted) return;
+      setState(() {
+        _notificationsList.removeWhere((item) => item['id'] == notif['id']);
+        _notificationsList.insert(0, notif);
+        _unreadNotifications++;
+      });
+
+      final title = notif['title']?.toString() ?? 'New Announcement';
+      final message = notif['message']?.toString() ?? '';
+      final actionUrl = notif['action_url']?.toString();
+
+      // Trigger Web Browser Desktop Pop-up (Chrome/Edge/Firefox)
+      triggerBrowserNotification(title, message, actionUrl);
+
+      // Trigger Floating In-App Banner on user screen
+      _showInAppNotificationBanner(notif);
+    });
+  }
+
+  void _showInAppNotificationBanner(Map<String, dynamic> notif) {
+    final title = notif['title']?.toString() ?? 'Rankearn Alert';
+    final message = notif['message']?.toString() ?? '';
+    final actionUrl = notif['action_url']?.toString();
+    final notifId = notif['id']?.toString() ?? '';
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 7),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.all(14),
+        backgroundColor: Colors.white,
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0FDF4),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.notifications_active_rounded,
+                color: Color(0xFF059669),
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (message.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      message,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF475569),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (actionUrl != null && actionUrl.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  _notificationsRepo.recordClick(notifId);
+                  _handleNotificationUrl(actionUrl);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF059669),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Open',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleNotificationUrl(String url) {
+    final clean = url.trim().toLowerCase();
+    if (clean.contains('test')) {
+      setState(() => _activeTab = UserNavTab.tests);
+    } else if (clean.contains('battle')) {
+      setState(() => _activeTab = UserNavTab.battle);
+    } else if (clean.contains('reward') || clean.contains('earn')) {
+      setState(() => _activeTab = UserNavTab.rewards);
+    } else if (clean.contains('wallet')) {
+      _openBuyCoinsModal();
+    }
   }
 
   Future<void> _syncPlatformConfigs() async {
@@ -633,6 +794,9 @@ class _UserAppShellState extends State<UserAppShell> {
       isScrollControlled: true,
       builder: (context) {
         return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -662,59 +826,116 @@ class _UserAppShellState extends State<UserAppShell> {
                 ],
               ),
               const Divider(),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySubtle,
-                    borderRadius: AppRadii.borderMd,
+              if (_notificationsList.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 36),
+                  child: Center(
+                    child: Column(
+                      children: const [
+                        Icon(Icons.notifications_off_outlined, size: 40, color: AppColors.textMuted),
+                        SizedBox(height: 8),
+                        Text(
+                          'No notifications yet',
+                          style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.emoji_events,
-                    color: AppColors.primary,
+                )
+              else
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _notificationsList.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final n = _notificationsList[index];
+                      final title = n['title']?.toString() ?? 'Announcement';
+                      final message = n['message']?.toString() ?? '';
+                      final actionUrl = n['action_url']?.toString();
+                      final notifId = n['id']?.toString() ?? '';
+                      final isRead = n['is_read'] == true;
+                      final type = n['type']?.toString() ?? 'alert';
+
+                      IconData icon = Icons.notifications_rounded;
+                      Color iconColor = AppColors.primary;
+                      Color iconBg = AppColors.primarySubtle;
+
+                      if (type == 'alert' || type == 'high') {
+                        icon = Icons.campaign_rounded;
+                        iconColor = const Color(0xFFD97706);
+                        iconBg = const Color(0xFFFEF3C7);
+                      } else if (type == 'system') {
+                        icon = Icons.info_outline_rounded;
+                        iconColor = const Color(0xFF2563EB);
+                        iconBg = const Color(0xFFEFF6FF);
+                      }
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: iconBg,
+                            borderRadius: AppRadii.borderMd,
+                          ),
+                          child: Icon(icon, color: iconColor, size: 20),
+                        ),
+                        title: Text(
+                          title,
+                          style: TextStyle(
+                            fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        subtitle: message.isNotEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  message,
+                                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              )
+                            : null,
+                        trailing: (actionUrl != null && actionUrl.isNotEmpty)
+                            ? TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _notificationsRepo.recordClick(notifId);
+                                  _handleNotificationUrl(actionUrl);
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: const Text(
+                                  'View',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              )
+                            : null,
+                        onTap: () {
+                          _notificationsRepo.markRead(notifId, userId: _profile.id);
+                          if (actionUrl != null && actionUrl.isNotEmpty) {
+                            Navigator.pop(context);
+                            _handleNotificationUrl(actionUrl);
+                          }
+                        },
+                      );
+                    },
                   ),
                 ),
-                title: const Text(
-                  'BPSC Grand League Winner!',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                subtitle: const Text(
-                  'You won 250 Coins in the 70th BPSC Prelims Mega Contest.',
-                  style: TextStyle(fontSize: 12),
-                ),
-                trailing: const Text(
-                  '2h ago',
-                  style: TextStyle(fontSize: 10, color: AppColors.textMuted),
-                ),
-              ),
-              const Divider(),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: AppRadii.borderMd,
-                  ),
-                  child: const Icon(Icons.bolt, color: Color(0xFFD97706)),
-                ),
-                title: const Text(
-                  'Live Battle Challenge',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                subtitle: const Text(
-                  'New 1v1 Arena is live with 2x coin multiplier.',
-                  style: TextStyle(fontSize: 12),
-                ),
-                trailing: const Text(
-                  '5h ago',
-                  style: TextStyle(fontSize: 10, color: AppColors.textMuted),
-                ),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               AppButton(
-                label: 'Mark All as Read',
+                label: 'Close',
                 variant: AppButtonVariant.secondary,
                 fullWidth: true,
                 onPressed: () => Navigator.pop(context),

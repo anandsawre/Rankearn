@@ -36,3 +36,4 @@ export 'repositories/polls_repository.dart';
 export 'repositories/banners_repository.dart';
 export 'repositories/incomplete_tests_repository.dart';
 export 'repositories/feature_flags_repository.dart';
+export 'repositories/notifications_repository.dart';
