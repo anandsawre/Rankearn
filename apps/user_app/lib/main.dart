@@ -21,6 +21,7 @@ import 'features/tournament/screens/tournament_screen.dart';
 import 'features/notifications/web_notification_helper.dart';
 import 'features/notifications/in_app_notification_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -348,23 +349,53 @@ class _UserAppShellState extends State<UserAppShell> {
   Future<void> _loadNotifications() async {
     try {
       final list = await _notificationsRepo.fetchNotifications(limit: 25);
+      final prefs = await SharedPreferences.getInstance();
+      final currentUserId = SupabaseConfig.clientSafe?.auth.currentUser?.id ?? _profile.id;
+      final clearedAtMillis = prefs.getInt('notifications_cleared_at_$currentUserId') ?? 0;
+
+      final filteredList = list.where((n) {
+        final createdAtStr = n['created_at']?.toString();
+        if (createdAtStr != null && clearedAtMillis > 0) {
+          final createdAt = DateTime.tryParse(createdAtStr)?.millisecondsSinceEpoch ?? 0;
+          if (createdAt <= clearedAtMillis) {
+            return false;
+          }
+        }
+        return true;
+      }).toList();
+
       if (mounted) {
-        final currentUserId = SupabaseConfig.clientSafe?.auth.currentUser?.id;
-        final unreadCount = list.where((n) {
+        final unreadCount = filteredList.where((n) {
           final isRead = n['is_read'] == true;
           final readBy = n['read_by'] is List ? (n['read_by'] as List) : [];
-          if (currentUserId != null && readBy.contains(currentUserId)) {
+          if (currentUserId.isNotEmpty && readBy.contains(currentUserId)) {
             return false;
           }
           return !isRead;
         }).length;
 
         setState(() {
-          _notificationsList = list;
+          _notificationsList = filteredList;
           _unreadNotifications = unreadCount;
         });
       }
     } catch (_) {}
+  }
+
+  Future<void> _clearAllNotifications() async {
+    final nowMillis = DateTime.now().millisecondsSinceEpoch;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentUserId = SupabaseConfig.clientSafe?.auth.currentUser?.id ?? _profile.id;
+      await prefs.setInt('notifications_cleared_at_$currentUserId', nowMillis);
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _notificationsList.clear();
+        _unreadNotifications = 0;
+      });
+    }
   }
 
   void _subscribeRealtimeNotifications() {
@@ -885,59 +916,93 @@ class _UserAppShellState extends State<UserAppShell> {
     AppBottomSheet.show(
       context: context,
       builder: (context) {
-        return AppBottomSheet(
-          showDragHandle: true,
-          showCloseButton: true,
-          scrollable: false,
-          maxHeightRatio: 0.85,
-          title: 'Notifications',
-          subtitle: _notificationsList.isNotEmpty
-              ? '${_notificationsList.length} updates & alerts'
-              : 'Stay up to date with broadcasts',
-          leadingIcon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: AppColors.primarySubtle,
-              borderRadius: AppRadii.borderMd,
-            ),
-            child: const Icon(
-              Icons.notifications_active_rounded,
-              color: AppColors.primary,
-              size: 20,
-            ),
-          ),
-          bottomAction: AppButton(
-            label: 'Close',
-            variant: AppButtonVariant.secondary,
-            fullWidth: true,
-            onPressed: () => Navigator.pop(context),
-          ),
-          child: _notificationsList.isEmpty
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.notifications_off_outlined, size: 44, color: AppColors.textMuted),
-                        SizedBox(height: 10),
-                        Text(
-                          'No notifications yet',
-                          style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textSecondary, fontSize: 14),
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AppBottomSheet(
+              showDragHandle: true,
+              showCloseButton: false,
+              scrollable: false,
+              maxHeightRatio: 0.85,
+              title: 'Notifications',
+              subtitle: _notificationsList.isNotEmpty
+                  ? '${_notificationsList.length} updates & alerts'
+                  : 'All caught up',
+              leadingIcon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: AppColors.primarySubtle,
+                  borderRadius: AppRadii.borderMd,
+                ),
+                child: const Icon(
+                  Icons.notifications_active_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              headerTrailing: _notificationsList.isNotEmpty
+                  ? InkWell(
+                      onTap: () async {
+                        await _clearAllNotifications();
+                        setModalState(() {});
+                      },
+                      borderRadius: AppRadii.borderSm,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceSubtle,
+                          borderRadius: AppRadii.borderSm,
+                          border: Border.all(color: AppColors.borderSubtle),
                         ),
-                      ],
-                    ),
-                  ),
-                )
-              : ListView.separated(
-                  shrinkWrap: true,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: _notificationsList.length,
-                  separatorBuilder: (_, _) => const Divider(
-                    color: AppColors.borderSubtle,
-                    height: 1,
-                  ),
-                  itemBuilder: (context, index) {
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.cleaning_services_rounded, size: 14, color: AppColors.textSecondary),
+                            SizedBox(width: 5),
+                            Text(
+                              'Clear All',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : null,
+              bottomAction: null,
+              child: _notificationsList.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.notifications_off_outlined, size: 48, color: AppColors.textMuted),
+                            SizedBox(height: 12),
+                            Text(
+                              'No notifications',
+                              style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 16),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'You have cleared all alerts',
+                              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: _notificationsList.length,
+                      separatorBuilder: (_, _) => const Divider(
+                        color: AppColors.borderSubtle,
+                        height: 1,
+                      ),
+                      itemBuilder: (context, index) {
                     final n = _notificationsList[index];
                     final title = n['title']?.toString() ?? 'Announcement';
                     final message = n['message']?.toString() ?? '';
@@ -1081,6 +1146,8 @@ class _UserAppShellState extends State<UserAppShell> {
                     );
                   },
                 ),
+            );
+          },
         );
       },
     );
