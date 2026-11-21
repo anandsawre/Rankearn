@@ -20,6 +20,7 @@ import 'features/leaderboard/leaderboard_screen.dart';
 import 'features/tournament/screens/tournament_screen.dart';
 import 'features/notifications/web_notification_helper.dart';
 import 'features/notifications/in_app_notification_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -523,27 +524,68 @@ class _UserAppShellState extends State<UserAppShell> {
     );
   }
 
-  void _handleNotificationUrl(String url) {
-    final clean = url.trim().toLowerCase();
-    if (clean.contains('spin') || clean.contains('wheel')) {
+  Future<void> _handleNotificationUrl(String rawUrl) async {
+    final url = rawUrl.trim();
+    if (url.isEmpty) return;
+
+    final lower = url.toLowerCase();
+
+    // 1. External Web & App URLs (http, https, www, mailto, tel, whatsapp, tg)
+    if (lower.startsWith('http://') ||
+        lower.startsWith('https://') ||
+        lower.startsWith('www.') ||
+        lower.startsWith('mailto:') ||
+        lower.startsWith('tel:') ||
+        lower.startsWith('whatsapp:') ||
+        lower.startsWith('tg:')) {
+      final launchUri = lower.startsWith('www.')
+          ? Uri.parse('https://$url')
+          : Uri.parse(url);
+      try {
+        if (await canLaunchUrl(launchUri)) {
+          await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+          return;
+        } else {
+          await launchUrl(launchUri);
+          return;
+        }
+      } catch (e) {
+        debugPrint('Could not launch external URL: $e');
+      }
+      return;
+    }
+
+    // 2. Fallback check for domain without protocol (e.g. "google.com", "t.me/channel")
+    if (lower.contains('.') && !lower.startsWith('/') && !lower.contains(' ')) {
+      try {
+        final uri = Uri.parse('https://$url');
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // 3. Internal User App Tabs & Routes
+    if (lower.contains('spin') || lower.contains('wheel')) {
       _navigateToTab(UserNavTab.spin);
-    } else if (clean.contains('live') || clean.contains('contest')) {
+    } else if (lower.contains('live') || lower.contains('contest')) {
       _navigateToTab(UserNavTab.live);
-    } else if (clean.contains('test')) {
+    } else if (lower.contains('test')) {
       _navigateToTab(UserNavTab.tests);
-    } else if (clean.contains('battle')) {
+    } else if (lower.contains('battle')) {
       _navigateToTab(UserNavTab.battle);
-    } else if (clean.contains('tournament')) {
+    } else if (lower.contains('tournament')) {
       _navigateToTab(UserNavTab.tournament);
-    } else if (clean.contains('reward') || clean.contains('earn')) {
+    } else if (lower.contains('reward') || lower.contains('earn')) {
       _navigateToTab(UserNavTab.rewards);
-    } else if (clean.contains('leaderboard')) {
+    } else if (lower.contains('leaderboard')) {
       _navigateToTab(UserNavTab.leaderboard);
-    } else if (clean.contains('profile')) {
+    } else if (lower.contains('profile')) {
       _navigateToTab(UserNavTab.profile);
-    } else if (clean.contains('wallet') || clean.contains('coin')) {
+    } else if (lower.contains('wallet') || lower.contains('coin')) {
       _navigateToTab(UserNavTab.wallet);
-    } else if (clean.contains('home')) {
+    } else if (lower.contains('home')) {
       _navigateToTab(UserNavTab.home);
     }
   }
