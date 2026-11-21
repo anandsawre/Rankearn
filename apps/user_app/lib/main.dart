@@ -986,18 +986,14 @@ class _UserAppShellState extends State<UserAppShell> {
                         onTap: () {
                           _notificationsRepo.markRead(notifId, userId: _profile.id);
                           Navigator.pop(context);
-                          if (imageUrl != null && imageUrl.isNotEmpty) {
-                            InAppNotificationDialog.show(
-                              context: context,
-                              notification: n,
-                              onAction: (url) {
-                                _notificationsRepo.recordClick(notifId);
-                                _handleNotificationUrl(url);
-                              },
-                            );
-                          } else if (actionUrl != null && actionUrl.isNotEmpty) {
-                            _handleNotificationUrl(actionUrl);
-                          }
+                          InAppNotificationDialog.show(
+                            context: context,
+                            notification: n,
+                            onAction: (url) {
+                              _notificationsRepo.recordClick(notifId);
+                              _handleNotificationUrl(url);
+                            },
+                          );
                         },
                       );
                     },
