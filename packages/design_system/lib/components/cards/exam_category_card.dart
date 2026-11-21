@@ -78,8 +78,9 @@ class ExamCategoryCard extends StatelessWidget {
   final IconData? icon;
   final bool isSelected;
   final VoidCallback onTap;
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
+  final bool isHorizontal;
 
   const ExamCategoryCard({
     super.key,
@@ -90,8 +91,9 @@ class ExamCategoryCard extends StatelessWidget {
     this.icon,
     this.isSelected = false,
     required this.onTap,
-    this.width = 122,
-    this.height = 144,
+    this.width,
+    this.height,
+    this.isHorizontal = true,
   });
 
   static IconData resolveIcon(String name, String id) {
@@ -162,19 +164,21 @@ class ExamCategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = ExamCategoryPalette.forIndex(index);
     final iconData = icon ?? resolveIcon(name, id);
+    final cardWidth = width ?? (isHorizontal ? 190.0 : 122.0);
+    final cardHeight = height ?? (isHorizontal ? 66.0 : 144.0);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
-      width: width,
-      height: height,
+      width: cardWidth,
+      height: cardHeight,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [palette.bg, palette.bgEnd],
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(isHorizontal ? 16 : 18),
         border: Border.all(
           color: isSelected ? palette.accent : palette.border.withAlpha(160),
           width: isSelected ? 2 : 1.2,
@@ -190,147 +194,271 @@ class ExamCategoryCard extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(isHorizontal ? 16 : 18),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
             child: Stack(
               children: [
-                // Background Design 1: Top-Right Decorative Glow Circle
-                Positioned(
-                  top: -16,
-                  right: -16,
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: palette.accent.withAlpha(isSelected ? 28 : 16),
-                    ),
-                  ),
-                ),
-                // Background Design 2: Top-Right Concentric Ring
-                Positioned(
-                  top: -26,
-                  right: -26,
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: palette.accent.withAlpha(isSelected ? 32 : 18),
-                        width: 1.5,
+                if (isHorizontal) ...[
+                  // Background Design 1: Bottom-Right Watermark Icon
+                  Positioned(
+                    bottom: -6,
+                    right: -4,
+                    child: Transform.rotate(
+                      angle: -0.15,
+                      child: Icon(
+                        iconData,
+                        size: 46,
+                        color: palette.accent.withAlpha(isSelected ? 26 : 14),
                       ),
                     ),
                   ),
-                ),
-                // Background Design 3: Bottom-Right Tilted Watermark Icon
-                Positioned(
-                  bottom: -8,
-                  right: -8,
-                  child: Transform.rotate(
-                    angle: -0.15,
-                    child: Icon(
-                      iconData,
-                      size: 54,
-                      color: palette.accent.withAlpha(isSelected ? 30 : 18),
+                  // Background Design 2: Top-Right Soft Glow Bubble
+                  Positioned(
+                    top: -12,
+                    right: -12,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: palette.accent.withAlpha(isSelected ? 24 : 14),
+                      ),
                     ),
                   ),
-                ),
-                // Background Design 4: Bottom-Left Soft White Highlight Bubble
-                Positioned(
-                  bottom: -20,
-                  left: -20,
-                  child: Container(
-                    width: 55,
-                    height: 55,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withAlpha(isSelected ? 110 : 70),
+                ] else ...[
+                  // Background Design 1: Top-Right Decorative Glow Circle
+                  Positioned(
+                    top: -16,
+                    right: -16,
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: palette.accent.withAlpha(isSelected ? 28 : 16),
+                      ),
                     ),
                   ),
-                ),
+                  // Background Design 2: Top-Right Concentric Ring
+                  Positioned(
+                    top: -26,
+                    right: -26,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: palette.accent.withAlpha(isSelected ? 32 : 18),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Background Design 3: Bottom-Right Tilted Watermark Icon
+                  Positioned(
+                    bottom: -8,
+                    right: -8,
+                    child: Transform.rotate(
+                      angle: -0.15,
+                      child: Icon(
+                        iconData,
+                        size: 54,
+                        color: palette.accent.withAlpha(isSelected ? 30 : 18),
+                      ),
+                    ),
+                  ),
+                  // Background Design 4: Bottom-Left Soft White Highlight Bubble
+                  Positioned(
+                    bottom: -20,
+                    left: -20,
+                    child: Container(
+                      width: 55,
+                      height: 55,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withAlpha(isSelected ? 110 : 70),
+                      ),
+                    ),
+                  ),
+                ],
+
                 // Foreground Content
-                SizedBox.expand(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(13),
-                            boxShadow: [
-                              BoxShadow(
-                                color: palette.accent.withAlpha(22),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                if (isHorizontal)
+                  SizedBox.expand(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: palette.accent.withAlpha(22),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              iconData,
+                              color: palette.accent,
+                              size: 21,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12.5,
+                                    color: isSelected
+                                        ? palette.accent
+                                        : const Color(0xFF1E293B),
+                                    height: 1.15,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? palette.accent.withAlpha(25)
+                                        : Colors.white.withAlpha(200),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    badgeText,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: isSelected
+                                          ? palette.accent
+                                          : const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isSelected)
+                            Container(
+                              margin: const EdgeInsets.only(left: 4),
+                              padding: const EdgeInsets.all(2.5),
+                              decoration: BoxDecoration(
+                                color: palette.accent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 11,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  SizedBox.expand(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(13),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: palette.accent.withAlpha(22),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              iconData,
+                              color: palette.accent,
+                              size: 23,
+                            ),
+                          ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                name,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12,
+                                  color: isSelected
+                                      ? palette.accent
+                                      : const Color(0xFF1E293B),
+                                  height: 1.2,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 5),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 2.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? palette.accent.withAlpha(25)
+                                      : Colors.white.withAlpha(190),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  badgeText,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: isSelected
+                                        ? palette.accent
+                                        : const Color(0xFF64748B),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            iconData,
-                            color: palette.accent,
-                            size: 23,
-                          ),
-                        ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              name,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 12,
-                                color: isSelected
-                                    ? palette.accent
-                                    : const Color(0xFF1E293B),
-                                height: 1.2,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 5),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 2.5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? palette.accent.withAlpha(25)
-                                    : Colors.white.withAlpha(190),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                badgeText,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: isSelected
-                                      ? palette.accent
-                                      : const Color(0xFF64748B),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                if (isSelected)
+                if (isSelected && !isHorizontal)
                   Positioned(
                     top: 7,
                     right: 7,
