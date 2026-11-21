@@ -24,6 +24,14 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
 
+-- Ensure all modern columns exist if table was previously created
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS channel VARCHAR(20) NOT NULL DEFAULT 'push';
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS action_label VARCHAR(100);
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'sent';
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMPTZ;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS clicks BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS read_by UUID[] DEFAULT '{}';
+
 -- 2. Indexes for instant lookup and sorting
 CREATE INDEX IF NOT EXISTS idx_notifications_user_created 
   ON public.notifications(user_id, created_at DESC);
