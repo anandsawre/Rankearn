@@ -349,12 +349,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                               ),
                             )
                           else
-                            Column(
-                              children: [
-                                _buildRightLoginCard(hFactor, vScale),
-                                const SizedBox(height: 24),
-                                _buildLeftHeroSectionStacked(hFactor, vScale),
-                              ],
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 440),
+                              child: _buildRightLoginCard(hFactor, vScale),
                             ),
                         ],
                       ),
@@ -385,23 +382,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
         _buildMiddleBlock(hFactor, vScale),
 
         // Group 3: Bottom Section (4 Stats Cards + Footer Quote)
-        _buildBottomBlock(hFactor, vScale),
-      ],
-    );
-  }
-
-  // ==========================================
-  // LEFT PROMOTIONAL SECTION (STACKED / MOBILE)
-  // ==========================================
-  Widget _buildLeftHeroSectionStacked(double hFactor, double Function(double, double) vScale) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildHeaderBlock(hFactor, vScale),
-        const SizedBox(height: 18),
-        _buildMiddleBlock(hFactor, vScale),
-        const SizedBox(height: 18),
         _buildBottomBlock(hFactor, vScale),
       ],
     );
