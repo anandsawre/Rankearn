@@ -371,10 +371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         if (isDesktop) {
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 20,
-            ),
+            padding: AppSpacing.pagePadding(context),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -382,7 +379,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   flex: 67,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildTopBanner(
                         borderRadius: AppRadii.borderMd,
@@ -407,7 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   flex: 33,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       TodayGoalCard(
                         completed: ((_userStats['testsAttempted'] as num?)?.toInt() ?? 0).clamp(0, 5),
@@ -434,15 +431,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         }
 
-        // Standard Mobile & Tablet Layout (Direct reference match)
+        // Standard Mobile & Tablet Layout (Direct reference match to Admin App Dashboard)
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
+          padding: AppSpacing.pagePadding(context),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildTopBanner(
                 borderRadius: AppRadii.borderMd,
@@ -568,6 +562,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             continueCard,
             const SizedBox(height: 12),
@@ -760,6 +755,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             dailyChallengeCard,
             const SizedBox(height: 12),
@@ -1076,6 +1072,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         gradient: LinearGradient(
@@ -1275,6 +1272,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const accentColor = Color(0xFFF59E0B);
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         gradient: LinearGradient(

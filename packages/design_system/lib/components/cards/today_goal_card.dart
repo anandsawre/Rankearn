@@ -27,6 +27,7 @@ class TodayGoalCard extends StatelessWidget {
     final progress = target > 0 ? (completed / target).clamp(0.0, 1.0) : 0.0;
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         gradient: LinearGradient(

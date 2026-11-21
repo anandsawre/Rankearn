@@ -94,6 +94,7 @@ class ContinueLearningCard extends StatelessWidget {
 
         // Card Container with Themed Background Design
         Container(
+          width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
             gradient: LinearGradient(

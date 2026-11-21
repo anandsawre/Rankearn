@@ -136,6 +136,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
           children: [
             Container(
               height: effectiveHeight,
+              width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: radius,
                 boxShadow: const [

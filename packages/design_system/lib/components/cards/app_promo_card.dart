@@ -307,6 +307,7 @@ class AppPromoCard extends StatelessWidget {
           );
         }
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             first,
             SizedBox(height: spacing - 2),
@@ -320,6 +321,7 @@ class AppPromoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(borderRadius),
