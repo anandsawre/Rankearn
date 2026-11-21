@@ -24,6 +24,7 @@ class TestPromoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isDarkPurple) {
       return Container(
+        width: double.infinity,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [
@@ -175,6 +176,7 @@ class TestPromoCard extends StatelessWidget {
 
     // Create Your Own Test Banner (Mint Green Theme)
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFE8FDF3), Color(0xFFD1FBE5), Color(0xFFE0FAF0)],

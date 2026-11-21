@@ -426,7 +426,7 @@ class _RewardsHubScreenState extends State<RewardsHubScreen> {
 
         // Main Column Content (~70% on desktop)
         final mainContent = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. Hero Banner
             RewardsHeroBanner(
@@ -486,10 +486,7 @@ class _RewardsHubScreenState extends State<RewardsHubScreen> {
 
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 24 : 16,
-            vertical: 14,
-          ),
+          padding: AppSpacing.pagePadding(context),
           child: isDesktop
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,7 +505,7 @@ class _RewardsHubScreenState extends State<RewardsHubScreen> {
                   ],
                 )
               : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     mainContent,
                     const SizedBox(height: 20),
@@ -773,7 +770,7 @@ class _RewardsHubScreenState extends State<RewardsHubScreen> {
   // --- Right Sidebar (Matching Reference Design) ---
   Widget _buildRightSidebar() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Today's Goal
         const AppSectionHeader(

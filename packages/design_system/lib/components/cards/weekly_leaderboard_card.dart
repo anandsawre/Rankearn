@@ -187,6 +187,7 @@ class WeeklyLeaderboardCard extends StatelessWidget {
     const accentColor = Color(0xFFF59E0B);
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         gradient: LinearGradient(

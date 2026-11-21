@@ -632,21 +632,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 960;
-        final hPadding = isDesktop ? 24.0 : 16.0;
 
         if (isDesktop) {
           // Desktop: 2-Column Dashboard Layout
           // Left: Hero Section, Statistics, Streak, Shortcuts, Premium
           // Right: Account & Settings, Legal & About, Logout
           return SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 16.0),
+            padding: AppSpacing.pagePadding(context),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // LEFT COLUMN (Starts with Hero Section)
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // 1. Profile Hero Card (Iridescent mesh gradient + Student Avatar + Rank Card)
                       ProfileHeroCard(
@@ -756,9 +755,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         // Mobile / Tablet: Stack vertically
         return SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 16.0),
+          padding: AppSpacing.pagePadding(context),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 1. Profile Hero Card (Iridescent mesh gradient + Student Avatar + Rank Card)
               ProfileHeroCard(

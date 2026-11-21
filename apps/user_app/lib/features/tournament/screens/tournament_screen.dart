@@ -247,10 +247,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
                         physics: const AlwaysScrollableScrollPhysics(
                           parent: BouncingScrollPhysics(),
                         ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isDesktop ? AppSpacing.pagePaddingDesktop : AppSpacing.cardPadding,
-                          vertical: isDesktop ? AppSpacing.xl : AppSpacing.md,
-                        ),
+                        padding: AppSpacing.pagePadding(context),
                         child: isDesktop
                             ? _buildDesktopLayout()
                             : _buildMobileLayout(),
@@ -288,7 +285,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
         Expanded(
           flex: 71,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 1. Purple Hero Banner
               TournamentHeroBanner(
@@ -424,7 +421,7 @@ class _TournamentScreenState extends State<TournamentScreen> {
         : '₹0';
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Purple Hero Banner
         TournamentHeroBanner(

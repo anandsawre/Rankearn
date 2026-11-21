@@ -88,6 +88,7 @@ class LiveContestCard extends StatelessWidget {
               ));
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: AppRadii.borderXl,

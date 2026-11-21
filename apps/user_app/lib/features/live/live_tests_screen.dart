@@ -383,7 +383,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
         final userRank = _userStats['rank']?.toString() ?? '-';
 
         final mainContent = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. Live Tests Hero Banner / Dynamic Carousel
             _buildTopBanner(borderRadius: BorderRadius.circular(12)),
@@ -461,7 +461,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
         );
 
         final rightSidebar = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. Today's Goal
             _buildTodaysGoalSection(),
@@ -531,10 +531,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
           color: const Color(0xFF6366F1),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-            padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 24 : 16,
-              vertical: 16,
-            ),
+            padding: AppSpacing.pagePadding(context),
             child: _isLoading
                 ? const SizedBox(
                     height: 400,
@@ -552,7 +549,7 @@ class _LiveTestsScreenState extends State<LiveTestsScreen> {
                         ],
                       )
                     : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           mainContent,
                           const SizedBox(height: 12),

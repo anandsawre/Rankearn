@@ -561,7 +561,7 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
 
   Widget _buildRightSidebar() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1. Today's Goal
         const AppSectionHeader(
@@ -670,7 +670,7 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
         final isTablet = constraints.maxWidth >= 640 && constraints.maxWidth < 990;
 
         final mainContent = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. Hero Banner
             BattleHeroBanner(
@@ -745,10 +745,7 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
 
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 24 : 16,
-            vertical: 14,
-          ),
+          padding: AppSpacing.pagePadding(context),
           child: isDesktop
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -767,7 +764,7 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
                   ],
                 )
               : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     mainContent,
                     const SizedBox(height: 24),
@@ -819,6 +816,7 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
 
     // Mobile vertical stack
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         quickCard,
         const SizedBox(height: 12),

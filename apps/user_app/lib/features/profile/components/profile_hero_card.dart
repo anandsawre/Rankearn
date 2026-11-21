@@ -25,6 +25,7 @@ class ProfileHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       constraints: BoxConstraints(minHeight: isDesktop ? 215.0 : 0.0),
       decoration: BoxDecoration(
         // Iridescent mint-cyan to electric violet pastel gradient matching reference

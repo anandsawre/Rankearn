@@ -120,10 +120,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xxl,
-        vertical: AppSpacing.xl,
-      ),
+      padding: AppSpacing.pagePadding(context),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -215,12 +212,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.pagePaddingMobile,
-              vertical: AppSpacing.md,
-            ),
+            padding: AppSpacing.pagePadding(context),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Top-Three 3D Podium
                 if (_isLoading)

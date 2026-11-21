@@ -308,7 +308,6 @@ class _LuckyWheelScreenState extends State<LuckyWheelScreen>
 
                   final isDesktop = constraints.maxWidth >= 900;
                   final maxContentWidth = isDesktop ? 680.0 : double.infinity;
-                  final hPadding = isDesktop ? 24.0 : 16.0;
 
                   // Responsive wheel sizing
                   final wheelSize = (constraints.maxWidth * 0.85).clamp(
@@ -318,10 +317,7 @@ class _LuckyWheelScreenState extends State<LuckyWheelScreen>
 
                   return SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: hPadding,
-                      vertical: 16,
-                    ),
+                    padding: AppSpacing.pagePadding(context),
                     child: Center(
                       child: ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: maxContentWidth),

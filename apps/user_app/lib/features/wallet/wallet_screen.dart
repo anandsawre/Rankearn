@@ -400,14 +400,13 @@ class _WalletScreenState extends State<WalletScreen> {
   // ==========================================
   Widget _buildDesktopLayout(double viewportWidth) {
     final filteredTxs = _getFilteredTransactions();
-    final horizontalGutter = viewportWidth >= 1440 ? 32.0 : 24.0;
 
     return SingleChildScrollView(
       controller: _scrollController,
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: horizontalGutter, vertical: 22),
+      padding: AppSpacing.pagePadding(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Responsive Two-Column Layout (Left ~65%, Right ~35%)
           Row(
@@ -417,7 +416,7 @@ class _WalletScreenState extends State<WalletScreen> {
               Expanded(
                 flex: 65,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // A. Hero Banner
                     DesktopWalletHeroBanner(
@@ -461,7 +460,7 @@ class _WalletScreenState extends State<WalletScreen> {
               Expanded(
                 flex: 35,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // A. Withdraw to UPI Card (Web only)
                     if (isWithdrawalSupported) ...[
@@ -533,9 +532,9 @@ class _WalletScreenState extends State<WalletScreen> {
     return SingleChildScrollView(
       controller: _scrollController,
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: AppSpacing.pagePadding(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DesktopWalletHeroBanner(
             onBuyCoinsTap: _openBuyCoinsModal,
@@ -627,9 +626,9 @@ class _WalletScreenState extends State<WalletScreen> {
     return SingleChildScrollView(
       controller: _scrollController,
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: AppSpacing.pagePadding(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1 & 2. My Wallet Title + Total Coins Hero Card
           MobileWalletHeroSection(

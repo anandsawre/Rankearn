@@ -888,7 +888,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              padding: AppSpacing.pagePadding(context),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -896,7 +896,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 Expanded(
                   flex: 72,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // 1. Tests Hero Banner / Dynamic Carousel
                       _buildTopBanner(borderRadius: BorderRadius.circular(12)),
@@ -926,7 +926,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
                 Expanded(
                   flex: 28,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // 1. Today's Goal
                       _buildTodaysGoalSection(),
@@ -959,12 +959,9 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
             physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
-            padding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 20 : 16,
-              vertical: 16,
-            ),
+            padding: AppSpacing.pagePadding(context),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
               // 1. Tests Hero Banner / Dynamic Carousel
               _buildTopBanner(borderRadius: BorderRadius.circular(12)),
@@ -1475,6 +1472,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   // --- Right Sidebar: 1. Today's Goal ---
   Widget _buildTodaysGoalSection() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1638,7 +1636,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   // --- Right Sidebar: 2. Quick Actions & Rewards ---
   Widget _buildQuickActionsCard() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: const [
@@ -1671,6 +1669,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFFFFFBEB),
@@ -1757,6 +1756,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFFF5F3FF),
@@ -1828,6 +1828,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
           },
           borderRadius: BorderRadius.circular(16),
           child: Container(
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFFE8FAF2),
@@ -1892,7 +1893,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
   // --- Right Sidebar: 3. Upcoming Tests ---
   Widget _buildUpcomingTestsSection() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2426,6 +2427,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         testSeriesBanner,
         const SizedBox(height: 12),
