@@ -163,8 +163,15 @@ void main() {
 
     // Verify modal is open full-screen and renders contents cleanly
     expect(find.text('Candidate Device Simulator'), findsOneWidget);
-    expect(find.text('Close Preview'), findsOneWidget);
-    expect(find.text('Push Notification'), findsWidgets);
+    expect(find.text('Close'), findsOneWidget);
+    expect(find.text('Push'), findsOneWidget);
+    expect(find.text('In-App'), findsOneWidget);
+
+    // Verify Close button and Mode Switcher are on the EXACT SAME row side-by-side (no awkward line wrap)
+    final closeTopLeft = tester.getTopLeft(find.text('Close'));
+    final pushTopLeft = tester.getTopLeft(find.text('Push'));
+    expect((closeTopLeft.dy - pushTopLeft.dy).abs(), lessThan(4.0));
+    expect(pushTopLeft.dx, greaterThan(closeTopLeft.dx));
   });
 
   testWidgets('NotificationPreviewCard renders at narrow 320px width without any overflow', (tester) async {

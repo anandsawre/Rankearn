@@ -139,29 +139,32 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
     AppModalDialog.show(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => AppModalDialog(
-          title: 'Candidate Device Simulator',
-          subtitle: 'Live visual preview across In-App & Push channels',
-          iconData: Icons.smartphone_rounded,
-          gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
-          maxWidth: 540,
-          scrollable: true,
-          fullScreenOnMobile: true,
-          actions: [
-            AppButton.adminSecondary(
-              label: 'Close Preview',
-              leadingIcon: const Icon(Icons.close_rounded, size: 16),
-              height: 38,
-              onPressed: () => Navigator.of(ctx).pop(),
-            ),
-            NotificationPreviewCard.buildModeSwitcher(
-              mode: currentPreviewMode,
-              onChanged: (newMode) {
-                setModalState(() => currentPreviewMode = newMode);
-              },
-            ),
-          ],
-          child: NotificationPreviewCard(
+        builder: (ctx, setModalState) {
+          final isMobile = MediaQuery.sizeOf(ctx).width < 640;
+          return AppModalDialog(
+            title: 'Candidate Device Simulator',
+            subtitle: 'Live visual preview across In-App & Push channels',
+            iconData: Icons.smartphone_rounded,
+            gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
+            maxWidth: 540,
+            scrollable: true,
+            fullScreenOnMobile: true,
+            actions: [
+              AppButton.adminSecondary(
+                label: isMobile ? 'Close' : 'Close Preview',
+                leadingIcon: const Icon(Icons.close_rounded, size: 16),
+                height: 38,
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+              NotificationPreviewCard.buildModeSwitcher(
+                mode: currentPreviewMode,
+                compact: isMobile,
+                onChanged: (newMode) {
+                  setModalState(() => currentPreviewMode = newMode);
+                },
+              ),
+            ],
+            child: NotificationPreviewCard(
             titleController: widget.titleController,
             messageController: widget.messageController,
             imageUrlController: widget.imageUrlController,
@@ -177,10 +180,11 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
               setModalState(() => currentPreviewMode = newMode);
             },
           ),
-        ),
-      ),
-    );
-  }
+        );
+      },
+    ),
+  );
+}
 
   @override
   void initState() {

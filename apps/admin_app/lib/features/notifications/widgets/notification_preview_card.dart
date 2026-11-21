@@ -44,38 +44,46 @@ class NotificationPreviewCard extends StatefulWidget {
   static Widget buildModeSwitcher({
     required NotificationPreviewMode mode,
     required ValueChanged<NotificationPreviewMode> onChanged,
+    bool? compact,
   }) {
-    return Container(
-      height: 38,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: AppColors.adminBackground,
-        borderRadius: AppRadii.adminControl,
-        border: Border.all(color: AppColors.adminBorder),
-      ),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildModeButtonWidget(
-              isSelected: mode == NotificationPreviewMode.inAppPopup,
-              label: 'In-App Pop-up',
-              icon: Icons.chat_bubble_outline_rounded,
-              onTap: () => onChanged(NotificationPreviewMode.inAppPopup),
+    return Builder(
+      builder: (context) {
+        final isMobile = compact ?? (MediaQuery.sizeOf(context).width < 640);
+        return Container(
+          height: 38,
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: AppColors.adminBackground,
+            borderRadius: AppRadii.adminControl,
+            border: Border.all(color: AppColors.adminBorder),
+          ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildModeButtonWidget(
+                  isSelected: mode == NotificationPreviewMode.inAppPopup,
+                  label: isMobile ? 'In-App' : 'In-App Pop-up',
+                  icon: Icons.chat_bubble_outline_rounded,
+                  onTap: () => onChanged(NotificationPreviewMode.inAppPopup),
+                  isMobile: isMobile,
+                ),
+                const SizedBox(width: 4),
+                _buildModeButtonWidget(
+                  isSelected: mode == NotificationPreviewMode.pushNotification,
+                  label: isMobile ? 'Push' : 'Push Notification',
+                  icon: Icons.notifications_active_outlined,
+                  onTap: () => onChanged(NotificationPreviewMode.pushNotification),
+                  isMobile: isMobile,
+                ),
+              ],
             ),
-            const SizedBox(width: 4),
-            _buildModeButtonWidget(
-              isSelected: mode == NotificationPreviewMode.pushNotification,
-              label: 'Push Notification',
-              icon: Icons.notifications_active_outlined,
-              onTap: () => onChanged(NotificationPreviewMode.pushNotification),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -84,6 +92,7 @@ class NotificationPreviewCard extends StatefulWidget {
     required String label,
     required IconData icon,
     required VoidCallback onTap,
+    bool isMobile = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -92,7 +101,7 @@ class NotificationPreviewCard extends StatefulWidget {
         duration: const Duration(milliseconds: 150),
         height: 32,
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 10),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.adminPurple : Colors.transparent,
           borderRadius: BorderRadius.circular(7),
@@ -106,7 +115,7 @@ class NotificationPreviewCard extends StatefulWidget {
               size: 14,
               color: isSelected ? Colors.white : AppColors.adminSecondaryText,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 5),
             Text(
               label,
               style: TextStyle(
