@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:shared_core/shared_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 import '../models/user_profile.dart';
 import '../supabase/supabase_config.dart';
+import '../services/push_notification_service.dart';
 
 /// Authentication & User Profile Repository
 class AuthRepository {
@@ -60,92 +62,63 @@ class AuthRepository {
     final client = _client;
     final cachedProfile = await getLocalProfile();
 
-    if (client == null) {
-      if (cachedProfile != null) {
-        return Success(cachedProfile);
+    // 1. If locally persisted profile is available, return immediately!
+    // This guarantees zero-delay cold start and eliminates unwanted re-login on APK reopen.
+    if (cachedProfile != null) {
+      // Sync device push token in the background
+      unawaited(PushNotificationService.syncDeviceToken(userId: cachedProfile.id));
+
+      // Asynchronously update profile from database if online
+      if (client != null) {
+        unawaited(() async {
+          try {
+            final session = client.auth.currentSession;
+            final targetId = session?.user.id ?? cachedProfile.id;
+            final fresh = await getProfile(targetId);
+            if (fresh is Success<UserProfile>) {
+              await saveLocalProfile(fresh.data);
+            }
+          } catch (_) {}
+        }());
       }
+
+      return Success(cachedProfile);
+    }
+
+    if (client == null) {
       return const Failure('Database not connected');
     }
 
     try {
-      // 1. If Supabase session is not immediately available, wait briefly for authStateChanges (initialSession)
-      supa.Session? session = client.auth.currentSession;
-      if (session == null) {
-        try {
-          final authData = await client.auth.onAuthStateChange
-              .firstWhere(
-                (data) => data.event == supa.AuthChangeEvent.initialSession ||
-                          data.event == supa.AuthChangeEvent.signedIn ||
-                          data.event == supa.AuthChangeEvent.tokenRefreshed ||
-                          data.event == supa.AuthChangeEvent.signedOut,
-              )
-              .timeout(const Duration(milliseconds: 1200));
-          session = authData.session ?? client.auth.currentSession;
-        } catch (_) {
-          session = client.auth.currentSession;
-        }
-      }
-
+      final session = client.auth.currentSession;
       if (session != null) {
-        var activeSession = session;
-        if (activeSession.isExpired) {
-          try {
-            final refreshed = await client.auth.refreshSession();
-            if (refreshed.session != null) {
-              activeSession = refreshed.session!;
-            }
-          } catch (_) {}
-        }
-
-        final sessionUser = client.auth.currentUser ?? activeSession.user;
-        final profileRes = await getProfile(sessionUser.id);
+        final profileRes = await getProfile(session.user.id);
         if (profileRes is Success<UserProfile>) {
           await saveLocalProfile(profileRes.data);
+          unawaited(PushNotificationService.syncDeviceToken(userId: profileRes.data.id));
           return profileRes;
         }
 
-        // Active session exists: fallback to cached profile if profile table query timed out
-        if (cachedProfile != null) {
-          return Success(cachedProfile);
-        }
-
-        // Active session exists: create fallback profile from session metadata so user is never logged out
-        final meta = sessionUser.userMetadata ?? {};
+        final meta = session.user.userMetadata ?? {};
         final fallback = UserProfile(
-          id: sessionUser.id,
+          id: session.user.id,
           name: meta['name']?.toString() ??
               meta['full_name']?.toString() ??
-              sessionUser.email?.split('@').first ??
+              session.user.email?.split('@').first ??
               'Rankearn Aspirant',
-          email: sessionUser.email ?? (cachedProfile?.email ?? 'aspirant@rankearn.in'),
-          phone: sessionUser.phone ?? meta['phone']?.toString() ?? cachedProfile?.phone,
-          coins: cachedProfile?.coins ?? 100,
-          subscriptionStatus: cachedProfile?.subscriptionStatus ?? 'free',
-          examPreparingFor: meta['exam_goal']?.toString() ?? (cachedProfile?.examPreparingFor ?? 'Competitive Aspirant'),
-          state: cachedProfile?.state ?? 'India',
-          createdAt: cachedProfile?.createdAt ?? DateTime.now(),
+          email: session.user.email ?? 'aspirant@rankearn.in',
+          phone: session.user.phone ?? meta['phone']?.toString(),
+          coins: 100,
+          subscriptionStatus: 'free',
+          examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+          state: 'India',
+          createdAt: DateTime.now(),
         );
         await saveLocalProfile(fallback);
+        unawaited(PushNotificationService.syncDeviceToken(userId: fallback.id));
         return Success(fallback);
       }
-
-      final currentUser = client.auth.currentUser;
-      if (currentUser != null) {
-        final profileRes = await getProfile(currentUser.id);
-        if (profileRes is Success<UserProfile>) {
-          await saveLocalProfile(profileRes.data);
-          return profileRes;
-        }
-        if (cachedProfile != null) {
-          return Success(cachedProfile);
-        }
-      }
     } catch (_) {}
-
-    // Fallback to locally cached profile so user is NEVER logged out due to network latency on app launch
-    if (cachedProfile != null) {
-      return Success(cachedProfile);
-    }
 
     return const Failure('No authenticated session found');
   }

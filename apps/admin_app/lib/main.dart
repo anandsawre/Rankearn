@@ -48,45 +48,38 @@ void main() async {
     debugPrint('Supabase initialization: $e');
   }
 
+  // Initialize Push & In-App Notification Service
+  try {
+    await PushNotificationService.initialize();
+  } catch (e) {
+    debugPrint('PushNotificationService initialization: $e');
+  }
+
   // Restore authenticated admin session across browser page reloads (F5) and APK restarts
   bool startLoggedIn = false;
+  String? cachedAdminName;
+  String? cachedAdminEmail;
+  String? cachedAdminRole;
   try {
     final client = SupabaseConfig.clientSafe;
     final prefs = await SharedPreferences.getInstance();
     final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
+    cachedAdminName = prefs.getString('rankearn_admin_name');
+    cachedAdminEmail = prefs.getString('rankearn_admin_email');
+    cachedAdminRole = prefs.getString('rankearn_admin_role');
 
-    // Check if session is immediately available
-    var session = client?.auth.currentSession;
-    if (session == null && wasLoggedIn && client != null) {
-      // Wait briefly for initialSession recovery from disk
-      try {
-        final authEvent = await client.auth.onAuthStateChange
-            .firstWhere(
-              (data) => data.event == AuthChangeEvent.initialSession ||
-                        data.event == AuthChangeEvent.signedIn ||
-                        data.event == AuthChangeEvent.tokenRefreshed ||
-                        data.event == AuthChangeEvent.signedOut,
-            )
-            .timeout(const Duration(milliseconds: 1200));
-        session = authEvent.session ?? client.auth.currentSession;
-      } catch (_) {
-        session = client.auth.currentSession;
-      }
-    }
-
-    if (session != null && session.isExpired) {
-      try {
-        final refreshRes = await client?.auth.refreshSession();
-        session = refreshRes?.session ?? session;
-      } catch (_) {}
-    }
-
-    startLoggedIn = session != null || wasLoggedIn;
+    final session = client?.auth.currentSession;
+    startLoggedIn = wasLoggedIn || session != null;
   } catch (_) {}
 
   runApp(
     ProviderScope(
-      child: RankearnAdminApp(startLoggedIn: startLoggedIn),
+      child: RankearnAdminApp(
+        startLoggedIn: startLoggedIn,
+        initialAdminName: cachedAdminName,
+        initialAdminEmail: cachedAdminEmail,
+        initialAdminRole: cachedAdminRole,
+      ),
     ),
   );
 }
@@ -94,11 +87,17 @@ void main() async {
 class RankearnAdminApp extends StatelessWidget {
   final bool startLoggedIn;
   final AdminNavTab initialTab;
+  final String? initialAdminName;
+  final String? initialAdminEmail;
+  final String? initialAdminRole;
 
   const RankearnAdminApp({
     super.key,
     this.startLoggedIn = true,
     this.initialTab = AdminNavTab.overview,
+    this.initialAdminName,
+    this.initialAdminEmail,
+    this.initialAdminRole,
   });
 
   @override
@@ -125,7 +124,13 @@ class RankearnAdminApp extends StatelessWidget {
           surface: Colors.white,
         ),
       ),
-      home: AdminAppShell(startLoggedIn: startLoggedIn, initialTab: initialTab),
+      home: AdminAppShell(
+        startLoggedIn: startLoggedIn,
+        initialTab: initialTab,
+        initialAdminName: initialAdminName,
+        initialAdminEmail: initialAdminEmail,
+        initialAdminRole: initialAdminRole,
+      ),
     );
   }
 }
@@ -133,11 +138,17 @@ class RankearnAdminApp extends StatelessWidget {
 class AdminAppShell extends StatefulWidget {
   final bool startLoggedIn;
   final AdminNavTab initialTab;
+  final String? initialAdminName;
+  final String? initialAdminEmail;
+  final String? initialAdminRole;
 
   const AdminAppShell({
     super.key,
     this.startLoggedIn = true,
     this.initialTab = AdminNavTab.overview,
+    this.initialAdminName,
+    this.initialAdminEmail,
+    this.initialAdminRole,
   });
 
   @override
@@ -150,10 +161,11 @@ class _AdminAppShellState extends State<AdminAppShell> {
   bool _isCheckingAuth = false;
   final ScrollController _navScrollController = ScrollController();
   StreamSubscription<AuthState>? _authSubscription;
+  StreamSubscription<Map<String, dynamic>>? _adminNotificationsSub;
 
-  String _adminDisplayName = 'Admin User';
-  String _adminEmail = '';
-  String _adminRoleLabel = 'Super Admin';
+  late String _adminDisplayName = widget.initialAdminName ?? 'Admin User';
+  late String _adminEmail = widget.initialAdminEmail ?? '';
+  late String _adminRoleLabel = widget.initialAdminRole ?? 'Super Admin';
 
   @override
   void initState() {
@@ -161,13 +173,49 @@ class _AdminAppShellState extends State<AdminAppShell> {
     _checkAndRestoreSession();
     _setupAuthListener();
     _syncCurrentAdminProfile();
+    _setupRealtimeNotifications();
   }
 
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _adminNotificationsSub?.cancel();
     _navScrollController.dispose();
     super.dispose();
+  }
+
+  void _setupRealtimeNotifications() {
+    try {
+      _adminNotificationsSub?.cancel();
+      final repo = NotificationsRepository();
+      _adminNotificationsSub = repo.streamIncomingNotifications().listen((notif) {
+        if (!mounted) return;
+        final title = notif['title']?.toString() ?? 'Rankearn Alert';
+        final message = notif['message']?.toString() ?? '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('📢 $title: $message'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF5636F5),
+          ),
+        );
+      });
+
+      PushNotificationService.initialize(
+        onForegroundNotification: (notif) {
+          if (!mounted) return;
+          final title = notif['title']?.toString() ?? 'Rankearn Notification';
+          final message = notif['message']?.toString() ?? '';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🔔 $title: $message'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: const Color(0xFF5636F5),
+            ),
+          );
+        },
+      );
+    } catch (_) {}
   }
 
   Future<void> _checkAndRestoreSession() async {
@@ -176,25 +224,22 @@ class _AdminAppShellState extends State<AdminAppShell> {
       final prefs = await SharedPreferences.getInstance();
       final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
 
+      if (wasLoggedIn && mounted && !_isLoggedIn) {
+        setState(() {
+          _isLoggedIn = true;
+          _isCheckingAuth = false;
+        });
+      }
+
       if (client != null) {
-        var session = client.auth.currentSession;
+        final session = client.auth.currentSession;
         if (session != null && session.isExpired) {
           try {
-            final refreshed = await client.auth.refreshSession();
-            session = refreshed.session ?? session;
+            await client.auth.refreshSession();
           } catch (_) {}
         }
-
-        if (session != null || wasLoggedIn) {
-          if (mounted && !_isLoggedIn) {
-            setState(() {
-              _isLoggedIn = true;
-              _isCheckingAuth = false;
-            });
-          }
-          _syncCurrentAdminProfile();
-          return;
-        }
+        _syncCurrentAdminProfile();
+        return;
       }
     } catch (_) {}
     if (mounted && _isCheckingAuth) {
@@ -223,43 +268,68 @@ class _AdminAppShellState extends State<AdminAppShell> {
             _isLoggedIn = true;
             _isCheckingAuth = false;
           });
-          _syncCurrentAdminProfile();
         }
+        _syncCurrentAdminProfile();
       } else if (event == AuthChangeEvent.signedOut) {
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('rankearn_admin_logged_in', false);
-        } catch (_) {}
-        if (mounted && _isLoggedIn) {
-          setState(() {
-            _isLoggedIn = false;
-            _isCheckingAuth = false;
-            _adminDisplayName = 'Admin User';
-            _adminEmail = '';
-          });
+        // ONLY clear admin credentials if the sign out was explicitly user initiated
+        if (data.signOutReason == SignOutReason.userInitiated) {
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('rankearn_admin_logged_in', false);
+            await prefs.remove('rankearn_admin_id');
+            await prefs.remove('rankearn_admin_email');
+            await prefs.remove('rankearn_admin_name');
+            await prefs.remove('rankearn_admin_role');
+          } catch (_) {}
+          if (mounted && _isLoggedIn) {
+            setState(() {
+              _isLoggedIn = false;
+              _isCheckingAuth = false;
+              _adminDisplayName = 'Admin User';
+              _adminEmail = '';
+            });
+          }
         }
       }
     });
   }
 
   Future<void> _syncCurrentAdminProfile() async {
-    final client = SupabaseConfig.clientSafe;
-    final user = client?.auth.currentUser;
-    if (user == null) return;
-
-    final fallbackName = (user.userMetadata?['name']?.toString().trim().isNotEmpty ?? false)
-        ? user.userMetadata!['name'].toString().trim()
-        : (user.email?.split('@').first ?? 'Admin User');
-
-    if (mounted) {
-      setState(() {
-        _adminDisplayName = fallbackName;
-        _adminEmail = user.email ?? '';
-        _adminRoleLabel = 'Super Admin';
-      });
-    }
-
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedName = prefs.getString('rankearn_admin_name');
+      final cachedEmail = prefs.getString('rankearn_admin_email');
+      final cachedRole = prefs.getString('rankearn_admin_role');
+
+      if (mounted) {
+        setState(() {
+          if (cachedName != null && cachedName.isNotEmpty) _adminDisplayName = cachedName;
+          if (cachedEmail != null && cachedEmail.isNotEmpty) _adminEmail = cachedEmail;
+          if (cachedRole != null && cachedRole.isNotEmpty) _adminRoleLabel = cachedRole;
+        });
+      }
+
+      final client = SupabaseConfig.clientSafe;
+      final user = client?.auth.currentUser;
+      if (user == null) return;
+
+      final fallbackName = (user.userMetadata?['name']?.toString().trim().isNotEmpty ?? false)
+          ? user.userMetadata!['name'].toString().trim()
+          : (user.email?.split('@').first ?? (_adminDisplayName.isNotEmpty ? _adminDisplayName : 'Admin User'));
+
+      if (mounted) {
+        setState(() {
+          _adminDisplayName = fallbackName;
+          _adminEmail = user.email ?? _adminEmail;
+          _adminRoleLabel = 'Super Admin';
+        });
+      }
+
+      await prefs.setString('rankearn_admin_name', _adminDisplayName);
+      await prefs.setString('rankearn_admin_email', _adminEmail);
+      await prefs.setString('rankearn_admin_role', _adminRoleLabel);
+      await prefs.setString('rankearn_admin_id', user.id);
+
       final profile = await client!
           .from('profiles')
           .select('name, email')
@@ -272,9 +342,11 @@ class _AdminAppShellState extends State<AdminAppShell> {
           if (dbName != null && dbName.isNotEmpty) _adminDisplayName = dbName;
           if (dbEmail != null && dbEmail.isNotEmpty) _adminEmail = dbEmail;
         });
+        if (dbName != null && dbName.isNotEmpty) await prefs.setString('rankearn_admin_name', dbName);
+        if (dbEmail != null && dbEmail.isNotEmpty) await prefs.setString('rankearn_admin_email', dbEmail);
       }
     } catch (_) {
-      // Auth metadata fallback already applied cleanly.
+      // Graceful fallback from cache already applied
     }
   }
 
@@ -291,6 +363,10 @@ class _AdminAppShellState extends State<AdminAppShell> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('rankearn_admin_logged_in', false);
+      await prefs.remove('rankearn_admin_id');
+      await prefs.remove('rankearn_admin_email');
+      await prefs.remove('rankearn_admin_name');
+      await prefs.remove('rankearn_admin_role');
     } catch (_) {}
     try {
       await SupabaseConfig.clientSafe?.auth.signOut();

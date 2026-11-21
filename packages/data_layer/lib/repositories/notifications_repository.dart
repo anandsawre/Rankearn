@@ -53,12 +53,18 @@ class NotificationsRepository {
                 (DateTime.tryParse(scheduledAtStr)?.isBefore(DateTime.now().toUtc()) ?? true);
 
             // Only deliver active sent broadcasts or due scheduled items (ignore pending scheduled / drafts)
-            if (status == 'sent' || (status == 'scheduled' && isDue)) {
+            if (status == 'sent' || (status == 'scheduled' && isDue) || status.isEmpty) {
               controller.add(Map<String, dynamic>.from(record));
             }
           }
         },
-      ).subscribe();
+      ).subscribe((status, [error]) {
+        if (status == RealtimeSubscribeStatus.subscribed) {
+          debugPrint('Supabase Realtime notifications channel subscribed successfully');
+        } else if (error != null) {
+          debugPrint('Supabase Realtime notifications subscription notice: $status, $error');
+        }
+      });
 
       controller.onCancel = () {
         channel.unsubscribe();

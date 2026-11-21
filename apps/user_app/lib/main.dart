@@ -40,6 +40,13 @@ void main() async {
     debugPrint('Supabase initialization: $e');
   }
 
+  // Initialize Push & In-App Notification Service
+  try {
+    await PushNotificationService.initialize();
+  } catch (e) {
+    debugPrint('PushNotificationService initialization: $e');
+  }
+
   // Restore authenticated user session before runApp to eliminate re-login on APK reopen
   UserProfile? initialProfile;
   try {
@@ -172,13 +179,16 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
           }
         }
       } else if (event == AuthChangeEvent.signedOut) {
-        await _authRepository.clearLocalProfile();
-        if (mounted) {
-          setState(() {
-            _currentUser = null;
-            _showAuth = true;
-            _isCheckingSession = false;
-          });
+        // ONLY clear local profile if the logout was explicitly user-initiated (never on cold start / background timeout)
+        if (authState.signOutReason == SignOutReason.userInitiated) {
+          await _authRepository.clearLocalProfile();
+          if (mounted) {
+            setState(() {
+              _currentUser = null;
+              _showAuth = true;
+              _isCheckingSession = false;
+            });
+          }
         }
       }
     });
@@ -429,38 +439,54 @@ class _UserAppShellState extends State<UserAppShell> {
     _notificationsSub?.cancel();
     _notificationsSub = _notificationsRepo.streamIncomingNotifications().listen((notif) {
       if (!mounted) return;
-      setState(() {
-        _notificationsList.removeWhere((item) => item['id'] == notif['id']);
-        _notificationsList.insert(0, notif);
-        _unreadNotifications++;
-      });
-
-      final title = notif['title']?.toString() ?? 'New Announcement';
-      final message = notif['message']?.toString() ?? '';
-      final actionUrl = notif['action_url']?.toString();
-      final channel = (notif['channel'] ?? 'push').toString().toLowerCase();
-
-      // Trigger Web Browser Desktop Pop-up strictly for 'push' channel (not for inapp)
-      if (channel == 'push') {
-        triggerBrowserNotification(title, message, actionUrl);
-      }
-
-      // If notification has image or is an in-app popup, show rich pop-up dialog!
-      final hasImage = notif['image_url'] != null && notif['image_url'].toString().trim().isNotEmpty;
-      if (hasImage || channel == 'inapp') {
-        InAppNotificationDialog.show(
-          context: context,
-          notification: notif,
-          onAction: (url) {
-            _notificationsRepo.recordClick(notif['id']?.toString() ?? '');
-            _handleNotificationUrl(url);
-          },
-        );
-      } else {
-        // Trigger Floating In-App Banner on user screen
-        _showInAppNotificationBanner(notif);
-      }
+      _handleIncomingNotification(notif);
     });
+
+    // Also connect PushNotificationService foreground & click listeners
+    PushNotificationService.initialize(
+      onForegroundNotification: (notif) {
+        if (!mounted) return;
+        _handleIncomingNotification(notif);
+      },
+      onNotificationTap: (data) {
+        final actionUrl = data['actionUrl']?.toString() ?? data['action_url']?.toString();
+        if (actionUrl != null && actionUrl.isNotEmpty) {
+          _handleNotificationUrl(actionUrl);
+        }
+      },
+    );
+  }
+
+  void _handleIncomingNotification(Map<String, dynamic> notif) {
+    setState(() {
+      _notificationsList.removeWhere((item) => item['id'] == notif['id']);
+      _notificationsList.insert(0, notif);
+      _unreadNotifications++;
+    });
+
+    final title = notif['title']?.toString() ?? 'New Announcement';
+    final message = notif['message']?.toString() ?? '';
+    final actionUrl = notif['action_url']?.toString();
+    final channel = (notif['channel'] ?? 'push').toString().toLowerCase();
+
+    // Trigger local system heads-up notification in Android notification bar
+    triggerBrowserNotification(title, message, actionUrl);
+
+    // If notification has image or is an in-app popup, show rich pop-up dialog!
+    final hasImage = notif['image_url'] != null && notif['image_url'].toString().trim().isNotEmpty;
+    if (hasImage || channel == 'inapp') {
+      InAppNotificationDialog.show(
+        context: context,
+        notification: notif,
+        onAction: (url) {
+          _notificationsRepo.recordClick(notif['id']?.toString() ?? '');
+          _handleNotificationUrl(url);
+        },
+      );
+    } else {
+      // Trigger Floating In-App Banner on user screen
+      _showInAppNotificationBanner(notif);
+    }
   }
 
   void _showInAppNotificationBanner(Map<String, dynamic> notif) {

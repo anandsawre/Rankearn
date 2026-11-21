@@ -1,3 +1,9 @@
+import 'package:data_layer/data_layer.dart';
+
 void triggerBrowserNotification(String title, String body, String? url) {
-  // No-op on mobile / non-web platforms
+  PushNotificationService.showLocalNotification(
+    title: title,
+    body: body,
+    payload: url,
+  );
 }

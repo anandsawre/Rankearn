@@ -106,6 +106,12 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('rankearn_admin_logged_in', true);
+        await prefs.setString('rankearn_admin_id', user.id);
+        await prefs.setString('rankearn_admin_email', user.email ?? email);
+        final name = (user.userMetadata?['name'] ?? user.userMetadata?['full_name'])?.toString().trim();
+        final effectiveName = (name != null && name.isNotEmpty) ? name : email.split('@').first;
+        await prefs.setString('rankearn_admin_name', effectiveName);
+        await prefs.setString('rankearn_admin_role', appRole ?? userRole ?? 'Super Admin');
       } catch (_) {}
 
       if (mounted) {

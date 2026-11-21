@@ -38,3 +38,5 @@ export 'repositories/banners_repository.dart';
 export 'repositories/incomplete_tests_repository.dart';
 export 'repositories/feature_flags_repository.dart';
 export 'repositories/notifications_repository.dart';
+export 'services/push_notification_service.dart';
+export 'services/firebase_options.dart';
