@@ -279,39 +279,41 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Top Bar: Back to website link
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              if (!isDesktop)
-                                Flexible(child: _buildBrandLogo())
-                              else
+                          // Top Bar: Back to website link (Desktop only; on mobile, preserve vertical space so card doesn't move up)
+                          if (isDesktop) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
                                 const SizedBox.shrink(),
-                              InkWell(
-                                onTap: widget.onBackToWebsite ??
-                                    () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Navigating back to main website...'),
-                                        ),
-                                      );
-                                    },
-                                borderRadius: BorderRadius.circular(8),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  child: const Text(
-                                    'Back to Website',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF5636F5),
+                                InkWell(
+                                  onTap: widget.onBackToWebsite ??
+                                      () {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Navigating back to main website...'),
+                                          ),
+                                        );
+                                      },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    child: const Text(
+                                      'Back to Website',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF5636F5),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: topBarGap),
+                              ],
+                            ),
+                            SizedBox(height: topBarGap),
+                          ] else ...[
+                            // Preserve exact top bar height so the login card does not shift upwards
+                            SizedBox(height: 28.0 + topBarGap),
+                          ],
 
                           // Main Content: 2-Column Desktop or 1-Column Mobile
                           if (isDesktop)
