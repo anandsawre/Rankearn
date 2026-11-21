@@ -862,16 +862,15 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFEEF0FF),
+                color: const Color(0xFFEF4444),
                 borderRadius: BorderRadius.circular(5),
-                border: Border.all(color: const Color(0xFFE0E7FF), width: 0.8),
               ),
               child: const Text(
                 'Admin Panel',
                 style: TextStyle(
                   fontSize: 9.5,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF5636F5),
+                  color: Colors.white,
                   letterSpacing: 0.2,
                 ),
               ),
