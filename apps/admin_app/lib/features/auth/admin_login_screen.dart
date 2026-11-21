@@ -398,8 +398,6 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildHeaderBlock(hFactor, vScale),
-        const SizedBox(height: 18),
         _buildMiddleBlock(hFactor, vScale),
         const SizedBox(height: 18),
         _buildBottomBlock(hFactor, vScale),
