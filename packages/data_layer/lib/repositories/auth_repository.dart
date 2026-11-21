@@ -68,16 +68,36 @@ class AuthRepository {
     }
 
     try {
-      // 1. Check if Supabase has a valid or refreshable session
-      final currentSession = client.auth.currentSession;
-      if (currentSession != null) {
-        if (currentSession.isExpired) {
+      // 1. If Supabase session is not immediately available, wait briefly for authStateChanges (initialSession)
+      supa.Session? session = client.auth.currentSession;
+      if (session == null) {
+        try {
+          final authData = await client.auth.onAuthStateChange
+              .firstWhere(
+                (data) => data.event == supa.AuthChangeEvent.initialSession ||
+                          data.event == supa.AuthChangeEvent.signedIn ||
+                          data.event == supa.AuthChangeEvent.tokenRefreshed ||
+                          data.event == supa.AuthChangeEvent.signedOut,
+              )
+              .timeout(const Duration(milliseconds: 1200));
+          session = authData.session ?? client.auth.currentSession;
+        } catch (_) {
+          session = client.auth.currentSession;
+        }
+      }
+
+      if (session != null) {
+        var activeSession = session;
+        if (activeSession.isExpired) {
           try {
-            await client.auth.refreshSession();
+            final refreshed = await client.auth.refreshSession();
+            if (refreshed.session != null) {
+              activeSession = refreshed.session!;
+            }
           } catch (_) {}
         }
 
-        final sessionUser = client.auth.currentUser ?? currentSession.user;
+        final sessionUser = client.auth.currentUser ?? activeSession.user;
         final profileRes = await getProfile(sessionUser.id);
         if (profileRes is Success<UserProfile>) {
           await saveLocalProfile(profileRes.data);
@@ -97,13 +117,13 @@ class AuthRepository {
               meta['full_name']?.toString() ??
               sessionUser.email?.split('@').first ??
               'Rankearn Aspirant',
-          email: sessionUser.email ?? '',
-          phone: sessionUser.phone ?? meta['phone']?.toString(),
-          coins: 100,
-          subscriptionStatus: 'free',
-          examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
-          state: 'India',
-          createdAt: DateTime.now(),
+          email: sessionUser.email ?? (cachedProfile?.email ?? 'aspirant@rankearn.in'),
+          phone: sessionUser.phone ?? meta['phone']?.toString() ?? cachedProfile?.phone,
+          coins: cachedProfile?.coins ?? 100,
+          subscriptionStatus: cachedProfile?.subscriptionStatus ?? 'free',
+          examPreparingFor: meta['exam_goal']?.toString() ?? (cachedProfile?.examPreparingFor ?? 'Competitive Aspirant'),
+          state: cachedProfile?.state ?? 'India',
+          createdAt: cachedProfile?.createdAt ?? DateTime.now(),
         );
         await saveLocalProfile(fallback);
         return Success(fallback);

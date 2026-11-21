@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// User Profile Domain Model
 class UserProfile {
   final String id;
@@ -51,6 +53,31 @@ class UserProfile {
   bool get isActive => status == 'active';
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
+    List<String> parsedBadges = [];
+    final rawBadges = map['badges'];
+    if (rawBadges is List) {
+      parsedBadges = rawBadges.map((e) => e.toString()).toList();
+    } else if (rawBadges is String && rawBadges.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawBadges);
+        if (decoded is List) {
+          parsedBadges = decoded.map((e) => e.toString()).toList();
+        }
+      } catch (_) {}
+    }
+
+    int parseNumToInt(dynamic val, int fallback) {
+      if (val is num) return val.toInt();
+      if (val != null) return int.tryParse(val.toString()) ?? fallback;
+      return fallback;
+    }
+
+    double parseNumToDouble(dynamic val, double fallback) {
+      if (val is num) return val.toDouble();
+      if (val != null) return double.tryParse(val.toString()) ?? fallback;
+      return fallback;
+    }
+
     return UserProfile(
       id: map['id']?.toString() ?? '',
       name: map['name']?.toString() ?? 'User',
@@ -59,16 +86,16 @@ class UserProfile {
       profilePhotoUrl: map['profile_photo_url']?.toString(),
       examPreparingFor: map['exam_preparing_for']?.toString(),
       state: map['state']?.toString(),
-      coins: (map['coins'] as num?)?.toInt() ?? 0,
-      totalEarned: (map['total_earned'] as num?)?.toInt() ?? 0,
-      totalSpent: (map['total_spent'] as num?)?.toInt() ?? 0,
-      withdrawableBalance: (map['withdrawable_balance'] as num?)?.toDouble() ?? 0.0,
-      badges: (map['badges'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      coins: parseNumToInt(map['coins'], 0),
+      totalEarned: parseNumToInt(map['total_earned'], 0),
+      totalSpent: parseNumToInt(map['total_spent'], 0),
+      withdrawableBalance: parseNumToDouble(map['withdrawable_balance'], 0.0),
+      badges: parsedBadges,
       subscriptionStatus: map['subscription_status']?.toString() ?? 'free',
       subscriptionEndDate: map['subscription_end_date'] != null
           ? DateTime.tryParse(map['subscription_end_date'].toString())
           : null,
-      isLeaderboardEligible: map['is_leaderboard_eligible'] == true,
+      isLeaderboardEligible: map['is_leaderboard_eligible'] == true || map['is_leaderboard_eligible']?.toString() == 'true',
       lastSpinDate: map['last_spin_date'] != null
           ? DateTime.tryParse(map['last_spin_date'].toString())
           : null,

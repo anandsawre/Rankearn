@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:data_layer/data_layer.dart';
 import 'package:design_system/design_system.dart' show AppModalDialog, AppColors;
 import 'login_image_data.dart';
@@ -101,6 +102,11 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
         await client.auth.signOut();
         throw 'Access Denied: Your account does not have administrator privileges.';
       }
+
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('rankearn_admin_logged_in', true);
+      } catch (_) {}
 
       if (mounted) {
         widget.onLoginSuccess();

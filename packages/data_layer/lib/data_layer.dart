@@ -2,6 +2,7 @@
 // Supabase Configuration, Typed Domain Models, and Repositories
 
 export 'package:shared_core/shared_core.dart';
+export 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
 export 'supabase/supabase_config.dart';
 
 // Models

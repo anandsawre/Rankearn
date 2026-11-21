@@ -72,7 +72,7 @@ class RankearnUserApp extends StatefulWidget {
     super.key,
     this.initialTests,
     this.showAuthInitially,
-    this.autoCheckSession = false,
+    this.autoCheckSession = true,
     this.initialProfile,
   });
 
@@ -91,13 +91,16 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
   void initState() {
     super.initState();
     _currentUser = widget.initialProfile;
-    _showAuth = widget.showAuthInitially ?? (_currentUser == null);
-    _isCheckingSession = false;
 
-    // If initialProfile was not loaded synchronously and autoCheckSession is true, check async
-    if (_currentUser == null && widget.autoCheckSession) {
-      _isCheckingSession = true;
-      _checkSession();
+    if (_currentUser != null) {
+      _showAuth = false;
+      _isCheckingSession = false;
+    } else {
+      _isCheckingSession = widget.autoCheckSession;
+      _showAuth = !_isCheckingSession;
+      if (widget.autoCheckSession) {
+        _checkSession();
+      }
     }
 
     _subscribeAuth();
@@ -142,16 +145,40 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
       authState,
     ) async {
       final session = authState.session;
+      final event = authState.event;
 
-      if (session != null) {
+      if (session != null &&
+          (event == AuthChangeEvent.initialSession ||
+           event == AuthChangeEvent.signedIn ||
+           event == AuthChangeEvent.tokenRefreshed)) {
         final res = await _authRepository.getProfile(session.user.id);
         if (mounted) {
           if (res case Success(:final data)) {
+            await _authRepository.saveLocalProfile(data);
             setState(() {
               _currentUser = data;
               _showAuth = false;
+              _isCheckingSession = false;
             });
+          } else {
+            final cached = await _authRepository.getLocalProfile();
+            if (cached != null) {
+              setState(() {
+                _currentUser = cached;
+                _showAuth = false;
+                _isCheckingSession = false;
+              });
+            }
           }
+        }
+      } else if (event == AuthChangeEvent.signedOut) {
+        await _authRepository.clearLocalProfile();
+        if (mounted) {
+          setState(() {
+            _currentUser = null;
+            _showAuth = true;
+            _isCheckingSession = false;
+          });
         }
       }
     });

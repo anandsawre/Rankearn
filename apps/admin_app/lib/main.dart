@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:design_system/design_system.dart';
 import 'package:data_layer/data_layer.dart';
 // Hot reload: Matched Dashboard full width padding & removed duplicate left checkbox (2026-10-20)
@@ -49,14 +48,40 @@ void main() async {
     debugPrint('Supabase initialization: $e');
   }
 
-  // Restore authenticated admin session across browser page reloads (F5)
+  // Restore authenticated admin session across browser page reloads (F5) and APK restarts
   bool startLoggedIn = false;
   try {
     final client = SupabaseConfig.clientSafe;
-    final currentSession = client?.auth.currentSession;
     final prefs = await SharedPreferences.getInstance();
     final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
-    startLoggedIn = currentSession != null || (wasLoggedIn && client?.auth.currentUser != null);
+
+    // Check if session is immediately available
+    var session = client?.auth.currentSession;
+    if (session == null && wasLoggedIn && client != null) {
+      // Wait briefly for initialSession recovery from disk
+      try {
+        final authEvent = await client.auth.onAuthStateChange
+            .firstWhere(
+              (data) => data.event == AuthChangeEvent.initialSession ||
+                        data.event == AuthChangeEvent.signedIn ||
+                        data.event == AuthChangeEvent.tokenRefreshed ||
+                        data.event == AuthChangeEvent.signedOut,
+            )
+            .timeout(const Duration(milliseconds: 1200));
+        session = authEvent.session ?? client.auth.currentSession;
+      } catch (_) {
+        session = client.auth.currentSession;
+      }
+    }
+
+    if (session != null && session.isExpired) {
+      try {
+        final refreshRes = await client?.auth.refreshSession();
+        session = refreshRes?.session ?? session;
+      } catch (_) {}
+    }
+
+    startLoggedIn = session != null || wasLoggedIn;
   } catch (_) {}
 
   runApp(
@@ -122,6 +147,7 @@ class AdminAppShell extends StatefulWidget {
 class _AdminAppShellState extends State<AdminAppShell> {
   late AdminNavTab _activeTab = widget.initialTab;
   late bool _isLoggedIn = widget.startLoggedIn;
+  bool _isCheckingAuth = false;
   final ScrollController _navScrollController = ScrollController();
   StreamSubscription<AuthState>? _authSubscription;
 
@@ -150,15 +176,30 @@ class _AdminAppShellState extends State<AdminAppShell> {
       final prefs = await SharedPreferences.getInstance();
       final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
 
-      if (client != null && (client.auth.currentSession != null || (wasLoggedIn && client.auth.currentUser != null))) {
-        if (mounted && !_isLoggedIn) {
-          setState(() {
-            _isLoggedIn = true;
-          });
+      if (client != null) {
+        var session = client.auth.currentSession;
+        if (session != null && session.isExpired) {
+          try {
+            final refreshed = await client.auth.refreshSession();
+            session = refreshed.session ?? session;
+          } catch (_) {}
         }
-        _syncCurrentAdminProfile();
+
+        if (session != null || wasLoggedIn) {
+          if (mounted && !_isLoggedIn) {
+            setState(() {
+              _isLoggedIn = true;
+              _isCheckingAuth = false;
+            });
+          }
+          _syncCurrentAdminProfile();
+          return;
+        }
       }
     } catch (_) {}
+    if (mounted && _isCheckingAuth) {
+      setState(() => _isCheckingAuth = false);
+    }
   }
 
   void _setupAuthListener() {
@@ -169,7 +210,10 @@ class _AdminAppShellState extends State<AdminAppShell> {
       final event = data.event;
       final session = data.session;
 
-      if (event == AuthChangeEvent.signedIn || (session != null && event == AuthChangeEvent.tokenRefreshed)) {
+      if (session != null &&
+          (event == AuthChangeEvent.initialSession ||
+           event == AuthChangeEvent.signedIn ||
+           event == AuthChangeEvent.tokenRefreshed)) {
         try {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('rankearn_admin_logged_in', true);
@@ -177,6 +221,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
         if (mounted && !_isLoggedIn) {
           setState(() {
             _isLoggedIn = true;
+            _isCheckingAuth = false;
           });
           _syncCurrentAdminProfile();
         }
@@ -188,6 +233,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
         if (mounted && _isLoggedIn) {
           setState(() {
             _isLoggedIn = false;
+            _isCheckingAuth = false;
             _adminDisplayName = 'Admin User';
             _adminEmail = '';
           });
@@ -265,6 +311,27 @@ class _AdminAppShellState extends State<AdminAppShell> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingAuth) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF8FAFC),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.8,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5636F5)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (!_isLoggedIn) {
       return _buildAdminLoginScreen();
     }
