@@ -472,8 +472,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.monetization_on_rounded,
           label: 'My Coins',
           value: _formatNumber(widget.profile.coins),
-          accentColor: const Color(0xFFF59E0B),
-          backgroundColor: const Color(0xFFFFFBEB),
+          accentColor: const Color(0xFFEF4444),
+          backgroundColor: const Color(0xFFFEF2F2),
           onTap: widget.onOpenWallet,
         ),
         TestMetricCard(
@@ -496,8 +496,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.military_tech_rounded,
           label: 'My Rank',
           value: '${_userStats['rank'] ?? '-'}',
-          accentColor: const Color(0xFFEAB308),
-          backgroundColor: const Color(0xFFFEFCE8),
+          accentColor: const Color(0xFF7C3AED),
+          backgroundColor: const Color(0xFFFAF5FF),
           onTap: widget.onLeaderboardTap ?? () => _showRankInfo(context),
         ),
       ],
@@ -1585,7 +1585,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (ctx) => AlertDialog(
         title: Row(
           children: const [
-            Icon(Icons.military_tech_rounded, color: Color(0xFFEAB308)),
+            Icon(Icons.military_tech_rounded, color: Color(0xFF7C3AED)),
             SizedBox(width: 8),
             Text('All India Rank #1256', style: TextStyle(fontWeight: FontWeight.w900)),
           ],
