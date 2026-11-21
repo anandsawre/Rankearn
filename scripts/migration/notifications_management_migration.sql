@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   title VARCHAR(255) NOT NULL,
   message TEXT NOT NULL,
   type VARCHAR(30) NOT NULL DEFAULT 'alert', -- 'alert', 'announcement', 'reminder', 'system'
+  channel VARCHAR(20) NOT NULL DEFAULT 'push', -- 'push', 'inapp', 'email'
   action_url TEXT,
   image_url TEXT,
   is_read BOOLEAN NOT NULL DEFAULT false,

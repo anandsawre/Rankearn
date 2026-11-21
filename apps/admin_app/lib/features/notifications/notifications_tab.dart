@@ -217,6 +217,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
           'title': title,
           'message': body,
           'type': _notificationType,
+          'channel': _selectedChannel,
           'target_segment': _targetAudience,
           'action_url': _hasActionButton ? _actionUrlController.text.trim() : null,
           'is_read': false,
@@ -224,8 +225,8 @@ class _NotificationsTabState extends State<NotificationsTab> {
           'scheduled_at': isSched ? scheduledTime!.toUtc().toIso8601String() : null,
         });
 
-        // Trigger Google FCM v1 Edge Function strictly for INSTANT dispatches (never for scheduled)
-        if (!isSched && _selectedChannel != 'email') {
+        // Trigger Google FCM v1 Edge Function strictly for PUSH channel (never for inapp or email)
+        if (!isSched && _selectedChannel == 'push') {
           try {
             final funcRes = await client.functions.invoke(
               'send-push',
@@ -238,6 +239,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
                 'notificationId': newId,
                 'data': {
                   'type': _notificationType,
+                  'channel': _selectedChannel,
                   'action_url': _hasActionButton ? _actionUrlController.text.trim() : '/tests',
                 },
               },
@@ -266,9 +268,11 @@ class _NotificationsTabState extends State<NotificationsTab> {
         content: Text(
           isSched
               ? '⏰ Notification scheduled successfully!'
-              : fcmDispatched
-                  ? '🚀 Notification broadcast dispatched live via FCM HTTP v1!'
-                  : '🚀 Notification recorded & broadcast queued across $selectedChannel channel!',
+              : _selectedChannel == 'inapp'
+                  ? '📱 In-App Notification dispatched to candidates in realtime!'
+                  : fcmDispatched
+                      ? '🚀 Push notification broadcast dispatched live via FCM HTTP v1!'
+                      : '🚀 Notification recorded & broadcast queued across $selectedChannel channel!',
         ),
       ),
     );

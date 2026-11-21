@@ -378,11 +378,14 @@ class _UserAppShellState extends State<UserAppShell> {
       final title = notif['title']?.toString() ?? 'New Announcement';
       final message = notif['message']?.toString() ?? '';
       final actionUrl = notif['action_url']?.toString();
+      final channel = (notif['channel'] ?? 'push').toString().toLowerCase();
 
-      // Trigger Web Browser Desktop Pop-up (Chrome/Edge/Firefox)
-      triggerBrowserNotification(title, message, actionUrl);
+      // Trigger Web Browser Desktop Pop-up strictly for 'push' channel (not for inapp)
+      if (channel == 'push') {
+        triggerBrowserNotification(title, message, actionUrl);
+      }
 
-      // Trigger Floating In-App Banner on user screen
+      // Trigger Floating In-App Banner on user screen (for both inapp and push)
       _showInAppNotificationBanner(notif);
     });
   }
