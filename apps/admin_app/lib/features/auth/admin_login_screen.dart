@@ -258,10 +258,14 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           final availableHeight = constraints.maxHeight - (outerVPad * 2) - topBarHeight - topBarGap;
           final contentRowHeight = math.min(940.0, math.max(620.0, availableHeight));
 
-          return Stack(
-            children: [
-              // 1. Pixel-Accurate Fluid Background Waves matching reference
-              AdminBackgroundWaves(isDesktop: isDesktop),
+          return SizedBox(
+            width: constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 1. Pixel-Accurate Fluid Background Waves matching reference
+                AdminBackgroundWaves(isDesktop: isDesktop),
 
               // 2. Main Responsive Layout (Locks scrolling on desktop when fitting viewport)
               SafeArea(
@@ -355,7 +359,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 ),
               ),
             ],
-          );
+          ),
+        );
         },
       ),
     );
@@ -1049,31 +1054,36 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Checkbox(
-                        value: _rememberMe,
-                        activeColor: const Color(0xFF5636F5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                        onChanged: (val) {
-                          setState(() => _rememberMe = val ?? true);
-                        },
+                Flexible(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: Checkbox(
+                          value: _rememberMe,
+                          activeColor: const Color(0xFF5636F5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          onChanged: (val) {
+                            setState(() => _rememberMe = val ?? true);
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Remember me',
-                      style: TextStyle(
-                        fontSize: vScale(11, 11.5),
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF334155),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          'Remember me',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: vScale(11, 11.5),
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 TextButton(
                   onPressed: _showForgotPasswordDialog,
