@@ -148,7 +148,12 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           scrollable: true,
           fullScreenOnMobile: false,
           actions: [
-            AppModalDialog.cancelButton(ctx, label: 'Close Preview'),
+            AppButton.adminSecondary(
+              label: 'Close Preview',
+              leadingIcon: const Icon(Icons.close_rounded, size: 16),
+              height: 38,
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
             NotificationPreviewCard.buildModeSwitcher(
               mode: currentPreviewMode,
               onChanged: (newMode) {

@@ -40,35 +40,39 @@ class NotificationPreviewCard extends StatefulWidget {
   });
 
   /// Centralized mode switcher pill: renders [In-App Pop-up] and [Push Notification] buttons.
-  /// Can be used directly in modal dialog footers or standalone bars.
+  /// Can be used directly in modal dialog footers or standalone bars with exact 38px height matching admin buttons.
   static Widget buildModeSwitcher({
     required NotificationPreviewMode mode,
     required ValueChanged<NotificationPreviewMode> onChanged,
   }) {
     return Container(
+      height: 38,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: AppColors.adminBackground,
         borderRadius: AppRadii.adminControl,
         border: Border.all(color: AppColors.adminBorder),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildModeButtonWidget(
-            isSelected: mode == NotificationPreviewMode.inAppPopup,
-            label: 'In-App Pop-up',
-            icon: Icons.chat_bubble_outline_rounded,
-            onTap: () => onChanged(NotificationPreviewMode.inAppPopup),
-          ),
-          const SizedBox(width: 4),
-          _buildModeButtonWidget(
-            isSelected: mode == NotificationPreviewMode.pushNotification,
-            label: 'Push Notification',
-            icon: Icons.notifications_active_outlined,
-            onTap: () => onChanged(NotificationPreviewMode.pushNotification),
-          ),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildModeButtonWidget(
+              isSelected: mode == NotificationPreviewMode.inAppPopup,
+              label: 'In-App Pop-up',
+              icon: Icons.chat_bubble_outline_rounded,
+              onTap: () => onChanged(NotificationPreviewMode.inAppPopup),
+            ),
+            const SizedBox(width: 4),
+            _buildModeButtonWidget(
+              isSelected: mode == NotificationPreviewMode.pushNotification,
+              label: 'Push Notification',
+              icon: Icons.notifications_active_outlined,
+              onTap: () => onChanged(NotificationPreviewMode.pushNotification),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -81,15 +85,18 @@ class NotificationPreviewCard extends StatefulWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      borderRadius: BorderRadius.circular(7),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.adminPurple : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(7),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
               icon,
