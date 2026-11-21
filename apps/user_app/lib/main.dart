@@ -408,6 +408,8 @@ class _UserAppShellState extends State<UserAppShell> {
     final title = notif['title']?.toString() ?? 'Rankearn Alert';
     final message = notif['message']?.toString() ?? '';
     final actionUrl = notif['action_url']?.toString();
+    final rawActionLabel = notif['action_label']?.toString().trim();
+    final actionLabel = (rawActionLabel != null && rawActionLabel.isNotEmpty) ? rawActionLabel : 'Open';
     final notifId = notif['id']?.toString() ?? '';
     final imageUrl = notif['image_url']?.toString().trim();
     final hasImg = imageUrl != null && imageUrl.isNotEmpty;
@@ -509,9 +511,9 @@ class _UserAppShellState extends State<UserAppShell> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Open',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                child: Text(
+                  actionLabel,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -523,14 +525,26 @@ class _UserAppShellState extends State<UserAppShell> {
 
   void _handleNotificationUrl(String url) {
     final clean = url.trim().toLowerCase();
-    if (clean.contains('test')) {
-      setState(() => _activeTab = UserNavTab.tests);
+    if (clean.contains('spin') || clean.contains('wheel')) {
+      _navigateToTab(UserNavTab.spin);
+    } else if (clean.contains('live') || clean.contains('contest')) {
+      _navigateToTab(UserNavTab.live);
+    } else if (clean.contains('test')) {
+      _navigateToTab(UserNavTab.tests);
     } else if (clean.contains('battle')) {
-      setState(() => _activeTab = UserNavTab.battle);
+      _navigateToTab(UserNavTab.battle);
+    } else if (clean.contains('tournament')) {
+      _navigateToTab(UserNavTab.tournament);
     } else if (clean.contains('reward') || clean.contains('earn')) {
-      setState(() => _activeTab = UserNavTab.rewards);
-    } else if (clean.contains('wallet')) {
-      _openBuyCoinsModal();
+      _navigateToTab(UserNavTab.rewards);
+    } else if (clean.contains('leaderboard')) {
+      _navigateToTab(UserNavTab.leaderboard);
+    } else if (clean.contains('profile')) {
+      _navigateToTab(UserNavTab.profile);
+    } else if (clean.contains('wallet') || clean.contains('coin')) {
+      _navigateToTab(UserNavTab.wallet);
+    } else if (clean.contains('home')) {
+      _navigateToTab(UserNavTab.home);
     }
   }
 
@@ -891,6 +905,8 @@ class _UserAppShellState extends State<UserAppShell> {
                       final title = n['title']?.toString() ?? 'Announcement';
                       final message = n['message']?.toString() ?? '';
                       final actionUrl = n['action_url']?.toString();
+                      final rawActionLabel = n['action_label']?.toString().trim();
+                      final actionLabel = (rawActionLabel != null && rawActionLabel.isNotEmpty) ? rawActionLabel : 'View';
                       final imageUrl = n['image_url']?.toString();
                       final notifId = n['id']?.toString() ?? '';
                       final isRead = n['is_read'] == true;
@@ -973,9 +989,9 @@ class _UserAppShellState extends State<UserAppShell> {
                                   minimumSize: Size.zero,
                                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 ),
-                                child: const Text(
-                                  'View',
-                                  style: TextStyle(
+                                child: Text(
+                                  actionLabel,
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 12,
                                     color: AppColors.primary,

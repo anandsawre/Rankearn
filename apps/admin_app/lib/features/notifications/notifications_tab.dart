@@ -89,6 +89,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
               'reads': isScheduledItem ? 'Pending' : readsStr,
               'ctr': isScheduledItem ? '0.0%' : ctrStr,
               'action_url': n['action_url']?.toString() ?? '',
+              'action_label': n['action_label']?.toString() ?? '',
               'image_url': n['image_url']?.toString(),
             };
           }).toList();
@@ -160,6 +161,9 @@ class _NotificationsTabState extends State<NotificationsTab> {
       return;
     }
 
+    final actionLabel = _hasActionButton ? _actionLabelController.text.trim() : '';
+    final actionUrl = _hasActionButton ? _actionUrlController.text.trim() : '';
+
     final newDraft = {
       'id': 'draft-${DateTime.now().millisecondsSinceEpoch}',
       'title': title.isNotEmpty ? title : 'Image Announcement',
@@ -171,7 +175,8 @@ class _NotificationsTabState extends State<NotificationsTab> {
       'date': 'Draft',
       'reads': '0 (0%)',
       'ctr': '0.0%',
-      'action_url': _actionUrlController.text.trim(),
+      'action_url': actionUrl,
+      'action_label': actionLabel,
     };
 
     setState(() {
@@ -206,6 +211,9 @@ class _NotificationsTabState extends State<NotificationsTab> {
 
     final displayTitle = title.isNotEmpty ? title : (imageUrl != null ? 'Image Announcement' : 'Notification');
 
+    final actionLabel = _hasActionButton ? _actionLabelController.text.trim() : null;
+    final actionUrl = _hasActionButton ? _actionUrlController.text.trim() : null;
+
     final newItem = {
       'id': newId,
       'title': displayTitle,
@@ -219,7 +227,8 @@ class _NotificationsTabState extends State<NotificationsTab> {
           : 'Just Now',
       'reads': isSched ? 'Pending' : '0 (0%)',
       'ctr': '0.0%',
-      'action_url': _hasActionButton ? _actionUrlController.text.trim() : '',
+      'action_url': actionUrl ?? '',
+      'action_label': actionLabel ?? '',
     };
 
     final client = SupabaseConfig.clientSafe;
@@ -236,7 +245,8 @@ class _NotificationsTabState extends State<NotificationsTab> {
           'type': _notificationType,
           'channel': _selectedChannel,
           'target_segment': _targetAudience,
-          'action_url': _hasActionButton ? _actionUrlController.text.trim() : null,
+          'action_url': actionUrl,
+          'action_label': actionLabel,
           'is_read': false,
           'status': isSched ? 'scheduled' : 'sent',
           'scheduled_at': isSched ? scheduledTime!.toUtc().toIso8601String() : null,
@@ -253,12 +263,13 @@ class _NotificationsTabState extends State<NotificationsTab> {
                 'imageUrl': imageUrl,
                 'targetTopic': _targetAudience == 'all' ? 'all_users' : _targetAudience,
                 'targetSegment': _targetAudience,
-                'actionUrl': _hasActionButton ? _actionUrlController.text.trim() : '/tests',
+                'actionUrl': actionUrl ?? '/tests',
+                'actionLabel': actionLabel ?? 'Open',
                 'notificationId': newId,
                 'data': {
                   'type': _notificationType,
                   'channel': _selectedChannel,
-                  'action_url': _hasActionButton ? _actionUrlController.text.trim() : '/tests',
+                  'action_label': actionLabel ?? '',
                 },
               },
             );

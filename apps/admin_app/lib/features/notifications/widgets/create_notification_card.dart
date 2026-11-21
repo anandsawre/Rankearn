@@ -58,9 +58,91 @@ class CreateNotificationCard extends StatefulWidget {
 }
 
 class _CreateNotificationCardState extends State<CreateNotificationCard> {
+  static const List<Map<String, dynamic>> _userAppTabs = [
+    {
+      'id': '/spin',
+      'label': '🎡 Lucky Wheel (Spin & Win)',
+      'icon': Icons.rotate_right_rounded,
+      'defaultLabel': 'Spin Now',
+    },
+    {
+      'id': '/tests',
+      'label': '📝 Test Series & Quizzes',
+      'icon': Icons.assignment_rounded,
+      'defaultLabel': 'Explore Tests',
+    },
+    {
+      'id': '/live',
+      'label': '⚡ Live Tests & Contests',
+      'icon': Icons.bolt_rounded,
+      'defaultLabel': 'Join Contest',
+    },
+    {
+      'id': '/battle',
+      'label': '⚔️ 1v1 Quiz Battles',
+      'icon': Icons.sports_esports_rounded,
+      'defaultLabel': 'Play Battle',
+    },
+    {
+      'id': '/tournament',
+      'label': '🏆 Tournaments Hub',
+      'icon': Icons.emoji_events_rounded,
+      'defaultLabel': 'View Tournament',
+    },
+    {
+      'id': '/rewards',
+      'label': '🎁 Rewards & Earnings Hub',
+      'icon': Icons.card_giftcard_rounded,
+      'defaultLabel': 'Claim Rewards',
+    },
+    {
+      'id': '/wallet',
+      'label': '💰 Wallet & Coins',
+      'icon': Icons.account_balance_wallet_rounded,
+      'defaultLabel': 'Open Wallet',
+    },
+    {
+      'id': '/leaderboard',
+      'label': '📊 Leaderboard',
+      'icon': Icons.leaderboard_rounded,
+      'defaultLabel': 'View Ranks',
+    },
+    {
+      'id': '/profile',
+      'label': '👤 User Profile',
+      'icon': Icons.person_rounded,
+      'defaultLabel': 'My Profile',
+    },
+    {
+      'id': '/home',
+      'label': '🏠 Home Screen',
+      'icon': Icons.home_rounded,
+      'defaultLabel': 'Open App',
+    },
+    {
+      'id': 'custom',
+      'label': '🔗 Custom Link / External Route',
+      'icon': Icons.link_rounded,
+      'defaultLabel': 'View Details',
+    },
+  ];
+
+  String _selectedRouteTab = '/spin';
+
   @override
   void initState() {
     super.initState();
+    final currentUrl = widget.actionUrlController.text.trim();
+    if (currentUrl.isNotEmpty) {
+      final exists = _userAppTabs.any((t) => t['id'] == currentUrl);
+      _selectedRouteTab = exists ? currentUrl : 'custom';
+    } else {
+      _selectedRouteTab = '/spin';
+      widget.actionUrlController.text = '/spin';
+      if (widget.actionLabelController.text.trim().isEmpty) {
+        widget.actionLabelController.text = 'Spin Now';
+      }
+    }
   }
 
   @override
@@ -399,43 +481,48 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
 
           if (widget.hasActionButton) ...[
             const SizedBox(height: 12),
+            // User App Tab Redirection Dropdown
+            Row(
+              children: [
+                const Icon(Icons.alt_route_rounded, size: 18, color: AppColors.adminPurple),
+                const SizedBox(width: 8),
+                Text(
+                  'Select Redirection Tab in User App',
+                  style: AppTypography.adminFieldLabel.copyWith(fontSize: 12),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            _buildRouteDropdown(),
+            const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {
                 final isTwo = constraints.maxWidth >= 500;
+                final buttonTextField = AppTextField(
+                  controller: widget.actionLabelController,
+                  hintText: 'Button Text (e.g. Spin Now, Join Quiz)',
+                  prefixIcon: const Icon(Icons.smart_button_rounded, size: 20, color: AppColors.adminSecondaryText),
+                );
+                final routeField = AppTextField(
+                  controller: widget.actionUrlController,
+                  hintText: 'Target Route (Auto-selected or enter custom route/URL)',
+                  prefixIcon: const Icon(Icons.link_rounded, size: 20, color: AppColors.adminSecondaryText),
+                );
+
                 if (isTwo) {
                   return Row(
                     children: [
-                      Expanded(
-                        child: AppTextField(
-                          controller: widget.actionLabelController,
-                          hintText: 'Button Text (e.g. Join Now)',
-                          prefixIcon: const Icon(Icons.smart_button_rounded, size: 20, color: AppColors.adminSecondaryText),
-                        ),
-                      ),
+                      Expanded(child: buttonTextField),
                       const SizedBox(width: 14),
-                      Expanded(
-                        child: AppTextField(
-                          controller: widget.actionUrlController,
-                          hintText: 'Target Route (e.g. /tests)',
-                          prefixIcon: const Icon(Icons.link_rounded, size: 20, color: AppColors.adminSecondaryText),
-                        ),
-                      ),
+                      Expanded(child: routeField),
                     ],
                   );
                 }
                 return Column(
                   children: [
-                    AppTextField(
-                      controller: widget.actionLabelController,
-                      hintText: 'Button Text (e.g. Join Now)',
-                      prefixIcon: const Icon(Icons.smart_button_rounded, size: 20, color: AppColors.adminSecondaryText),
-                    ),
+                    buttonTextField,
                     const SizedBox(height: 10),
-                    AppTextField(
-                      controller: widget.actionUrlController,
-                      hintText: 'Target Route (e.g. /tests)',
-                      prefixIcon: const Icon(Icons.link_rounded, size: 20, color: AppColors.adminSecondaryText),
-                    ),
+                    routeField,
                   ],
                 );
               },
@@ -509,6 +596,39 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRouteDropdown() {
+    return AppDropdown<String>(
+      key: const ValueKey('notif_dropdown_redirection_tab'),
+      inlineLabel: false,
+      value: _selectedRouteTab,
+      height: AppSpacing.adminControlHeight,
+      borderRadius: AppRadii.adminControl,
+      items: _userAppTabs.map((t) {
+        return AppDropdownItem<String>(
+          value: t['id'] as String,
+          label: t['label'] as String,
+          icon: t['icon'] as IconData,
+        );
+      }).toList(),
+      onChanged: (val) {
+        if (val == null) return;
+        setState(() {
+          _selectedRouteTab = val;
+          if (val != 'custom') {
+            widget.actionUrlController.text = val;
+            final tab = _userAppTabs.firstWhere((t) => t['id'] == val);
+            final defaultBtn = tab['defaultLabel'] as String;
+            final currentBtn = widget.actionLabelController.text.trim();
+            final isDefault = currentBtn.isEmpty || _userAppTabs.any((t) => t['defaultLabel'] == currentBtn);
+            if (isDefault) {
+              widget.actionLabelController.text = defaultBtn;
+            }
+          }
+        });
+      },
     );
   }
 

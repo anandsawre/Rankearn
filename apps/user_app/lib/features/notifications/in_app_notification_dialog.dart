@@ -44,6 +44,11 @@ class InAppNotificationDialog extends StatelessWidget {
     final type = notification['type']?.toString().toLowerCase() ?? 'alert';
     final hasImage = imageUrl != null && imageUrl.isNotEmpty;
 
+    final rawActionLabel = notification['action_label']?.toString().trim();
+    final actionLabel = (rawActionLabel != null && rawActionLabel.isNotEmpty)
+        ? rawActionLabel
+        : 'View Details';
+
     // Detect if this is an image-only notification (no custom title or description)
     final bool isTitleProvided = rawTitle.isNotEmpty &&
         rawTitle != 'Announcement' &&
@@ -241,7 +246,7 @@ class InAppNotificationDialog extends StatelessWidget {
                               Expanded(
                                 flex: 2,
                                 child: AppButton(
-                                  label: 'View Details',
+                                  label: actionLabel,
                                   variant: AppButtonVariant.primary,
                                   onPressed: () {
                                     Navigator.of(context).pop();

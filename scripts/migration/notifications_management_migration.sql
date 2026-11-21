@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   type VARCHAR(30) NOT NULL DEFAULT 'alert', -- 'alert', 'announcement', 'reminder', 'system'
   channel VARCHAR(20) NOT NULL DEFAULT 'push', -- 'push', 'inapp', 'email'
   action_url TEXT,
+  action_label VARCHAR(100),
   image_url TEXT,
   is_read BOOLEAN NOT NULL DEFAULT false,
   read_by UUID[] DEFAULT '{}',
