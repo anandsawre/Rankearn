@@ -53,10 +53,12 @@ class NotificationPreviewCard extends StatefulWidget {
         borderRadius: AppRadii.adminControl,
         border: Border.all(color: AppColors.adminBorder),
       ),
-      child: IntrinsicHeight(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.center,
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildModeButtonWidget(
               isSelected: mode == NotificationPreviewMode.inAppPopup,
@@ -88,6 +90,7 @@ class NotificationPreviewCard extends StatefulWidget {
       borderRadius: BorderRadius.circular(7),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
+        height: 32,
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
@@ -111,6 +114,7 @@ class NotificationPreviewCard extends StatefulWidget {
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected ? Colors.white : AppColors.adminSecondaryText,
               ),
+              maxLines: 1,
             ),
           ],
         ),

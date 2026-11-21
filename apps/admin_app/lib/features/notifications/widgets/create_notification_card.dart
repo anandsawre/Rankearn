@@ -146,7 +146,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
           maxWidth: 540,
           scrollable: true,
-          fullScreenOnMobile: false,
+          fullScreenOnMobile: true,
           actions: [
             AppButton.adminSecondary(
               label: 'Close Preview',
@@ -346,25 +346,30 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.schedule_send_rounded, size: 20, color: AppColors.adminPurple),
-                  SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Schedule Send',
-                        style: AppTypography.adminFieldLabel,
+              const Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.schedule_send_rounded, size: 20, color: AppColors.adminPurple),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Schedule Send',
+                            style: AppTypography.adminFieldLabel,
+                          ),
+                          Text(
+                            'Send automatically at a scheduled date and time',
+                            style: AppTypography.adminTableSecondary,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Send automatically at a scheduled date and time',
-                        style: AppTypography.adminTableSecondary,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 10),
               AppSwitch.primary(
                 value: widget.isScheduled,
                 onChanged: widget.onScheduleToggled,
@@ -411,25 +416,30 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.image_outlined, size: 20, color: AppColors.adminBlue),
-                  SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Attach Banner Image',
-                        style: AppTypography.adminFieldLabel,
+              const Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.image_outlined, size: 20, color: AppColors.adminBlue),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Attach Banner Image',
+                            style: AppTypography.adminFieldLabel,
+                          ),
+                          Text(
+                            'Display rich image inside push & in-app pop-up',
+                            style: AppTypography.adminTableSecondary,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Display rich image inside push & in-app pop-up',
-                        style: AppTypography.adminTableSecondary,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 10),
               AppSwitch.primary(
                 value: widget.hasImage,
                 onChanged: widget.onImageToggled,
@@ -506,25 +516,30 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.touch_app_rounded, size: 20, color: AppColors.adminSuccess),
-                  SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Add Action Button (CTA)',
-                        style: AppTypography.adminFieldLabel,
+              const Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.touch_app_rounded, size: 20, color: AppColors.adminSuccess),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Add Action Button (CTA)',
+                            style: AppTypography.adminFieldLabel,
+                          ),
+                          Text(
+                            'Attach deep link or web redirect to notification',
+                            style: AppTypography.adminTableSecondary,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Attach deep link or web redirect to notification',
-                        style: AppTypography.adminTableSecondary,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 10),
               AppSwitch.success(
                 value: widget.hasActionButton,
                 onChanged: widget.onActionButtonToggled,
@@ -539,9 +554,12 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
               children: [
                 const Icon(Icons.alt_route_rounded, size: 18, color: AppColors.adminPurple),
                 const SizedBox(width: 8),
-                Text(
-                  'Select Redirection Tab in User App',
-                  style: AppTypography.adminFieldLabel.copyWith(fontSize: 12),
+                Expanded(
+                  child: Text(
+                    'Select Redirection Tab in User App',
+                    style: AppTypography.adminFieldLabel.copyWith(fontSize: 12),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -683,34 +701,40 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.devices_rounded, size: 18, color: AppColors.adminPurple),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Live Candidate Device Preview',
-                        style: AppTypography.adminFieldLabel.copyWith(
-                          color: AppColors.adminPurple,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.adminPurple,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          _showInlinePreview ? 'Interactive Mode' : 'Click to preview',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.devices_rounded, size: 18, color: AppColors.adminPurple),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'Live Candidate Device Preview',
+                            style: AppTypography.adminFieldLabel.copyWith(
+                              color: AppColors.adminPurple,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.adminPurple,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            _showInlinePreview ? 'Interactive Mode' : 'Click to preview',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Icon(
                     _showInlinePreview

@@ -88,6 +88,7 @@ void main() {
 
     final previewButton = find.text('Preview Device');
     expect(previewButton, findsOneWidget);
+    await tester.ensureVisible(previewButton);
     await tester.tap(previewButton);
     await tester.pumpAndSettle();
 
@@ -95,7 +96,6 @@ void main() {
     expect(find.text('Live Device Simulator'), findsOneWidget);
     expect(find.text('Close Preview'), findsOneWidget);
 
-    // Switcher is in modal actions to the right of Close Preview button
     final pushModeBtn = find.descendant(
       of: find.byType(AppModalDialog),
       matching: find.text('Push Notification'),
@@ -105,6 +105,66 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('RANKEARN'), findsOneWidget);
+  });
+
+  testWidgets('Mobile full-screen mode opens without margin gaps or overflows', (tester) async {
+    final titleController = TextEditingController(text: 'Mobile Push Alert');
+    final messageController = TextEditingController(text: 'Test full screen preview modal on mobile device viewport.');
+    final imageUrlController = TextEditingController();
+    final actionLabelController = TextEditingController(text: 'Open');
+    final actionUrlController = TextEditingController(text: '/home');
+
+    // Simulate standard mobile viewport (< 640px)
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: CreateNotificationCard(
+              titleController: titleController,
+              messageController: messageController,
+              actionLabelController: actionLabelController,
+              actionUrlController: actionUrlController,
+              selectedChannel: 'push',
+              onChannelChanged: (_) {},
+              targetAudience: 'all',
+              onAudienceChanged: (_) {},
+              notificationType: 'alert',
+              onTypeChanged: (_) {},
+              isScheduled: false,
+              onScheduleToggled: (_) {},
+              scheduledDateTime: null,
+              onDateTimeChanged: (_) {},
+              hasImage: false,
+              onImageToggled: (_) {},
+              imageUrlController: imageUrlController,
+              hasActionButton: true,
+              onActionButtonToggled: (_) {},
+              isSubmitting: false,
+              onSendNow: () {},
+              onSaveDraft: () {},
+              onReset: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final previewButton = find.text('Preview Device');
+    expect(previewButton, findsOneWidget);
+    await tester.ensureVisible(previewButton);
+    await tester.tap(previewButton);
+    await tester.pumpAndSettle();
+
+    // Verify modal is open full-screen and renders contents cleanly
+    expect(find.text('Candidate Device Simulator'), findsOneWidget);
+    expect(find.text('Close Preview'), findsOneWidget);
+    expect(find.text('Push Notification'), findsWidgets);
   });
 
   testWidgets('NotificationPreviewCard renders at narrow 320px width without any overflow', (tester) async {
