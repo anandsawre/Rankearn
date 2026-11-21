@@ -19,7 +19,8 @@ class NotificationsRepository {
     try {
       var query = client.from('notifications').select();
       if (onlyActive) {
-        query = query.neq('status', 'scheduled').neq('status', 'draft');
+        final nowIso = DateTime.now().toUtc().toIso8601String();
+        query = query.or('status.eq.sent,and(status.eq.scheduled,scheduled_at.lte.$nowIso)');
       }
       final res = await query.order('created_at', ascending: false).limit(limit);
 
@@ -30,7 +31,7 @@ class NotificationsRepository {
     }
   }
 
-  /// Realtime Stream of incoming notifications
+  /// Realtime Stream of incoming notifications (handles both instant and due scheduled updates)
   Stream<Map<String, dynamic>> streamIncomingNotifications() {
     final client = _effectiveClient;
     if (client == null) return const Stream.empty();
@@ -40,15 +41,19 @@ class NotificationsRepository {
     try {
       final channel = client.channel('public:notifications_realtime');
       channel.onPostgresChanges(
-        event: PostgresChangeEvent.insert,
+        event: PostgresChangeEvent.all,
         schema: 'public',
         table: 'notifications',
         callback: (payload) {
           final record = payload.newRecord;
           if (record.isNotEmpty && !controller.isClosed) {
             final status = (record['status'] ?? 'sent').toString().toLowerCase();
-            // Only deliver active sent broadcasts (ignore scheduled / drafts)
-            if (status != 'scheduled' && status != 'draft') {
+            final scheduledAtStr = record['scheduled_at']?.toString();
+            final isDue = scheduledAtStr == null ||
+                (DateTime.tryParse(scheduledAtStr)?.isBefore(DateTime.now().toUtc()) ?? true);
+
+            // Only deliver active sent broadcasts or due scheduled items (ignore pending scheduled / drafts)
+            if (status == 'sent' || (status == 'scheduled' && isDue)) {
               controller.add(Map<String, dynamic>.from(record));
             }
           }

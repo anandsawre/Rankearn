@@ -11,8 +11,10 @@ const corsHeaders = {
 };
 
 interface PushNotificationPayload {
-  title: string;
-  body: string;
+  action?: string; // "process_scheduled"
+  mode?: string;
+  title?: string;
+  body?: string;
   imageUrl?: string;
   targetTopic?: string; // e.g. "all_users", "students", "teachers"
   targetTokens?: string[]; // Specific FCM device tokens
@@ -164,6 +166,134 @@ serve(async (req: Request) => {
     const adminClient = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey);
 
     const payload: PushNotificationPayload = await req.json();
+
+    // -------------------------------------------------------------
+    // AUTOMATED SCHEDULED NOTIFICATIONS DISPATCHER
+    // Processes all due scheduled notifications even when apps are closed
+    // -------------------------------------------------------------
+    if (payload.action === "process_scheduled" || payload.mode === "process_scheduled") {
+      const nowIso = new Date().toISOString();
+      const { data: dueNotifications, error: fetchErr } = await adminClient
+        .from("notifications")
+        .select("*")
+        .eq("status", "scheduled")
+        .not("scheduled_at", "is", null)
+        .lte("scheduled_at", nowIso);
+
+      if (fetchErr) {
+        return new Response(JSON.stringify({ error: fetchErr.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const processed: any[] = [];
+      const sa = getServiceAccount();
+      let accessToken = "";
+      try {
+        accessToken = await getGoogleOAuth2Token(sa);
+      } catch (authErr) {
+        console.warn("FCM OAuth token generation notice:", authErr);
+      }
+
+      for (const item of (dueNotifications || [])) {
+        // 1. Mark as 'sent' and update timestamp to now (triggers Realtime in-app alerts on active devices)
+        await adminClient
+          .from("notifications")
+          .update({
+            status: "sent",
+            created_at: nowIso,
+          })
+          .eq("id", item.id);
+
+        let fcmStatus = "skipped_or_not_push";
+
+        // 2. If channel is 'push', dispatch Google FCM v1 notification to device tokens / topic
+        if (item.channel === "push" && accessToken) {
+          try {
+            const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
+            const topicName = (item.target_segment || "all_users")
+              .toLowerCase()
+              .replace(/[^a-zA-Z0-9-_.~%]/g, "_");
+
+            const notificationPayload = {
+              title: item.title,
+              body: item.message,
+              ...(item.image_url ? { image: item.image_url } : {}),
+            };
+
+            const dataPayload = {
+              notification_id: item.id,
+              action_url: item.action_url || "/tests",
+              image_url: item.image_url || "",
+              type: item.type || "alert",
+              channel: item.channel,
+              action_label: item.action_label || "Open",
+            };
+
+            const fcmRes = await fetch(fcmEndpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                message: {
+                  topic: topicName === "all" ? "all_users" : topicName,
+                  notification: notificationPayload,
+                  data: dataPayload,
+                  android: {
+                    priority: "high",
+                    notification: {
+                      channel_id: "rankearn_broadcasts",
+                      sound: "default",
+                      default_vibrate_timings: true,
+                      ...(item.image_url ? { notification_priority: "PRIORITY_HIGH" } : {}),
+                    },
+                  },
+                  webpush: {
+                    headers: { Urgency: "high" },
+                    notification: {
+                      title: item.title,
+                      body: item.message,
+                      icon: "/icons/Icon-192.png",
+                      ...(item.image_url ? { image: item.image_url } : {}),
+                    },
+                    fcm_options: {
+                      link: item.action_url || "/tests",
+                    },
+                  },
+                },
+              }),
+            });
+
+            fcmStatus = fcmRes.status === 200 ? "dispatched" : `fcm_status_${fcmRes.status}`;
+          } catch (e: any) {
+            fcmStatus = `fcm_err_${e.message}`;
+          }
+        }
+
+        processed.push({
+          id: item.id,
+          title: item.title,
+          channel: item.channel,
+          fcm: fcmStatus,
+        });
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          processedCount: processed.length,
+          items: processed,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const {
       title,
       body,
