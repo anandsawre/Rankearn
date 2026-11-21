@@ -513,6 +513,43 @@ class _NotificationsTabState extends State<NotificationsTab> {
     }
   }
 
+  void _handleBulkDelete(List<String> ids) async {
+    if (ids.isEmpty) return;
+    final confirmed = await AppModalDialog.confirm(
+      context: context,
+      title: 'Delete Selected Notifications',
+      subtitle: 'Permanent bulk deletion warning',
+      message: 'Are you sure you want to delete ${ids.length} selected notification${ids.length > 1 ? "s" : ""}? This action cannot be undone.',
+      confirmLabel: 'Delete All Selected',
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+
+    setState(() {
+      _history.removeWhere((x) => ids.contains(x['id']?.toString()));
+    });
+
+    final client = SupabaseConfig.clientSafe;
+    if (client != null) {
+      final validIds = ids.where((id) => !id.startsWith('draft-')).toList();
+      if (validIds.isNotEmpty) {
+        try {
+          await client.from('notifications').delete().inFilter('id', validIds);
+        } catch (err) {
+          debugPrint('Bulk delete error: $err');
+        }
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully deleted ${ids.length} notification${ids.length > 1 ? "s" : ""}'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -686,6 +723,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
               );
             },
             onDelete: _deleteNotification,
+            onBulkDelete: _handleBulkDelete,
           ),
         ],
       ),

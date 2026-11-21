@@ -422,4 +422,87 @@ void main() {
     expect(find.byType(AppDropdown<String>), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('NotificationsDataTable supports checkbox selection and bulk delete action', (tester) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final mockHistory = [
+      {
+        'id': 'notif-1',
+        'title': 'Grand Scholarship Test',
+        'body': 'Win up to 100% scholarship',
+        'segment': 'All Users',
+        'type': 'alert',
+        'status': 'sent',
+        'date': '2026-11-15',
+        'reads': '1.8k',
+        'ctr': '28.4%',
+      },
+      {
+        'id': 'notif-2',
+        'title': 'Weekend Mock Exam',
+        'body': 'Compete with peers',
+        'segment': 'Students',
+        'type': 'contest',
+        'status': 'scheduled',
+        'date': '2026-11-16',
+        'reads': '0',
+        'ctr': '0.0%',
+      },
+    ];
+
+    List<String>? deletedIds;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: NotificationsDataTable(
+              notifications: mockHistory,
+              isLoading: false,
+              onBulkDelete: (ids) {
+                deletedIds = ids;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Checkboxes are rendered (1 header + 2 rows = 3 checkboxes)
+    final checkboxes = find.byType(Checkbox);
+    expect(checkboxes, findsNWidgets(3));
+
+    // Initially bulk actions are not visible
+    expect(find.text('Delete Selected (1)'), findsNothing);
+
+    // Tap first row checkbox (index 1 is the first row checkbox, index 0 is header)
+    await tester.tap(checkboxes.at(1));
+    await tester.pumpAndSettle();
+
+    // Bulk actions should appear with "1 Selected" and "Delete Selected (1)"
+    expect(find.text('1 Selected'), findsOneWidget);
+    expect(find.text('Delete Selected (1)'), findsOneWidget);
+
+    // Tap header checkbox (index 0) to select all
+    await tester.tap(find.byType(Checkbox).first);
+    await tester.pumpAndSettle();
+
+    // Now all 2 items are selected
+    expect(find.text('2 Selected'), findsOneWidget);
+    expect(find.text('Delete Selected (2)'), findsOneWidget);
+
+    // Tap Delete Selected button
+    await tester.tap(find.text('Delete Selected (2)'));
+    await tester.pumpAndSettle();
+
+    // Verify callback was called with both IDs
+    expect(deletedIds, isNotNull);
+    expect(deletedIds, containsAll(['notif-1', 'notif-2']));
+
+    expect(tester.takeException(), isNull);
+  });
 }

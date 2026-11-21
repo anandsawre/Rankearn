@@ -8,6 +8,7 @@ class NotificationsDataTable extends StatefulWidget {
   final void Function(Map<String, dynamic> item)? onEdit;
   final void Function(Map<String, dynamic> item)? onDuplicate;
   final void Function(Map<String, dynamic> item)? onDelete;
+  final void Function(List<String> ids)? onBulkDelete;
 
   const NotificationsDataTable({
     super.key,
@@ -17,6 +18,7 @@ class NotificationsDataTable extends StatefulWidget {
     this.onEdit,
     this.onDuplicate,
     this.onDelete,
+    this.onBulkDelete,
   });
 
   @override
@@ -28,6 +30,55 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
   String _searchQuery = '';
   int _currentPage = 1;
   final int _rowsPerPage = 8;
+  final Set<String> _selectedIds = {};
+
+  @override
+  void didUpdateWidget(covariant NotificationsDataTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final currentIds = widget.notifications
+        .map((e) => e['id']?.toString() ?? '')
+        .toSet();
+    _selectedIds.removeWhere((id) => !currentIds.contains(id));
+  }
+
+  bool? _getSelectAllState(List<Map<String, dynamic>> pagedItems) {
+    if (pagedItems.isEmpty) return false;
+    final pageIds = pagedItems
+        .map((e) => e['id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    if (pageIds.isEmpty) return false;
+    final selectedCount = pageIds.where((id) => _selectedIds.contains(id)).length;
+    if (selectedCount == 0) return false;
+    if (selectedCount == pageIds.length) return true;
+    return null; // Tristate indeterminate (dash)
+  }
+
+  void _toggleSelectAll(List<Map<String, dynamic>> pagedItems) {
+    setState(() {
+      final pageIds = pagedItems
+          .map((e) => e['id']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toList();
+      final allSelected = pageIds.isNotEmpty && pageIds.every((id) => _selectedIds.contains(id));
+      if (allSelected) {
+        _selectedIds.removeAll(pageIds);
+      } else {
+        _selectedIds.addAll(pageIds);
+      }
+    });
+  }
+
+  void _toggleRow(String id) {
+    if (id.isEmpty) return;
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
 
   List<Map<String, dynamic>> get _filteredList {
     return widget.notifications.where((n) {
@@ -78,9 +129,66 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
       rowsPerPage: _rowsPerPage,
       onPageChanged: (page) => setState(() => _currentPage = page),
       itemLabel: 'notifications',
-      minWidth: 920.0,
+      minWidth: 980.0,
       isLoading: widget.isLoading,
       emptyWidget: _buildEmptyState(),
+      headerActions: _selectedIds.isEmpty
+          ? null
+          : [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.brandPurple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppColors.brandPurple.withValues(alpha: 0.25)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.brandPurple),
+                    const SizedBox(width: 5),
+                    Text(
+                      '${_selectedIds.length} Selected',
+                      style: const TextStyle(
+                        fontFamily: AppTypography.fontBody,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.brandPurple,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AppButton(
+                label: 'Delete Selected (${_selectedIds.length})',
+                variant: AppButtonVariant.destructive,
+                height: 32,
+                leadingIcon: const Icon(Icons.delete_outline_rounded, size: 14, color: Colors.white),
+                borderRadius: BorderRadius.circular(6),
+                onPressed: () {
+                  final idsToDelete = _selectedIds.toList();
+                  widget.onBulkDelete?.call(idsToDelete);
+                },
+              ),
+              Tooltip(
+                message: 'Deselect all',
+                child: InkWell(
+                  onTap: () => setState(() => _selectedIds.clear()),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    height: 32,
+                    width: 32,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.adminBackground,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.adminBorder),
+                    ),
+                    child: const Icon(Icons.close_rounded, size: 16, color: AppColors.adminSecondaryText),
+                  ),
+                ),
+              ),
+            ],
       filterControls: [
         AdminTableDropdown<String>(
           value: _activeTab,
@@ -106,17 +214,34 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
           }),
         ),
       ],
-      columns: const [
-        DataColumn(label: Text('NOTIFICATION', style: AppTypography.adminTableHead)),
-        DataColumn(label: Text('TYPE', style: AppTypography.adminTableHead)),
-        DataColumn(label: Text('AUDIENCE', style: AppTypography.adminTableHead)),
-        DataColumn(label: Text('STATUS', style: AppTypography.adminTableHead)),
-        DataColumn(label: Text('SENT / SCHEDULE', style: AppTypography.adminTableHead)),
-        DataColumn(label: Text('READS', style: AppTypography.adminTableHead)),
-        DataColumn(label: Text('CTR', style: AppTypography.adminTableHead)),
-        DataColumn(label: Text('ACTIONS', style: AppTypography.adminTableHead)),
+      columns: [
+        DataColumn(
+          label: SizedBox(
+            width: 24,
+            child: Checkbox(
+              value: _getSelectAllState(pagedItems),
+              tristate: true,
+              onChanged: pagedItems.isEmpty
+                  ? null
+                  : (_) => _toggleSelectAll(pagedItems),
+              activeColor: AppColors.brandPurple,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ),
+        const DataColumn(label: Text('NOTIFICATION', style: AppTypography.adminTableHead)),
+        const DataColumn(label: Text('TYPE', style: AppTypography.adminTableHead)),
+        const DataColumn(label: Text('AUDIENCE', style: AppTypography.adminTableHead)),
+        const DataColumn(label: Text('STATUS', style: AppTypography.adminTableHead)),
+        const DataColumn(label: Text('SENT / SCHEDULE', style: AppTypography.adminTableHead)),
+        const DataColumn(label: Text('READS', style: AppTypography.adminTableHead)),
+        const DataColumn(label: Text('CTR', style: AppTypography.adminTableHead)),
+        const DataColumn(label: Text('ACTIONS', style: AppTypography.adminTableHead)),
       ],
       rows: pagedItems.map((item) {
+        final id = item['id']?.toString() ?? '';
+        final isChecked = id.isNotEmpty && _selectedIds.contains(id);
         final title = item['title']?.toString() ?? 'Notification';
         final body = item['body']?.toString() ?? '';
         final type = item['type']?.toString() ?? 'info';
@@ -127,7 +252,22 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
         final ctr = item['ctr']?.toString() ?? '24.5%';
 
         return DataRow(
+          selected: isChecked,
+          onSelectChanged: id.isEmpty ? null : (_) => _toggleRow(id),
           cells: [
+            // Checkbox
+            DataCell(
+              SizedBox(
+                width: 24,
+                child: Checkbox(
+                  value: isChecked,
+                  activeColor: AppColors.brandPurple,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: id.isEmpty ? null : (_) => _toggleRow(id),
+                ),
+              ),
+            ),
             // Notification Title & Message
             DataCell(
               SizedBox(
