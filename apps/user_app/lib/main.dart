@@ -882,191 +882,205 @@ class _UserAppShellState extends State<UserAppShell> {
 
   void _openNotificationsModal() {
     setState(() => _unreadNotifications = 0);
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
       builder: (context) {
-        return Material(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          clipBehavior: Clip.antiAlias,
-          child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.75,
+        return AppBottomSheet(
+          showDragHandle: true,
+          showCloseButton: true,
+          scrollable: false,
+          maxHeightRatio: 0.85,
+          title: 'Notifications',
+          subtitle: _notificationsList.isNotEmpty
+              ? '${_notificationsList.length} updates & alerts'
+              : 'Stay up to date with broadcasts',
+          leadingIcon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: const BoxDecoration(
+              color: AppColors.primarySubtle,
+              borderRadius: AppRadii.borderMd,
             ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: const [
-                      Icon(
-                        Icons.notifications_active,
-                        color: AppColors.primary,
-                      ),
-                      SizedBox(width: 8),
-                      Text('Notifications', style: AppTypography.titleLarge),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const Divider(),
-              if (_notificationsList.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 36),
+            child: const Icon(
+              Icons.notifications_active_rounded,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
+          bottomAction: AppButton(
+            label: 'Close',
+            variant: AppButtonVariant.secondary,
+            fullWidth: true,
+            onPressed: () => Navigator.pop(context),
+          ),
+          child: _notificationsList.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Center(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: const [
-                        Icon(Icons.notifications_off_outlined, size: 40, color: AppColors.textMuted),
-                        SizedBox(height: 8),
+                        Icon(Icons.notifications_off_outlined, size: 44, color: AppColors.textMuted),
+                        SizedBox(height: 10),
                         Text(
                           'No notifications yet',
-                          style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                          style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textSecondary, fontSize: 14),
                         ),
                       ],
                     ),
                   ),
                 )
-              else
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: _notificationsList.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final n = _notificationsList[index];
-                      final title = n['title']?.toString() ?? 'Announcement';
-                      final message = n['message']?.toString() ?? '';
-                      final actionUrl = n['action_url']?.toString();
-                      final rawActionLabel = n['action_label']?.toString().trim();
-                      final actionLabel = (rawActionLabel != null && rawActionLabel.isNotEmpty) ? rawActionLabel : 'View';
-                      final imageUrl = n['image_url']?.toString();
-                      final notifId = n['id']?.toString() ?? '';
-                      final isRead = n['is_read'] == true;
-                      final type = n['type']?.toString() ?? 'alert';
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: _notificationsList.length,
+                  separatorBuilder: (_, _) => const Divider(
+                    color: AppColors.borderSubtle,
+                    height: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    final n = _notificationsList[index];
+                    final title = n['title']?.toString() ?? 'Announcement';
+                    final message = n['message']?.toString() ?? '';
+                    final actionUrl = n['action_url']?.toString();
+                    final rawActionLabel = n['action_label']?.toString().trim();
+                    final actionLabel = (rawActionLabel != null && rawActionLabel.isNotEmpty) ? rawActionLabel : 'View';
+                    final imageUrl = n['image_url']?.toString();
+                    final notifId = n['id']?.toString() ?? '';
+                    final isRead = n['is_read'] == true;
+                    final type = n['type']?.toString() ?? 'alert';
 
-                      IconData icon = Icons.notifications_rounded;
-                      Color iconColor = AppColors.primary;
-                      Color iconBg = AppColors.primarySubtle;
+                    IconData icon = Icons.notifications_rounded;
+                    Color iconColor = AppColors.primary;
+                    Color iconBg = AppColors.primarySubtle;
 
-                      if (type == 'alert' || type == 'high') {
-                        icon = Icons.campaign_rounded;
-                        iconColor = const Color(0xFFD97706);
-                        iconBg = const Color(0xFFFEF3C7);
-                      } else if (type == 'system') {
-                        icon = Icons.info_outline_rounded;
-                        iconColor = const Color(0xFF2563EB);
-                        iconBg = const Color(0xFFEFF6FF);
-                      }
+                    if (type == 'alert' || type == 'high') {
+                      icon = Icons.campaign_rounded;
+                      iconColor = const Color(0xFFD97706);
+                      iconBg = const Color(0xFFFEF3C7);
+                    } else if (type == 'system') {
+                      icon = Icons.info_outline_rounded;
+                      iconColor = const Color(0xFF2563EB);
+                      iconBg = const Color(0xFFEFF6FF);
+                    }
 
-                      Widget leadingWidget;
-                      if (imageUrl != null && imageUrl.isNotEmpty) {
-                        leadingWidget = ClipRRect(
-                          borderRadius: AppRadii.borderMd,
-                          child: SizedBox(
-                            width: 44,
-                            height: 44,
-                            child: Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (ctx, err, stack) => Container(
-                                padding: const EdgeInsets.all(8),
-                                color: iconBg,
-                                child: Icon(icon, color: iconColor, size: 20),
-                              ),
+                    Widget leadingWidget;
+                    if (imageUrl != null && imageUrl.isNotEmpty) {
+                      leadingWidget = ClipRRect(
+                        borderRadius: AppRadii.borderMd,
+                        child: SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) => Container(
+                              padding: const EdgeInsets.all(8),
+                              color: iconBg,
+                              child: Icon(icon, color: iconColor, size: 20),
                             ),
                           ),
-                        );
-                      } else {
-                        leadingWidget = Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: iconBg,
-                            borderRadius: AppRadii.borderMd,
-                          ),
-                          child: Icon(icon, color: iconColor, size: 20),
-                        );
-                      }
-
-                      return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                        leading: leadingWidget,
-                        title: Text(
-                          title,
-                          style: TextStyle(
-                            fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
-                            fontSize: 14,
-                            color: AppColors.textPrimary,
-                          ),
                         ),
-                        subtitle: message.isNotEmpty
-                            ? Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: Text(
-                                  message,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              )
-                            : null,
-                        trailing: (actionUrl != null && actionUrl.isNotEmpty)
-                            ? TextButton(
+                      );
+                    } else {
+                      leadingWidget = Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: iconBg,
+                          borderRadius: AppRadii.borderMd,
+                        ),
+                        child: Icon(icon, color: iconColor, size: 20),
+                      );
+                    }
+
+                    return InkWell(
+                      onTap: () {
+                        _notificationsRepo.markRead(notifId, userId: _profile.id);
+                        Navigator.pop(context);
+                        InAppNotificationDialog.show(
+                          context: context,
+                          notification: n,
+                          onAction: (url) {
+                            _notificationsRepo.recordClick(notifId);
+                            _handleNotificationUrl(url);
+                          },
+                        );
+                      },
+                      borderRadius: AppRadii.borderMd,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            leadingWidget,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          title,
+                                          style: TextStyle(
+                                            fontWeight: isRead ? FontWeight.w600 : FontWeight.w800,
+                                            fontSize: 14,
+                                            color: AppColors.textPrimary,
+                                            letterSpacing: -0.2,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (!isRead) ...[
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          width: 7,
+                                          height: 7,
+                                          decoration: const BoxDecoration(
+                                            color: AppColors.primary,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  if (message.isNotEmpty) ...[
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      message,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                        height: 1.35,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            if (actionUrl != null && actionUrl.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              AppButton(
+                                label: actionLabel,
+                                size: AppButtonSize.small,
+                                variant: AppButtonVariant.primary,
                                 onPressed: () {
                                   Navigator.pop(context);
                                   _notificationsRepo.recordClick(notifId);
                                   _handleNotificationUrl(actionUrl);
                                 },
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(
-                                  actionLabel,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              )
-                            : null,
-                        onTap: () {
-                          _notificationsRepo.markRead(notifId, userId: _profile.id);
-                          Navigator.pop(context);
-                          InAppNotificationDialog.show(
-                            context: context,
-                            notification: n,
-                            onAction: (url) {
-                              _notificationsRepo.recordClick(notifId);
-                              _handleNotificationUrl(url);
-                            },
-                          );
-                        },
-                      );
-                    },
-                  ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              const SizedBox(height: 12),
-              AppButton(
-                label: 'Close',
-                variant: AppButtonVariant.secondary,
-                fullWidth: true,
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          ),
         );
       },
     );
