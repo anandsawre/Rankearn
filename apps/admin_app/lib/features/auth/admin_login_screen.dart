@@ -261,7 +261,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           return Stack(
             children: [
               // 1. Pixel-Accurate Fluid Background Waves matching reference
-              const AdminBackgroundWaves(),
+              AdminBackgroundWaves(isDesktop: isDesktop),
 
               // 2. Main Responsive Layout (Locks scrolling on desktop when fitting viewport)
               SafeArea(
@@ -345,6 +345,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                 _buildRightLoginCard(hFactor, vScale),
                                 const SizedBox(height: 24),
                                 _buildLeftHeroSectionStacked(hFactor, vScale),
+                                const SizedBox(height: 24),
                               ],
                             ),
                         ],

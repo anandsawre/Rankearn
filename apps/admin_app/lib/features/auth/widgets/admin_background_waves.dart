@@ -9,19 +9,27 @@ import 'package:flutter/material.dart';
 /// - Crisp Luminous Wave Crest Highlights (Neon Edge Sheen)
 /// - Modern Tech Grid Matrix and Bokeh Floating Light Accents
 class AdminBackgroundWaves extends StatelessWidget {
-  const AdminBackgroundWaves({super.key});
+  final bool isDesktop;
+
+  const AdminBackgroundWaves({
+    super.key,
+    this.isDesktop = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: CustomPaint(
-        painter: _AdminBackgroundWavesPainter(),
+        painter: _AdminBackgroundWavesPainter(isDesktop: isDesktop),
       ),
     );
   }
 }
 
 class _AdminBackgroundWavesPainter extends CustomPainter {
+  final bool isDesktop;
+
+  const _AdminBackgroundWavesPainter({this.isDesktop = true});
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
@@ -311,66 +319,129 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
     canvas.drawPath(wave3Crest, wave3CrestPaint);
 
     // =========================================================================
-    // 7. WAVE LAYER 4: Pristine Foreground Horizon Wave (Cradles Stats & Quote)
+    // 7. WAVE LAYER 4: Pristine Foreground Horizon Wave (Desktop) / Fluid Ocean (Mobile)
+    // On mobile, the background design extends seamlessly to the bottom
+    // eliminating any stark white cut-off space.
     // =========================================================================
-    final wave4 = Path()
-      ..moveTo(0, h * 0.79)
-      ..cubicTo(
-        w * 0.28, h * 0.74,
-        w * 0.52, h * 0.82,
-        w * 0.75, h * 0.77,
-      )
-      ..cubicTo(
-        w * 0.88, h * 0.74,
-        w * 0.95, h * 0.80,
-        w, h * 0.83,
-      )
-      ..lineTo(w, h)
-      ..lineTo(0, h)
-      ..close();
+    if (isDesktop) {
+      final wave4 = Path()
+        ..moveTo(0, h * 0.79)
+        ..cubicTo(
+          w * 0.28, h * 0.74,
+          w * 0.52, h * 0.82,
+          w * 0.75, h * 0.77,
+        )
+        ..cubicTo(
+          w * 0.88, h * 0.74,
+          w * 0.95, h * 0.80,
+          w, h * 0.83,
+        )
+        ..lineTo(w, h)
+        ..lineTo(0, h)
+        ..close();
 
-    // High-end diffused elevation shadow for foreground wave
-    canvas.drawShadow(wave4, const Color(0x180F172A), 36, true);
+      // High-end diffused elevation shadow for foreground wave
+      canvas.drawShadow(wave4, const Color(0x180F172A), 36, true);
 
-    final wave4Paint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Color(0xFFFAFCFF),
-          Color(0xFFF1F6FE),
-          Color(0xFFE6EEFC),
-        ],
-        stops: [0.0, 0.45, 1.0],
-      ).createShader(Rect.fromLTWH(0, h * 0.74, w, h * 0.26));
-    canvas.drawPath(wave4, wave4Paint);
+      final wave4Paint = Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFFAFCFF),
+            Color(0xFFF1F6FE),
+            Color(0xFFE6EEFC),
+          ],
+          stops: [0.0, 0.45, 1.0],
+        ).createShader(Rect.fromLTWH(0, h * 0.74, w, h * 0.26));
+      canvas.drawPath(wave4, wave4Paint);
 
-    // Wave 4 Pure Glass Edge Sheen
-    final wave4Crest = Path()
-      ..moveTo(0, h * 0.79)
-      ..cubicTo(
-        w * 0.28, h * 0.74,
-        w * 0.52, h * 0.82,
-        w * 0.75, h * 0.77,
-      )
-      ..cubicTo(
-        w * 0.88, h * 0.74,
-        w * 0.95, h * 0.80,
-        w, h * 0.83,
-      );
+      // Wave 4 Pure Glass Edge Sheen
+      final wave4Crest = Path()
+        ..moveTo(0, h * 0.79)
+        ..cubicTo(
+          w * 0.28, h * 0.74,
+          w * 0.52, h * 0.82,
+          w * 0.75, h * 0.77,
+        )
+        ..cubicTo(
+          w * 0.88, h * 0.74,
+          w * 0.95, h * 0.80,
+          w, h * 0.83,
+        );
 
-    final wave4CrestPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..shader = LinearGradient(
-        colors: [
-          Colors.white,
-          const Color(0xFFC7D2FE).withAlpha(180),
-          Colors.white,
-        ],
-        stops: const [0.0, 0.5, 1.0],
-      ).createShader(Rect.fromLTWH(0, h * 0.74, w, 15));
-    canvas.drawPath(wave4Crest, wave4CrestPaint);
+      final wave4CrestPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..shader = LinearGradient(
+          colors: [
+            Colors.white,
+            const Color(0xFFC7D2FE).withAlpha(180),
+            Colors.white,
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ).createShader(Rect.fromLTWH(0, h * 0.74, w, 15));
+      canvas.drawPath(wave4Crest, wave4CrestPaint);
+    } else {
+      // Mobile: Rich fluid wave extension carrying the indigo/periwinkle theme into the bottom area
+      final mobileWave = Path()
+        ..moveTo(0, h * 0.78)
+        ..cubicTo(
+          w * 0.28, h * 0.72,
+          w * 0.55, h * 0.82,
+          w * 0.78, h * 0.76,
+        )
+        ..cubicTo(
+          w * 0.88, h * 0.73,
+          w * 0.96, h * 0.79,
+          w, h * 0.82,
+        )
+        ..lineTo(w, h)
+        ..lineTo(0, h)
+        ..close();
+
+      canvas.drawShadow(mobileWave, const Color(0x184F46E5), 24, true);
+
+      final mobileWavePaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFF6366F1).withAlpha(140),
+            const Color(0xFF818CF8).withAlpha(150),
+            const Color(0xFF93C5FD).withAlpha(130),
+            const Color(0xFFA5B4FC).withAlpha(150),
+          ],
+          stops: const [0.0, 0.35, 0.70, 1.0],
+        ).createShader(Rect.fromLTWH(0, h * 0.72, w, h * 0.28));
+      canvas.drawPath(mobileWave, mobileWavePaint);
+
+      final mobileCrest = Path()
+        ..moveTo(0, h * 0.78)
+        ..cubicTo(
+          w * 0.28, h * 0.72,
+          w * 0.55, h * 0.82,
+          w * 0.78, h * 0.76,
+        )
+        ..cubicTo(
+          w * 0.88, h * 0.73,
+          w * 0.96, h * 0.79,
+          w, h * 0.82,
+        );
+
+      final mobileCrestPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..shader = LinearGradient(
+          colors: [
+            Colors.white.withAlpha(220),
+            const Color(0xFF818CF8).withAlpha(180),
+            Colors.white.withAlpha(200),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ).createShader(Rect.fromLTWH(0, h * 0.72, w, 15));
+      canvas.drawPath(mobileCrest, mobileCrestPaint);
+    }
 
     // =========================================================================
     // 8. HAIRLINE VECTOR CONTOURS (Modern Tech Wave Lines)
@@ -466,5 +537,6 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _AdminBackgroundWavesPainter oldDelegate) =>
+      oldDelegate.isDesktop != isDesktop;
 }
