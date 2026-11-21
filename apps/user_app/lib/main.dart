@@ -1631,6 +1631,9 @@ class _UserSupportChatDialogState extends State<_UserSupportChatDialog> {
         .stream(primaryKey: ['id'])
         .eq('ticket_id', ticketId)
         .order('created_at', ascending: true)
+        .handleError((err) {
+          debugPrint('User app support messages stream notice: $err');
+        })
         .listen(
       (data) {
         if (!mounted) return;

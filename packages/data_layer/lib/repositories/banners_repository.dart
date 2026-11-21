@@ -44,16 +44,23 @@ class BannersRepository {
       return const Stream.empty();
     }
 
-    return client
-        .from('app_banners')
-        .stream(primaryKey: ['id'])
-        .eq('is_active', true)
-        .order('priority', ascending: true)
-        .map((rows) {
-          final all = rows.map((e) => BannerModel.fromJson(e)).toList();
-          if (displayMode == null) return all;
-          return all.where((b) => b.displayMode == displayMode).toList();
-        });
+    try {
+      return client
+          .from('app_banners')
+          .stream(primaryKey: ['id'])
+          .eq('is_active', true)
+          .order('priority', ascending: true)
+          .handleError((_) {
+            // Silently swallow websocket close/reconnect errors (e.g. code 1006 on web or unconfigured publication)
+          })
+          .map((rows) {
+            final all = rows.map((e) => BannerModel.fromJson(e)).toList();
+            if (displayMode == null) return all;
+            return all.where((b) => b.displayMode == displayMode).toList();
+          });
+    } catch (_) {
+      return const Stream.empty();
+    }
   }
 
   /// Increments click count for attribution.

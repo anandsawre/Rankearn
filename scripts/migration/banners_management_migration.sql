@@ -42,7 +42,20 @@ CREATE POLICY "Admins can manage banners"
   USING (true)
   WITH CHECK (true);
 
--- 5. Seed initial production banners if table is empty
+-- 5. Enable Supabase Realtime for Banners Stream
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'app_banners'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.app_banners;
+  END IF;
+END $$;
+
+-- 6. Seed initial production banners if table is empty
 INSERT INTO public.app_banners (id, image_url, title, link, priority, is_active, type, spotlight_data)
 VALUES
   (

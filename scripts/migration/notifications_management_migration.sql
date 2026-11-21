@@ -79,7 +79,7 @@ CREATE POLICY "Users can manage own device tokens"
     OR user_id = auth.uid()
   );
 
--- 7. Add public.notifications to Supabase Realtime Publication
+-- 7. Add public.notifications and public.app_banners to Supabase Realtime Publication
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -89,6 +89,15 @@ BEGIN
       AND tablename = 'notifications'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'app_banners'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.app_banners;
   END IF;
 END $$;
 

@@ -64,6 +64,9 @@ class _SupportTabState extends State<SupportTab> {
         .from('support_tickets')
         .stream(primaryKey: ['id'])
         .order('last_updated', ascending: false)
+        .handleError((err) {
+          debugPrint('Support tickets stream error: $err');
+        })
         .listen(
       (data) {
         if (!mounted) return;

@@ -50,6 +50,9 @@ class PollsRepository {
           .eq('is_active', true)
           .order('created_at', ascending: false)
           .limit(1)
+          .handleError((_) {
+            // Silently swallow websocket close/reconnect errors
+          })
           .map((list) {
             if (list.isEmpty) return null;
             final poll = PollModel.fromJson(list.first);

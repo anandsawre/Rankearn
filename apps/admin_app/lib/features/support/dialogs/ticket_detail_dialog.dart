@@ -57,6 +57,9 @@ class _TicketDetailDialogState extends State<TicketDetailDialog> {
         .stream(primaryKey: ['id'])
         .eq('ticket_id', ticketId)
         .order('created_at', ascending: true)
+        .handleError((err) {
+          debugPrint('Support messages stream error: $err');
+        })
         .listen(
       (data) {
         if (!mounted) return;
