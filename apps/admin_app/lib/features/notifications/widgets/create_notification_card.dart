@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'notification_preview_card.dart';
 
 class CreateNotificationCard extends StatefulWidget {
   final TextEditingController titleController;
@@ -128,6 +129,35 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
   ];
 
   String _selectedRouteTab = '/spin';
+  bool _showInlinePreview = false;
+
+  void _showLiveDevicePreviewModal() {
+    AppModalDialog.show(
+      context: context,
+      builder: (ctx) => AppModalDialog(
+        title: 'Candidate Device Simulator',
+        subtitle: 'Live visual preview across In-App & Push channels',
+        iconData: Icons.smartphone_rounded,
+        gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
+        maxWidth: 440,
+        fullScreenOnMobile: false,
+        actions: [
+          AppModalDialog.cancelButton(ctx, label: 'Close Preview'),
+        ],
+        child: NotificationPreviewCard(
+          titleController: widget.titleController,
+          messageController: widget.messageController,
+          imageUrlController: widget.imageUrlController,
+          actionLabelController: widget.actionLabelController,
+          actionUrlController: widget.actionUrlController,
+          hasImage: widget.hasImage,
+          hasActionButton: widget.hasActionButton,
+          selectedChannel: widget.selectedChannel,
+          notificationType: widget.notificationType,
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -541,6 +571,12 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                 onPressed: widget.isSubmitting ? null : widget.onReset,
               );
 
+              final previewButton = AppButton.adminOutline(
+                label: 'Preview Device',
+                leadingIcon: const Icon(Icons.smartphone_rounded, size: 16),
+                onPressed: _showLiveDevicePreviewModal,
+              );
+
               final saveDraftButton = AppButton.adminSecondary(
                 label: 'Save Draft',
                 leadingIcon: const Icon(Icons.drafts_outlined, size: 16),
@@ -568,12 +604,18 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                     Row(
                       children: [
                         Expanded(child: resetButton),
-                        const SizedBox(width: 10),
-                        Expanded(child: saveDraftButton),
+                        const SizedBox(width: 8),
+                        Expanded(child: previewButton),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    primaryButton,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(child: saveDraftButton),
+                        const SizedBox(width: 8),
+                        Expanded(child: primaryButton),
+                      ],
+                    ),
                   ],
                 );
               }
@@ -585,8 +627,10 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      previewButton,
+                      const SizedBox(width: 10),
                       saveDraftButton,
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       primaryButton,
                     ],
                   ),
@@ -594,6 +638,82 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
               );
             },
           ),
+
+          // Live Device Preview Accordion / Simulator
+          const SizedBox(height: 18),
+          const Divider(color: AppColors.adminBorder, height: 1),
+          const SizedBox(height: 14),
+          InkWell(
+            onTap: () => setState(() => _showInlinePreview = !_showInlinePreview),
+            borderRadius: AppRadii.borderMd,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: _showInlinePreview
+                    ? AppColors.adminPurpleLight.withValues(alpha: 0.6)
+                    : AppColors.adminBackground,
+                borderRadius: AppRadii.adminControl,
+                border: Border.all(
+                  color: _showInlinePreview ? AppColors.adminPurple : AppColors.adminBorder,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.devices_rounded, size: 18, color: AppColors.adminPurple),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Live Candidate Device Preview',
+                        style: AppTypography.adminFieldLabel.copyWith(
+                          color: AppColors.adminPurple,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.adminPurple,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _showInlinePreview ? 'Interactive Mode' : 'Click to preview',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Icon(
+                    _showInlinePreview
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: AppColors.adminPurple,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_showInlinePreview) ...[
+            const SizedBox(height: 16),
+            NotificationPreviewCard(
+              titleController: widget.titleController,
+              messageController: widget.messageController,
+              imageUrlController: widget.imageUrlController,
+              actionLabelController: widget.actionLabelController,
+              actionUrlController: widget.actionUrlController,
+              hasImage: widget.hasImage,
+              hasActionButton: widget.hasActionButton,
+              selectedChannel: widget.selectedChannel,
+              notificationType: widget.notificationType,
+            ),
+          ],
         ],
       ),
     );
