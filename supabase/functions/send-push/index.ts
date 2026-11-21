@@ -235,6 +235,20 @@ serve(async (req: Request) => {
       },
     };
 
+    const webpushConfig = {
+      headers: {
+        Urgency: "high",
+      },
+      notification: {
+        title,
+        body,
+        icon: "/icons/Icon-192.png",
+      },
+      fcm_options: {
+        link: clickUrl,
+      },
+    };
+
     if (targetTokens && targetTokens.length > 0) {
       // Direct token dispatch
       for (const token of targetTokens) {
@@ -251,6 +265,7 @@ serve(async (req: Request) => {
                 notification: notificationPayload,
                 data: dataPayload,
                 android: androidConfig,
+                webpush: webpushConfig,
               },
             }),
           });
@@ -278,6 +293,7 @@ serve(async (req: Request) => {
             notification: notificationPayload,
             data: dataPayload,
             android: androidConfig,
+            webpush: webpushConfig,
           },
         }),
       });
