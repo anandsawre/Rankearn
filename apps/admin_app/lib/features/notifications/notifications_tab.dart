@@ -62,6 +62,14 @@ class _NotificationsTabState extends State<NotificationsTab> {
         setState(() {
           _history = (res as List).map((n) {
             final isRead = n['is_read'] == true;
+            final clicks = n['clicks'] is int
+                ? (n['clicks'] as int)
+                : int.tryParse(n['clicks']?.toString() ?? '0') ?? 0;
+            final readByList = n['read_by'] is List ? (n['read_by'] as List) : [];
+            final readCount = readByList.isNotEmpty ? readByList.length : (isRead ? 1 : 0);
+            final readsStr = readCount > 0 ? '$readCount reads' : (isRead ? 'Read' : 'Delivered');
+            final ctrStr = clicks > 0 ? '$clicks clicks' : '0.0%';
+
             return {
               'id': n['id']?.toString() ?? '',
               'title': n['title']?.toString() ?? 'Notification Broadcast',
@@ -70,8 +78,8 @@ class _NotificationsTabState extends State<NotificationsTab> {
               'type': n['type']?.toString() ?? 'alert',
               'status': 'sent',
               'date': n['created_at'] != null ? n['created_at'].toString().split('T').first : 'Recent',
-              'reads': isRead ? '1.8k (92%)' : '1.2k (78%)',
-              'ctr': '28.4%',
+              'reads': readsStr,
+              'ctr': ctrStr,
               'action_url': n['action_url']?.toString() ?? '',
             };
           }).toList();
@@ -190,6 +198,8 @@ class _NotificationsTabState extends State<NotificationsTab> {
     };
 
     final client = SupabaseConfig.clientSafe;
+    bool fcmDispatched = false;
+
     if (client != null) {
       try {
         await client.from('notifications').insert({
@@ -202,7 +212,35 @@ class _NotificationsTabState extends State<NotificationsTab> {
           'action_url': _hasActionButton ? _actionUrlController.text.trim() : null,
           'is_read': false,
         });
-      } catch (_) {}
+
+        // Trigger Google FCM v1 Edge Function for instant push broadcast
+        if (!isSched && _selectedChannel != 'email') {
+          try {
+            final funcRes = await client.functions.invoke(
+              'send-push',
+              body: {
+                'title': title,
+                'body': body,
+                'targetTopic': _targetAudience == 'all' ? 'all_users' : _targetAudience,
+                'targetSegment': _targetAudience,
+                'actionUrl': _hasActionButton ? _actionUrlController.text.trim() : '/tests',
+                'notificationId': newId,
+                'data': {
+                  'type': _notificationType,
+                  'action_url': _hasActionButton ? _actionUrlController.text.trim() : '/tests',
+                },
+              },
+            );
+            if (funcRes.status == 200) {
+              fcmDispatched = true;
+            }
+          } catch (funcErr) {
+            debugPrint('FCM Edge Function dispatch notice: $funcErr');
+          }
+        }
+      } catch (err) {
+        debugPrint('Notification DB persist notice: $err');
+      }
     }
 
     if (!mounted) return;
@@ -217,7 +255,9 @@ class _NotificationsTabState extends State<NotificationsTab> {
         content: Text(
           isSched
               ? '⏰ Notification scheduled successfully!'
-              : '🚀 Notification broadcast dispatched across $selectedChannel channel!',
+              : fcmDispatched
+                  ? '🚀 Notification broadcast dispatched live via FCM HTTP v1!'
+                  : '🚀 Notification recorded & broadcast queued across $selectedChannel channel!',
         ),
       ),
     );
