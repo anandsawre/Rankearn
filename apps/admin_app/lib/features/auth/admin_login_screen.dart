@@ -299,24 +299,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                 borderRadius: BorderRadius.circular(8),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: const [
-                                      Icon(
-                                        Icons.arrow_back_rounded,
-                                        size: 16,
-                                        color: Color(0xFF5636F5),
-                                      ),
-                                      SizedBox(width: 6),
-                                      Text(
-                                        'Back to Website',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF5636F5),
-                                        ),
-                                      ),
-                                    ],
+                                  child: const Text(
+                                    'Back to Website',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF5636F5),
+                                    ),
                                   ),
                                 ),
                               ),
