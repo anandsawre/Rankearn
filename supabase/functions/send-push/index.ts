@@ -221,6 +221,7 @@ serve(async (req: Request) => {
       ...data,
       notification_id: notifId,
       action_url: clickUrl,
+      image_url: imageUrl || "",
       type: data.type || "alert",
     };
 
@@ -230,6 +231,7 @@ serve(async (req: Request) => {
         channel_id: "rankearn_broadcasts",
         sound: "default",
         default_vibrate_timings: true,
+        ...(imageUrl ? { notification_priority: "PRIORITY_HIGH" } : {}),
       },
     };
 
@@ -241,6 +243,7 @@ serve(async (req: Request) => {
         title,
         body,
         icon: "/icons/Icon-192.png",
+        ...(imageUrl ? { image: imageUrl } : {}),
       },
       fcm_options: {
         link: clickUrl,

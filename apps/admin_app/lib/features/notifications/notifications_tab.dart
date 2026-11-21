@@ -23,11 +23,13 @@ class _NotificationsTabState extends State<NotificationsTab> {
   bool _isScheduled = false;
   DateTime? _scheduledDateTime;
   bool _hasActionButton = false;
+  bool _hasImage = false;
   bool _isDispatching = false;
   bool _isLoadingHistory = true;
 
   final _titleController = TextEditingController();
   final _messageController = TextEditingController();
+  final _imageUrlController = TextEditingController();
   final _actionLabelController = TextEditingController();
   final _actionUrlController = TextEditingController(text: '/tests');
 
@@ -87,6 +89,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
               'reads': isScheduledItem ? 'Pending' : readsStr,
               'ctr': isScheduledItem ? '0.0%' : ctrStr,
               'action_url': n['action_url']?.toString() ?? '',
+              'image_url': n['image_url']?.toString(),
             };
           }).toList();
           _isLoadingHistory = false;
@@ -122,6 +125,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
   void dispose() {
     _titleController.dispose();
     _messageController.dispose();
+    _imageUrlController.dispose();
     _actionLabelController.dispose();
     _actionUrlController.dispose();
     super.dispose();
@@ -131,10 +135,12 @@ class _NotificationsTabState extends State<NotificationsTab> {
     setState(() {
       _titleController.clear();
       _messageController.clear();
+      _imageUrlController.clear();
       _actionLabelController.clear();
       _actionUrlController.text = '/tests';
       _isScheduled = false;
       _scheduledDateTime = null;
+      _hasImage = false;
       _hasActionButton = false;
       _selectedChannel = 'push';
       _targetAudience = 'all';
@@ -150,10 +156,14 @@ class _NotificationsTabState extends State<NotificationsTab> {
       return;
     }
 
+    final rawImg = _hasImage ? _imageUrlController.text.trim() : '';
+    final imageUrl = rawImg.isNotEmpty ? rawImg : null;
+
     final newDraft = {
       'id': 'draft-${DateTime.now().millisecondsSinceEpoch}',
       'title': _titleController.text.trim(),
       'body': _messageController.text.trim(),
+      'image_url': imageUrl,
       'segment': _formatSegment(_targetAudience),
       'type': _notificationType,
       'status': 'draft',
@@ -190,11 +200,14 @@ class _NotificationsTabState extends State<NotificationsTab> {
     final scheduledTime = isSched
         ? (_scheduledDateTime ?? DateTime.now().add(const Duration(hours: 1)))
         : null;
+    final rawImg = _hasImage ? _imageUrlController.text.trim() : '';
+    final imageUrl = rawImg.isNotEmpty ? rawImg : null;
 
     final newItem = {
       'id': newId,
       'title': title,
       'body': body,
+      'image_url': imageUrl,
       'segment': _formatSegment(_targetAudience),
       'type': _notificationType,
       'status': isSched ? 'scheduled' : 'sent',
@@ -216,6 +229,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
           'user_id': 'global',
           'title': title,
           'message': body,
+          'image_url': imageUrl,
           'type': _notificationType,
           'channel': _selectedChannel,
           'target_segment': _targetAudience,
@@ -233,6 +247,7 @@ class _NotificationsTabState extends State<NotificationsTab> {
               body: {
                 'title': title,
                 'body': body,
+                'imageUrl': imageUrl,
                 'targetTopic': _targetAudience == 'all' ? 'all_users' : _targetAudience,
                 'targetSegment': _targetAudience,
                 'actionUrl': _hasActionButton ? _actionUrlController.text.trim() : '/tests',
@@ -335,6 +350,19 @@ class _NotificationsTabState extends State<NotificationsTab> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (item['image_url'] != null && item['image_url'].toString().isNotEmpty) ...[
+              ClipRRect(
+                borderRadius: AppRadii.adminControl,
+                child: Image.network(
+                  item['image_url'].toString(),
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, stack) => const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -574,6 +602,9 @@ class _NotificationsTabState extends State<NotificationsTab> {
                 onScheduleToggled: (sc) => setState(() => _isScheduled = sc),
                 scheduledDateTime: _scheduledDateTime,
                 onDateTimeChanged: (dt) => setState(() => _scheduledDateTime = dt),
+                hasImage: _hasImage,
+                onImageToggled: (img) => setState(() => _hasImage = img),
+                imageUrlController: _imageUrlController,
                 hasActionButton: _hasActionButton,
                 onActionButtonToggled: (ab) => setState(() => _hasActionButton = ab),
                 isSubmitting: _isDispatching,

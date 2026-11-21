@@ -19,6 +19,7 @@ import 'features/auth/user_auth_screen.dart';
 import 'features/leaderboard/leaderboard_screen.dart';
 import 'features/tournament/screens/tournament_screen.dart';
 import 'features/notifications/web_notification_helper.dart';
+import 'features/notifications/in_app_notification_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -385,8 +386,21 @@ class _UserAppShellState extends State<UserAppShell> {
         triggerBrowserNotification(title, message, actionUrl);
       }
 
-      // Trigger Floating In-App Banner on user screen (for both inapp and push)
-      _showInAppNotificationBanner(notif);
+      // If notification has image or is an in-app popup, show rich pop-up dialog!
+      final hasImage = notif['image_url'] != null && notif['image_url'].toString().trim().isNotEmpty;
+      if (hasImage || channel == 'inapp') {
+        InAppNotificationDialog.show(
+          context: context,
+          notification: notif,
+          onAction: (url) {
+            _notificationsRepo.recordClick(notif['id']?.toString() ?? '');
+            _handleNotificationUrl(url);
+          },
+        );
+      } else {
+        // Trigger Floating In-App Banner on user screen
+        _showInAppNotificationBanner(notif);
+      }
     });
   }
 
@@ -395,6 +409,8 @@ class _UserAppShellState extends State<UserAppShell> {
     final message = notif['message']?.toString() ?? '';
     final actionUrl = notif['action_url']?.toString();
     final notifId = notif['id']?.toString() ?? '';
+    final imageUrl = notif['image_url']?.toString().trim();
+    final hasImg = imageUrl != null && imageUrl.isNotEmpty;
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -412,19 +428,38 @@ class _UserAppShellState extends State<UserAppShell> {
         content: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0FDF4),
-                borderRadius: BorderRadius.circular(10),
+            if (hasImg) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  imageUrl,
+                  width: 44,
+                  height: 44,
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, stack) => Container(
+                    width: 44,
+                    height: 44,
+                    color: const Color(0xFFF0FDF4),
+                    child: const Icon(Icons.campaign_rounded, color: Color(0xFF059669), size: 22),
+                  ),
+                ),
               ),
-              child: const Icon(
-                Icons.notifications_active_rounded,
-                color: Color(0xFF059669),
-                size: 22,
+              const SizedBox(width: 10),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.notifications_active_rounded,
+                  color: Color(0xFF059669),
+                  size: 22,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
+              const SizedBox(width: 12),
+            ],
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -856,6 +891,7 @@ class _UserAppShellState extends State<UserAppShell> {
                       final title = n['title']?.toString() ?? 'Announcement';
                       final message = n['message']?.toString() ?? '';
                       final actionUrl = n['action_url']?.toString();
+                      final imageUrl = n['image_url']?.toString();
                       final notifId = n['id']?.toString() ?? '';
                       final isRead = n['is_read'] == true;
                       final type = n['type']?.toString() ?? 'alert';
@@ -874,16 +910,38 @@ class _UserAppShellState extends State<UserAppShell> {
                         iconBg = const Color(0xFFEFF6FF);
                       }
 
-                      return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                        leading: Container(
+                      Widget leadingWidget;
+                      if (imageUrl != null && imageUrl.isNotEmpty) {
+                        leadingWidget = ClipRRect(
+                          borderRadius: AppRadii.borderMd,
+                          child: SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (ctx, err, stack) => Container(
+                                padding: const EdgeInsets.all(8),
+                                color: iconBg,
+                                child: Icon(icon, color: iconColor, size: 20),
+                              ),
+                            ),
+                          ),
+                        );
+                      } else {
+                        leadingWidget = Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: iconBg,
                             borderRadius: AppRadii.borderMd,
                           ),
                           child: Icon(icon, color: iconColor, size: 20),
-                        ),
+                        );
+                      }
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                        leading: leadingWidget,
                         title: Text(
                           title,
                           style: TextStyle(
@@ -927,8 +985,17 @@ class _UserAppShellState extends State<UserAppShell> {
                             : null,
                         onTap: () {
                           _notificationsRepo.markRead(notifId, userId: _profile.id);
-                          if (actionUrl != null && actionUrl.isNotEmpty) {
-                            Navigator.pop(context);
+                          Navigator.pop(context);
+                          if (imageUrl != null && imageUrl.isNotEmpty) {
+                            InAppNotificationDialog.show(
+                              context: context,
+                              notification: n,
+                              onAction: (url) {
+                                _notificationsRepo.recordClick(notifId);
+                                _handleNotificationUrl(url);
+                              },
+                            );
+                          } else if (actionUrl != null && actionUrl.isNotEmpty) {
                             _handleNotificationUrl(actionUrl);
                           }
                         },

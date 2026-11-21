@@ -16,6 +16,9 @@ class CreateNotificationCard extends StatefulWidget {
   final ValueChanged<bool> onScheduleToggled;
   final DateTime? scheduledDateTime;
   final ValueChanged<DateTime?> onDateTimeChanged;
+  final bool hasImage;
+  final ValueChanged<bool> onImageToggled;
+  final TextEditingController imageUrlController;
   final bool hasActionButton;
   final ValueChanged<bool> onActionButtonToggled;
   final bool isSubmitting;
@@ -39,6 +42,9 @@ class CreateNotificationCard extends StatefulWidget {
     required this.onScheduleToggled,
     required this.scheduledDateTime,
     required this.onDateTimeChanged,
+    required this.hasImage,
+    required this.onImageToggled,
+    required this.imageUrlController,
     required this.hasActionButton,
     required this.onActionButtonToggled,
     required this.isSubmitting,
@@ -262,6 +268,101 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
                   ],
                 ),
               ),
+            ),
+          ],
+          const SizedBox(height: 16),
+
+          // Attach Banner Image Toggle
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.image_outlined, size: 20, color: AppColors.adminBlue),
+                  SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Attach Banner Image',
+                        style: AppTypography.adminFieldLabel,
+                      ),
+                      Text(
+                        'Display rich image inside push & in-app pop-up',
+                        style: AppTypography.adminTableSecondary,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              AppSwitch.primary(
+                value: widget.hasImage,
+                onChanged: widget.onImageToggled,
+              ),
+            ],
+          ),
+
+          if (widget.hasImage) ...[
+            const SizedBox(height: 12),
+            AppTextField(
+              controller: widget.imageUrlController,
+              hintText: 'Direct Image URL (e.g. https://images.unsplash.com/... or .png / .jpg)',
+              prefixIcon: const Icon(Icons.link_rounded, size: 20, color: AppColors.adminSecondaryText),
+            ),
+            const SizedBox(height: 8),
+            // Live Preview of Image
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: widget.imageUrlController,
+              builder: (context, value, _) {
+                final url = value.text.trim();
+                if (url.isEmpty || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+                  return const SizedBox.shrink();
+                }
+                return Container(
+                  height: 140,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: AppRadii.borderMd,
+                    border: Border.all(color: AppColors.adminBorder),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        url,
+                        fit: BoxFit.cover,
+                        errorBuilder: (ctx, err, stack) => Container(
+                          color: AppColors.adminNeutral.withValues(alpha: 0.1),
+                          child: const Center(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.broken_image_rounded, color: AppColors.adminDanger, size: 20),
+                                SizedBox(width: 8),
+                                Text('Invalid or unreachable image link', style: TextStyle(color: AppColors.adminDanger, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: CircleAvatar(
+                          radius: 14,
+                          backgroundColor: Colors.black.withValues(alpha: 0.6),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.close_rounded, size: 16, color: Colors.white),
+                            onPressed: () => widget.imageUrlController.clear(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
           const SizedBox(height: 16),
