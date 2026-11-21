@@ -37,19 +37,28 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
 
     // =========================================================================
     // 1. BASE CANVAS: Smooth Executive Light Mesh Canvas
+    // On mobile, the base canvas transitions into vibrant indigo at the bottom
+    // so the design is vertically full without any white space.
     // =========================================================================
     final baseRect = Rect.fromLTWH(0, 0, w, h);
     final basePaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        stops: [0.0, 0.35, 0.70, 1.0],
-        colors: [
-          Color(0xFFF0F4FF), // Crisp top-left periwinkle tint
-          Color(0xFFF8FAFC), // Pure center slate
-          Color(0xFFEEF2FF), // Soft indigo wash
-          Color(0xFFE0E7FE), // Vibrant bottom-right gradient
-        ],
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        stops: isDesktop ? const [0.0, 0.35, 0.70, 1.0] : const [0.0, 0.30, 0.65, 1.0],
+        colors: isDesktop
+            ? const [
+                Color(0xFFF0F4FF), // Crisp top-left periwinkle tint
+                Color(0xFFF8FAFC), // Pure center slate
+                Color(0xFFEEF2FF), // Soft indigo wash
+                Color(0xFFE0E7FE), // Vibrant bottom-right gradient
+              ]
+            : const [
+                Color(0xFFF0F4FF), // Crisp top periwinkle tint
+                Color(0xFFE0E7FE), // Soft mid indigo wash
+                Color(0xFFC7D2FE), // Rich lavender indigo
+                Color(0xFF818CF8), // Deep vibrant periwinkle bottom
+              ],
       ).createShader(baseRect);
     canvas.drawRect(baseRect, basePaint);
 
@@ -85,17 +94,18 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
       ).createShader(Rect.fromCircle(center: clGlowCenter, radius: w * 0.35));
     canvas.drawCircle(clGlowCenter, w * 0.35, clGlowPaint);
 
-    // Glow 3: Bottom-Left Lavender Accent
-    final blGlowCenter = Offset(w * 0.15, h * 0.85);
+    // Glow 3: Bottom Volumetric Accent Glow
+    final blGlowCenter = Offset(w * (isDesktop ? 0.15 : 0.40), h * 0.85);
     final blGlowPaint = Paint()
       ..shader = RadialGradient(
-        radius: 0.70,
+        radius: isDesktop ? 0.70 : 0.85,
         colors: [
-          const Color(0xFFA5B4FC).withAlpha(45),
+          const Color(0xFF818CF8).withAlpha(isDesktop ? 45 : 95),
+          const Color(0xFF6366F1).withAlpha(isDesktop ? 20 : 65),
           Colors.transparent,
         ],
-      ).createShader(Rect.fromCircle(center: blGlowCenter, radius: w * 0.28));
-    canvas.drawCircle(blGlowCenter, w * 0.28, blGlowPaint);
+      ).createShader(Rect.fromCircle(center: blGlowCenter, radius: w * (isDesktop ? 0.28 : 0.65)));
+    canvas.drawCircle(blGlowCenter, w * (isDesktop ? 0.28 : 0.65), blGlowPaint);
 
     // =========================================================================
     // 3. TOP-RIGHT ASYMMETRIC FLUID ARCS (Dynamic Energy)
@@ -284,11 +294,17 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          const Color(0xFF6366F1).withAlpha(160),
-          const Color(0xFF818CF8).withAlpha(120),
-          const Color(0xFFC7D2FE).withAlpha(90),
-        ],
+        colors: isDesktop
+            ? [
+                const Color(0xFF6366F1).withAlpha(160),
+                const Color(0xFF818CF8).withAlpha(120),
+                const Color(0xFFC7D2FE).withAlpha(90),
+              ]
+            : [
+                const Color(0xFF6366F1).withAlpha(200),
+                const Color(0xFF818CF8).withAlpha(180),
+                const Color(0xFF4F46E5).withAlpha(170),
+              ],
       ).createShader(Rect.fromLTWH(0, h * 0.60, w, h * 0.40));
     canvas.drawPath(wave3, wave3Paint);
 
@@ -383,63 +399,63 @@ class _AdminBackgroundWavesPainter extends CustomPainter {
         ).createShader(Rect.fromLTWH(0, h * 0.74, w, 15));
       canvas.drawPath(wave4Crest, wave4CrestPaint);
     } else {
-      // Mobile: Rich fluid wave extension carrying the indigo/periwinkle theme into the bottom area
+      // Mobile: Rich full-bleed oceanic wave filling the lower portion with zero transparency gap
       final mobileWave = Path()
-        ..moveTo(0, h * 0.78)
+        ..moveTo(0, h * 0.65)
         ..cubicTo(
-          w * 0.28, h * 0.72,
-          w * 0.55, h * 0.82,
-          w * 0.78, h * 0.76,
+          w * 0.25, h * 0.60,
+          w * 0.50, h * 0.70,
+          w * 0.75, h * 0.65,
         )
         ..cubicTo(
-          w * 0.88, h * 0.73,
-          w * 0.96, h * 0.79,
-          w, h * 0.82,
+          w * 0.88, h * 0.62,
+          w * 0.95, h * 0.68,
+          w, h * 0.70,
         )
         ..lineTo(w, h)
         ..lineTo(0, h)
         ..close();
 
-      canvas.drawShadow(mobileWave, const Color(0x184F46E5), 24, true);
+      canvas.drawShadow(mobileWave, const Color(0x33312E81), 24, true);
 
       final mobileWavePaint = Paint()
-        ..shader = LinearGradient(
+        ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            const Color(0xFF6366F1).withAlpha(140),
-            const Color(0xFF818CF8).withAlpha(150),
-            const Color(0xFF93C5FD).withAlpha(130),
-            const Color(0xFFA5B4FC).withAlpha(150),
+            Color(0xFF6366F1), // Rich energetic indigo
+            Color(0xFF818CF8), // Vibrant periwinkle
+            Color(0xFF60A5FA), // Sky blue
+            Color(0xFF4F46E5), // Deep indigo bottom
           ],
-          stops: const [0.0, 0.35, 0.70, 1.0],
-        ).createShader(Rect.fromLTWH(0, h * 0.72, w, h * 0.28));
+          stops: [0.0, 0.35, 0.70, 1.0],
+        ).createShader(Rect.fromLTWH(0, h * 0.60, w, h * 0.40));
       canvas.drawPath(mobileWave, mobileWavePaint);
 
       final mobileCrest = Path()
-        ..moveTo(0, h * 0.78)
+        ..moveTo(0, h * 0.65)
         ..cubicTo(
-          w * 0.28, h * 0.72,
-          w * 0.55, h * 0.82,
-          w * 0.78, h * 0.76,
+          w * 0.25, h * 0.60,
+          w * 0.50, h * 0.70,
+          w * 0.75, h * 0.65,
         )
         ..cubicTo(
-          w * 0.88, h * 0.73,
-          w * 0.96, h * 0.79,
-          w, h * 0.82,
+          w * 0.88, h * 0.62,
+          w * 0.95, h * 0.68,
+          w, h * 0.70,
         );
 
       final mobileCrestPaint = Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.6
+        ..strokeWidth = 2.0
         ..shader = LinearGradient(
           colors: [
-            Colors.white.withAlpha(220),
-            const Color(0xFF818CF8).withAlpha(180),
-            Colors.white.withAlpha(200),
+            Colors.white.withAlpha(255),
+            const Color(0xFF38BDF8).withAlpha(240),
+            Colors.white.withAlpha(255),
           ],
           stops: const [0.0, 0.5, 1.0],
-        ).createShader(Rect.fromLTWH(0, h * 0.72, w, 15));
+        ).createShader(Rect.fromLTWH(0, h * 0.60, w, 20));
       canvas.drawPath(mobileCrest, mobileCrestPaint);
     }
 
