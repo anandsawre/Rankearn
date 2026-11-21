@@ -139,7 +139,8 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
         subtitle: 'Live visual preview across In-App & Push channels',
         iconData: Icons.smartphone_rounded,
         gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
-        maxWidth: 440,
+        maxWidth: 540,
+        scrollable: true,
         fullScreenOnMobile: false,
         actions: [
           AppModalDialog.cancelButton(ctx, label: 'Close Preview'),

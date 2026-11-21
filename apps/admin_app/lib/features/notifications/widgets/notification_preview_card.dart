@@ -46,6 +46,8 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
     // Default preview mode matches channel: inapp -> inAppPopup, push -> pushNotification
     if (widget.selectedChannel == 'inapp') {
       _mode = NotificationPreviewMode.inAppPopup;
+    } else if (widget.selectedChannel == 'push') {
+      _mode = NotificationPreviewMode.pushNotification;
     } else {
       _mode = widget.initialMode;
     }
@@ -57,6 +59,8 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
     if (oldWidget.selectedChannel != widget.selectedChannel) {
       if (widget.selectedChannel == 'inapp') {
         _mode = NotificationPreviewMode.inAppPopup;
+      } else if (widget.selectedChannel == 'push') {
+        _mode = NotificationPreviewMode.pushNotification;
       }
     }
   }
@@ -83,25 +87,53 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header with Title and Mode Switcher
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Row(
+              // Responsive Header with Title and Mode Switcher
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompact = constraints.maxWidth < 540;
+                  final titlePod = Row(
+                    mainAxisSize: isCompact ? MainAxisSize.max : MainAxisSize.min,
                     children: [
-                      Icon(Icons.devices_rounded, size: 20, color: AppColors.adminPurple),
-                      SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Live Device Simulator', style: AppTypography.adminCardTitle),
-                          Text('Real-time candidate view preview', style: AppTypography.adminCardSubtitle),
-                        ],
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.adminPurpleLight,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.devices_rounded, size: 18, color: AppColors.adminPurple),
                       ),
+                      const SizedBox(width: 8),
+                      isCompact
+                          ? const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Live Device Simulator',
+                                    style: AppTypography.adminCardTitle,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    'Real-time candidate view preview',
+                                    style: AppTypography.adminCardSubtitle,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Live Device Simulator', style: AppTypography.adminCardTitle),
+                                Text('Real-time candidate view preview', style: AppTypography.adminCardSubtitle),
+                              ],
+                            ),
                     ],
-                  ),
-                  // Segmented Switcher
-                  Container(
+                  );
+
+                  final switcherPod = Container(
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       color: AppColors.adminBackground,
@@ -124,8 +156,31 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  );
+
+                  if (isCompact) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        titlePod,
+                        const SizedBox(height: 12),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: switcherPod,
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      titlePod,
+                      switcherPod,
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 18),
               const Divider(color: AppColors.adminBorder, height: 1),
@@ -190,21 +245,30 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
                           ),
                         ),
 
-                        // Device Screen Content Canvas
+                        // Device Screen Content Canvas (Gradient Wallpaper with no network dependencies)
                         Container(
                           constraints: const BoxConstraints(minHeight: 440, maxHeight: 490),
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: _mode == NotificationPreviewMode.inAppPopup
-                                ? const Color(0xFF1E293B)
-                                : const Color(0xFF0F172A),
-                            image: const DecorationImage(
-                              image: NetworkImage(
-                                'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop',
-                              ),
-                              fit: BoxFit.cover,
-                              opacity: 0.18,
-                            ),
+                            gradient: _mode == NotificationPreviewMode.inAppPopup
+                                ? const RadialGradient(
+                                    center: Alignment.topCenter,
+                                    radius: 1.2,
+                                    colors: [
+                                      Color(0xFF334155),
+                                      Color(0xFF1E293B),
+                                      Color(0xFF0F172A),
+                                    ],
+                                  )
+                                : const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Color(0xFF1E1B4B),
+                                      Color(0xFF0F172A),
+                                      Color(0xFF020617),
+                                    ],
+                                  ),
                           ),
                           child: _mode == NotificationPreviewMode.inAppPopup
                               ? _buildInAppPopupPreview()
@@ -239,11 +303,14 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
                 children: [
                   const Icon(Icons.touch_app_rounded, size: 14, color: AppColors.adminSecondaryText),
                   const SizedBox(width: 6),
-                  Text(
-                    _mode == NotificationPreviewMode.inAppPopup
-                        ? 'Simulating candidate app center pop-up dialog'
-                        : 'Simulating lock-screen & desktop push notification',
-                    style: AppTypography.adminTableSecondary.copyWith(fontSize: 11.5),
+                  Flexible(
+                    child: Text(
+                      _mode == NotificationPreviewMode.inAppPopup
+                          ? 'Simulating candidate app center pop-up dialog'
+                          : 'Simulating lock-screen & desktop push notification',
+                      style: AppTypography.adminTableSecondary.copyWith(fontSize: 11.5),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
