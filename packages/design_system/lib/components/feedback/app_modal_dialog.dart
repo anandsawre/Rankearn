@@ -800,12 +800,14 @@ class AppModalDialog extends StatelessWidget {
                               else
                                 const SizedBox.shrink(),
                               const SizedBox(width: 12),
-                              Wrap(
-                                spacing: 10,
-                                runSpacing: 8,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                alignment: WrapAlignment.end,
-                                children: effectiveActions ?? [],
+                              Expanded(
+                                child: Wrap(
+                                  spacing: 10,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  alignment: WrapAlignment.end,
+                                  children: effectiveActions ?? [],
+                                ),
                               ),
                             ],
                           ),

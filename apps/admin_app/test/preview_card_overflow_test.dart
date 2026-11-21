@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:design_system/design_system.dart';
 import 'package:admin_app/features/notifications/widgets/create_notification_card.dart';
 import 'package:admin_app/features/notifications/widgets/notification_preview_card.dart';
 
@@ -38,7 +39,7 @@ void main() {
     expect(find.text('Live Device Simulator'), findsOneWidget);
   });
 
-  testWidgets('Clicking Preview Device opens modal without errors or overflows', (tester) async {
+  testWidgets('Clicking Preview Device opens modal with switcher right of Close Preview button', (tester) async {
     final titleController = TextEditingController(text: 'Special Diwali Bonus');
     final messageController = TextEditingController(text: 'Spin the wheel now and earn up to 500 coins instantly!');
     final imageUrlController = TextEditingController();
@@ -92,9 +93,13 @@ void main() {
 
     expect(find.text('Candidate Device Simulator'), findsOneWidget);
     expect(find.text('Live Device Simulator'), findsOneWidget);
+    expect(find.text('Close Preview'), findsOneWidget);
 
-    // Switch to Push Notification preview mode inside modal
-    final pushModeBtn = find.text('Push Notification');
+    // Switcher is in modal actions to the right of Close Preview button
+    final pushModeBtn = find.descendant(
+      of: find.byType(AppModalDialog),
+      matching: find.text('Push Notification'),
+    );
     expect(pushModeBtn, findsOneWidget);
     await tester.tap(pushModeBtn);
     await tester.pumpAndSettle();

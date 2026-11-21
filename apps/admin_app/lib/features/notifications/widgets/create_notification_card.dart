@@ -132,29 +132,46 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
   bool _showInlinePreview = false;
 
   void _showLiveDevicePreviewModal() {
+    NotificationPreviewMode currentPreviewMode = widget.selectedChannel == 'push'
+        ? NotificationPreviewMode.pushNotification
+        : NotificationPreviewMode.inAppPopup;
+
     AppModalDialog.show(
       context: context,
-      builder: (ctx) => AppModalDialog(
-        title: 'Candidate Device Simulator',
-        subtitle: 'Live visual preview across In-App & Push channels',
-        iconData: Icons.smartphone_rounded,
-        gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
-        maxWidth: 540,
-        scrollable: true,
-        fullScreenOnMobile: false,
-        actions: [
-          AppModalDialog.cancelButton(ctx, label: 'Close Preview'),
-        ],
-        child: NotificationPreviewCard(
-          titleController: widget.titleController,
-          messageController: widget.messageController,
-          imageUrlController: widget.imageUrlController,
-          actionLabelController: widget.actionLabelController,
-          actionUrlController: widget.actionUrlController,
-          hasImage: widget.hasImage,
-          hasActionButton: widget.hasActionButton,
-          selectedChannel: widget.selectedChannel,
-          notificationType: widget.notificationType,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => AppModalDialog(
+          title: 'Candidate Device Simulator',
+          subtitle: 'Live visual preview across In-App & Push channels',
+          iconData: Icons.smartphone_rounded,
+          gradientColors: const [AppColors.adminViolet, AppColors.brandPurple],
+          maxWidth: 540,
+          scrollable: true,
+          fullScreenOnMobile: false,
+          actions: [
+            AppModalDialog.cancelButton(ctx, label: 'Close Preview'),
+            NotificationPreviewCard.buildModeSwitcher(
+              mode: currentPreviewMode,
+              onChanged: (newMode) {
+                setModalState(() => currentPreviewMode = newMode);
+              },
+            ),
+          ],
+          child: NotificationPreviewCard(
+            titleController: widget.titleController,
+            messageController: widget.messageController,
+            imageUrlController: widget.imageUrlController,
+            actionLabelController: widget.actionLabelController,
+            actionUrlController: widget.actionUrlController,
+            hasImage: widget.hasImage,
+            hasActionButton: widget.hasActionButton,
+            selectedChannel: widget.selectedChannel,
+            notificationType: widget.notificationType,
+            currentMode: currentPreviewMode,
+            showHeaderModeSwitcher: false,
+            onModeChanged: (newMode) {
+              setModalState(() => currentPreviewMode = newMode);
+            },
+          ),
         ),
       ),
     );

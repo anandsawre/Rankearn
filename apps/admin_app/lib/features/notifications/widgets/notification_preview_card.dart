@@ -18,6 +18,9 @@ class NotificationPreviewCard extends StatefulWidget {
   final String selectedChannel;
   final String notificationType;
   final NotificationPreviewMode initialMode;
+  final NotificationPreviewMode? currentMode;
+  final ValueChanged<NotificationPreviewMode>? onModeChanged;
+  final bool showHeaderModeSwitcher;
 
   const NotificationPreviewCard({
     super.key,
@@ -31,7 +34,82 @@ class NotificationPreviewCard extends StatefulWidget {
     required this.selectedChannel,
     required this.notificationType,
     this.initialMode = NotificationPreviewMode.inAppPopup,
+    this.currentMode,
+    this.onModeChanged,
+    this.showHeaderModeSwitcher = true,
   });
+
+  /// Centralized mode switcher pill: renders [In-App Pop-up] and [Push Notification] buttons.
+  /// Can be used directly in modal dialog footers or standalone bars.
+  static Widget buildModeSwitcher({
+    required NotificationPreviewMode mode,
+    required ValueChanged<NotificationPreviewMode> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: AppColors.adminBackground,
+        borderRadius: AppRadii.adminControl,
+        border: Border.all(color: AppColors.adminBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildModeButtonWidget(
+            isSelected: mode == NotificationPreviewMode.inAppPopup,
+            label: 'In-App Pop-up',
+            icon: Icons.chat_bubble_outline_rounded,
+            onTap: () => onChanged(NotificationPreviewMode.inAppPopup),
+          ),
+          const SizedBox(width: 4),
+          _buildModeButtonWidget(
+            isSelected: mode == NotificationPreviewMode.pushNotification,
+            label: 'Push Notification',
+            icon: Icons.notifications_active_outlined,
+            onTap: () => onChanged(NotificationPreviewMode.pushNotification),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildModeButtonWidget({
+    required bool isSelected,
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.adminPurple : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected ? Colors.white : AppColors.adminSecondaryText,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? Colors.white : AppColors.adminSecondaryText,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   State<NotificationPreviewCard> createState() => _NotificationPreviewCardState();
@@ -40,11 +118,14 @@ class NotificationPreviewCard extends StatefulWidget {
 class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
   late NotificationPreviewMode _mode;
 
+  NotificationPreviewMode get effectiveMode => widget.currentMode ?? _mode;
+
   @override
   void initState() {
     super.initState();
-    // Default preview mode matches channel: inapp -> inAppPopup, push -> pushNotification
-    if (widget.selectedChannel == 'inapp') {
+    if (widget.currentMode != null) {
+      _mode = widget.currentMode!;
+    } else if (widget.selectedChannel == 'inapp') {
       _mode = NotificationPreviewMode.inAppPopup;
     } else if (widget.selectedChannel == 'push') {
       _mode = NotificationPreviewMode.pushNotification;
@@ -56,7 +137,9 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
   @override
   void didUpdateWidget(NotificationPreviewCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedChannel != widget.selectedChannel) {
+    if (widget.currentMode != null && widget.currentMode != oldWidget.currentMode) {
+      _mode = widget.currentMode!;
+    } else if (oldWidget.selectedChannel != widget.selectedChannel) {
       if (widget.selectedChannel == 'inapp') {
         _mode = NotificationPreviewMode.inAppPopup;
       } else if (widget.selectedChannel == 'push') {
@@ -136,29 +219,16 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
                     ],
                   );
 
-                  final switcherPod = Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: AppColors.adminBackground,
-                      borderRadius: AppRadii.adminControl,
-                      border: Border.all(color: AppColors.adminBorder),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildModeButton(
-                          mode: NotificationPreviewMode.inAppPopup,
-                          label: 'In-App Pop-up',
-                          icon: Icons.chat_bubble_outline_rounded,
-                        ),
-                        const SizedBox(width: 4),
-                        _buildModeButton(
-                          mode: NotificationPreviewMode.pushNotification,
-                          label: 'Push Notification',
-                          icon: Icons.notifications_active_outlined,
-                        ),
-                      ],
-                    ),
+                  if (!widget.showHeaderModeSwitcher) {
+                    return titlePod;
+                  }
+
+                  final switcherPod = NotificationPreviewCard.buildModeSwitcher(
+                    mode: effectiveMode,
+                    onChanged: (newMode) {
+                      setState(() => _mode = newMode);
+                      widget.onModeChanged?.call(newMode);
+                    },
                   );
 
                   if (isCompact) {
@@ -253,7 +323,7 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
                           constraints: const BoxConstraints(minHeight: 440, maxHeight: 490),
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            gradient: _mode == NotificationPreviewMode.inAppPopup
+                            gradient: effectiveMode == NotificationPreviewMode.inAppPopup
                                 ? const RadialGradient(
                                     center: Alignment.topCenter,
                                     radius: 1.2,
@@ -273,7 +343,7 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
                                     ],
                                   ),
                           ),
-                          child: _mode == NotificationPreviewMode.inAppPopup
+                          child: effectiveMode == NotificationPreviewMode.inAppPopup
                               ? _buildInAppPopupPreview()
                               : _buildPushNotificationPreview(),
                         ),
@@ -308,7 +378,7 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      _mode == NotificationPreviewMode.inAppPopup
+                      effectiveMode == NotificationPreviewMode.inAppPopup
                           ? 'Simulating candidate app center pop-up dialog'
                           : 'Simulating lock-screen & desktop push notification',
                       style: AppTypography.adminTableSecondary.copyWith(fontSize: 11.5),
@@ -322,44 +392,6 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildModeButton({
-    required NotificationPreviewMode mode,
-    required String label,
-    required IconData icon,
-  }) {
-    final isSelected = _mode == mode;
-    return InkWell(
-      onTap: () => setState(() => _mode = mode),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.adminPurple : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 14,
-              color: isSelected ? Colors.white : AppColors.adminSecondaryText,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? Colors.white : AppColors.adminSecondaryText,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
