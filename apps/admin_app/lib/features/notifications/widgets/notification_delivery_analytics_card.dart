@@ -9,39 +9,58 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
 
   const NotificationDeliveryAnalyticsCard({
     super.key,
-    this.totalReads = 36800,
-    this.totalClicks = 12400,
-    this.totalUnopened = 7350,
+    this.totalReads = 0,
+    this.totalClicks = 0,
+    this.totalUnopened = 0,
     this.onQuickAction,
   });
+
+  String _formatCount(int count, String unit) {
+    if (count >= 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M $unit';
+    }
+    if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}k $unit';
+    }
+    return '$count $unit';
+  }
 
   @override
   Widget build(BuildContext context) {
     final total = totalReads + totalClicks + totalUnopened;
-    final readPct = total > 0 ? (totalReads / total) * 100 : 65.0;
-    final clickPct = total > 0 ? (totalClicks / total) * 100 : 22.0;
-    final unopenedPct = total > 0 ? (totalUnopened / total) * 100 : 13.0;
+    final readPct = total > 0 ? (totalReads / total) * 100 : 0.0;
+    final clickPct = total > 0 ? (totalClicks / total) * 100 : 0.0;
+    final unopenedPct = total > 0 ? (totalUnopened / total) * 100 : 0.0;
 
-    final slices = [
-      DonutSlice(
-        label: 'Read',
-        percentage: readPct,
-        color: AppColors.adminSuccess,
-        count: totalReads,
-      ),
-      DonutSlice(
-        label: 'Clicked',
-        percentage: clickPct,
-        color: AppColors.adminPurple,
-        count: totalClicks,
-      ),
-      DonutSlice(
-        label: 'Unopened',
-        percentage: unopenedPct,
-        color: AppColors.adminNeutral.withValues(alpha: 0.35),
-        count: totalUnopened,
-      ),
-    ];
+    final slices = total > 0
+        ? [
+            DonutSlice(
+              label: 'Read',
+              percentage: readPct,
+              color: AppColors.adminSuccess,
+              count: totalReads,
+            ),
+            DonutSlice(
+              label: 'Clicked',
+              percentage: clickPct,
+              color: AppColors.adminPurple,
+              count: totalClicks,
+            ),
+            DonutSlice(
+              label: 'Unopened',
+              percentage: unopenedPct,
+              color: AppColors.adminNeutral.withValues(alpha: 0.35),
+              count: totalUnopened,
+            ),
+          ]
+        : [
+            DonutSlice(
+              label: 'No Dispatches',
+              percentage: 100.0,
+              color: AppColors.adminNeutral.withValues(alpha: 0.18),
+              count: 0,
+            ),
+          ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -84,7 +103,7 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
                       borderRadius: AppRadii.adminRoundPill,
                     ),
                     child: Text(
-                      'Last 30 Days',
+                      'Live Metrics',
                       style: AppTypography.adminBadge.copyWith(color: AppColors.adminPurple),
                     ),
                   ),
@@ -96,7 +115,7 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
               Center(
                 child: AppDonutChart(
                   slices: slices,
-                  totalCount: total > 0 ? total : 56550,
+                  totalCount: total,
                   totalLabel: 'Dispatches',
                   chartSize: 130,
                   strokeWidth: 16,
@@ -108,21 +127,21 @@ class NotificationDeliveryAnalyticsCard extends StatelessWidget {
               _buildMetricBreakdown(
                 label: 'Read Rate',
                 value: '${readPct.toStringAsFixed(1)}%',
-                count: '${(totalReads / 1000).toStringAsFixed(1)}k users',
+                count: _formatCount(totalReads, 'reads'),
                 color: AppColors.adminSuccess,
               ),
               const SizedBox(height: 10),
               _buildMetricBreakdown(
                 label: 'Click Rate (CTR)',
                 value: '${clickPct.toStringAsFixed(1)}%',
-                count: '${(totalClicks / 1000).toStringAsFixed(1)}k clicks',
+                count: _formatCount(totalClicks, 'clicks'),
                 color: AppColors.adminPurple,
               ),
               const SizedBox(height: 10),
               _buildMetricBreakdown(
                 label: 'Unopened Rate',
                 value: '${unopenedPct.toStringAsFixed(1)}%',
-                count: '${(totalUnopened / 1000).toStringAsFixed(1)}k users',
+                count: _formatCount(totalUnopened, 'unopened'),
                 color: AppColors.adminSecondaryText,
               ),
             ],

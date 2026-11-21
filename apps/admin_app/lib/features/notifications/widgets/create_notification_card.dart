@@ -26,6 +26,11 @@ class CreateNotificationCard extends StatefulWidget {
   final VoidCallback onSendNow;
   final VoidCallback onSaveDraft;
   final VoidCallback onReset;
+  final FocusNode? titleFocusNode;
+  final String? targetUserId;
+  final String? targetUserName;
+  final VoidCallback? onSelectSpecificUser;
+  final VoidCallback? onClearSpecificUser;
 
   const CreateNotificationCard({
     super.key,
@@ -52,6 +57,11 @@ class CreateNotificationCard extends StatefulWidget {
     required this.onSendNow,
     required this.onSaveDraft,
     required this.onReset,
+    this.titleFocusNode,
+    this.targetUserId,
+    this.targetUserName,
+    this.onSelectSpecificUser,
+    this.onClearSpecificUser,
   });
 
   @override
@@ -279,6 +289,7 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
               final isWide = constraints.maxWidth >= 550;
               final titleField = AppTextField(
                 controller: widget.titleController,
+                focusNode: widget.titleFocusNode,
                 hintText: 'Notification Title * (Optional for image-only in-app pop-up)',
                 prefixIcon: const Icon(Icons.title_rounded, size: 20, color: AppColors.adminSecondaryText),
               );
@@ -339,6 +350,58 @@ class _CreateNotificationCardState extends State<CreateNotificationCard> {
               );
             },
           ),
+          if (widget.targetAudience == 'specific') ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.adminBlueLight.withAlpha(60),
+                borderRadius: AppRadii.borderMd,
+                border: Border.all(color: AppColors.adminBlue.withAlpha(120)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.person_pin_rounded, color: AppColors.adminBlue, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.targetUserId != null && widget.targetUserId!.isNotEmpty
+                              ? 'Target Recipient: ${widget.targetUserName ?? widget.targetUserId}'
+                              : 'No specific user selected yet',
+                          style: AppTypography.adminTablePrimary.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        if (widget.targetUserId != null && widget.targetUserId!.isNotEmpty)
+                          Text(
+                            'User ID: ${widget.targetUserId}',
+                            style: AppTypography.adminTableSecondary.copyWith(fontSize: 11),
+                          ),
+                      ],
+                    ),
+                  ),
+                  AppButton.adminSecondary(
+                    label: widget.targetUserId != null ? 'Change User' : 'Choose User',
+                    height: 32,
+                    leadingIcon: const Icon(Icons.search_rounded, size: 14),
+                    onPressed: widget.onSelectSpecificUser,
+                  ),
+                  if (widget.targetUserId != null) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.adminSecondaryText),
+                      tooltip: 'Clear user',
+                      onPressed: widget.onClearSpecificUser,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
 
           // Divider

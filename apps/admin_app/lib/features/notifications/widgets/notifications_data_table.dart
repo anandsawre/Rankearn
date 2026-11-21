@@ -9,6 +9,8 @@ class NotificationsDataTable extends StatefulWidget {
   final void Function(Map<String, dynamic> item)? onDuplicate;
   final void Function(Map<String, dynamic> item)? onDelete;
   final void Function(List<String> ids)? onBulkDelete;
+  final String? activeTab;
+  final ValueChanged<String>? onTabChanged;
 
   const NotificationsDataTable({
     super.key,
@@ -19,6 +21,8 @@ class NotificationsDataTable extends StatefulWidget {
     this.onDuplicate,
     this.onDelete,
     this.onBulkDelete,
+    this.activeTab,
+    this.onTabChanged,
   });
 
   @override
@@ -26,15 +30,25 @@ class NotificationsDataTable extends StatefulWidget {
 }
 
 class _NotificationsDataTableState extends State<NotificationsDataTable> {
-  String _activeTab = 'all'; // 'all', 'sent', 'scheduled', 'draft'
+  late String _activeTab;
   String _searchQuery = '';
   int _currentPage = 1;
   final int _rowsPerPage = 8;
   final Set<String> _selectedIds = {};
 
   @override
+  void initState() {
+    super.initState();
+    _activeTab = widget.activeTab ?? 'all';
+  }
+
+  @override
   void didUpdateWidget(covariant NotificationsDataTable oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.activeTab != null && widget.activeTab != _activeTab) {
+      _activeTab = widget.activeTab!;
+      _currentPage = 1;
+    }
     final currentIds = widget.notifications
         .map((e) => e['id']?.toString() ?? '')
         .toSet();
@@ -208,10 +222,13 @@ class _NotificationsDataTableState extends State<NotificationsDataTable> {
                 return 'All';
             }
           },
-          onChanged: (tab) => setState(() {
-            _activeTab = tab;
-            _currentPage = 1;
-          }),
+          onChanged: (tab) {
+            setState(() {
+              _activeTab = tab;
+              _currentPage = 1;
+            });
+            widget.onTabChanged?.call(tab);
+          },
         ),
       ],
       columns: [
