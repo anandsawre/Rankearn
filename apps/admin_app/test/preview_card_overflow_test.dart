@@ -4,6 +4,40 @@ import 'package:admin_app/features/notifications/widgets/create_notification_car
 import 'package:admin_app/features/notifications/widgets/notification_preview_card.dart';
 
 void main() {
+  testWidgets('NotificationPreviewCard in 427px constrained height does not overflow', (tester) async {
+    final titleController = TextEditingController(text: 'Special Diwali Bonus');
+    final messageController = TextEditingController(text: 'Spin the wheel now and earn up to 500 coins instantly!');
+    final imageUrlController = TextEditingController();
+    final actionLabelController = TextEditingController(text: 'Spin Now');
+    final actionUrlController = TextEditingController(text: '/spin');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 362, maxHeight: 427),
+              child: NotificationPreviewCard(
+                titleController: titleController,
+                messageController: messageController,
+                imageUrlController: imageUrlController,
+                actionLabelController: actionLabelController,
+                actionUrlController: actionUrlController,
+                hasImage: false,
+                hasActionButton: true,
+                selectedChannel: 'inapp',
+                notificationType: 'alert',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.text('Live Device Simulator'), findsOneWidget);
+  });
+
   testWidgets('Clicking Preview Device opens modal without errors or overflows', (tester) async {
     final titleController = TextEditingController(text: 'Special Diwali Bonus');
     final messageController = TextEditingController(text: 'Spin the wheel now and earn up to 500 coins instantly!');

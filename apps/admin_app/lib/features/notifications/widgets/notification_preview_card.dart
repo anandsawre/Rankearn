@@ -83,10 +83,13 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
             border: Border.all(color: AppColors.adminBorder),
             boxShadow: AppShadows.adminCard,
           ),
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+          clipBehavior: Clip.antiAlias,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            physics: const ClampingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               // Responsive Header with Title and Mode Switcher
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -315,6 +318,7 @@ class _NotificationPreviewCardState extends State<NotificationPreviewCard> {
                 ],
               ),
             ],
+          ),
           ),
         );
       },
