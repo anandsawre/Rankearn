@@ -76,13 +76,21 @@ jobs:
       - name: Build User App Release APKs (Compact & Universal)
         run: |
           cd apps/user_app
-          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
+          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation || {
+            echo "::error::User App Split APK Build failed. Running verbose diagnostics..."
+            flutter build apk --release --split-per-abi --android-skip-build-dependency-validation -v
+            exit 1
+          }
           flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Build Admin App Release APKs (Compact & Universal)
         run: |
           cd apps/admin_app
-          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
+          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation || {
+            echo "::error::Admin App Split APK Build failed. Running verbose diagnostics..."
+            flutter build apk --release --split-per-abi --android-skip-build-dependency-validation -v
+            exit 1
+          }
           flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Organize APK Artifacts
