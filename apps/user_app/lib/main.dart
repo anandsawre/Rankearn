@@ -109,12 +109,13 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
     if (_currentUser != null) {
       _showAuth = false;
       _isCheckingSession = false;
+    } else if (widget.autoCheckSession) {
+      _isCheckingSession = true;
+      _showAuth = false;
+      _checkSession();
     } else {
-      _isCheckingSession = widget.autoCheckSession;
-      _showAuth = !_isCheckingSession;
-      if (widget.autoCheckSession) {
-        _checkSession();
-      }
+      _isCheckingSession = false;
+      _showAuth = widget.showAuthInitially ?? true;
     }
 
     _subscribeAuth();

@@ -24,12 +24,20 @@ class AuthRepository {
   Stream<supa.AuthState> get authStateChanges =>
       _client?.auth.onAuthStateChange ?? const Stream.empty();
 
+  void _safeSyncDeviceToken(String userId) {
+    unawaited(() async {
+      try {
+        await PushNotificationService.syncDeviceToken(userId: userId);
+      } catch (_) {}
+    }());
+  }
+
   /// Persist authenticated user profile in local storage for instant offline / APK reopen
-  Future<void> saveLocalProfile(UserProfile profile) async {
+  Future<void> saveLocalProfile(UserProfile profile, {bool rememberMe = true}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_localProfileKey, jsonEncode(profile.toMap()));
-      await prefs.setBool(_rememberMeKey, true);
+      await prefs.setBool(_rememberMeKey, rememberMe);
     } catch (_) {}
   }
 
@@ -60,65 +68,90 @@ class AuthRepository {
   /// Restore user session seamlessly on app launch (guarantees session persistence across APK restarts)
   Future<Result<UserProfile>> restoreSession() async {
     final client = _client;
+
+    // Fast check: retrieve locally persisted profile cache
     final cachedProfile = await getLocalProfile();
 
-    // 1. If locally persisted profile is available, return immediately!
-    // This guarantees zero-delay cold start and eliminates unwanted re-login on APK reopen.
-    if (cachedProfile != null) {
-      // Sync device push token in the background
-      unawaited(PushNotificationService.syncDeviceToken(userId: cachedProfile.id));
+    // 1. Ensure Supabase auth session is recovered and available
+    supa.Session? session;
+    if (SupabaseConfig.isInitialized && client != null) {
+      try {
+        session = await SupabaseConfig.ensureSessionReady();
+      } catch (_) {}
+      session ??= client.auth.currentSession;
+    }
 
-      // Asynchronously ensure Supabase session is ready & update profile from DB if online
-      unawaited(SupabaseConfig.ensureSessionReady());
-      if (client != null) {
-        unawaited(() async {
-          try {
-            final session = client.auth.currentSession;
-            final targetId = session?.user.id ?? cachedProfile.id;
-            final fresh = await getProfile(targetId);
-            if (fresh is Success<UserProfile>) {
-              await saveLocalProfile(fresh.data);
-            }
-          } catch (_) {}
-        }());
+    // 2. If Supabase session is present:
+    if (session != null) {
+      final userId = session.user.id;
+
+      // If cached profile matches the active authenticated user, return immediately!
+      // This eliminates startup lag and guarantees offline functionality.
+      if (cachedProfile != null && cachedProfile.id == userId) {
+        _safeSyncDeviceToken(userId);
+
+        // Asynchronously synchronize fresh profile from DB in the background without blocking UI
+        if (client != null) {
+          unawaited(() async {
+            try {
+              final fresh = await getProfile(userId);
+              if (fresh is Success<UserProfile>) {
+                await saveLocalProfile(fresh.data);
+              }
+            } catch (_) {}
+          }());
+        }
+        return Success(cachedProfile);
       }
 
+      // If no cache or user mismatch, fetch from database:
+      try {
+        final profileRes = await getProfile(userId);
+        if (profileRes is Success<UserProfile>) {
+          await saveLocalProfile(profileRes.data);
+          _safeSyncDeviceToken(profileRes.data.id);
+          return profileRes;
+        }
+      } catch (_) {}
+
+      // Fallback: build valid UserProfile from Supabase auth user metadata so user is never locked out
+      final meta = session.user.userMetadata ?? {};
+      final fallback = UserProfile(
+        id: userId,
+        name: meta['name']?.toString() ??
+            meta['full_name']?.toString() ??
+            session.user.email?.split('@').first ??
+            'Rankearn Aspirant',
+        email: session.user.email ?? 'aspirant@rankearn.in',
+        phone: session.user.phone ?? meta['phone']?.toString(),
+        coins: 100,
+        subscriptionStatus: 'free',
+        examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+        state: 'India',
+        createdAt: DateTime.now(),
+      );
+      await saveLocalProfile(fallback);
+      _safeSyncDeviceToken(fallback.id);
+      return Success(fallback);
+    }
+
+    // 3. Fallback: If session is not currently in memory, but we have a locally cached profile:
+    if (cachedProfile != null) {
+      // Check if raw token exists to restore session to Supabase client
+      try {
+        final rawSbToken = await SupabaseConfig.getPersistedToken();
+        if (rawSbToken != null && rawSbToken.isNotEmpty && client != null) {
+          if (client.auth.currentSession == null) {
+            await client.auth.setInitialSession(rawSbToken);
+          }
+        }
+      } catch (_) {}
+
+      _safeSyncDeviceToken(cachedProfile.id);
       return Success(cachedProfile);
     }
 
-    // 2. Ensure Supabase auth session is recovered and ready
-    try {
-      final readySession = await SupabaseConfig.ensureSessionReady() ?? client?.auth.currentSession;
-      if (readySession != null) {
-        final profileRes = await getProfile(readySession.user.id);
-        if (profileRes is Success<UserProfile>) {
-          await saveLocalProfile(profileRes.data);
-          unawaited(PushNotificationService.syncDeviceToken(userId: profileRes.data.id));
-          return profileRes;
-        }
-
-        final meta = readySession.user.userMetadata ?? {};
-        final fallback = UserProfile(
-          id: readySession.user.id,
-          name: meta['name']?.toString() ??
-              meta['full_name']?.toString() ??
-              readySession.user.email?.split('@').first ??
-              'Rankearn Aspirant',
-          email: readySession.user.email ?? 'aspirant@rankearn.in',
-          phone: readySession.user.phone ?? meta['phone']?.toString(),
-          coins: 100,
-          subscriptionStatus: 'free',
-          examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
-          state: 'India',
-          createdAt: DateTime.now(),
-        );
-        await saveLocalProfile(fallback);
-        unawaited(PushNotificationService.syncDeviceToken(userId: fallback.id));
-        return Success(fallback);
-      }
-    } catch (_) {}
-
-    // 3. Fallback: Parse stored Supabase auth token directly from SharedPreferences
+    // 4. Fallback: Parse stored Supabase auth token directly from SharedPreferences if cache was missing
     try {
       final rawSbToken = await SupabaseConfig.getPersistedToken();
       if (rawSbToken != null && rawSbToken.isNotEmpty) {
@@ -142,8 +175,13 @@ class AuthRepository {
             state: 'India',
             createdAt: DateTime.now(),
           );
+          if (client != null && client.auth.currentSession == null) {
+            try {
+              await client.auth.setInitialSession(rawSbToken);
+            } catch (_) {}
+          }
           await saveLocalProfile(fallback);
-          unawaited(PushNotificationService.syncDeviceToken(userId: fallback.id));
+          _safeSyncDeviceToken(fallback.id);
           return Success(fallback);
         }
       }
@@ -183,7 +221,7 @@ class AuthRepository {
         password: password,
         data: {
           'name': name.trim(),
-          if (cleanPhone != null) 'phone': cleanPhone,
+          'phone': ?cleanPhone,
           if (examGoal != null && examGoal.trim().isNotEmpty) 'exam_goal': examGoal.trim(),
           if (referralCode != null && referralCode.trim().isNotEmpty)
             'referral_code': referralCode.trim().toUpperCase(),
@@ -253,6 +291,7 @@ class AuthRepository {
   Future<Result<UserProfile>> signInWithIdentifier({
     required String identifier,
     required String password,
+    bool rememberMe = true,
   }) async {
     final client = _client;
     if (client == null) {
@@ -306,7 +345,7 @@ class AuthRepository {
 
       final profileRes = await getProfile(user.id);
       if (profileRes is Success<UserProfile>) {
-        await saveLocalProfile(profileRes.data);
+        await saveLocalProfile(profileRes.data, rememberMe: rememberMe);
         return profileRes;
       }
 
@@ -325,7 +364,7 @@ class AuthRepository {
       try {
         await client.from('profiles').upsert(fallbackProfile.toMap()).timeout(const Duration(seconds: 8));
       } catch (_) {}
-      await saveLocalProfile(fallbackProfile);
+      await saveLocalProfile(fallbackProfile, rememberMe: rememberMe);
       return Success(fallbackProfile);
     } on TimeoutException {
       return const Failure('Server request timed out. Please check your internet connection or verify if the Supabase project is active/unpaused.');
@@ -344,14 +383,16 @@ class AuthRepository {
   Future<Result<UserProfile>> signInWithEmail({
     required String email,
     required String password,
+    bool rememberMe = true,
   }) async {
-    return signInWithIdentifier(identifier: email, password: password);
+    return signInWithIdentifier(identifier: email, password: password, rememberMe: rememberMe);
   }
 
   /// Sign In with Google OAuth ID Token
   Future<Result<UserProfile>> signInWithGoogleIdToken({
     required String idToken,
     String? accessToken,
+    bool rememberMe = true,
   }) async {
     final client = _client;
     if (client == null) {
@@ -371,7 +412,7 @@ class AuthRepository {
 
       final profileRes = await getProfile(user.id);
       if (profileRes is Success<UserProfile>) {
-        await saveLocalProfile(profileRes.data);
+        await saveLocalProfile(profileRes.data, rememberMe: rememberMe);
         return profileRes;
       }
 
@@ -390,7 +431,7 @@ class AuthRepository {
       try {
         await client.from('profiles').upsert(fallbackProfile.toMap());
       } catch (_) {}
-      await saveLocalProfile(fallbackProfile);
+      await saveLocalProfile(fallbackProfile, rememberMe: rememberMe);
       return Success(fallbackProfile);
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
@@ -433,6 +474,7 @@ class AuthRepository {
   Future<Result<UserProfile>> verifyPhoneOtp({
     required String phone,
     required String token,
+    bool rememberMe = true,
   }) async {
     final client = _client;
     if (client == null) return const Failure('Database not connected');
@@ -450,7 +492,7 @@ class AuthRepository {
       }
       final profileRes = await getProfile(user.id);
       if (profileRes is Success<UserProfile>) {
-        await saveLocalProfile(profileRes.data);
+        await saveLocalProfile(profileRes.data, rememberMe: rememberMe);
         return profileRes;
       }
 
@@ -469,7 +511,7 @@ class AuthRepository {
       try {
         await client.from('profiles').upsert(fallbackProfile.toMap());
       } catch (_) {}
-      await saveLocalProfile(fallbackProfile);
+      await saveLocalProfile(fallbackProfile, rememberMe: rememberMe);
       return Success(fallbackProfile);
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
@@ -635,7 +677,9 @@ class AuthRepository {
           .select()
           .single();
 
-      return Success(UserProfile.fromMap(data));
+      final updated = UserProfile.fromMap(data);
+      await saveLocalProfile(updated);
+      return Success(updated);
     } catch (e) {
       return Failure('Error updating profile: $e', e);
     }

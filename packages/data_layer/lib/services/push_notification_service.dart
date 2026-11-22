@@ -257,7 +257,14 @@ class PushNotificationService {
 
   /// Register device FCM token in Supabase public.user_device_tokens table
   static Future<void> syncDeviceToken({String? userId}) async {
-    final token = _cachedFcmToken ?? await FirebaseMessaging.instance.getToken().catchError((_) => null);
+    String? token = _cachedFcmToken;
+    if (token == null) {
+      try {
+        token = await FirebaseMessaging.instance.getToken().catchError((_) => null);
+      } catch (_) {
+        return;
+      }
+    }
     if (token == null || token.isEmpty) return;
 
     final client = SupabaseConfig.clientSafe;

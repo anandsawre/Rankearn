@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,6 +38,7 @@ class UserAuthScreen extends StatefulWidget {
 class _UserAuthScreenState extends State<UserAuthScreen> {
   final AuthRepository _authRepository = AuthRepository();
   final _formKey = GlobalKey<FormState>();
+  StreamSubscription<dynamic>? _authSubscription;
 
   late AuthScreenMode _mode;
 
@@ -76,10 +78,22 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     _phoneFocusNode.addListener(() {
       if (mounted) setState(() {});
     });
+    _authSubscription = _authRepository.authStateChanges.listen((authState) async {
+      final session = authState.session;
+      if (session != null &&
+          (authState.event.name == 'signedIn' ||
+           authState.event.name == 'tokenRefreshed')) {
+        final res = await _authRepository.getProfile(session.user.id);
+        if (res is Success<UserProfile> && mounted) {
+          _handleSuccess(res.data);
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _scrollController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
@@ -136,6 +150,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         final res = await _authRepository.signInWithIdentifier(
           identifier: identifier,
           password: password,
+          rememberMe: _rememberMe,
         );
 
         if (res is Success<UserProfile>) {
@@ -252,7 +267,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   }
 
   void _handleSuccess(UserProfile profile) {
-    _authRepository.saveLocalProfile(profile);
+    _authRepository.saveLocalProfile(profile, rememberMe: _rememberMe);
     if (widget.onAuthSuccess != null) {
       widget.onAuthSuccess!(profile);
     } else {
