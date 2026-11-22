@@ -49,24 +49,14 @@ class AuthRepository {
     }
   }
 
-  /// Retrieve locally persisted user profile
+  /// Retrieve locally persisted user profile for display convenience (NOT authentication proof)
   Future<UserProfile?> getLocalProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final rememberMe = prefs.getBool(_rememberMeKey) ?? true;
-      if (!rememberMe) {
-        AuthLogger.log('getLocalProfile: rememberMe is false; skipping local profile');
-        return null;
-      }
       final raw = prefs.getString(_localProfileKey);
       if (raw != null && raw.isNotEmpty) {
         final map = jsonDecode(raw) as Map<String, dynamic>;
         final profile = UserProfile.fromMap(map);
-        AuthLogger.logSessionRestore(
-          source: 'local_profile_cache',
-          hasSession: true,
-          userId: profile.id,
-        );
         return profile;
       }
     } catch (e) {
@@ -87,162 +77,100 @@ class AuthRepository {
     }
   }
 
-  /// Restore user session seamlessly on app launch (guarantees session persistence across APK restarts)
+  /// Restore user session on app launch.
+  ///
+  /// CRITICAL SECURITY REQUIREMENT:
+  /// Only an actual, verified Supabase SDK session (`currentSession != null`)
+  /// establishes authenticated status. A cached user profile in SharedPreferences
+  /// is NEVER treated as proof of authentication.
   Future<Result<UserProfile>> restoreSession() async {
     final client = _client;
+    if (client == null || !SupabaseConfig.isInitialized) {
+      AuthLogger.logSessionRestore(
+        source: 'uninitialized_client',
+        hasSession: false,
+        error: 'Supabase client is null or uninitialized',
+      );
+      return const Failure('Supabase client not initialized');
+    }
 
-    // Fast check: retrieve locally persisted profile cache
-    final cachedProfile = await getLocalProfile();
-
-    // 1. Ensure Supabase auth session is recovered and available
+    // 1. Ensure the Supabase SDK session is ready (safely awaiting refresh if expired)
     supa.Session? session;
-    if (SupabaseConfig.isInitialized && client != null) {
-      try {
-        session = await SupabaseConfig.ensureSessionReady();
-      } catch (e) {
-        AuthLogger.log('ensureSessionReady error in restoreSession', {'error': e.toString()});
-      }
-      session ??= client.auth.currentSession;
+    try {
+      session = await SupabaseConfig.ensureSessionReady();
+    } catch (e) {
+      AuthLogger.log('ensureSessionReady error in restoreSession', {'error': e.toString()});
     }
+    session ??= client.auth.currentSession;
+    final supaUser = client.auth.currentUser;
 
-    // 2. If Supabase session is present:
-    if (session != null) {
-      final userId = session.user.id;
-
-      // If cached profile matches the active authenticated user, return immediately!
-      // This eliminates startup lag and guarantees offline functionality.
-      if (cachedProfile != null && cachedProfile.id == userId) {
-        _safeSyncDeviceToken(userId);
-
-        // Asynchronously synchronize fresh profile from DB in the background without blocking UI
-        if (client != null) {
-          unawaited(() async {
-            try {
-              final fresh = await getProfile(userId);
-              if (fresh is Success<UserProfile>) {
-                await saveLocalProfile(fresh.data);
-              }
-            } catch (_) {}
-          }());
-        }
-        AuthLogger.logSessionRestore(
-          source: 'active_session_and_cache_matched',
-          hasSession: true,
-          userId: userId,
-        );
-        return Success(cachedProfile);
-      }
-
-      // If no cache or user mismatch, fetch from database:
-      try {
-        final profileRes = await getProfile(userId);
-        if (profileRes is Success<UserProfile>) {
-          await saveLocalProfile(profileRes.data);
-          _safeSyncDeviceToken(profileRes.data.id);
-          AuthLogger.logSessionRestore(
-            source: 'active_session_fetched_from_db',
-            hasSession: true,
-            userId: profileRes.data.id,
-          );
-          return profileRes;
-        }
-      } catch (e) {
-        AuthLogger.log('getProfile db fetch error; falling back to metadata', {'error': e.toString()});
-      }
-
-      // Fallback: build valid UserProfile from Supabase auth user metadata so user is never locked out
-      final meta = session.user.userMetadata ?? {};
-      final fallback = UserProfile(
-        id: userId,
-        name: meta['name']?.toString() ??
-            meta['full_name']?.toString() ??
-            session.user.email?.split('@').first ??
-            'Rankearn Aspirant',
-        email: session.user.email ?? 'aspirant@rankearn.in',
-        phone: session.user.phone ?? meta['phone']?.toString(),
-        coins: 100,
-        subscriptionStatus: 'free',
-        examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
-        state: 'India',
-        createdAt: DateTime.now(),
-      );
-      await saveLocalProfile(fallback);
-      _safeSyncDeviceToken(fallback.id);
+    // 2. The ONLY source of truth for authentication is the verified Supabase SDK session!
+    if (session == null || supaUser == null) {
       AuthLogger.logSessionRestore(
-        source: 'active_session_constructed_from_metadata',
-        hasSession: true,
-        userId: fallback.id,
+        source: 'supabase_sdk_session_check',
+        hasSession: false,
+        userId: null,
       );
-      return Success(fallback);
+      return const Failure('No authenticated Supabase session found');
     }
 
-    // 3. Fallback: If session is not currently in memory, but we have a locally cached profile:
-    if (cachedProfile != null) {
-      // Check if raw token exists to restore session to Supabase client
-      try {
-        final rawSbToken = await SupabaseConfig.getPersistedToken();
-        if (rawSbToken != null && rawSbToken.isNotEmpty && client != null) {
-          if (client.auth.currentSession == null) {
-            await client.auth.setInitialSession(rawSbToken);
+    final userId = supaUser.id;
+    AuthLogger.logSessionRestore(
+      source: 'supabase_sdk_session_verified',
+      hasSession: true,
+      userId: userId,
+      isExpired: session.isExpired,
+    );
+
+    // 3. Read cached profile for fast UI display if it matches the authenticated user
+    final cachedProfile = await getLocalProfile();
+    if (cachedProfile != null && cachedProfile.id == userId) {
+      _safeSyncDeviceToken(userId);
+
+      // Asynchronously synchronize fresh profile from DB in the background without blocking UI
+      unawaited(() async {
+        try {
+          final fresh = await getProfile(userId);
+          if (fresh is Success<UserProfile>) {
+            await saveLocalProfile(fresh.data);
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }());
 
-      _safeSyncDeviceToken(cachedProfile.id);
-      AuthLogger.logSessionRestore(
-        source: 'offline_cached_profile_fallback',
-        hasSession: true,
-        userId: cachedProfile.id,
-      );
       return Success(cachedProfile);
     }
 
-    // 4. Fallback: Parse stored Supabase auth token directly from SharedPreferences if cache was missing
+    // 4. If cache missing or user mismatch, fetch from database:
     try {
-      final rawSbToken = await SupabaseConfig.getPersistedToken();
-      if (rawSbToken != null && rawSbToken.isNotEmpty) {
-        final tokenJson = jsonDecode(rawSbToken) as Map<String, dynamic>;
-        final userObj = tokenJson['user'] as Map<String, dynamic>?;
-        if (userObj != null && userObj['id'] != null) {
-          final userId = userObj['id'].toString();
-          final meta = (userObj['user_metadata'] as Map<String, dynamic>?) ?? {};
-          final email = userObj['email']?.toString() ?? 'aspirant@rankearn.in';
-          final name = meta['name']?.toString() ??
-              meta['full_name']?.toString() ??
-              email.split('@').first;
-          final fallback = UserProfile(
-            id: userId,
-            name: name,
-            email: email,
-            phone: userObj['phone']?.toString() ?? meta['phone']?.toString(),
-            coins: 100,
-            subscriptionStatus: 'free',
-            examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
-            state: 'India',
-            createdAt: DateTime.now(),
-          );
-          if (client != null && client.auth.currentSession == null) {
-            try {
-              await client.auth.setInitialSession(rawSbToken);
-            } catch (_) {}
-          }
-          await saveLocalProfile(fallback);
-          _safeSyncDeviceToken(fallback.id);
-          AuthLogger.logSessionRestore(
-            source: 'raw_storage_token_parsed',
-            hasSession: true,
-            userId: fallback.id,
-          );
-          return Success(fallback);
-        }
+      final profileRes = await getProfile(userId);
+      if (profileRes is Success<UserProfile>) {
+        await saveLocalProfile(profileRes.data);
+        _safeSyncDeviceToken(profileRes.data.id);
+        return profileRes;
       }
-    } catch (_) {}
+    } catch (e) {
+      AuthLogger.log('getProfile database fetch error; using metadata', {'error': e.toString()});
+    }
 
-    AuthLogger.logSessionRestore(
-      source: 'restoreSession_completed',
-      hasSession: false,
+    // 5. Fallback: If DB query fails (e.g. offline), construct profile from verified SDK user metadata
+    final meta = supaUser.userMetadata ?? {};
+    final fallback = UserProfile(
+      id: userId,
+      name: meta['name']?.toString() ??
+          meta['full_name']?.toString() ??
+          supaUser.email?.split('@').first ??
+          'Rankearn Aspirant',
+      email: supaUser.email ?? 'aspirant@rankearn.in',
+      phone: supaUser.phone ?? meta['phone']?.toString(),
+      coins: 100,
+      subscriptionStatus: 'free',
+      examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+      state: 'India',
+      createdAt: DateTime.now(),
     );
-    return const Failure('No authenticated session found');
+    await saveLocalProfile(fallback);
+    _safeSyncDeviceToken(fallback.id);
+    return Success(fallback);
   }
 
   /// Register new user with Email, Phone, Password, Name, and optional Referral Code

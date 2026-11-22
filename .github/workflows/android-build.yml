@@ -46,6 +46,9 @@ jobs:
           flutter analyze --no-fatal-infos packages/data_layer apps/user_app apps/admin_app
 
       - name: Run Authentication Persistence & Unit Tests
+        env:
+          SUPABASE_TEST_EMAIL: ${{ secrets.SUPABASE_TEST_EMAIL }}
+          SUPABASE_TEST_PASSWORD: ${{ secrets.SUPABASE_TEST_PASSWORD }}
         run: |
           mkdir -p reports
           echo "==========================================" > reports/auth-diagnostics-summary.txt
@@ -57,6 +60,7 @@ jobs:
           cd packages/data_layer
           flutter test test/auth_session_persistence_test.dart --reporter expanded 2>&1 | tee ../../reports/auth-persistence-tests.log
           flutter test test/data_layer_test.dart --reporter expanded 2>&1 | tee -a ../../reports/data-layer-tests.log
+          flutter test test/supabase_real_auth_integration_test.dart --reporter expanded 2>&1 | tee -a ../../reports/supabase-real-auth-tests.log
           cd ../..
 
           echo "Running User App Auth Screen & Battle Flow Tests..."
@@ -66,6 +70,7 @@ jobs:
           cd ../..
 
           cat reports/auth-persistence-tests.log >> reports/auth-diagnostics-summary.txt
+          cat reports/supabase-real-auth-tests.log >> reports/auth-diagnostics-summary.txt
           cat reports/user-auth-screen-tests.log >> reports/auth-diagnostics-summary.txt
 
       - name: Build User App Release APKs (Compact & Universal)

@@ -52,18 +52,10 @@ void main() async {
   UserProfile? initialProfile;
   try {
     final authRepo = AuthRepository();
-    // 1. Instantly check local profile cache FIRST (1ms disk read, zero network dependency)
-    initialProfile = await authRepo.getLocalProfile();
-    if (initialProfile == null) {
-      // 2. Fallback to Supabase session recovery only if no local cache exists
-      await SupabaseConfig.ensureSessionReady();
-      final res = await authRepo.restoreSession();
-      if (res case Success(:final data)) {
-        initialProfile = data;
-      }
-    } else {
-      // Asynchronously ensure Supabase session is synchronized without blocking app startup
-      unawaited(SupabaseConfig.ensureSessionReady());
+    // Only establish authenticated status if a verified Supabase SDK session exists!
+    final res = await authRepo.restoreSession();
+    if (res case Success(:final data)) {
+      initialProfile = data;
     }
   } catch (e) {
     AuthLogger.log('Startup session restore error', {'error': e.toString()});
@@ -159,56 +151,9 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
       AuthLogger.log('Session check error', {'error': e.toString()});
     }
     if (mounted) {
-      final cached = await _authRepository.getLocalProfile();
-      if (cached != null) {
-        AuthLogger.logNavigationDecision(
-          screen: 'UserAppShell',
-          reason: 'cached_profile_restored',
-          userId: cached.id,
-        );
-        setState(() {
-          _currentUser = cached;
-          _showAuth = false;
-          _isCheckingSession = false;
-        });
-        return;
-      }
-
-      // 3. Fallback to Supabase current user
-      final supaUser = SupabaseConfig.clientSafe?.auth.currentUser;
-      if (supaUser != null) {
-        final meta = supaUser.userMetadata ?? {};
-        final fallback = UserProfile(
-          id: supaUser.id,
-          name: meta['name']?.toString() ??
-              meta['full_name']?.toString() ??
-              supaUser.email?.split('@').first ??
-              'Rankearn Aspirant',
-          email: supaUser.email ?? 'aspirant@rankearn.in',
-          phone: supaUser.phone ?? meta['phone']?.toString(),
-          coins: 100,
-          subscriptionStatus: 'free',
-          examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
-          state: 'India',
-          createdAt: DateTime.now(),
-        );
-        await _authRepository.saveLocalProfile(fallback);
-        AuthLogger.logNavigationDecision(
-          screen: 'UserAppShell',
-          reason: 'supaUser_metadata_restored',
-          userId: fallback.id,
-        );
-        setState(() {
-          _currentUser = fallback;
-          _showAuth = false;
-          _isCheckingSession = false;
-        });
-        return;
-      }
-
       AuthLogger.logNavigationDecision(
         screen: 'UserAuthScreen',
-        reason: 'no_session_and_no_cache',
+        reason: 'no_authenticated_supabase_session',
       );
       setState(() {
         _currentUser = null;

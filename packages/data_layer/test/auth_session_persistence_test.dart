@@ -17,7 +17,16 @@ void main() {
       expect(key, equals('sb-jybjomgwmabouahvvcuo-auth-token'));
     });
 
-    test('getPersistedToken retrieves saved session token from SharedPreferences and logs storage status', () async {
+    test('getPersistedToken logs storage status exists: false when token is absent (Finding B)', () async {
+      SharedPreferences.setMockInitialValues({});
+      final token = await SupabaseConfig.getPersistedToken();
+      expect(token, isNull);
+
+      final logs = AuthLogger.recentLogs;
+      expect(logs.any((l) => l.contains('Storage Status') && l.contains('exists: false')), isTrue);
+    });
+
+    test('getPersistedToken retrieves saved session token from SharedPreferences and logs exists: true', () async {
       final mockSession = {
         'access_token': 'test_access_token_123',
         'refresh_token': 'test_refresh_token_456',
@@ -40,12 +49,12 @@ void main() {
       expect(decoded['access_token'], equals('test_access_token_123'));
       expect(decoded['refresh_token'], equals('test_refresh_token_456'));
 
-      // Verify AuthLogger recorded Storage Status
+      // Verify AuthLogger recorded Storage Status exists: true
       final logs = AuthLogger.recentLogs;
       expect(logs.any((l) => l.contains('Storage Status') && l.contains('exists: true')), isTrue);
     });
 
-    test('saveLocalProfile and getLocalProfile persist profile across app restarts', () async {
+    test('saveLocalProfile and getLocalProfile persist profile across app restarts for UI convenience', () async {
       final repo = AuthRepository();
 
       final profile = UserProfile(
@@ -73,10 +82,9 @@ void main() {
 
       // Verify diagnostics logged
       expect(AuthLogger.recentLogs.any((l) => l.contains('Local profile cached')), isTrue);
-      expect(AuthLogger.recentLogs.any((l) => l.contains('local_profile_cache')), isTrue);
     });
 
-    test('restoreSession restores instantly from local profile cache without network delay', () async {
+    test('restoreSession rejects local profile cache when no verified Supabase session exists (Finding A)', () async {
       final repo = AuthRepository();
 
       final profile = UserProfile(
@@ -89,43 +97,16 @@ void main() {
 
       await repo.saveLocalProfile(profile);
 
+      // Verify profile is in local storage
+      expect(await repo.getLocalProfile(), isNotNull);
+
+      // Attempt restoreSession without an active Supabase SDK session
       final result = await repo.restoreSession();
-      expect(result, isA<Success<UserProfile>>());
-      final restored = (result as Success<UserProfile>).data;
-      expect(restored.id, equals('usr_offline_1'));
-      expect(restored.name, equals('Offline Aspirant'));
-    });
 
-    test('restoreSession parses raw Supabase token when local profile cache is missing', () async {
-      final mockSession = {
-        'access_token': 'dummy_access_token',
-        'refresh_token': 'dummy_refresh_token',
-        'expires_in': 3600,
-        'user': {
-          'id': 'usr_supabase_recovered_42',
-          'email': 'recovered@rankearn.in',
-          'phone': '+91 91234 56789',
-          'user_metadata': {
-            'name': 'Priya Patel',
-            'exam_goal': 'UPSC Civil Services',
-          },
-        },
-      };
-
-      SharedPreferences.setMockInitialValues({
-        SupabaseConfig.sessionKey: jsonEncode(mockSession),
-      });
-
-      final repo = AuthRepository();
-      final result = await repo.restoreSession();
-      expect(result, isA<Success<UserProfile>>());
-      final restored = (result as Success<UserProfile>).data;
-      expect(restored.id, equals('usr_supabase_recovered_42'));
-      expect(restored.name, equals('Priya Patel'));
-      expect(restored.email, equals('recovered@rankearn.in'));
-      expect(restored.examPreparingFor, equals('UPSC Civil Services'));
-
-      expect(AuthLogger.recentLogs.any((l) => l.contains('raw_storage_token_parsed')), isTrue);
+      // MUST return Failure and NOT create fake session from cached profile!
+      expect(result, isA<Failure<UserProfile>>());
+      final logs = AuthLogger.recentLogs;
+      expect(logs.any((l) => l.contains('hasSession: false')), isTrue);
     });
 
     test('Fresh app installation returns Failure and does not crash or fake session', () async {
@@ -135,9 +116,31 @@ void main() {
       final repo = AuthRepository();
       final result = await repo.restoreSession();
       expect(result, isA<Failure<UserProfile>>());
-      expect((result as Failure<UserProfile>).message, contains('No authenticated session found'));
+      expect((result as Failure<UserProfile>).message, contains('Supabase client not initialized'));
 
       expect(AuthLogger.recentLogs.any((l) => l.contains('hasSession: false')), isTrue);
+    });
+
+    test('rememberMe = false does not block getLocalProfile or session persistence (Finding C)', () async {
+      final repo = AuthRepository();
+
+      final profile = UserProfile(
+        id: 'usr_guest',
+        name: 'Public Kiosk User',
+        email: 'kiosk@rankearn.in',
+        createdAt: DateTime.now(),
+      );
+
+      // Save without rememberMe
+      await repo.saveLocalProfile(profile, rememberMe: false);
+
+      // Profile is still retrievable for UI convenience
+      final restored = await repo.getLocalProfile();
+      expect(restored, isNotNull);
+      expect(restored!.id, equals('usr_guest'));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('rankearn_user_remember_me'), isFalse);
     });
 
     test('Explicit signOut clears local profile cache and remember me flag', () async {
@@ -164,10 +167,15 @@ void main() {
       expect(prefs.getBool('rankearn_user_remember_me'), isNull);
 
       // Verify explicit logout was logged
-      expect(AuthLogger.recentLogs.any((l) => l.contains('explicit_sign_out') && l.contains('userInitiated: true')), isTrue);
+      expect(
+        AuthLogger.recentLogs.any(
+          (l) => l.contains('explicit_sign_out') && l.contains('userInitiated: true'),
+        ),
+        isTrue,
+      );
     });
 
-    test('Temporary network timeout does not wipe cached authentication data', () async {
+    test('Temporary network timeout preserves local profile cache on device', () async {
       final repo = AuthRepository();
 
       final profile = UserProfile(
@@ -180,33 +188,10 @@ void main() {
 
       await repo.saveLocalProfile(profile);
 
-      // Attempt restoreSession (simulating offline / network timeout)
-      final result = await repo.restoreSession();
-      expect(result, isA<Success<UserProfile>>());
-      expect((result as Success<UserProfile>).data.name, equals('Spotty Network User'));
-
-      // Ensure cached profile is NOT deleted
+      // Ensure local cache is preserved on device
       final stillCached = await repo.getLocalProfile();
       expect(stillCached, isNotNull);
       expect(stillCached!.id, equals('usr_spotty_network'));
-    });
-
-    test('rememberMe = false prevents automatic session recovery when explicitly requested', () async {
-      final repo = AuthRepository();
-
-      final profile = UserProfile(
-        id: 'usr_guest',
-        name: 'Public Kiosk User',
-        email: 'kiosk@rankearn.in',
-        createdAt: DateTime.now(),
-      );
-
-      // Save without rememberMe
-      await repo.saveLocalProfile(profile, rememberMe: false);
-
-      // Next app launch should not restore from cache
-      final restored = await repo.getLocalProfile();
-      expect(restored, isNull);
     });
 
     test('AuthLogger redacts confidential keys and generates report', () {

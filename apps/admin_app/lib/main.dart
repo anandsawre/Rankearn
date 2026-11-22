@@ -62,41 +62,19 @@ void main() async {
   String? cachedAdminEmail;
   String? cachedAdminRole;
   try {
-    // 1. Read locally cached admin state FIRST (instant, zero network delay)
+    final session = await SupabaseConfig.ensureSessionReady();
     final client = SupabaseConfig.clientSafe;
+    final supaUser = client?.auth.currentUser;
     final prefs = await SharedPreferences.getInstance();
-    final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
     cachedAdminName = prefs.getString('rankearn_admin_name');
-    cachedAdminEmail = prefs.getString('rankearn_admin_email');
+    cachedAdminEmail = prefs.getString('rankearn_admin_email') ?? supaUser?.email;
     cachedAdminRole = prefs.getString('rankearn_admin_role');
 
-    // Also parse Supabase token if available
-    final rawSbToken = await SupabaseConfig.getPersistedToken();
-    bool hasValidSbToken = false;
-    if (rawSbToken != null && rawSbToken.isNotEmpty) {
-      try {
-        final tokenJson = jsonDecode(rawSbToken) as Map<String, dynamic>;
-        final userObj = tokenJson['user'] as Map<String, dynamic>?;
-        if (userObj != null && userObj['id'] != null) {
-          hasValidSbToken = true;
-          cachedAdminEmail ??= userObj['email']?.toString();
-          final meta = (userObj['user_metadata'] as Map<String, dynamic>?) ?? {};
-          cachedAdminName ??= meta['name']?.toString() ??
-              meta['full_name']?.toString() ??
-              cachedAdminEmail?.split('@').first;
-        }
-      } catch (_) {}
-    }
-
-    final session = client?.auth.currentSession;
-    startLoggedIn = wasLoggedIn ||
-        session != null ||
-        hasValidSbToken ||
-        (cachedAdminEmail != null && cachedAdminEmail.isNotEmpty);
-
-    // 2. Asynchronously recover Supabase session without blocking main thread
-    unawaited(SupabaseConfig.ensureSessionReady());
-  } catch (_) {}
+    // ONLY establish authenticated status if a real Supabase SDK session exists
+    startLoggedIn = session != null && supaUser != null;
+  } catch (e) {
+    debugPrint('Admin startup session restore error: $e');
+  }
 
   runApp(
     ProviderScope(
@@ -246,19 +224,21 @@ class _AdminAppShellState extends State<AdminAppShell> {
 
   Future<void> _checkAndRestoreSession() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
-      final cachedEmail = prefs.getString('rankearn_admin_email');
+      final session = await SupabaseConfig.ensureSessionReady();
+      final client = SupabaseConfig.clientSafe;
+      final supaUser = client?.auth.currentUser;
+      final hasRealSession = session != null && supaUser != null;
 
-      if ((wasLoggedIn || (cachedEmail != null && cachedEmail.isNotEmpty)) && mounted && !_isLoggedIn) {
+      if (mounted) {
         setState(() {
-          _isLoggedIn = true;
+          _isLoggedIn = hasRealSession;
           _isCheckingAuth = false;
         });
       }
 
-      await SupabaseConfig.ensureSessionReady();
-      _syncCurrentAdminProfile();
+      if (hasRealSession) {
+        _syncCurrentAdminProfile();
+      }
     } catch (_) {}
     if (mounted && _isCheckingAuth) {
       setState(() => _isCheckingAuth = false);
