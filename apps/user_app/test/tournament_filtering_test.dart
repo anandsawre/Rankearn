@@ -88,5 +88,62 @@ void main() {
       final intersection = running.where((r) => upcoming.any((u) => u.id == r.id)).toList();
       expect(intersection, isEmpty);
     });
+
+    test('Live Test vs Contest Separation strictly routes tests to their intended tabs', () {
+      final now = DateTime.now();
+      final futureStart = now.add(const Duration(days: 2));
+
+      // 1. A pure Live Test (ticked "Run as Scheduled Live Test")
+      final scheduledLiveTest = TestModel(
+        id: 'test-live-only',
+        title: 'All India Live Science Mock',
+        durationMinutes: 45,
+        totalQuestions: 50,
+        testMode: 'live',
+        isTournament: false,
+        entryFeeCoins: 0,
+        scheduledStartTime: futureStart,
+        status: 'published',
+      );
+
+      // 2. A pure Contest (ticked "Run as Live Paid Contest / Tournament")
+      final paidTournament = TestModel(
+        id: 'test-contest-only',
+        title: 'Unit And Measurements Tournament',
+        durationMinutes: 20,
+        totalQuestions: 50,
+        testMode: 'tournament',
+        isTournament: true,
+        entryFeeCoins: 100,
+        scheduledStartTime: futureStart,
+        status: 'published',
+      );
+
+      final combinedPool = [scheduledLiveTest, paidTournament];
+
+      // Contests query: strictly isTournament == true or testMode == 'tournament'
+      final tournamentTabList = combinedPool
+          .where((t) => t.isTournament || t.testMode == 'tournament')
+          .toList();
+
+      // Live Tests query: strictly excludes pure tournaments
+      final liveTestsTabList = combinedPool
+          .where((t) =>
+              (!t.isTournament || t.testMode == 'live' || t.testMode == 'live_quiz') &&
+              t.testMode != 'tournament')
+          .toList();
+
+      // Contests tab must ONLY contain paidTournament
+      expect(tournamentTabList.length, 1);
+      expect(tournamentTabList.first.id, 'test-contest-only');
+
+      // Live Tests tab must ONLY contain scheduledLiveTest
+      expect(liveTestsTabList.length, 1);
+      expect(liveTestsTabList.first.id, 'test-live-only');
+
+      // Zero overlap between Live Test tab and Contests tab
+      final overlap = tournamentTabList.where((t) => liveTestsTabList.any((l) => l.id == t.id)).toList();
+      expect(overlap, isEmpty);
+    });
   });
 }

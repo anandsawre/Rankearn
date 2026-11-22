@@ -53,7 +53,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<TestModel> _popularTests = [];
   List<TestModel> _allTests = [];
   List<ExamCategoryModel> _examCategories = [];
-  List<TestModel> _tournaments = [];
+  List<TestModel> _liveTests = [];
   List<CategoryModel> _liveCategories = [];
   List<BannerModel> _activeBanners = [];
   Map<String, dynamic> _userStats = {};
@@ -102,7 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboardData() async {
     final testsRes = await TestsRepository().getTests();
-    final tourRes = await ContestsRepository().getTournaments();
+    final liveRes = await ContestsRepository().getLiveAndUpcomingTests();
     final catRes = await TestsRepository().getCategories();
     final examRes = await TestsRepository().getExamCategoryList();
     final bannersRes = await BannersRepository().getActiveBanners(displayMode: 'home_carousel');
@@ -132,8 +132,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (examRes is Success<List<ExamCategoryModel>> && examRes.data.isNotEmpty) {
         _examCategories = examRes.data;
       }
-      if (tourRes is Success<List<TestModel>>) {
-        _tournaments = tourRes.data;
+      if (liveRes is Success<List<TestModel>>) {
+        _liveTests = liveRes.data;
       }
       if (catRes is Success<List<CategoryModel>> && catRes.data.isNotEmpty) {
         _liveCategories = catRes.data;
@@ -780,13 +780,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       LiveEventActionType actionType,
       VoidCallback onAction,
     })>[
-      if (_tournaments.isNotEmpty) ...[
-        for (final t in _tournaments.take(5))
+      if (_liveTests.isNotEmpty) ...[
+        for (final t in _liveTests.take(5))
           (
             title: t.title,
             dateTime: t.scheduledStartTime != null
                 ? '${t.scheduledStartTime!.day} ${_monthName(t.scheduledStartTime!.month)} • ${_formatHour(t.scheduledStartTime!)}'
-                : 'Live Tournament',
+                : 'Scheduled Live Test',
             questions: '${t.totalQuestions} Questions',
             icon: Container(
               width: 38,
@@ -797,7 +797,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               child: Center(
                 child: Icon(
-                  t.isLive ? Icons.calendar_month_rounded : Icons.emoji_events_rounded,
+                  t.isLive ? Icons.sensors_rounded : Icons.calendar_month_rounded,
                   color: t.isLive ? Colors.white : const Color(0xFF2587F8),
                   size: 22,
                 ),
@@ -1009,7 +1009,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        if (_tournaments.isEmpty)
+        if (_liveTests.isEmpty)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -1026,11 +1026,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           )
         else
-          for (final t in _tournaments.take(3)) ...[
+          for (final t in _liveTests.take(3)) ...[
             _buildDesktopLiveEventCard(
               iconBg: t.isLive ? const Color(0xFFF43F5E) : const Color(0xFF2587F8),
               icon: Icon(
-                t.isLive ? Icons.calendar_month_rounded : Icons.emoji_events_rounded,
+                t.isLive ? Icons.sensors_rounded : Icons.calendar_month_rounded,
                 color: Colors.white,
                 size: 22,
               ),
@@ -1038,7 +1038,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: t.title,
               dateTime: t.scheduledStartTime != null
                   ? '${t.scheduledStartTime!.day} ${_monthName(t.scheduledStartTime!.month)} • ${_formatHour(t.scheduledStartTime!)}'
-                  : 'Live Tournament',
+                  : 'Scheduled Live Test',
               questions: '${t.totalQuestions} Questions',
               actionLabel: t.isLive ? 'Join Now →' : 'Register →',
               actionColor: t.isLive ? const Color(0xFFE11D48) : const Color(0xFF2587F8),

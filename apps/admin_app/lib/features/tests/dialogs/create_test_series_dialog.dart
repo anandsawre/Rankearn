@@ -36,6 +36,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
   late TestSeriesStatus _status;
 
   bool _isPremium = false;
+  bool _isLiveTest = false;
   bool _isTournament = false;
 
   DateTime? _scheduledStartTime;
@@ -68,6 +69,8 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
     _isTournament = item?.isTournament ?? false;
     _scheduledStartTime = item?.scheduledStartTime;
     _scheduledEndTime = item?.scheduledEndTime;
+    _isLiveTest = (item?.testMode == 'live' || item?.testMode == 'live_quiz') ||
+        (_scheduledStartTime != null && !_isTournament);
 
     _loadDataFromSupabase();
   }
@@ -175,13 +178,27 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
     final entryFee = _isTournament ? (int.tryParse(_entryFeeController.text.trim()) ?? 0) : 0;
     final finalTopic = _selectedTopic ?? _topicController.text.trim();
 
+    // Determine final testMode based on live test vs tournament flags
+    String finalTestMode = _testMode;
+    if (_isLiveTest && !_isTournament) {
+      finalTestMode = 'live';
+    } else if (_isTournament && !_isLiveTest) {
+      finalTestMode = 'tournament';
+    }
+
+    final hasSchedule = _isLiveTest || _isTournament;
+    final scheduledStart = hasSchedule ? _scheduledStartTime : null;
+    final scheduledEnd = hasSchedule
+        ? (_scheduledEndTime ?? scheduledStart?.add(Duration(minutes: duration)))
+        : null;
+
     final item = TestSeriesItem(
       id: widget.initialItem?.id ?? 'test-${DateTime.now().millisecondsSinceEpoch}',
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
       subject: _selectedSubject ?? 'General',
       examCategoryId: _examCategoryId.isNotEmpty ? _examCategoryId : 'general',
-      testMode: _testMode,
+      testMode: finalTestMode,
       totalTests: duration,
       durationMinutes: duration,
       totalQuestions: totalQ,
@@ -191,8 +208,8 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
       priceInr: coins,
       isTournament: _isTournament,
       entryFeeCoins: entryFee,
-      scheduledStartTime: _scheduledStartTime,
-      scheduledEndTime: _scheduledEndTime,
+      scheduledStartTime: scheduledStart,
+      scheduledEndTime: scheduledEnd,
       enrollments: widget.initialItem?.enrollments ?? 0,
       status: _status,
       createdAt: widget.initialItem?.createdAt ?? DateTime.now(),
@@ -202,6 +219,114 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
 
     widget.onSave(item);
     Navigator.of(context).pop();
+  }
+
+  String _formatDateTimeTokenized(DateTime? dt) {
+    if (dt == null) return 'Select Date & Time';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final m = months[dt.month - 1];
+    final hour = dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
+    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '${dt.day} $m ${dt.year} • $hour:$minute $ampm';
+  }
+
+  Widget _buildTokenizedDateTimePicker({
+    required BuildContext context,
+    required DateTime? value,
+    required ValueChanged<DateTime?> onChanged,
+    required String label,
+  }) {
+    final hasValue = value != null;
+
+    return InkWell(
+      onTap: () async {
+        final picked = await AppDateTimePicker.show(
+          context: context,
+          initialDateTime: value ?? DateTime.now().add(const Duration(days: 1)),
+          firstDate: DateTime.now().subtract(const Duration(days: 30)),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
+          gradientColors: const [Color(0xFFFF9500), Color(0xFFF59E0B)],
+        );
+        if (picked != null) {
+          onChanged(picked);
+        }
+      },
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        height: 42,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: hasValue ? const Color(0xFFF59E0B) : const Color(0xFFCBD5E1),
+            width: hasValue ? 1.2 : 1.0,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x080F172A),
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.calendar_month_rounded,
+                size: 15,
+                color: Color(0xFFEA580C),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 9.0,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF94A3B8),
+                      height: 1.1,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  Text(
+                    _formatDateTimeTokenized(value),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: hasValue ? FontWeight.w700 : FontWeight.w500,
+                      color: hasValue ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.access_time_rounded,
+              size: 16,
+              color: Color(0xFF64748B),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   IconData _getIconForSubject(String subject) {
@@ -491,21 +616,59 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                     ),
                   ],
                   const Divider(height: 18, color: Color(0xFFFDE68A)),
+
+                  // 2. Scheduled Live Test (Only in Live Tests tab)
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    value: _isLiveTest,
+                    activeColor: AppModalDialog.defaultPrimaryColor,
+                    onChanged: (val) {
+                      setState(() {
+                        _isLiveTest = val ?? false;
+                        if (_isLiveTest && _scheduledStartTime == null) {
+                          _scheduledStartTime = DateTime.now().add(const Duration(days: 1, hours: 2));
+                        }
+                      });
+                    },
+                    title: const Text('Run as Scheduled Live Test', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
+                    subtitle: const Text('Appears in Live Tests tab (Live Now & Upcoming Live Tests)', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                  ),
+                  if (_isLiveTest) ...[
+                    const SizedBox(height: 8),
+                    _buildTokenizedDateTimePicker(
+                      context: context,
+                      label: 'LIVE TEST SCHEDULE',
+                      value: _scheduledStartTime,
+                      onChanged: (dt) => setState(() => _scheduledStartTime = dt),
+                    ),
+                  ],
+
+                  const Divider(height: 18, color: Color(0xFFFDE68A)),
+
+                  // 3. Paid Contest / Tournament (Only in Contests tab)
                   CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                     value: _isTournament,
                     activeColor: AppModalDialog.defaultPrimaryColor,
-                    onChanged: (val) => setState(() => _isTournament = val ?? false),
+                    onChanged: (val) {
+                      setState(() {
+                        _isTournament = val ?? false;
+                        if (_isTournament && _scheduledStartTime == null) {
+                          _scheduledStartTime = DateTime.now().add(const Duration(days: 1, hours: 2));
+                        }
+                      });
+                    },
                     title: const Text('Run as Live Paid Contest / Tournament', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
-                    subtitle: const Text('Leaderboard-based live battle with prize distribution. (Will appear in Contests & Live Tests)', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                    subtitle: const Text('Appears in Contests tab (Running Contests & Upcoming Contests)', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                   ),
                   if (_isTournament) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         SizedBox(
-                          width: 160,
+                          width: 140,
                           child: AppModalDialog.textField(
                             controller: _entryFeeController,
                             keyboardType: TextInputType.number,
@@ -516,38 +679,11 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              final pickedDate = await showDatePicker(
-                                context: context,
-                                initialDate: _scheduledStartTime ?? DateTime.now().add(const Duration(days: 1)),
-                                firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                                lastDate: DateTime.now().add(const Duration(days: 365)),
-                              );
-                              if (pickedDate == null || !context.mounted) return;
-                              final pickedTime = await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.fromDateTime(_scheduledStartTime ?? DateTime.now()),
-                              );
-                              if (pickedTime == null || !context.mounted) return;
-                              setState(() {
-                                _scheduledStartTime = DateTime(
-                                  pickedDate.year,
-                                  pickedDate.month,
-                                  pickedDate.day,
-                                  pickedTime.hour,
-                                  pickedTime.minute,
-                                );
-                              });
-                            },
-                            icon: const Icon(Icons.event_rounded, size: 16),
-                            label: Text(
-                              _scheduledStartTime != null
-                                  ? '${_scheduledStartTime!.day}/${_scheduledStartTime!.month}/${_scheduledStartTime!.year}'
-                                  : 'Schedule Date',
-                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                          child: _buildTokenizedDateTimePicker(
+                            context: context,
+                            label: 'CONTEST SCHEDULE',
+                            value: _scheduledStartTime,
+                            onChanged: (dt) => setState(() => _scheduledStartTime = dt),
                           ),
                         ),
                       ],

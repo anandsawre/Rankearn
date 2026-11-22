@@ -26,14 +26,16 @@ class ContestsRepository {
           .or('is_tournament.eq.true,test_mode.eq.tournament')
           .order('created_at', ascending: false);
 
-      final list = (data as List).map((m) => TestModel.fromMap(m)).toList();
+      final allList = (data as List).map((m) => TestModel.fromMap(m)).toList();
+      // Strictly Tournaments / Contests
+      final list = allList.where((t) => t.isTournament || t.testMode == 'tournament').toList();
       return Success(list);
     } catch (e) {
       return Failure('Error fetching tournaments: $e', e);
     }
   }
 
-  /// Fetch Live and Scheduled Upcoming Tests
+  /// Fetch Live and Scheduled Upcoming Tests (strictly live tests, excludes pure tournaments)
   Future<Result<List<TestModel>>> getLiveAndUpcomingTests() async {
     final client = _client;
     if (client == null) {
@@ -47,7 +49,11 @@ class ContestsRepository {
           .not('scheduled_start_time', 'is', null)
           .order('scheduled_start_time', ascending: true);
 
-      final list = (data as List).map((m) => TestModel.fromMap(m)).toList();
+      final allList = (data as List).map((m) => TestModel.fromMap(m)).toList();
+      // Live Tests only: excludes pure tournaments so they stay in Contests tab
+      final list = allList
+          .where((t) => (!t.isTournament || t.testMode == 'live' || t.testMode == 'live_quiz') && t.testMode != 'tournament')
+          .toList();
       return Success(list);
     } catch (e) {
       return Failure('Error fetching live tests: $e', e);
