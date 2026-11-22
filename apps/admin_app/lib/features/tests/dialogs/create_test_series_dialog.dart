@@ -27,6 +27,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
   late TextEditingController _negativeMarkingController;
   late TextEditingController _priceCoinsController;
   late TextEditingController _entryFeeController;
+  late TextEditingController _rewardsInrController;
   late TextEditingController _topicController;
 
   late String _examCategoryId;
@@ -58,6 +59,10 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
     _negativeMarkingController = TextEditingController(text: (item?.negativeMarking ?? 0.25).toString());
     _priceCoinsController = TextEditingController(text: (item?.priceInr ?? 0).toString());
     _entryFeeController = TextEditingController(text: (item?.entryFeeCoins ?? 20).toString());
+    final initialReward = (item?.prizePoolInRupees != null && item!.prizePoolInRupees > 0)
+        ? item.prizePoolInRupees.round()
+        : 75;
+    _rewardsInrController = TextEditingController(text: initialReward.toString());
     _topicController = TextEditingController(text: item?.topic ?? '');
 
     _examCategoryId = item?.examCategoryId ?? '';
@@ -155,6 +160,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
     _negativeMarkingController.dispose();
     _priceCoinsController.dispose();
     _entryFeeController.dispose();
+    _rewardsInrController.dispose();
     _topicController.dispose();
     super.dispose();
   }
@@ -176,6 +182,8 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
     final negMark = double.tryParse(_negativeMarkingController.text.trim()) ?? 0.25;
     final coins = _isPremium ? (int.tryParse(_priceCoinsController.text.trim()) ?? 0) : 0;
     final entryFee = _isTournament ? (int.tryParse(_entryFeeController.text.trim()) ?? 0) : 0;
+    final rewardsInr = int.tryParse(_rewardsInrController.text.trim()) ?? 75;
+    final prizePoolCoins = _isTournament ? (rewardsInr * 20) : (widget.initialItem?.prizePoolCoins ?? 1500);
     final finalTopic = _selectedTopic ?? _topicController.text.trim();
 
     // Determine final testMode based on live test vs tournament flags
@@ -208,6 +216,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
       priceInr: coins,
       isTournament: _isTournament,
       entryFeeCoins: entryFee,
+      prizePoolCoins: prizePoolCoins,
       scheduledStartTime: scheduledStart,
       scheduledEndTime: scheduledEnd,
       enrollments: widget.initialItem?.enrollments ?? 0,
@@ -667,8 +676,7 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        SizedBox(
-                          width: 140,
+                        Expanded(
                           child: AppModalDialog.textField(
                             controller: _entryFeeController,
                             keyboardType: TextInputType.number,
@@ -679,14 +687,22 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: _buildTokenizedDateTimePicker(
-                            context: context,
-                            label: 'CONTEST SCHEDULE',
-                            value: _scheduledStartTime,
-                            onChanged: (dt) => setState(() => _scheduledStartTime = dt),
+                          child: AppModalDialog.textField(
+                            controller: _rewardsInrController,
+                            keyboardType: TextInputType.number,
+                            hint: 'Total Reward (75)',
+                            suffixText: '₹',
+                            suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildTokenizedDateTimePicker(
+                      context: context,
+                      label: 'CONTEST SCHEDULE',
+                      value: _scheduledStartTime,
+                      onChanged: (dt) => setState(() => _scheduledStartTime = dt),
                     ),
                   ],
                 ],

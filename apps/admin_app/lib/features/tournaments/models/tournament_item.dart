@@ -181,11 +181,11 @@ class TournamentItem {
         ? (map['total_participants'] as num).toInt()
         : 0;
 
-    final rawPrize = (map['prize_pool_coins'] is num)
-        ? (map['prize_pool_coins'] as num).toInt()
-        : ((map['prize_pool'] is num)
-            ? (map['prize_pool'] as num).toInt()
-            : (entryFee * 10 > 0 ? entryFee * 10 : 10000));
+    final rawPrize = (map['prize_pool'] is num)
+        ? (map['prize_pool'] as num).toInt()
+        : ((map['prize_pool_coins'] is num)
+            ? ((map['prize_pool_coins'] as num).toInt() ~/ 20)
+            : (entryFee * 10 > 0 ? entryFee * 10 : 75));
 
     final statusStr = (map['status'] ?? '').toString().toLowerCase();
     TournamentStatus status = TournamentStatus.upcoming;
@@ -234,6 +234,8 @@ class TournamentItem {
       'is_tournament': true,
       'test_mode': 'tournament',
       'max_participants': maxParticipants,
+      'prize_pool': prizePool,
+      'prize_pool_coins': prizePool * 20,
       'duration_minutes': endDate.difference(startDate).inMinutes > 0
           ? endDate.difference(startDate).inMinutes
           : 60,
