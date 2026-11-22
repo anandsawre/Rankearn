@@ -155,7 +155,7 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
               ),
             ),
             DataColumn(
-              label: Text('• Subject', style: _headerStyle),
+              label: Text('Subject', style: _headerStyle),
             ),
             DataColumn(
               label: Text('Total Tests', style: _headerStyle),
@@ -167,10 +167,10 @@ class _TestSeriesTableCardState extends State<TestSeriesTableCard> {
               label: Text('Price', style: _headerStyle),
             ),
             DataColumn(
-              label: Text('• Enrollments', style: _headerStyle),
+              label: Text('Enrollments', style: _headerStyle),
             ),
             DataColumn(
-              label: Text('• Status', style: _headerStyle),
+              label: Text('Status', style: _headerStyle),
             ),
             DataColumn(
               label: Text('Created On', style: _headerStyle),
