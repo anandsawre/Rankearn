@@ -87,7 +87,7 @@ class SupabaseConfig {
       final session = supaClient.auth.currentSession;
       if (session != null && session.isExpired) {
         try {
-          final res = await supaClient.auth.recoverSession(rawToken);
+          final res = await supaClient.auth.recoverSession(rawToken).timeout(const Duration(seconds: 8));
           return res.session ?? supaClient.auth.currentSession;
         } catch (_) {
           return supaClient.auth.currentSession;

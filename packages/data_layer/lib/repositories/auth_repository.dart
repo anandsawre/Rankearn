@@ -188,7 +188,7 @@ class AuthRepository {
           if (referralCode != null && referralCode.trim().isNotEmpty)
             'referral_code': referralCode.trim().toUpperCase(),
         },
-      );
+      ).timeout(const Duration(seconds: 15));
 
       final user = response.user;
       if (user == null) {
@@ -210,7 +210,7 @@ class AuthRepository {
       );
 
       try {
-        await client.from('profiles').upsert(newProfile.toMap());
+        await client.from('profiles').upsert(newProfile.toMap()).timeout(const Duration(seconds: 8));
       } catch (_) {}
 
       final profileRes = await getProfile(user.id);
@@ -221,9 +221,15 @@ class AuthRepository {
 
       await saveLocalProfile(newProfile);
       return Success(newProfile);
+    } on TimeoutException {
+      return const Failure('Server request timed out. Please check if your Supabase project is active or paused.');
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {
+      final str = e.toString().toLowerCase();
+      if (str.contains('timeout') || str.contains('timeoutexception') || str.contains('504')) {
+        return const Failure('Server request timed out. Please check if your Supabase project is active or paused.');
+      }
       return Failure(e.toString(), e);
     }
   }
@@ -268,7 +274,8 @@ class AuthRepository {
               .from('profiles')
               .select('email')
               .or('phone.eq.$trimmed,phone.eq.$phoneE164,phone.eq.$digits')
-              .maybeSingle();
+              .maybeSingle()
+              .timeout(const Duration(seconds: 8));
           if (profileRow != null && profileRow['email'] != null) {
             linkedEmail = profileRow['email'] as String?;
           }
@@ -278,18 +285,18 @@ class AuthRepository {
           response = await client.auth.signInWithPassword(
             email: linkedEmail,
             password: password,
-          );
+          ).timeout(const Duration(seconds: 15));
         } else {
           response = await client.auth.signInWithPassword(
             phone: phoneE164,
             password: password,
-          );
+          ).timeout(const Duration(seconds: 15));
         }
       } else {
         response = await client.auth.signInWithPassword(
           email: trimmed,
           password: password,
-        );
+        ).timeout(const Duration(seconds: 15));
       }
 
       final user = response.user;
@@ -316,13 +323,19 @@ class AuthRepository {
         createdAt: DateTime.now(),
       );
       try {
-        await client.from('profiles').upsert(fallbackProfile.toMap());
+        await client.from('profiles').upsert(fallbackProfile.toMap()).timeout(const Duration(seconds: 8));
       } catch (_) {}
       await saveLocalProfile(fallbackProfile);
       return Success(fallbackProfile);
+    } on TimeoutException {
+      return const Failure('Server request timed out. Please check your internet connection or verify if the Supabase project is active/unpaused.');
     } on supa.AuthException catch (e) {
       return Failure(e.message, e.statusCode);
     } catch (e) {
+      final str = e.toString().toLowerCase();
+      if (str.contains('timeout') || str.contains('timeoutexception') || str.contains('504')) {
+        return const Failure('Server request timed out. Please verify that your Supabase project is active.');
+      }
       return Failure(e.toString(), e);
     }
   }
@@ -537,7 +550,8 @@ class AuthRepository {
           .from('profiles')
           .select()
           .eq('id', userId)
-          .maybeSingle();
+          .maybeSingle()
+          .timeout(const Duration(seconds: 8));
 
       if (data == null) {
         // If profile row was not yet created by database trigger, provision it from auth metadata
@@ -634,7 +648,7 @@ class AuthRepository {
       return false;
     }
     try {
-      final res = await client.rpc('is_admin');
+      final res = await client.rpc('is_admin').timeout(const Duration(seconds: 8));
       return res == true;
     } catch (_) {
       return false;

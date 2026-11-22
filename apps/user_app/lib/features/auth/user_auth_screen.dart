@@ -173,7 +173,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       }
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = _formatAuthError(e.toString());
       });
     } finally {
       if (mounted) {
@@ -227,6 +227,9 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       return 'Authentication failed. Please verify your credentials.';
     }
     final lower = raw.toLowerCase();
+    if (lower.contains('timeout') || lower.contains('timeoutexception') || lower.contains('504')) {
+      return 'Server connection timed out (Supabase is not responding). Please verify if your Supabase project is active or unpaused in your Supabase dashboard.';
+    }
     if (lower.contains('invalid login credentials') || lower.contains('invalid_credentials')) {
       return 'Invalid email/phone or password. Please verify and try again.';
     }

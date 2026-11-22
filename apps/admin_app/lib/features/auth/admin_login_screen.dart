@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,7 +64,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       final authRes = await client.auth.signInWithPassword(
         email: email,
         password: password,
-      );
+      ).timeout(const Duration(seconds: 15));
 
       final user = authRes.user;
       if (user == null) {
@@ -78,13 +79,14 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
             .select('role')
             .eq('user_id', user.id)
             .eq('role', 'admin')
-            .maybeSingle();
+            .maybeSingle()
+            .timeout(const Duration(seconds: 8));
       } catch (_) {}
 
       bool rpcIsAdmin = false;
       if (roleCheck == null) {
         try {
-          final rpcRes = await client.rpc('is_admin');
+          final rpcRes = await client.rpc('is_admin').timeout(const Duration(seconds: 8));
           rpcIsAdmin = rpcRes == true;
         } catch (_) {}
       }
@@ -99,7 +101,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           userRole == 'super_admin';
 
       if (!isAdmin) {
-        await client.auth.signOut();
+        await client.auth.signOut().timeout(const Duration(seconds: 5));
         throw 'Access Denied: Your account does not have administrator privileges.';
       }
 
@@ -120,7 +122,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     } catch (e) {
       if (mounted) {
         String msg = e.toString().replaceAll('Exception:', '').trim();
-        if (msg.contains('Invalid login credentials') || msg.contains('invalid_credentials')) {
+        final lower = msg.toLowerCase();
+        if (e is TimeoutException || lower.contains('timeout') || lower.contains('504')) {
+          msg = 'Server connection timed out (Supabase is not responding). Please verify if your Supabase project is active/unpaused in the Supabase Dashboard.';
+        } else if (msg.contains('Invalid login credentials') || msg.contains('invalid_credentials')) {
           msg = 'Invalid login credentials. Please check your email and password.';
         } else if (msg.contains('Email not confirmed') || msg.contains('email_not_confirmed')) {
           msg = 'Email confirmation is pending in Supabase. Please verify your email or confirm user in Supabase dashboard.';
