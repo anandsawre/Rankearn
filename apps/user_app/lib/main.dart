@@ -81,7 +81,7 @@ class RankearnUserApp extends StatefulWidget {
     super.key,
     this.initialTests,
     this.showAuthInitially,
-    this.autoCheckSession = true,
+    this.autoCheckSession = false,
     this.initialProfile,
   });
 
@@ -109,6 +109,13 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
         reason: 'initialProfile_provided',
         userId: _currentUser!.id,
       );
+    } else if (widget.showAuthInitially != null) {
+      _isCheckingSession = false;
+      _showAuth = widget.showAuthInitially!;
+      AuthLogger.logNavigationDecision(
+        screen: _showAuth ? 'UserAuthScreen' : 'UserAppShell',
+        reason: 'showAuthInitially_explicit',
+      );
     } else if (widget.autoCheckSession) {
       _isCheckingSession = true;
       _showAuth = false;
@@ -119,10 +126,10 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
       _checkSession();
     } else {
       _isCheckingSession = false;
-      _showAuth = widget.showAuthInitially ?? true;
+      _showAuth = false;
       AuthLogger.logNavigationDecision(
-        screen: _showAuth ? 'UserAuthScreen' : 'UserAppShell',
-        reason: 'showAuthInitially_flag',
+        screen: 'UserAppShell',
+        reason: 'default_test_shell',
       );
     }
 
