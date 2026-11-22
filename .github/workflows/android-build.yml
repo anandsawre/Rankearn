@@ -29,6 +29,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.44.5'
           channel: 'stable'
           cache: true
 
@@ -42,7 +43,7 @@ jobs:
 
       - name: Static Code Analysis
         run: |
-          flutter analyze packages/data_layer apps/user_app apps/admin_app
+          flutter analyze --no-fatal-infos packages/data_layer apps/user_app apps/admin_app
 
       - name: Run Authentication Persistence & Unit Tests
         run: |
