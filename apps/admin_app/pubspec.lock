@@ -302,22 +302,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
-  jni:
-    dependency: transitive
-    description:
-      name: jni
-      sha256: "19764f78f6b9e0d40f6395b04649d1046eb57f5ccf05afce50cc63e5a82777b0"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.1"
-  jni_util:
-    dependency: transitive
-    description:
-      name: jni_util
-      sha256: "1ba86da04a5f2bf18fde2edb235587e70c5b0fc5bd4ba955f46b00942c3fc35f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   json_annotation:
     dependency: transitive
     description:
@@ -398,14 +382,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
-  package_config:
-    dependency: transitive
-    description:
-      name: package_config
-      sha256: ffcf4cf3d6c0b74ac43708d9f56625506e8a68aa935abe9d267a7330f320eb5d
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
   passkeys_platform_interface:
     dependency: transitive
     description:
@@ -521,10 +497,10 @@ packages:
     dependency: "direct main"
     description:
       name: shared_preferences_android
-      sha256: "137dedccacb394b8f470d6c9b435ffc3d33faaa6ce2949c4f54a61007d64396d"
+      sha256: "0634e64bd719f89c012f392938e173521f535d3ecaf66558fa94a056d22b5cc7"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.5"
+    version: "2.4.27"
   shared_preferences_foundation:
     dependency: transitive
     description:
