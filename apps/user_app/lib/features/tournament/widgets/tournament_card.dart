@@ -131,22 +131,34 @@ class TournamentCard extends StatelessWidget {
                           horizontal: 8,
                           vertical: 2.5,
                         ),
-                        decoration: const BoxDecoration(
-                          color: AppColors.contestBadgeRed,
+                        decoration: BoxDecoration(
+                          color: tournament.isLive
+                              ? AppColors.contestBadgeRed
+                              : (tournament.isUpcoming
+                                  ? const Color(0xFF7C3AED)
+                                  : const Color(0xFF64748B)),
                           borderRadius: AppRadii.borderPill,
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.circle,
-                              size: 6,
+                              tournament.isLive
+                                  ? Icons.circle
+                                  : (tournament.isUpcoming
+                                      ? Icons.calendar_today_rounded
+                                      : Icons.check_circle_outline_rounded),
+                              size: 7,
                               color: Colors.white,
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text(
-                              'Running',
-                              style: TextStyle(
+                              tournament.isLive
+                                  ? 'Running'
+                                  : (tournament.isUpcoming
+                                      ? 'Upcoming'
+                                      : 'Completed'),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
@@ -268,9 +280,20 @@ class TournamentCard extends StatelessWidget {
               children: [
                 ElevatedButton.icon(
                   onPressed: onParticipate,
-                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                  icon: Icon(
+                    tournament.isPast
+                        ? Icons.leaderboard_rounded
+                        : (tournament.isUpcoming
+                            ? (isRegistered ? Icons.check_circle_outline_rounded : Icons.calendar_today_rounded)
+                            : Icons.play_arrow_rounded),
+                    size: 18,
+                  ),
                   label: Text(
-                    isRegistered ? 'Play Quiz' : 'Participate Now',
+                    tournament.isPast
+                        ? 'View Results'
+                        : (tournament.isUpcoming
+                            ? (isRegistered ? 'Registered' : 'Register Now')
+                            : (isRegistered ? 'Play Quiz' : 'Participate Now')),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -407,7 +430,7 @@ class TournamentCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              _buildLiveBadge(),
+              _buildStatusBadge(),
             ],
           ),
 
@@ -688,16 +711,24 @@ class TournamentCard extends StatelessWidget {
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.play_arrow_rounded,
-                            color: Color(0xFF7C3AED),
+                          child: Icon(
+                            tournament.isPast
+                                ? Icons.leaderboard_rounded
+                                : (tournament.isUpcoming
+                                    ? (isRegistered ? Icons.check_circle_outline_rounded : Icons.calendar_today_rounded)
+                                    : Icons.play_arrow_rounded),
+                            color: const Color(0xFF7C3AED),
                             size: 13,
                           ),
                         ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            isRegistered ? 'Play Quiz' : 'Participate Now',
+                            tournament.isPast
+                                ? 'View Results'
+                                : (tournament.isUpcoming
+                                    ? (isRegistered ? 'Registered' : 'Register Now')
+                                    : (isRegistered ? 'Play Quiz' : 'Participate Now')),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -899,6 +930,79 @@ class TournamentCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatusBadge() {
+    if (tournament.isLive) {
+      return _buildLiveBadge();
+    } else if (tournament.isUpcoming) {
+      return _buildUpcomingBadge();
+    } else if (tournament.isPast) {
+      return _buildCompletedBadge();
+    }
+    return _buildLiveBadge();
+  }
+
+  Widget _buildUpcomingBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      decoration: BoxDecoration(
+        color: const Color(0xFF7C3AED), // Royal Purple
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.9),
+          width: 1.2,
+        ),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(Icons.calendar_today_rounded, size: 10, color: Colors.white),
+          SizedBox(width: 4),
+          Text(
+            'UPCOMING',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompletedBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      decoration: BoxDecoration(
+        color: const Color(0xFF64748B), // Slate Grey
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.9),
+          width: 1.2,
+        ),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(Icons.check_circle_outline_rounded, size: 10, color: Colors.white),
+          SizedBox(width: 4),
+          Text(
+            'ENDED',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

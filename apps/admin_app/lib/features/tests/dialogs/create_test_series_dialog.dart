@@ -498,19 +498,59 @@ class _CreateTestSeriesDialogState extends State<CreateTestSeriesDialog> {
                     activeColor: AppModalDialog.defaultPrimaryColor,
                     onChanged: (val) => setState(() => _isTournament = val ?? false),
                     title: const Text('Run as Live Paid Contest / Tournament', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B))),
-                    subtitle: const Text('Leaderboard-based live battle with prize distribution', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                    subtitle: const Text('Leaderboard-based live battle with prize distribution. (Will appear in Contests & Live Tests)', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                   ),
                   if (_isTournament) ...[
                     const SizedBox(height: 6),
-                    SizedBox(
-                      width: 180,
-                      child: AppModalDialog.textField(
-                        controller: _entryFeeController,
-                        keyboardType: TextInputType.number,
-                        hint: 'Entry Fee (20)',
-                        suffixText: 'coins',
-                        suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
-                      ),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 160,
+                          child: AppModalDialog.textField(
+                            controller: _entryFeeController,
+                            keyboardType: TextInputType.number,
+                            hint: 'Entry Fee (20)',
+                            suffixText: 'coins',
+                            suffixStyle: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: _scheduledStartTime ?? DateTime.now().add(const Duration(days: 1)),
+                                firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                              );
+                              if (pickedDate == null || !context.mounted) return;
+                              final pickedTime = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay.fromDateTime(_scheduledStartTime ?? DateTime.now()),
+                              );
+                              if (pickedTime == null || !context.mounted) return;
+                              setState(() {
+                                _scheduledStartTime = DateTime(
+                                  pickedDate.year,
+                                  pickedDate.month,
+                                  pickedDate.day,
+                                  pickedTime.hour,
+                                  pickedTime.minute,
+                                );
+                              });
+                            },
+                            icon: const Icon(Icons.event_rounded, size: 16),
+                            label: Text(
+                              _scheduledStartTime != null
+                                  ? '${_scheduledStartTime!.day}/${_scheduledStartTime!.month}/${_scheduledStartTime!.year}'
+                                  : 'Schedule Date',
+                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],

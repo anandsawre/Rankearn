@@ -113,13 +113,11 @@ class _TournamentScreenState extends State<TournamentScreen> {
 
     switch (_selectedFilter) {
       case 'running':
-        return _allTournaments
-            .where((t) => t.isLive || (!t.isPast && !t.isUpcoming))
-            .toList();
+        return _runningTournaments;
       case 'upcoming':
-        return _allTournaments.where((t) => t.isUpcoming).toList();
+        return _upcomingTournaments;
       case 'completed':
-        return _allTournaments.where((t) => t.isPast).toList();
+        return _allTournaments.where((t) => t.isPast || t.status == 'completed').toList();
       case 'free':
         return _allTournaments.where((t) => t.entryFeeCoins == 0).toList();
       case 'paid':
@@ -131,7 +129,12 @@ class _TournamentScreenState extends State<TournamentScreen> {
 
   List<TestModel> get _runningTournaments {
     return _allTournaments
-        .where((t) => t.isLive || (!t.isPast && !t.isUpcoming))
+        .where((t) =>
+            !t.isUpcoming &&
+            !t.isPast &&
+            (t.isLive ||
+                t.scheduledStartTime == null ||
+                DateTime.now().isAfter(t.scheduledStartTime!)))
         .toList();
   }
 
@@ -142,8 +145,20 @@ class _TournamentScreenState extends State<TournamentScreen> {
   Future<void> _handleParticipate(TestModel tournament) async {
     final isRegistered = _registeredIds.contains(tournament.id);
 
-    // If already registered or joined, start test directly
+    // If already registered or joined, start test directly only if currently running
     if (isRegistered) {
+      if (tournament.isUpcoming) {
+        final startText = tournament.datesFormatted.isNotEmpty
+            ? tournament.datesFormatted
+            : 'the scheduled date';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('You are already registered! Contest starts on $startText.'),
+            backgroundColor: AppColors.brandPurple,
+          ),
+        );
+        return;
+      }
       widget.onStartTest(tournament);
       return;
     }
@@ -183,13 +198,22 @@ class _TournamentScreenState extends State<TournamentScreen> {
         _registeredIds.add(tournament.id);
       });
       widget.onCoinDeducted?.call(entryFee);
+      final startText = tournament.datesFormatted.isNotEmpty
+          ? tournament.datesFormatted
+          : 'scheduled time';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Successfully registered for ${tournament.title}!'),
+          content: Text(
+            tournament.isUpcoming
+                ? 'Successfully registered for ${tournament.title}! Contest starts on $startText.'
+                : 'Successfully registered for ${tournament.title}!',
+          ),
           backgroundColor: AppColors.brandGreen,
         ),
       );
-      widget.onStartTest(tournament);
+      if (!tournament.isUpcoming) {
+        widget.onStartTest(tournament);
+      }
     } else if (joinRes case Failure(:final message)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -466,174 +490,295 @@ class _TournamentScreenState extends State<TournamentScreen> {
         ),
         const SizedBox(height: 18),
 
-        // 5. Running Tournaments Section
-        Row(
-          children: [
-            Container(
-              width: 26,
-              height: 26,
-              decoration: const BoxDecoration(
-                color: AppColors.contestShortcutPurpleBg,
-                shape: BoxShape.circle,
+        // 5. Main Contests Section
+        if (_selectedFilter == 'all') ...[
+          // Section A: Running Contests
+          Row(
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                decoration: const BoxDecoration(
+                  color: AppColors.contestShortcutPurpleBg,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  color: AppColors.brandPurple,
+                  size: 16,
+                ),
               ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.play_arrow_rounded,
-                color: AppColors.brandPurple,
-                size: 16,
+              const SizedBox(width: AppSpacing.sm),
+              const Text(
+                'Running Contests',
+                style: TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.contestTextPrimary,
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            const Text(
-              'Running Contests',
-              style: TextStyle(
-                fontSize: 15.5,
-                fontWeight: FontWeight.w900,
-                color: AppColors.contestTextPrimary,
-              ),
-            ),
-            const Spacer(),
-            InkWell(
-              onTap: () => setState(() => _selectedFilter = 'running'),
-              child: const Row(
-                children: [
-                  Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+              const Spacer(),
+              InkWell(
+                onTap: () => setState(() => _selectedFilter = 'running'),
+                child: const Row(
+                  children: [
+                    Text(
+                      'View All',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.brandPurple,
+                      ),
+                    ),
+                    SizedBox(width: 2),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 13,
                       color: AppColors.brandPurple,
                     ),
-                  ),
-                  SizedBox(width: 2),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Running Cards List (Strictly active running tournaments)
+          if (running.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: AppRadii.contestShortcut,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Row(
+                children: [
                   Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 13,
+                    Icons.info_outline_rounded,
                     color: AppColors.brandPurple,
+                    size: 20,
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'No active contests running right now. Check upcoming contests below!',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.contestTextSecondary,
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: running.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final tourney = running[index];
+                final isReg = _registeredIds.contains(tourney.id);
 
-        // Running Cards List
-        if (displayTournaments.isEmpty)
-          _buildEmptyState()
-        else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: displayTournaments.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final tourney = displayTournaments[index];
-              final isReg = _registeredIds.contains(tourney.id);
-
-              return TournamentCard(
-                tournament: tourney,
-                isDesktop: false,
-                isRegistered: isReg,
-                onParticipate: () => _handleParticipate(tourney),
-                onViewDetails: () => TournamentDetailsDialog.show(
-                  context,
+                return TournamentCard(
                   tournament: tourney,
+                  isDesktop: false,
                   isRegistered: isReg,
                   onParticipate: () => _handleParticipate(tourney),
+                  onViewDetails: () => TournamentDetailsDialog.show(
+                    context,
+                    tournament: tourney,
+                    isRegistered: isReg,
+                    onParticipate: () => _handleParticipate(tourney),
+                  ),
+                );
+              },
+            ),
+
+          const SizedBox(height: 22),
+
+          // Section B: Upcoming Contests
+          Row(
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                decoration: const BoxDecoration(
+                  color: AppColors.contestShortcutPurpleBg,
+                  shape: BoxShape.circle,
                 ),
-              );
-            },
-          ),
-
-        const SizedBox(height: 22),
-
-        // 6. Upcoming Tournaments Section
-        Row(
-          children: [
-            Container(
-              width: 26,
-              height: 26,
-              decoration: const BoxDecoration(
-                color: AppColors.contestShortcutPurpleBg,
-                shape: BoxShape.circle,
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: AppColors.brandPurple,
+                  size: 15,
+                ),
               ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.calendar_month_rounded,
-                color: AppColors.brandPurple,
-                size: 15,
+              const SizedBox(width: AppSpacing.sm),
+              const Text(
+                'Upcoming Contests',
+                style: TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.contestTextPrimary,
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            const Text(
-              'Upcoming Contests',
-              style: TextStyle(
-                fontSize: 15.5,
-                fontWeight: FontWeight.w900,
-                color: AppColors.contestTextPrimary,
-              ),
-            ),
-            const Spacer(),
-            InkWell(
-              onTap: () => setState(() => _selectedFilter = 'upcoming'),
-              child: const Row(
-                children: [
-                  Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+              const Spacer(),
+              InkWell(
+                onTap: () => setState(() => _selectedFilter = 'upcoming'),
+                child: const Row(
+                  children: [
+                    Text(
+                      'View All',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.brandPurple,
+                      ),
+                    ),
+                    SizedBox(width: 2),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 13,
                       color: AppColors.brandPurple,
                     ),
-                  ),
-                  SizedBox(width: 2),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          if (upcoming.isNotEmpty)
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: upcoming.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                return UpcomingTournamentCard(
+                  tournament: upcoming[index],
+                  isDesktop: false,
+                );
+              },
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+              decoration: BoxDecoration(
+                color: AppColors.contestUpcomingBg,
+                borderRadius: AppRadii.contestShortcut,
+                border: Border.all(color: AppColors.contestUpcomingBorder),
+              ),
+              child: const Row(
+                children: [
                   Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 13,
-                    color: AppColors.brandPurple,
+                    Icons.event_available_rounded,
+                    color: AppColors.contestPurple,
+                    size: 22,
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'No upcoming contests right now. Stay tuned for announcements!',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.contestTextSecondary,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        if (upcoming.isNotEmpty)
-          UpcomingTournamentCard(
-            tournament: upcoming.first,
-            isDesktop: false,
-          )
-        else
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-            decoration: BoxDecoration(
-              color: AppColors.contestUpcomingBg,
-              borderRadius: AppRadii.contestShortcut,
-              border: Border.all(color: AppColors.contestUpcomingBorder),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.event_available_rounded,
-                  color: AppColors.contestPurple,
-                  size: 22,
+        ] else ...[
+          // Specific Filter Selected (e.g. 'upcoming', 'running', 'completed', 'free', 'paid')
+          Row(
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                decoration: const BoxDecoration(
+                  color: AppColors.contestShortcutPurpleBg,
+                  shape: BoxShape.circle,
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'No upcoming contests right now. Stay tuned for announcements!',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.contestTextSecondary,
-                    ),
+                alignment: Alignment.center,
+                child: Icon(
+                  _selectedFilter == 'upcoming'
+                      ? Icons.calendar_month_rounded
+                      : (_selectedFilter == 'completed'
+                          ? Icons.check_circle_outline_rounded
+                          : Icons.flag_rounded),
+                  color: AppColors.brandPurple,
+                  size: 15,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                _selectedFilter == 'running'
+                    ? 'Running Contests (${displayTournaments.length})'
+                    : (_selectedFilter == 'upcoming'
+                        ? 'Upcoming Contests (${displayTournaments.length})'
+                        : (_selectedFilter == 'completed'
+                            ? 'Completed Contests (${displayTournaments.length})'
+                            : (_selectedFilter == 'free'
+                                ? 'Free Contests (${displayTournaments.length})'
+                                : (_selectedFilter == 'paid'
+                                    ? 'Paid Contests (${displayTournaments.length})'
+                                    : 'Contests (${displayTournaments.length})')))),
+                style: const TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.contestTextPrimary,
+                ),
+              ),
+              const Spacer(),
+              InkWell(
+                onTap: () => setState(() => _selectedFilter = 'all'),
+                child: const Text(
+                  'Show All',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.brandPurple,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          const SizedBox(height: 12),
+
+          if (displayTournaments.isEmpty)
+            _buildEmptyState()
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: displayTournaments.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final tourney = displayTournaments[index];
+                final isReg = _registeredIds.contains(tourney.id);
+
+                return TournamentCard(
+                  tournament: tourney,
+                  isDesktop: false,
+                  isRegistered: isReg,
+                  onParticipate: () => _handleParticipate(tourney),
+                  onViewDetails: () => TournamentDetailsDialog.show(
+                    context,
+                    tournament: tourney,
+                    isRegistered: isReg,
+                    onParticipate: () => _handleParticipate(tourney),
+                  ),
+                );
+              },
+            ),
+        ],
 
         const SizedBox(height: AppSpacing.xxl),
       ],

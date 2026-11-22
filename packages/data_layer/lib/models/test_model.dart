@@ -83,6 +83,9 @@ class TestModel {
   }
 
   bool get isLive {
+    if (status == 'completed' || status == 'archived' || status == 'draft') {
+      return false;
+    }
     if (scheduledStartTime == null) return false;
     final now = DateTime.now();
     // If it has a scheduled start time in the future, it is not live yet
@@ -101,11 +104,13 @@ class TestModel {
   }
 
   bool get isUpcoming {
+    if (status == 'completed' || status == 'archived') return false;
     if (scheduledStartTime == null) return false;
     return DateTime.now().isBefore(scheduledStartTime!);
   }
 
   bool get isPast {
+    if (status == 'completed' || status == 'archived') return true;
     if (scheduledStartTime == null) return false;
     final effectiveEndTime = scheduledEndTime ??
         scheduledStartTime!.add(

@@ -61,13 +61,21 @@ class TournamentDetailsDialog extends StatelessWidget {
           onParticipate();
         },
         icon: Icon(
-          isRegistered
-              ? Icons.play_arrow_rounded
-              : Icons.how_to_reg_rounded,
+          tournament.isPast
+              ? Icons.leaderboard_rounded
+              : (tournament.isUpcoming
+                  ? (isRegistered ? Icons.check_circle_outline_rounded : Icons.how_to_reg_rounded)
+                  : (isRegistered ? Icons.play_arrow_rounded : Icons.how_to_reg_rounded)),
           size: 20,
         ),
         label: Text(
-          isRegistered ? 'Start Contest Quiz' : 'Participate Now',
+          tournament.isPast
+              ? 'Contest Ended'
+              : (tournament.isUpcoming
+                  ? (isRegistered
+                      ? 'Registered (Starts ${tournament.datesFormatted.isNotEmpty ? tournament.datesFormatted : "Soon"})'
+                      : 'Register Now')
+                  : (isRegistered ? 'Start Contest Quiz' : 'Participate Now')),
           style: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
