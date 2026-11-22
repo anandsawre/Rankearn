@@ -50,13 +50,19 @@ void main() async {
   // Restore authenticated user session before runApp to eliminate re-login on APK reopen
   UserProfile? initialProfile;
   try {
-    await SupabaseConfig.ensureSessionReady();
     final authRepo = AuthRepository();
-    final res = await authRepo.restoreSession();
-    if (res case Success(:final data)) {
-      initialProfile = data;
+    // 1. Instantly check local profile cache FIRST (1ms disk read, zero network dependency)
+    initialProfile = await authRepo.getLocalProfile();
+    if (initialProfile == null) {
+      // 2. Fallback to Supabase session recovery only if no local cache exists
+      await SupabaseConfig.ensureSessionReady();
+      final res = await authRepo.restoreSession();
+      if (res case Success(:final data)) {
+        initialProfile = data;
+      }
     } else {
-      initialProfile = await authRepo.getLocalProfile();
+      // Asynchronously ensure Supabase session is synchronized without blocking app startup
+      unawaited(SupabaseConfig.ensureSessionReady());
     }
   } catch (_) {}
 

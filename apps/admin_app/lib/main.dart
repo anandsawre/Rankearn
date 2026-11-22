@@ -56,17 +56,13 @@ void main() async {
     debugPrint('PushNotificationService initialization: $e');
   }
 
-  // Ensure Supabase session is recovered from local storage
-  try {
-    await SupabaseConfig.ensureSessionReady();
-  } catch (_) {}
-
   // Restore authenticated admin session across browser page reloads (F5) and APK restarts
   bool startLoggedIn = false;
   String? cachedAdminName;
   String? cachedAdminEmail;
   String? cachedAdminRole;
   try {
+    // 1. Read locally cached admin state FIRST (instant, zero network delay)
     final client = SupabaseConfig.clientSafe;
     final prefs = await SharedPreferences.getInstance();
     final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
@@ -97,6 +93,9 @@ void main() async {
         session != null ||
         hasValidSbToken ||
         (cachedAdminEmail != null && cachedAdminEmail.isNotEmpty);
+
+    // 2. Asynchronously recover Supabase session without blocking main thread
+    unawaited(SupabaseConfig.ensureSessionReady());
   } catch (_) {}
 
   runApp(
@@ -371,7 +370,8 @@ class _AdminAppShellState extends State<AdminAppShell> {
           .from('profiles')
           .select('name, email')
           .eq('id', user.id)
-          .maybeSingle();
+          .maybeSingle()
+          .timeout(const Duration(seconds: 5));
       if (profile != null && mounted) {
         final dbName = profile['name']?.toString().trim();
         final dbEmail = profile['email']?.toString().trim();
