@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,6 +56,11 @@ void main() async {
     debugPrint('PushNotificationService initialization: $e');
   }
 
+  // Ensure Supabase session is recovered from local storage
+  try {
+    await SupabaseConfig.ensureSessionReady();
+  } catch (_) {}
+
   // Restore authenticated admin session across browser page reloads (F5) and APK restarts
   bool startLoggedIn = false;
   String? cachedAdminName;
@@ -68,8 +74,29 @@ void main() async {
     cachedAdminEmail = prefs.getString('rankearn_admin_email');
     cachedAdminRole = prefs.getString('rankearn_admin_role');
 
+    // Also parse Supabase token if available
+    final rawSbToken = await SupabaseConfig.getPersistedToken();
+    bool hasValidSbToken = false;
+    if (rawSbToken != null && rawSbToken.isNotEmpty) {
+      try {
+        final tokenJson = jsonDecode(rawSbToken) as Map<String, dynamic>;
+        final userObj = tokenJson['user'] as Map<String, dynamic>?;
+        if (userObj != null && userObj['id'] != null) {
+          hasValidSbToken = true;
+          cachedAdminEmail ??= userObj['email']?.toString();
+          final meta = (userObj['user_metadata'] as Map<String, dynamic>?) ?? {};
+          cachedAdminName ??= meta['name']?.toString() ??
+              meta['full_name']?.toString() ??
+              cachedAdminEmail?.split('@').first;
+        }
+      } catch (_) {}
+    }
+
     final session = client?.auth.currentSession;
-    startLoggedIn = wasLoggedIn || session != null;
+    startLoggedIn = wasLoggedIn ||
+        session != null ||
+        hasValidSbToken ||
+        (cachedAdminEmail != null && cachedAdminEmail.isNotEmpty);
   } catch (_) {}
 
   runApp(
@@ -220,27 +247,19 @@ class _AdminAppShellState extends State<AdminAppShell> {
 
   Future<void> _checkAndRestoreSession() async {
     try {
-      final client = SupabaseConfig.clientSafe;
       final prefs = await SharedPreferences.getInstance();
       final wasLoggedIn = prefs.getBool('rankearn_admin_logged_in') ?? false;
+      final cachedEmail = prefs.getString('rankearn_admin_email');
 
-      if (wasLoggedIn && mounted && !_isLoggedIn) {
+      if ((wasLoggedIn || (cachedEmail != null && cachedEmail.isNotEmpty)) && mounted && !_isLoggedIn) {
         setState(() {
           _isLoggedIn = true;
           _isCheckingAuth = false;
         });
       }
 
-      if (client != null) {
-        final session = client.auth.currentSession;
-        if (session != null && session.isExpired) {
-          try {
-            await client.auth.refreshSession();
-          } catch (_) {}
-        }
-        _syncCurrentAdminProfile();
-        return;
-      }
+      await SupabaseConfig.ensureSessionReady();
+      _syncCurrentAdminProfile();
     } catch (_) {}
     if (mounted && _isCheckingAuth) {
       setState(() => _isCheckingAuth = false);
@@ -311,7 +330,25 @@ class _AdminAppShellState extends State<AdminAppShell> {
 
       final client = SupabaseConfig.clientSafe;
       final user = client?.auth.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        final rawSb = await SupabaseConfig.getPersistedToken();
+        if (rawSb != null && rawSb.isNotEmpty) {
+          final tokenJson = jsonDecode(rawSb) as Map<String, dynamic>;
+          final userObj = tokenJson['user'] as Map<String, dynamic>?;
+          if (userObj != null) {
+            final email = userObj['email']?.toString() ?? _adminEmail;
+            final meta = (userObj['user_metadata'] as Map<String, dynamic>?) ?? {};
+            final name = meta['name']?.toString() ?? meta['full_name']?.toString() ?? email.split('@').first;
+            if (mounted) {
+              setState(() {
+                if (name.isNotEmpty) _adminDisplayName = name;
+                if (email.isNotEmpty) _adminEmail = email;
+              });
+            }
+          }
+        }
+        return;
+      }
 
       final fallbackName = (user.userMetadata?['name']?.toString().trim().isNotEmpty ?? false)
           ? user.userMetadata!['name'].toString().trim()
@@ -1239,7 +1276,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
               child: InkWell(
                 onTap: () {
                   Navigator.pop(context);
-                  setState(() => _isLoggedIn = false);
+                  _handleSignOut();
                 },
                 borderRadius: BorderRadius.circular(8),
                 child: Padding(

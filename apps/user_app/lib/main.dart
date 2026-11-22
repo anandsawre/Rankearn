@@ -50,6 +50,7 @@ void main() async {
   // Restore authenticated user session before runApp to eliminate re-login on APK reopen
   UserProfile? initialProfile;
   try {
+    await SupabaseConfig.ensureSessionReady();
     final authRepo = AuthRepository();
     final res = await authRepo.restoreSession();
     if (res case Success(:final data)) {
@@ -139,6 +140,34 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
         });
         return;
       }
+
+      // 3. Fallback to Supabase current user
+      final supaUser = SupabaseConfig.clientSafe?.auth.currentUser;
+      if (supaUser != null) {
+        final meta = supaUser.userMetadata ?? {};
+        final fallback = UserProfile(
+          id: supaUser.id,
+          name: meta['name']?.toString() ??
+              meta['full_name']?.toString() ??
+              supaUser.email?.split('@').first ??
+              'Rankearn Aspirant',
+          email: supaUser.email ?? 'aspirant@rankearn.in',
+          phone: supaUser.phone ?? meta['phone']?.toString(),
+          coins: 100,
+          subscriptionStatus: 'free',
+          examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+          state: 'India',
+          createdAt: DateTime.now(),
+        );
+        await _authRepository.saveLocalProfile(fallback);
+        setState(() {
+          _currentUser = fallback;
+          _showAuth = false;
+          _isCheckingSession = false;
+        });
+        return;
+      }
+
       setState(() {
         _currentUser = null;
         _showAuth = true;
@@ -172,6 +201,28 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
             if (cached != null) {
               setState(() {
                 _currentUser = cached;
+                _showAuth = false;
+                _isCheckingSession = false;
+              });
+            } else {
+              final meta = session.user.userMetadata ?? {};
+              final fallback = UserProfile(
+                id: session.user.id,
+                name: meta['name']?.toString() ??
+                    meta['full_name']?.toString() ??
+                    session.user.email?.split('@').first ??
+                    'Rankearn Aspirant',
+                email: session.user.email ?? 'aspirant@rankearn.in',
+                phone: session.user.phone ?? meta['phone']?.toString(),
+                coins: 100,
+                subscriptionStatus: 'free',
+                examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+                state: 'India',
+                createdAt: DateTime.now(),
+              );
+              await _authRepository.saveLocalProfile(fallback);
+              setState(() {
+                _currentUser = fallback;
                 _showAuth = false;
                 _isCheckingSession = false;
               });

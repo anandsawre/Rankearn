@@ -68,7 +68,8 @@ class AuthRepository {
       // Sync device push token in the background
       unawaited(PushNotificationService.syncDeviceToken(userId: cachedProfile.id));
 
-      // Asynchronously update profile from database if online
+      // Asynchronously ensure Supabase session is ready & update profile from DB if online
+      unawaited(SupabaseConfig.ensureSessionReady());
       if (client != null) {
         unawaited(() async {
           try {
@@ -85,29 +86,26 @@ class AuthRepository {
       return Success(cachedProfile);
     }
 
-    if (client == null) {
-      return const Failure('Database not connected');
-    }
-
+    // 2. Ensure Supabase auth session is recovered and ready
     try {
-      final session = client.auth.currentSession;
-      if (session != null) {
-        final profileRes = await getProfile(session.user.id);
+      final readySession = await SupabaseConfig.ensureSessionReady() ?? client?.auth.currentSession;
+      if (readySession != null) {
+        final profileRes = await getProfile(readySession.user.id);
         if (profileRes is Success<UserProfile>) {
           await saveLocalProfile(profileRes.data);
           unawaited(PushNotificationService.syncDeviceToken(userId: profileRes.data.id));
           return profileRes;
         }
 
-        final meta = session.user.userMetadata ?? {};
+        final meta = readySession.user.userMetadata ?? {};
         final fallback = UserProfile(
-          id: session.user.id,
+          id: readySession.user.id,
           name: meta['name']?.toString() ??
               meta['full_name']?.toString() ??
-              session.user.email?.split('@').first ??
+              readySession.user.email?.split('@').first ??
               'Rankearn Aspirant',
-          email: session.user.email ?? 'aspirant@rankearn.in',
-          phone: session.user.phone ?? meta['phone']?.toString(),
+          email: readySession.user.email ?? 'aspirant@rankearn.in',
+          phone: readySession.user.phone ?? meta['phone']?.toString(),
           coins: 100,
           subscriptionStatus: 'free',
           examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
@@ -117,6 +115,37 @@ class AuthRepository {
         await saveLocalProfile(fallback);
         unawaited(PushNotificationService.syncDeviceToken(userId: fallback.id));
         return Success(fallback);
+      }
+    } catch (_) {}
+
+    // 3. Fallback: Parse stored Supabase auth token directly from SharedPreferences
+    try {
+      final rawSbToken = await SupabaseConfig.getPersistedToken();
+      if (rawSbToken != null && rawSbToken.isNotEmpty) {
+        final tokenJson = jsonDecode(rawSbToken) as Map<String, dynamic>;
+        final userObj = tokenJson['user'] as Map<String, dynamic>?;
+        if (userObj != null && userObj['id'] != null) {
+          final userId = userObj['id'].toString();
+          final meta = (userObj['user_metadata'] as Map<String, dynamic>?) ?? {};
+          final email = userObj['email']?.toString() ?? 'aspirant@rankearn.in';
+          final name = meta['name']?.toString() ??
+              meta['full_name']?.toString() ??
+              email.split('@').first;
+          final fallback = UserProfile(
+            id: userId,
+            name: name,
+            email: email,
+            phone: userObj['phone']?.toString() ?? meta['phone']?.toString(),
+            coins: 100,
+            subscriptionStatus: 'free',
+            examPreparingFor: meta['exam_goal']?.toString() ?? 'Competitive Aspirant',
+            state: 'India',
+            createdAt: DateTime.now(),
+          );
+          await saveLocalProfile(fallback);
+          unawaited(PushNotificationService.syncDeviceToken(userId: fallback.id));
+          return Success(fallback);
+        }
       }
     } catch (_) {}
 
