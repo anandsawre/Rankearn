@@ -214,15 +214,19 @@ class BattleResultScreen extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: const [
             Icon(Icons.share_rounded, size: 16, color: Color(0xFF15803D)),
             SizedBox(width: 8),
-            Text(
-              'Challenge Friends on WhatsApp',
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF15803D),
+            Flexible(
+              child: Text(
+                'Challenge Friends on WhatsApp',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF15803D),
+                ),
               ),
             ),
           ],

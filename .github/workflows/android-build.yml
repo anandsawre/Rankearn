@@ -40,6 +40,33 @@ jobs:
           cd apps/user_app && flutter pub get && cd ../..
           cd apps/admin_app && flutter pub get && cd ../..
 
+      - name: Static Code Analysis
+        run: |
+          flutter analyze packages/data_layer apps/user_app apps/admin_app
+
+      - name: Run Authentication Persistence & Unit Tests
+        run: |
+          mkdir -p reports
+          echo "==========================================" > reports/auth-diagnostics-summary.txt
+          echo "Rankearn Authentication & Diagnostics Report" >> reports/auth-diagnostics-summary.txt
+          echo "Execution Date: $(date -u)" >> reports/auth-diagnostics-summary.txt
+          echo "==========================================" >> reports/auth-diagnostics-summary.txt
+
+          echo "Running Data Layer Session Persistence Tests..."
+          cd packages/data_layer
+          flutter test test/auth_session_persistence_test.dart --reporter expanded 2>&1 | tee ../../reports/auth-persistence-tests.log
+          flutter test test/data_layer_test.dart --reporter expanded 2>&1 | tee -a ../../reports/data-layer-tests.log
+          cd ../..
+
+          echo "Running User App Auth Screen & Battle Flow Tests..."
+          cd apps/user_app
+          flutter test test/auth_screen_test.dart --reporter expanded 2>&1 | tee ../../reports/user-auth-screen-tests.log
+          flutter test test/battle_flow_test.dart --reporter expanded 2>&1 | tee ../../reports/user-battle-tests.log
+          cd ../..
+
+          cat reports/auth-persistence-tests.log >> reports/auth-diagnostics-summary.txt
+          cat reports/user-auth-screen-tests.log >> reports/auth-diagnostics-summary.txt
+
       - name: Build User App Release APKs (Compact & Universal)
         run: |
           cd apps/user_app
@@ -83,6 +110,12 @@ jobs:
         with:
           name: rankearn-all-release-apks
           path: release-apks/*.apk
+
+      - name: Upload Authentication Diagnostics & Test Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-diagnostics-and-test-reports
+          path: reports/
 
       - name: Publish GitHub Release (on tag or manual dispatch)
         if: startsWith(github.ref, 'refs/tags/')

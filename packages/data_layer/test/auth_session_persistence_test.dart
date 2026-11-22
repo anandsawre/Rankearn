@@ -8,6 +8,7 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    AuthLogger.clear();
   });
 
   group('Supabase Authentication & Session Persistence Audit Tests', () {
@@ -16,7 +17,7 @@ void main() {
       expect(key, equals('sb-jybjomgwmabouahvvcuo-auth-token'));
     });
 
-    test('getPersistedToken retrieves saved session token from SharedPreferences', () async {
+    test('getPersistedToken retrieves saved session token from SharedPreferences and logs storage status', () async {
       final mockSession = {
         'access_token': 'test_access_token_123',
         'refresh_token': 'test_refresh_token_456',
@@ -38,6 +39,10 @@ void main() {
       final decoded = jsonDecode(token!) as Map<String, dynamic>;
       expect(decoded['access_token'], equals('test_access_token_123'));
       expect(decoded['refresh_token'], equals('test_refresh_token_456'));
+
+      // Verify AuthLogger recorded Storage Status
+      final logs = AuthLogger.recentLogs;
+      expect(logs.any((l) => l.contains('Storage Status') && l.contains('exists: true')), isTrue);
     });
 
     test('saveLocalProfile and getLocalProfile persist profile across app restarts', () async {
@@ -65,6 +70,10 @@ void main() {
       expect(restored.email, equals('rohan.sharma@rankearn.in'));
       expect(restored.coins, equals(500));
       expect(restored.isPro, isTrue);
+
+      // Verify diagnostics logged
+      expect(AuthLogger.recentLogs.any((l) => l.contains('Local profile cached')), isTrue);
+      expect(AuthLogger.recentLogs.any((l) => l.contains('local_profile_cache')), isTrue);
     });
 
     test('restoreSession restores instantly from local profile cache without network delay', () async {
@@ -115,6 +124,8 @@ void main() {
       expect(restored.name, equals('Priya Patel'));
       expect(restored.email, equals('recovered@rankearn.in'));
       expect(restored.examPreparingFor, equals('UPSC Civil Services'));
+
+      expect(AuthLogger.recentLogs.any((l) => l.contains('raw_storage_token_parsed')), isTrue);
     });
 
     test('Fresh app installation returns Failure and does not crash or fake session', () async {
@@ -125,6 +136,8 @@ void main() {
       final result = await repo.restoreSession();
       expect(result, isA<Failure<UserProfile>>());
       expect((result as Failure<UserProfile>).message, contains('No authenticated session found'));
+
+      expect(AuthLogger.recentLogs.any((l) => l.contains('hasSession: false')), isTrue);
     });
 
     test('Explicit signOut clears local profile cache and remember me flag', () async {
@@ -149,6 +162,9 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('rankearn_user_profile_cache'), isNull);
       expect(prefs.getBool('rankearn_user_remember_me'), isNull);
+
+      // Verify explicit logout was logged
+      expect(AuthLogger.recentLogs.any((l) => l.contains('explicit_sign_out') && l.contains('userInitiated: true')), isTrue);
     });
 
     test('Temporary network timeout does not wipe cached authentication data', () async {
@@ -191,6 +207,27 @@ void main() {
       // Next app launch should not restore from cache
       final restored = await repo.getLocalProfile();
       expect(restored, isNull);
+    });
+
+    test('AuthLogger redacts confidential keys and generates report', () {
+      AuthLogger.log('Login attempt', {
+        'userId': 'usr_safe_1',
+        'password': 'super_secret_password',
+        'access_token': 'eyJh...token',
+        'refresh_token': 'refresh_token_123',
+      });
+
+      final logs = AuthLogger.recentLogs;
+      expect(logs.isNotEmpty, isTrue);
+
+      final lastLog = logs.last;
+      expect(lastLog.contains('super_secret_password'), isFalse);
+      expect(lastLog.contains('eyJh...token'), isFalse);
+      expect(lastLog.contains('refresh_token_123'), isFalse);
+      expect(lastLog.contains('[REDACTED_CONFIDENTIAL]'), isTrue);
+
+      final report = AuthLogger.exportDiagnosticReport();
+      expect(report.contains('# Supabase Authentication Diagnostic Log Report'), isTrue);
     });
   });
 }

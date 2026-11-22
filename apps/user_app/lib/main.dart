@@ -34,17 +34,18 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
+  AuthLogger.log('UserApp main starting');
   try {
     await SupabaseConfig.initialize();
   } catch (e) {
-    debugPrint('Supabase initialization: $e');
+    AuthLogger.logInit(success: false, error: e.toString());
   }
 
   // Initialize Push & In-App Notification Service
   try {
     await PushNotificationService.initialize();
   } catch (e) {
-    debugPrint('PushNotificationService initialization: $e');
+    AuthLogger.log('PushNotificationService initialization error', {'error': e.toString()});
   }
 
   // Restore authenticated user session before runApp to eliminate re-login on APK reopen
@@ -64,7 +65,9 @@ void main() async {
       // Asynchronously ensure Supabase session is synchronized without blocking app startup
       unawaited(SupabaseConfig.ensureSessionReady());
     }
-  } catch (_) {}
+  } catch (e) {
+    AuthLogger.log('Startup session restore error', {'error': e.toString()});
+  }
 
   runApp(
     ProviderScope(
@@ -109,13 +112,26 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
     if (_currentUser != null) {
       _showAuth = false;
       _isCheckingSession = false;
+      AuthLogger.logNavigationDecision(
+        screen: 'UserAppShell (Home)',
+        reason: 'initialProfile_provided',
+        userId: _currentUser!.id,
+      );
     } else if (widget.autoCheckSession) {
       _isCheckingSession = true;
       _showAuth = false;
+      AuthLogger.logNavigationDecision(
+        screen: 'SplashScreen (Checking)',
+        reason: 'autoCheckSession_initiated',
+      );
       _checkSession();
     } else {
       _isCheckingSession = false;
       _showAuth = widget.showAuthInitially ?? true;
+      AuthLogger.logNavigationDecision(
+        screen: _showAuth ? 'UserAuthScreen' : 'UserAppShell',
+        reason: 'showAuthInitially_flag',
+      );
     }
 
     _subscribeAuth();
@@ -126,6 +142,11 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
       final res = await _authRepository.restoreSession();
       if (mounted) {
         if (res case Success(:final data)) {
+          AuthLogger.logNavigationDecision(
+            screen: 'UserAppShell',
+            reason: 'restoreSession_succeeded',
+            userId: data.id,
+          );
           setState(() {
             _currentUser = data;
             _showAuth = false;
@@ -135,11 +156,16 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
         }
       }
     } catch (e) {
-      debugPrint('Session check error: $e');
+      AuthLogger.log('Session check error', {'error': e.toString()});
     }
     if (mounted) {
       final cached = await _authRepository.getLocalProfile();
       if (cached != null) {
+        AuthLogger.logNavigationDecision(
+          screen: 'UserAppShell',
+          reason: 'cached_profile_restored',
+          userId: cached.id,
+        );
         setState(() {
           _currentUser = cached;
           _showAuth = false;
@@ -167,6 +193,11 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
           createdAt: DateTime.now(),
         );
         await _authRepository.saveLocalProfile(fallback);
+        AuthLogger.logNavigationDecision(
+          screen: 'UserAppShell',
+          reason: 'supaUser_metadata_restored',
+          userId: fallback.id,
+        );
         setState(() {
           _currentUser = fallback;
           _showAuth = false;
@@ -175,6 +206,10 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
         return;
       }
 
+      AuthLogger.logNavigationDecision(
+        screen: 'UserAuthScreen',
+        reason: 'no_session_and_no_cache',
+      );
       setState(() {
         _currentUser = null;
         _showAuth = true;
@@ -189,6 +224,12 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
     ) async {
       final session = authState.session;
       final event = authState.event;
+
+      AuthLogger.logAuthStateEvent(
+        event: event.name,
+        userId: session?.user.id,
+        signOutReason: authState.signOutReason?.name,
+      );
 
       if (session != null &&
           (event == AuthChangeEvent.initialSession ||
@@ -239,6 +280,7 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
       } else if (event == AuthChangeEvent.signedOut) {
         // ONLY clear local profile if the logout was explicitly user-initiated (never on cold start / background timeout)
         if (authState.signOutReason == SignOutReason.userInitiated) {
+          AuthLogger.logLogoutTrigger(trigger: 'onAuthStateChange.signedOut', userInitiated: true);
           await _authRepository.clearLocalProfile();
           if (mounted) {
             setState(() {
@@ -247,6 +289,11 @@ class _RankearnUserAppState extends State<RankearnUserApp> {
               _isCheckingSession = false;
             });
           }
+        } else {
+          AuthLogger.logLogoutTrigger(
+            trigger: 'onAuthStateChange.signedOut (ignored, non-user: ${authState.signOutReason?.name})',
+            userInitiated: false,
+          );
         }
       }
     });

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_logger.dart';
 
 /// Centralized Supabase Configuration & Client Provider
 class SupabaseConfig {
@@ -12,6 +13,7 @@ class SupabaseConfig {
 
   static String _activeUrl = defaultUrl;
   static bool _initialized = false;
+  static Future<Session?>? _inFlightRecovery;
 
   /// Dynamic session storage key matching Supabase Flutter standard: `sb-<project-ref>-auth-token`
   static String get sessionKey {
@@ -27,10 +29,19 @@ class SupabaseConfig {
     String url = defaultUrl,
     String anonKey = defaultAnonKey,
   }) async {
-    if (_initialized && clientSafe != null) return;
+    if (_initialized && clientSafe != null) {
+      AuthLogger.logInit(
+        success: true,
+        url: _activeUrl,
+        storageKey: sessionKey,
+      );
+      return;
+    }
 
     if (url.isEmpty || anonKey.isEmpty) {
-      throw StateError('Supabase URL and Anon Key must not be empty.');
+      const error = 'Supabase URL and Anon Key must not be empty.';
+      AuthLogger.logInit(success: false, error: error);
+      throw StateError(error);
     }
 
     _activeUrl = url;
@@ -46,10 +57,26 @@ class SupabaseConfig {
         ),
       );
       _initialized = true;
+      AuthLogger.logInit(
+        success: true,
+        url: url,
+        storageKey: sessionKey,
+      );
     } catch (e) {
       if (clientSafe != null) {
         _initialized = true;
+        AuthLogger.logInit(
+          success: true,
+          url: url,
+          storageKey: sessionKey,
+        );
       } else {
+        AuthLogger.logInit(
+          success: false,
+          url: url,
+          storageKey: sessionKey,
+          error: e.toString(),
+        );
         rethrow;
       }
     }
@@ -77,6 +104,11 @@ class SupabaseConfig {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(sessionKey);
       if (token != null && token.isNotEmpty) {
+        AuthLogger.logStorageStatus(
+          key: sessionKey,
+          exists: true,
+          dataLength: token.length,
+        );
         return token;
       }
       // Fallback check for static default key in case project URL format differed
@@ -84,22 +116,59 @@ class SupabaseConfig {
       if (sessionKey != fallbackKey) {
         final fallbackToken = prefs.getString(fallbackKey);
         if (fallbackToken != null && fallbackToken.isNotEmpty) {
+          AuthLogger.logStorageStatus(
+            key: fallbackKey,
+            exists: true,
+            dataLength: fallbackToken.length,
+          );
           return fallbackToken;
         }
       }
-    } catch (_) {}
+      AuthLogger.logStorageStatus(key: sessionKey, exists: false);
+    } catch (e) {
+      AuthLogger.log('Error reading persisted token', {'error': e.toString()});
+    }
     return null;
   }
 
-  /// Ensures the authenticated Supabase session is recovered and available across APK cold starts
+  /// Ensures the authenticated Supabase session is recovered and available across APK cold starts.
+  ///
+  /// Protected by a shared in-flight mutex so concurrent callers share a single recovery Future,
+  /// preventing double refresh token requests and invalid_grant token-rotation race conditions.
   static Future<Session?> ensureSessionReady() async {
-    if (!isInitialized) return null;
+    if (_inFlightRecovery != null) {
+      AuthLogger.log('ensureSessionReady deduplicated; awaiting existing in-flight recovery');
+      return _inFlightRecovery;
+    }
+    _inFlightRecovery = _internalEnsureSessionReady();
+    try {
+      return await _inFlightRecovery;
+    } finally {
+      _inFlightRecovery = null;
+    }
+  }
+
+  static Future<Session?> _internalEnsureSessionReady() async {
+    if (!isInitialized) {
+      AuthLogger.logSessionRestore(
+        source: 'ensureSessionReady',
+        hasSession: false,
+        error: 'Supabase not initialized',
+      );
+      return null;
+    }
     final supaClient = clientSafe;
     if (supaClient == null) return null;
 
     // 1. If active session is valid and not expired, return immediately
     final current = supaClient.auth.currentSession;
     if (current != null && !current.isExpired) {
+      AuthLogger.logSessionRestore(
+        source: 'memory_active',
+        hasSession: true,
+        userId: current.user.id,
+        isExpired: false,
+      );
       return current;
     }
 
@@ -108,10 +177,22 @@ class SupabaseConfig {
     // and causes invalid_grant token-rotation race conditions that log the user out!
     if (current != null && current.isExpired) {
       try {
+        AuthLogger.logTokenRefresh(trigger: 'expired_current_session', success: false);
         final res = await supaClient.auth.refreshSession().timeout(const Duration(seconds: 8));
-        return res.session ?? supaClient.auth.currentSession;
-      } catch (_) {
+        final refreshed = res.session ?? supaClient.auth.currentSession;
+        AuthLogger.logTokenRefresh(
+          trigger: 'expired_current_session',
+          success: refreshed != null && !refreshed.isExpired,
+        );
+        return refreshed;
+      } catch (e) {
         // Return existing session on network failure so user stays logged in offline
+        AuthLogger.logTokenRefresh(
+          trigger: 'expired_current_session',
+          success: false,
+          isOfflineFallback: true,
+          error: e.toString(),
+        );
         return supaClient.auth.currentSession;
       }
     }
@@ -129,16 +210,39 @@ class SupabaseConfig {
       if (restored != null) {
         if (restored.isExpired) {
           try {
+            AuthLogger.logTokenRefresh(trigger: 'restored_expired_token', success: false);
             final res = await supaClient.auth.refreshSession().timeout(const Duration(seconds: 8));
-            return res.session ?? supaClient.auth.currentSession;
-          } catch (_) {
+            final refreshed = res.session ?? supaClient.auth.currentSession;
+            AuthLogger.logTokenRefresh(
+              trigger: 'restored_expired_token',
+              success: refreshed != null && !refreshed.isExpired,
+            );
+            return refreshed;
+          } catch (e) {
+            AuthLogger.logTokenRefresh(
+              trigger: 'restored_expired_token',
+              success: false,
+              isOfflineFallback: true,
+              error: e.toString(),
+            );
             return supaClient.auth.currentSession;
           }
         }
+        AuthLogger.logSessionRestore(
+          source: 'storage_restored',
+          hasSession: true,
+          userId: restored.user.id,
+          isExpired: false,
+        );
         return restored;
       }
     }
 
+    AuthLogger.logSessionRestore(
+      source: 'ensureSessionReady',
+      hasSession: supaClient.auth.currentSession != null,
+      userId: supaClient.auth.currentSession?.user.id,
+    );
     return supaClient.auth.currentSession;
   }
 }

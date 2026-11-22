@@ -4,6 +4,7 @@
 export 'package:shared_core/shared_core.dart';
 export 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
 export 'supabase/supabase_config.dart';
+export 'supabase/auth_logger.dart';
 
 // Models
 export 'models/user_profile.dart';

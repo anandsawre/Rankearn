@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supa;
 import '../models/user_profile.dart';
 import '../supabase/supabase_config.dart';
+import '../supabase/auth_logger.dart';
 import '../services/push_notification_service.dart';
 
 /// Authentication & User Profile Repository
@@ -38,7 +39,14 @@ class AuthRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_localProfileKey, jsonEncode(profile.toMap()));
       await prefs.setBool(_rememberMeKey, rememberMe);
-    } catch (_) {}
+      AuthLogger.log('Local profile cached', {
+        'userId': profile.id,
+        'email': profile.email,
+        'rememberMe': rememberMe,
+      });
+    } catch (e) {
+      AuthLogger.log('saveLocalProfile error', {'error': e.toString()});
+    }
   }
 
   /// Retrieve locally persisted user profile
@@ -46,13 +54,24 @@ class AuthRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       final rememberMe = prefs.getBool(_rememberMeKey) ?? true;
-      if (!rememberMe) return null;
+      if (!rememberMe) {
+        AuthLogger.log('getLocalProfile: rememberMe is false; skipping local profile');
+        return null;
+      }
       final raw = prefs.getString(_localProfileKey);
       if (raw != null && raw.isNotEmpty) {
         final map = jsonDecode(raw) as Map<String, dynamic>;
-        return UserProfile.fromMap(map);
+        final profile = UserProfile.fromMap(map);
+        AuthLogger.logSessionRestore(
+          source: 'local_profile_cache',
+          hasSession: true,
+          userId: profile.id,
+        );
+        return profile;
       }
-    } catch (_) {}
+    } catch (e) {
+      AuthLogger.log('getLocalProfile error', {'error': e.toString()});
+    }
     return null;
   }
 
@@ -62,7 +81,10 @@ class AuthRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_localProfileKey);
       await prefs.remove(_rememberMeKey);
-    } catch (_) {}
+      AuthLogger.log('Local profile cleared from SharedPreferences');
+    } catch (e) {
+      AuthLogger.log('clearLocalProfile error', {'error': e.toString()});
+    }
   }
 
   /// Restore user session seamlessly on app launch (guarantees session persistence across APK restarts)
@@ -77,7 +99,9 @@ class AuthRepository {
     if (SupabaseConfig.isInitialized && client != null) {
       try {
         session = await SupabaseConfig.ensureSessionReady();
-      } catch (_) {}
+      } catch (e) {
+        AuthLogger.log('ensureSessionReady error in restoreSession', {'error': e.toString()});
+      }
       session ??= client.auth.currentSession;
     }
 
@@ -101,6 +125,11 @@ class AuthRepository {
             } catch (_) {}
           }());
         }
+        AuthLogger.logSessionRestore(
+          source: 'active_session_and_cache_matched',
+          hasSession: true,
+          userId: userId,
+        );
         return Success(cachedProfile);
       }
 
@@ -110,9 +139,16 @@ class AuthRepository {
         if (profileRes is Success<UserProfile>) {
           await saveLocalProfile(profileRes.data);
           _safeSyncDeviceToken(profileRes.data.id);
+          AuthLogger.logSessionRestore(
+            source: 'active_session_fetched_from_db',
+            hasSession: true,
+            userId: profileRes.data.id,
+          );
           return profileRes;
         }
-      } catch (_) {}
+      } catch (e) {
+        AuthLogger.log('getProfile db fetch error; falling back to metadata', {'error': e.toString()});
+      }
 
       // Fallback: build valid UserProfile from Supabase auth user metadata so user is never locked out
       final meta = session.user.userMetadata ?? {};
@@ -132,6 +168,11 @@ class AuthRepository {
       );
       await saveLocalProfile(fallback);
       _safeSyncDeviceToken(fallback.id);
+      AuthLogger.logSessionRestore(
+        source: 'active_session_constructed_from_metadata',
+        hasSession: true,
+        userId: fallback.id,
+      );
       return Success(fallback);
     }
 
@@ -148,6 +189,11 @@ class AuthRepository {
       } catch (_) {}
 
       _safeSyncDeviceToken(cachedProfile.id);
+      AuthLogger.logSessionRestore(
+        source: 'offline_cached_profile_fallback',
+        hasSession: true,
+        userId: cachedProfile.id,
+      );
       return Success(cachedProfile);
     }
 
@@ -182,11 +228,20 @@ class AuthRepository {
           }
           await saveLocalProfile(fallback);
           _safeSyncDeviceToken(fallback.id);
+          AuthLogger.logSessionRestore(
+            source: 'raw_storage_token_parsed',
+            hasSession: true,
+            userId: fallback.id,
+          );
           return Success(fallback);
         }
       }
     } catch (_) {}
 
+    AuthLogger.logSessionRestore(
+      source: 'restoreSession_completed',
+      hasSession: false,
+    );
     return const Failure('No authenticated session found');
   }
 
@@ -564,6 +619,7 @@ class AuthRepository {
 
   /// Sign Out
   Future<Result<bool>> signOut() async {
+    AuthLogger.logLogoutTrigger(trigger: 'explicit_sign_out', userInitiated: true);
     await clearLocalProfile();
     final client = _client;
     if (client == null) {
@@ -573,6 +629,7 @@ class AuthRepository {
       await client.auth.signOut();
       return const Success(true);
     } catch (e) {
+      AuthLogger.log('signOut error', {'error': e.toString()});
       return Failure(e.toString(), e);
     }
   }
