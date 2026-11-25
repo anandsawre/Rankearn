@@ -178,20 +178,54 @@ class _ViewLiveQuizDialogState extends State<ViewLiveQuizDialog> {
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildParam('Category', item.category),
-                    _buildParam('Status', item.statusLabel),
-                    _buildParam('Duration', '${item.durationMinutes} min'),
+                    _buildParam(
+                      'Category',
+                      item.category,
+                      icon: Icons.category_rounded,
+                      iconColor: AppColors.brandPurple,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildParam(
+                      'Status',
+                      item.statusLabel,
+                      icon: Icons.sensors_rounded,
+                      iconColor: item.computedStatus == LiveQuizStatus.liveNow
+                          ? const Color(0xFFEF4444)
+                          : item.statusTextColor,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildParam(
+                      'Duration',
+                      '${item.durationMinutes} min',
+                      icon: Icons.timer_outlined,
+                      iconColor: AppColors.brandBlue,
+                    ),
                   ],
                 ),
                 const Divider(height: 20, color: AppColors.border),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildParam('Participants', effectiveParticipants.toString()),
-                    _buildParam('Questions', item.questionsCount.toString()),
-                    _buildParam('Reward Coins', '${item.rewardCoins} pts'),
+                    _buildParam(
+                      'Participants',
+                      effectiveParticipants.toString(),
+                      icon: Icons.people_alt_outlined,
+                      iconColor: const Color(0xFF0EA5E9),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildParam(
+                      'Questions',
+                      item.questionsCount.toString(),
+                      icon: Icons.quiz_outlined,
+                      iconColor: AppColors.brandGreen,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildParam(
+                      'Reward Coins',
+                      '${item.rewardCoins} pts',
+                      icon: Icons.monetization_on_outlined,
+                      iconColor: const Color(0xFFF59E0B),
+                    ),
                   ],
                 ),
               ],
@@ -276,28 +310,55 @@ class _ViewLiveQuizDialogState extends State<ViewLiveQuizDialog> {
     }
   }
 
-  Widget _buildParam(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTypography.labelSmall.copyWith(
-            fontSize: 11,
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w500,
+  Widget _buildParam(
+    String label,
+    String value, {
+    required IconData icon,
+    required Color iconColor,
+  }) {
+    return Expanded(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 15, color: iconColor),
           ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: AppTypography.bodyMedium.copyWith(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.labelSmall.copyWith(
+                    fontSize: 10.5,
+                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyMedium.copyWith(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
