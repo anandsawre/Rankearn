@@ -1104,6 +1104,10 @@ class AdminTableStatusBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (isLive) ...[
+            _PulsingWaveDot(color: textColor),
+            const SizedBox(width: 5),
+          ],
           Text(
             label,
             style: TextStyle(
@@ -1113,10 +1117,6 @@ class AdminTableStatusBadge extends StatelessWidget {
               color: textColor,
             ),
           ),
-          if (isLive) ...[
-            const SizedBox(width: 5),
-            _PulsingWaveDot(color: textColor),
-          ],
         ],
       ),
     );
