@@ -192,7 +192,7 @@ class LiveQuizItem {
   Color get statusBgColor {
     switch (computedStatus) {
       case LiveQuizStatus.liveNow:
-        return const Color(0xFFEFF6FF); // Soft blue background
+        return const Color(0xFFEF4444); // Vibrant red background
       case LiveQuizStatus.completed:
         return const Color(0xFFDCFCE7); // Soft green
       case LiveQuizStatus.scheduled:
@@ -207,7 +207,7 @@ class LiveQuizItem {
   Color get statusTextColor {
     switch (computedStatus) {
       case LiveQuizStatus.liveNow:
-        return const Color(0xFF2563EB); // Blue
+        return Colors.white; // White text on red
       case LiveQuizStatus.completed:
         return const Color(0xFF15803D); // Green
       case LiveQuizStatus.scheduled:
@@ -222,7 +222,7 @@ class LiveQuizItem {
   Color get statusBorderColor {
     switch (computedStatus) {
       case LiveQuizStatus.liveNow:
-        return const Color(0xFFBFDBFE);
+        return const Color(0xFFDC2626);
       case LiveQuizStatus.completed:
         return const Color(0xFF86EFAC);
       case LiveQuizStatus.scheduled:

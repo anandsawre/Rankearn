@@ -464,7 +464,7 @@ class _LiveQuizTableCardState extends State<LiveQuizTableCard> {
                     backgroundColor: item.statusBgColor,
                     borderColor: item.statusBorderColor,
                     textColor: item.statusTextColor,
-                    isLive: item.status == LiveQuizStatus.liveNow,
+                    isLive: item.computedStatus == LiveQuizStatus.liveNow,
                   ),
                 ),
                 DataCell(

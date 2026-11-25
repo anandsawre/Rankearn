@@ -1114,17 +1114,80 @@ class AdminTableStatusBadge extends StatelessWidget {
             ),
           ),
           if (isLive) ...[
-            const SizedBox(width: 4),
-            Container(
-              width: 6,
-              height: 6,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFF3B30),
-                shape: BoxShape.circle,
-              ),
-            ),
+            const SizedBox(width: 5),
+            _PulsingWaveDot(color: textColor),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _PulsingWaveDot extends StatefulWidget {
+  final Color color;
+
+  const _PulsingWaveDot({required this.color});
+
+  @override
+  State<_PulsingWaveDot> createState() => _PulsingWaveDotState();
+}
+
+class _PulsingWaveDotState extends State<_PulsingWaveDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 12,
+      height: 12,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final t = _controller.value;
+          final scale = 1.0 + (t * 1.35);
+          final opacity = (1.0 - t).clamp(0.0, 1.0) * 0.75;
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              Transform.scale(
+                scale: scale,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: widget.color.withValues(alpha: opacity),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              child!,
+            ],
+          );
+        },
+        child: Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: widget.color,
+            shape: BoxShape.circle,
+          ),
+        ),
       ),
     );
   }
