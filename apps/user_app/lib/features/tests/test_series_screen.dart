@@ -138,9 +138,11 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     candidates.addAll(
       _tests.where(
         (t) =>
-            t.isTournament ||
-            t.testMode == 'live' ||
-            t.scheduledStartTime != null,
+            !t.isTournament &&
+            t.testMode != 'tournament' &&
+            (t.testMode == 'live' ||
+                t.testMode == 'live_quiz' ||
+                t.scheduledStartTime != null),
       ),
     );
 
@@ -202,7 +204,7 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
     final res = await testsRepo.getTests(isTournament: false);
     final catRes = await testsRepo.getCategories();
     final examRes = await testsRepo.getExamCategoryList();
-    final tourRes = await ContestsRepository().getTournaments();
+    final liveRes = await ContestsRepository().getLiveAndUpcomingTests();
     final registered = await ContestsRepository()
         .getUserRegisteredTournamentIds(widget.userId ?? '');
     final stats = await testsRepo.getUserStats(widget.userId ?? '');
@@ -220,8 +222,8 @@ class _TestSeriesScreenState extends State<TestSeriesScreen> {
       }
 
       final List<TestModel> extra = [];
-      if (tourRes is Success<List<TestModel>>) {
-        extra.addAll(tourRes.data);
+      if (liveRes is Success<List<TestModel>>) {
+        extra.addAll(liveRes.data);
       }
       _extractUpcomingTests(extra);
     });
