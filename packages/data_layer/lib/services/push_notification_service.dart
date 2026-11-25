@@ -124,12 +124,14 @@ class PushNotificationService {
         );
       }
 
-      // 6. Obtain FCM Device Token
-      try {
-        _cachedFcmToken = await messaging.getToken();
-        debugPrint('FCM Device Token: $_cachedFcmToken');
-      } catch (e) {
-        debugPrint('FCM getToken error: $e');
+      // 6. Obtain FCM Device Token (mobile only; web requires firebase-messaging-sw.js + VAPID key)
+      if (!kIsWeb) {
+        try {
+          _cachedFcmToken = await messaging.getToken();
+          debugPrint('FCM Device Token: $_cachedFcmToken');
+        } catch (e) {
+          debugPrint('FCM getToken error: $e');
+        }
       }
 
       // 7. Subscribe to global broadcasts topic
@@ -257,6 +259,7 @@ class PushNotificationService {
 
   /// Register device FCM token in Supabase public.user_device_tokens table
   static Future<void> syncDeviceToken({String? userId}) async {
+    if (kIsWeb) return;
     String? token = _cachedFcmToken;
     if (token == null) {
       try {
