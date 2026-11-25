@@ -324,11 +324,11 @@ class _ViewLiveQuizDialogState extends State<ViewLiveQuizDialog> {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
+              color: iconColor,
+              shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: 15, color: iconColor),
+            child: Icon(icon, size: 15, color: Colors.white),
           ),
           const SizedBox(width: 8),
           Expanded(
