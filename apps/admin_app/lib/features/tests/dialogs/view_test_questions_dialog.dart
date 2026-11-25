@@ -589,7 +589,7 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
       subtitle: '${widget.item.subject} • ${_questions.length} Questions',
       iconData: widget.item.icon,
       gradientColors: const [Color(0xFF1E1B4B), Color(0xFF4338CA)],
-      maxWidth: 820,
+      maxWidth: 880,
       maxHeight: 740,
       footerLeft: Text(
         'Showing ${_filteredQuestions.length} of ${_questions.length} questions',
@@ -598,7 +598,7 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
       actions: [
         OutlinedButton(
           style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             side: const BorderSide(color: Color(0xFFCBD5E1)),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
@@ -608,46 +608,43 @@ class _ViewTestQuestionsDialogState extends State<ViewTestQuestionsDialog> {
             style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 12),
           ),
         ),
-        const SizedBox(width: 8),
         OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             side: const BorderSide(color: Color(0xFF6366F1)),
             foregroundColor: const Color(0xFF4F46E5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
-          icon: const Icon(Icons.copy_all_rounded, size: 16),
+          icon: const Icon(Icons.copy_all_rounded, size: 15),
           label: const Text(
             'Add from Existing Test',
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
           ),
           onPressed: () => _openImportFromExistingTestDialog(),
         ),
-        const SizedBox(width: 8),
         OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             side: const BorderSide(color: Color(0xFF10B981)),
             foregroundColor: const Color(0xFF059669),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
-          icon: const Icon(Icons.cloud_upload_rounded, size: 16),
+          icon: const Icon(Icons.cloud_upload_rounded, size: 15),
           label: const Text(
             'Import Questions',
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
           ),
           onPressed: () => _openImportQuestionsDialog(),
         ),
-        const SizedBox(width: 8),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFFF9500),
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             elevation: 0,
           ),
-          icon: const Icon(Icons.post_add_rounded, size: 16),
+          icon: const Icon(Icons.post_add_rounded, size: 15),
           label: const Text(
             'Add Question',
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
