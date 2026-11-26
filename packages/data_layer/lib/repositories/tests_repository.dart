@@ -204,7 +204,13 @@ class TestsRepository {
       }
 
       final data = await query.order('created_at', ascending: false);
-      final tests = (data as List).map((m) => TestModel.fromMap(m)).toList();
+      var tests = (data as List).map((m) => TestModel.fromMap(m)).toList();
+      if (testMode == null && isTournament == false) {
+        tests = tests
+            .where((t) =>
+                t.testMode != 'live_quiz' && !t.id.startsWith('lq-'))
+            .toList();
+      }
       return Success(tests);
     } catch (e) {
       return Failure('Error fetching tests: $e', e);

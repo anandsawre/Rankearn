@@ -111,7 +111,14 @@ class _TestsTabState extends State<TestsTab> {
             .limit(2000),
       ]);
 
-      final testRows = List<Map<String, dynamic>>.from(results[0] as List);
+      final rawTestRows = List<Map<String, dynamic>>.from(results[0] as List);
+      final testRows = rawTestRows.where((row) {
+        final id = row['id']?.toString() ?? '';
+        final mode = (row['test_mode'] ?? '').toString().toLowerCase();
+        if (id.startsWith('lq-') || mode == 'live_quiz') return false;
+        if (id.startsWith('tourney-')) return false;
+        return true;
+      }).toList();
       final categoryRows = List<Map<String, dynamic>>.from(results[1] as List);
       final questionRows = List<Map<String, dynamic>>.from(results[2] as List);
       final attemptRows = List<Map<String, dynamic>>.from(results[3] as List);
