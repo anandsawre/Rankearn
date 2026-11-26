@@ -106,15 +106,11 @@ class _ConfirmActionDialogState extends State<ConfirmActionDialog> {
               style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
             ),
             const SizedBox(height: 6),
-            TextField(
+            AppModalDialog.textField(
               controller: _reasonController,
               maxLines: 3,
-              style: const TextStyle(fontSize: 12.5),
-              decoration: AppModalDialog.inputDecoration(
-                'e.g., Match disconnection abuse, server flush, cheating investigation...',
-                focusColor: widget.isDestructive ? const Color(0xFFDC2626) : AppColors.battleAdminPurple,
-                contentPadding: const EdgeInsets.all(12),
-              ),
+              hint: 'e.g., Match disconnection abuse, server flush, cheating investigation...',
+              focusColor: widget.isDestructive ? const Color(0xFFDC2626) : AppColors.battleAdminPurple,
             ),
             const SizedBox(height: 12),
           ],
