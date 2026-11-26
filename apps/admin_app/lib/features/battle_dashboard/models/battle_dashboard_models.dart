@@ -348,6 +348,63 @@ class PlayerBattleRecord {
   }
 }
 
+class BattleBotConfig {
+  final String id;
+  final String name;
+  final String rank;
+  final String? avatarUrl;
+  final double accuracy;
+  final bool isActive;
+
+  const BattleBotConfig({
+    required this.id,
+    required this.name,
+    this.rank = 'AI Bot',
+    this.avatarUrl,
+    this.accuracy = 0.65,
+    this.isActive = true,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'rank': rank,
+        if (avatarUrl != null && avatarUrl!.isNotEmpty) 'avatarUrl': avatarUrl,
+        'accuracy': accuracy,
+        'isActive': isActive,
+      };
+
+  factory BattleBotConfig.fromJson(Map<String, dynamic> json) {
+    final rawAvatar = json['avatarUrl']?.toString().trim();
+    return BattleBotConfig(
+      id: json['id']?.toString() ?? 'bot_${DateTime.now().millisecondsSinceEpoch}',
+      name: json['name']?.toString() ?? 'AI Bot',
+      rank: json['rank']?.toString() ?? 'AI Bot',
+      avatarUrl: (rawAvatar != null && rawAvatar.isNotEmpty) ? rawAvatar : null,
+      accuracy: ((json['accuracy'] as num?)?.toDouble() ?? 0.65).clamp(0.2, 0.98),
+      isActive: json['isActive'] as bool? ?? true,
+    );
+  }
+
+  BattleBotConfig copyWith({
+    String? id,
+    String? name,
+    String? rank,
+    String? avatarUrl,
+    double? accuracy,
+    bool? isActive,
+  }) {
+    return BattleBotConfig(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      rank: rank ?? this.rank,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      accuracy: accuracy ?? this.accuracy,
+      isActive: isActive ?? this.isActive,
+    );
+  }
+}
+
 class BattleSettingsData {
   final int matchmakingTimeout;
   final double botAccuracy;
@@ -360,6 +417,7 @@ class BattleSettingsData {
   final int maxRoomCapacity;
   final double speedCheckThreshold;
   final bool maintenanceMode;
+  final List<BattleBotConfig> bots;
 
   const BattleSettingsData({
     this.matchmakingTimeout = 10,
@@ -373,6 +431,7 @@ class BattleSettingsData {
     this.maxRoomCapacity = 100,
     this.speedCheckThreshold = 1.2,
     this.maintenanceMode = false,
+    this.bots = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -387,9 +446,19 @@ class BattleSettingsData {
         'maxRoomCapacity': maxRoomCapacity,
         'speedCheckThreshold': speedCheckThreshold,
         'maintenanceMode': maintenanceMode,
+        'bots': bots.map((b) => b.toJson()).toList(),
       };
 
   factory BattleSettingsData.fromJson(Map<String, dynamic> json) {
+    final rawBots = json['bots'];
+    final parsedBots = <BattleBotConfig>[];
+    if (rawBots is List) {
+      for (final b in rawBots) {
+        if (b is Map) {
+          parsedBots.add(BattleBotConfig.fromJson(Map<String, dynamic>.from(b)));
+        }
+      }
+    }
     return BattleSettingsData(
       matchmakingTimeout: (json['matchmakingTimeout'] as num?)?.toInt() ?? 10,
       botAccuracy: (json['botAccuracy'] as num?)?.toDouble() ?? 0.65,
@@ -402,6 +471,7 @@ class BattleSettingsData {
       maxRoomCapacity: (json['maxRoomCapacity'] as num?)?.toInt() ?? 100,
       speedCheckThreshold: (json['speedCheckThreshold'] as num?)?.toDouble() ?? 1.2,
       maintenanceMode: json['maintenanceMode'] as bool? ?? false,
+      bots: parsedBots,
     );
   }
 
@@ -417,6 +487,7 @@ class BattleSettingsData {
     int? maxRoomCapacity,
     double? speedCheckThreshold,
     bool? maintenanceMode,
+    List<BattleBotConfig>? bots,
   }) {
     return BattleSettingsData(
       matchmakingTimeout: matchmakingTimeout ?? this.matchmakingTimeout,
@@ -430,6 +501,7 @@ class BattleSettingsData {
       maxRoomCapacity: maxRoomCapacity ?? this.maxRoomCapacity,
       speedCheckThreshold: speedCheckThreshold ?? this.speedCheckThreshold,
       maintenanceMode: maintenanceMode ?? this.maintenanceMode,
+      bots: bots ?? this.bots,
     );
   }
 }

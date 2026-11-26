@@ -32,6 +32,11 @@ class FindingOpponentScreen extends StatefulWidget {
 class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
   final BattleRepository _repository = BattleRepository();
   Timer? _searchTimer;
+  Timer? _pollTimer;
+  String? _waitingBattleId;
+  bool _isFinalizing = false;
+  bool _botFallback = true;
+  double _botAccuracy = 0.65;
 
   @override
   void initState() {
@@ -39,49 +44,83 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
     _startMatchmakingHandshake();
   }
 
-  void _startMatchmakingHandshake() {
-    // 2.5 second simulated radar scan before matching real opponent
-    _searchTimer = Timer(const Duration(milliseconds: 2500), () async {
-      if (!mounted) return;
+  Future<void> _startMatchmakingHandshake() async {
+    final settings = await _repository.getBattleSettings();
+    if (!mounted) return;
 
-      final res = await _repository.createLiveBattleSession(
-        userId: widget.profile.id,
-        playerName: widget.profile.name.isEmpty ? 'Vikram Singh' : widget.profile.name,
-        opponentName: 'Amit Verma (Rank #4)',
-        entryFee: widget.entryFee,
-        opponentRank: 'Rank #4',
+    final maintenanceMode = settings['maintenanceMode'] == true;
+    if (maintenanceMode) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Battle Arena is temporarily under maintenance.'),
+          backgroundColor: Color(0xFFD97706),
+        ),
       );
+      Navigator.of(context).pop();
+      return;
+    }
 
-      if (!mounted) return;
+    _botFallback = settings['botFallback'] as bool? ?? true;
+    _botAccuracy = (settings['botAccuracy'] as num?)?.toDouble() ?? 0.65;
+    final timeoutSecs =
+        ((settings['matchmakingTimeout'] as num?)?.toInt() ?? 10).clamp(5, 30);
 
-      if (res is Success<BattleSession>) {
-        // Atomic ledger entry fee deduction upon match handshake
-        await _repository.deductBattleEntryFee(
-          userId: widget.profile.id,
-          entryFee: widget.entryFee,
-          battleId: res.data.id,
-          battleTitle: widget.battleType,
+    // 1. Check for an existing real waiting player or create a waiting room
+    final queueRes = await _repository.findOrCreateWaitingBattle(
+      userId: widget.profile.id,
+      entryFee: widget.entryFee,
+    );
+    if (!mounted || _isFinalizing) return;
+
+    _waitingBattleId = queueRes['battle_id']?.toString();
+    final immediatelyMatched = queueRes['matched'] == true;
+
+    if (immediatelyMatched) {
+      await _launchMatch(
+        battleId: _waitingBattleId!,
+        opponentId: queueRes['opponent_id']?.toString(),
+        opponentName: queueRes['opponent_name']?.toString(),
+        isBotFallback: false,
+      );
+      return;
+    }
+
+    // 2. Poll every 1.5s during the radar scan window to see if a real opponent joins
+    _pollTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) async {
+      if (!mounted || _isFinalizing || _waitingBattleId == null) return;
+      final match = await _repository.checkWaitingBattleMatched(
+        battleId: _waitingBattleId!,
+      );
+      if (match != null && match['matched'] == true && mounted && !_isFinalizing) {
+        await _launchMatch(
+          battleId: _waitingBattleId!,
+          opponentId: match['opponent_id']?.toString(),
+          opponentName: match['opponent_name']?.toString(),
+          isBotFallback: false,
         );
-        widget.onCoinUpdate?.call(-widget.entryFee);
+      }
+    });
 
+    // 3. After timeout (default 10s), either fall back to bot (if enabled) or cancel
+    _searchTimer = Timer(Duration(seconds: timeoutSecs), () async {
+      if (!mounted || _isFinalizing) return;
+      _pollTimer?.cancel();
+
+      if (_botFallback && _waitingBattleId != null) {
+        await _launchMatch(
+          battleId: _waitingBattleId!,
+          isBotFallback: true,
+        );
+      } else {
+        _isFinalizing = true;
+        if (_waitingBattleId != null) {
+          await _repository.cancelWaitingBattle(battleId: _waitingBattleId!);
+        }
         if (!mounted) return;
-
-        // Transition to Live Arena
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => LiveArenaScreen(
-              initialSession: res.data,
-              userCoins: widget.userCoins - widget.entryFee,
-              userProfile: widget.profile,
-              onCoinUpdate: widget.onCoinUpdate,
-            ),
-          ),
-        );
-      } else if (res is Failure<BattleSession>) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(res.message),
-            backgroundColor: const Color(0xFFDC2626),
+          const SnackBar(
+            content: Text('No opponent found right now. Please try again.'),
+            backgroundColor: Color(0xFFD97706),
           ),
         );
         Navigator.of(context).pop();
@@ -89,14 +128,81 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
     });
   }
 
-  void _cancelMatchmaking() {
+  Future<void> _launchMatch({
+    required String battleId,
+    String? opponentId,
+    String? opponentName,
+    required bool isBotFallback,
+  }) async {
+    if (_isFinalizing) return;
+    _isFinalizing = true;
+    _pollTimer?.cancel();
     _searchTimer?.cancel();
+
+    final res = await _repository.buildSessionForBattle(
+      battleId: battleId,
+      userId: widget.profile.id,
+      playerName: widget.profile.name.isEmpty ? 'Player' : widget.profile.name,
+      opponentId: opponentId,
+      opponentName: opponentName,
+      entryFee: widget.entryFee,
+      isBotFallback: isBotFallback,
+    );
+
+    if (!mounted) return;
+
+    if (res is Success<BattleSession>) {
+      if (widget.entryFee > 0) {
+        await _repository.deductBattleEntryFee(
+          userId: widget.profile.id,
+          entryFee: widget.entryFee,
+          battleId: res.data.id,
+          battleTitle: widget.battleType,
+        );
+        widget.onCoinUpdate?.call(-widget.entryFee);
+      }
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => LiveArenaScreen(
+            initialSession: res.data,
+            userCoins: widget.userCoins - widget.entryFee,
+            userProfile: widget.profile,
+            onCoinUpdate: widget.onCoinUpdate,
+            botAccuracy: res.data.botAccuracy ?? _botAccuracy,
+          ),
+        ),
+      );
+    } else if (res is Failure<BattleSession>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res.message),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _cancelMatchmaking() {
+    _isFinalizing = true;
+    _pollTimer?.cancel();
+    _searchTimer?.cancel();
+    if (_waitingBattleId != null) {
+      _repository.cancelWaitingBattle(battleId: _waitingBattleId!);
+    }
     Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _searchTimer?.cancel();
+    if (!_isFinalizing && _waitingBattleId != null) {
+      _repository.cancelWaitingBattle(battleId: _waitingBattleId!);
+    }
     super.dispose();
   }
 

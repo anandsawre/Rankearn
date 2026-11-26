@@ -368,6 +368,10 @@ class _BattleDashboardTabState extends State<BattleDashboardTab> {
     return QuickActionsCard(
       height: 124,
       compact: true,
+      onCustomize: () => AppModalDialog.show(
+        context: context,
+        builder: (_) => const BattleSettingsDialog(),
+      ),
       actions: battleActions,
     );
   }

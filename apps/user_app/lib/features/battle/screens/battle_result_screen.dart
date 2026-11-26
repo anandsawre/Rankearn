@@ -67,8 +67,10 @@ class BattleResultScreen extends StatelessWidget {
                         BattleResultComparisonCard(
                           winnerName: result.isVictory ? result.playerName : result.opponentName,
                           winnerScore: result.isVictory ? result.playerScore : result.opponentScore,
+                          winnerAvatar: result.isVictory ? result.playerAvatarUrl : result.opponentAvatarUrl,
                           loserName: result.isVictory ? result.opponentName : result.playerName,
                           loserScore: result.isVictory ? result.opponentScore : result.playerScore,
+                          loserAvatar: result.isVictory ? result.opponentAvatarUrl : result.playerAvatarUrl,
                           isWinnerCurrentUser: result.isVictory,
                         ),
                         const SizedBox(height: 16),
@@ -77,6 +79,7 @@ class BattleResultScreen extends StatelessWidget {
                         BattleRewardSummaryCard(
                           coinsWon: result.coinsWon,
                           isVictory: result.isVictory,
+                          isDraw: result.isDraw,
                         ),
                         const SizedBox(height: 20),
 

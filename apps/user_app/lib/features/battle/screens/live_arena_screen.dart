@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
@@ -14,6 +15,7 @@ class LiveArenaScreen extends StatefulWidget {
   final int userCoins;
   final UserProfile userProfile;
   final void Function(int coinsDelta)? onCoinUpdate;
+  final double botAccuracy;
 
   const LiveArenaScreen({
     super.key,
@@ -21,6 +23,7 @@ class LiveArenaScreen extends StatefulWidget {
     required this.userCoins,
     required this.userProfile,
     this.onCoinUpdate,
+    this.botAccuracy = 0.65,
   });
 
   @override
@@ -45,12 +48,45 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
   Timer? _countdownTimer;
   Timer? _submitDelayTimer;
   Timer? _reviewDelayTimer;
+  Timer? _liveSyncTimer;
+  Timer? _waitOpponentTimer;
+  bool _isWaitingForOpponent = false;
+  int _waitSecondsRemaining = 45;
+
+  bool get _isRealOpponent {
+    final oppId = _session.opponent.id;
+    return oppId.isNotEmpty && oppId != 'p_bot' && oppId != 'p_opponent';
+  }
 
   @override
   void initState() {
     super.initState();
     _session = widget.initialSession;
     _startTurnTimer();
+    if (_isRealOpponent) {
+      _startLiveOpponentSync();
+    }
+  }
+
+  void _startLiveOpponentSync() {
+    _liveSyncTimer?.cancel();
+    _liveSyncTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      if (!mounted || _isWaitingForOpponent) return;
+      final row = await _repository.fetchBattleState(battleId: _session.id);
+      if (!mounted || row == null) return;
+      _applyRemoteOpponentScore(row);
+    });
+  }
+
+  void _applyRemoteOpponentScore(Map<String, dynamic> row) {
+    final creatorId = row['creator_id']?.toString() ?? '';
+    final isCreator = creatorId == widget.userProfile.id;
+    final remoteOppScore = isCreator
+        ? (row['opponent_score'] as num?)?.toInt() ?? 0
+        : (row['creator_score'] as num?)?.toInt() ?? 0;
+    if (remoteOppScore != _opponentScore && mounted) {
+      setState(() => _opponentScore = remoteOppScore);
+    }
   }
 
   void _startTurnTimer() {
@@ -116,12 +152,14 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
       }
     }
 
-    // Simulate opponent choice (realistic 60% probability)
-    final opponentCorrect = (_currentRound % 2 == 1 && !timedOut) || (_currentRound == 2);
-    final opponentPoints = opponentCorrect ? 10 : 0;
+    // For bot matches, simulate opponent choice; for real 2-player matches, sync live score to Supabase
+    final bool opponentCorrect = !_isRealOpponent &&
+        !timedOut &&
+        (math.Random().nextDouble() < widget.botAccuracy);
+    final int opponentPoints = opponentCorrect ? 10 : 0;
 
     _submitDelayTimer?.cancel();
-    _submitDelayTimer = Timer(const Duration(milliseconds: 700), () {
+    _submitDelayTimer = Timer(const Duration(milliseconds: 700), () async {
       if (!mounted) return;
 
       if (isCorrect) {
@@ -132,12 +170,27 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
 
       setState(() {
         _playerScore += pointsWon;
-        _opponentScore += opponentPoints;
+        if (!_isRealOpponent) {
+          _opponentScore += opponentPoints;
+        }
 
         final roundIdx = (_currentRound - 1).clamp(0, 4);
         _playerRounds[roundIdx] = isCorrect;
-        _opponentRounds[roundIdx] = opponentCorrect;
+        if (!_isRealOpponent) {
+          _opponentRounds[roundIdx] = opponentCorrect;
+        }
       });
+
+      if (_isRealOpponent) {
+        final synced = await _repository.syncPlayerScore(
+          battleId: _session.id,
+          userId: widget.userProfile.id,
+          score: _playerScore,
+        );
+        if (synced != null && mounted) {
+          _applyRemoteOpponentScore(synced);
+        }
+      }
 
       // Advance round or complete match after brief review delay
       _reviewDelayTimer?.cancel();
@@ -159,8 +212,104 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
   }
 
   Future<void> _finishBattle() async {
-    final isWin = _playerScore > _opponentScore;
-    final isDraw = _playerScore == _opponentScore;
+    _countdownTimer?.cancel();
+    _liveSyncTimer?.cancel();
+
+    if (!_isRealOpponent) {
+      await _completeWithScores(
+        myFinalScore: _playerScore,
+        oppFinalScore: _opponentScore,
+        alreadyRecordedInDb: false,
+      );
+      return;
+    }
+
+    // Real 2-player match: synchronize completion via Supabase `battles`
+    final finalized = await _repository.finalizeRealBattle(
+      battleId: _session.id,
+      userId: widget.userProfile.id,
+      myScore: _playerScore,
+    );
+    if (!mounted) return;
+
+    if (finalized != null &&
+        (finalized['status'] ?? '').toString().toLowerCase() == 'completed') {
+      await _finishFromBattleRow(finalized);
+      return;
+    }
+
+    // First player to finish -> wait for opponent to finish (up to 45s safety timeout)
+    setState(() {
+      _isWaitingForOpponent = true;
+      _waitSecondsRemaining = 45;
+    });
+
+    _waitOpponentTimer?.cancel();
+    _waitOpponentTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_waitSecondsRemaining <= 1) {
+        timer.cancel();
+        final forced = await _repository.finalizeRealBattle(
+          battleId: _session.id,
+          userId: widget.userProfile.id,
+          myScore: _playerScore,
+          forceComplete: true,
+        );
+        if (!mounted) return;
+        if (forced != null) {
+          await _finishFromBattleRow(forced);
+        } else {
+          await _completeWithScores(
+            myFinalScore: _playerScore,
+            oppFinalScore: _opponentScore,
+            alreadyRecordedInDb: true,
+          );
+        }
+        return;
+      }
+
+      setState(() => _waitSecondsRemaining--);
+
+      // Poll every 2 seconds (or on even ticks)
+      if (_waitSecondsRemaining % 2 == 0) {
+        final row = await _repository.fetchBattleState(battleId: _session.id);
+        if (!mounted || row == null) return;
+        _applyRemoteOpponentScore(row);
+        if ((row['status'] ?? '').toString().toLowerCase() == 'completed') {
+          timer.cancel();
+          await _finishFromBattleRow(row);
+        }
+      }
+    });
+  }
+
+  Future<void> _finishFromBattleRow(Map<String, dynamic> row) async {
+    final creatorId = row['creator_id']?.toString() ?? '';
+    final isCreator = creatorId == widget.userProfile.id;
+    final creatorScore = (row['creator_score'] as num?)?.toInt() ?? 0;
+    final opponentScore = (row['opponent_score'] as num?)?.toInt() ?? 0;
+
+    final myFinalScore = isCreator ? creatorScore : opponentScore;
+    final oppFinalScore = isCreator ? opponentScore : creatorScore;
+
+    await _completeWithScores(
+      myFinalScore: myFinalScore,
+      oppFinalScore: oppFinalScore,
+      alreadyRecordedInDb: true,
+    );
+  }
+
+  Future<void> _completeWithScores({
+    required int myFinalScore,
+    required int oppFinalScore,
+    required bool alreadyRecordedInDb,
+  }) async {
+    final isWin = myFinalScore > oppFinalScore;
+    final isDraw = myFinalScore == oppFinalScore;
     final prizeCoins = isWin
         ? (_session.entryFee * 2)
         : (isDraw ? _session.entryFee : 0);
@@ -169,11 +318,13 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
       isVictory: isWin,
       isDraw: isDraw,
       isDefeat: !isWin && !isDraw,
-      playerName: widget.userProfile.name.isEmpty ? 'Vikram Singh' : widget.userProfile.name,
-      playerScore: _playerScore,
+      playerName: widget.userProfile.name.isEmpty ? 'Player' : widget.userProfile.name,
+      playerScore: myFinalScore,
+      playerAvatarUrl: widget.userProfile.profilePhotoUrl,
       opponentName: _session.opponent.name,
-      opponentScore: _opponentScore,
+      opponentScore: oppFinalScore,
       opponentRank: _session.opponent.rank,
+      opponentAvatarUrl: _session.opponent.avatarUrl,
       coinsWon: prizeCoins,
       message: isWin
           ? 'You defeated ${_session.opponent.name} in 1v1 Battle! 🏆'
@@ -182,19 +333,36 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
               : 'Good effort! Practice more and rematch ${_session.opponent.name}.'),
     );
 
-    // Apply winnings to user wallet (Entry fee was already deducted on entry)
     if (prizeCoins > 0) {
       if (isWin) HapticFeedback.heavyImpact();
       widget.onCoinUpdate?.call(prizeCoins);
     }
 
-    // Persist to backend
-    await _repository.recordBattleOutcome(
-      battleId: _session.id,
-      userId: widget.userProfile.id,
-      result: result,
-      entryFee: _session.entryFee,
-    );
+    if (alreadyRecordedInDb) {
+      // Credit only this user's own winnings / draw refund without overwriting the battles row
+      if (isWin && prizeCoins > 0) {
+        await _repository.distributeBattleWinnings(
+          userId: widget.userProfile.id,
+          coinsWon: prizeCoins,
+          battleId: _session.id,
+          battleTitle: 'Battle vs ${_session.opponent.name}',
+        );
+      } else if (isDraw && _session.entryFee > 0) {
+        await _repository.refundBattleEntryFee(
+          userId: widget.userProfile.id,
+          entryFee: _session.entryFee,
+          battleId: _session.id,
+          reason: 'Draw',
+        );
+      }
+    } else {
+      await _repository.recordBattleOutcome(
+        battleId: _session.id,
+        userId: widget.userProfile.id,
+        result: result,
+        entryFee: _session.entryFee,
+      );
+    }
 
     if (!mounted) return;
 
@@ -215,6 +383,8 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
     final shouldLeave = await BattleLeaveDialog.show(context, entryFee: _session.entryFee);
     if (shouldLeave == true && mounted) {
       _countdownTimer?.cancel();
+      _liveSyncTimer?.cancel();
+      _waitOpponentTimer?.cancel();
       // Entry fee is forfeited
       Navigator.of(context).pop();
     }
@@ -225,6 +395,8 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
     _countdownTimer?.cancel();
     _submitDelayTimer?.cancel();
     _reviewDelayTimer?.cancel();
+    _liveSyncTimer?.cancel();
+    _waitOpponentTimer?.cancel();
     super.dispose();
   }
 
@@ -267,16 +439,63 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                           playerScore: _playerScore,
                           playerRounds: _playerRounds,
                           isPlayerLeading: _playerScore > _opponentScore,
+                          playerAvatarUrl: widget.userProfile.profilePhotoUrl,
                           opponentName: _session.opponent.name,
                           opponentScore: _opponentScore,
                           opponentRounds: _opponentRounds,
                           isOpponentLeading: _opponentScore > _playerScore,
+                          opponentAvatarUrl: _session.opponent.avatarUrl,
                           remainingSeconds: _turnSeconds,
                           totalTurnSeconds: 15,
                         ),
                         const SizedBox(height: 16),
 
-                        // 2. Round Bar & Question Card Surface
+                        if (_isWaitingForOpponent)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: AppRadii.borderLg,
+                              border: Border.all(color: AppColors.battleBorder),
+                              boxShadow: AppShadows.subtle,
+                            ),
+                            child: Column(
+                              children: [
+                                const SizedBox(
+                                  width: 34,
+                                  height: 34,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    color: Color(0xFF00B96B),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Waiting for ${_session.opponent.name} to finish...',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.battleNavy,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Your Score: $_playerScore pts • Auto-resolving in ${_waitSecondsRemaining}s',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.battleSecondaryText,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else ...[
+                          // 2. Round Bar & Question Card Surface
                         BattleQuestionCard(
                           currentRound: _currentRound,
                           totalRounds: _session.totalRounds,
@@ -317,6 +536,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                           );
                         });
                         }(),
+                        ],
                         const SizedBox(height: 16),
                       ],
                     ),

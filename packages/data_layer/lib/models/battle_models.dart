@@ -289,6 +289,7 @@ class BattleSession {
   final int totalRounds;
   final List<BattleQuestion> questions;
   final BattleMatchState state;
+  final double? botAccuracy;
 
   const BattleSession({
     required this.id,
@@ -299,6 +300,7 @@ class BattleSession {
     this.totalRounds = 5,
     required this.questions,
     this.state = BattleMatchState.inProgress,
+    this.botAccuracy,
   });
 
   BattleQuestion get currentQuestion => questions[(currentRound - 1).clamp(0, questions.length - 1)];
@@ -337,9 +339,11 @@ class BattleResult {
   final bool isDefeat;
   final String playerName;
   final int playerScore;
+  final String? playerAvatarUrl;
   final String opponentName;
   final int opponentScore;
   final String opponentRank;
+  final String? opponentAvatarUrl;
   final int coinsWon;
   final String message;
 
@@ -349,9 +353,11 @@ class BattleResult {
     this.isDefeat = false,
     required this.playerName,
     required this.playerScore,
+    this.playerAvatarUrl,
     required this.opponentName,
     required this.opponentScore,
     this.opponentRank = 'Rank #4',
+    this.opponentAvatarUrl,
     required this.coinsWon,
     required this.message,
   });

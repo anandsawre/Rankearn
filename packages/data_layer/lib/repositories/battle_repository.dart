@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:shared_core/shared_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/battle_models.dart';
@@ -312,6 +313,7 @@ class BattleRepository {
     final questionLimit = (settings['defaultQuestions'] as num?)?.toInt() ?? 5;
     final questionsRes = await getLiveBattleQuestions(
       limit: questionLimit.clamp(1, 20),
+      battleId: battle.id,
     );
     if (questionsRes is Failure<List<BattleQuestion>>) {
       return Failure(questionsRes.message, questionsRes.error);
@@ -372,8 +374,12 @@ class BattleRepository {
     );
   }
 
-  /// Fetch live competitive battle questions strictly from Supabase `battle_questions`
-  Future<Result<List<BattleQuestion>>> getLiveBattleQuestions({int limit = 5}) async {
+  /// Fetch live competitive battle questions strictly from Supabase `battle_questions`.
+  /// When [battleId] is provided, uses a deterministic seed so both players get identical questions.
+  Future<Result<List<BattleQuestion>>> getLiveBattleQuestions({
+    int limit = 5,
+    String? battleId,
+  }) async {
     final client = _client;
     if (client == null) {
       return const Failure('Database connection is not initialized.');
@@ -383,6 +389,7 @@ class BattleRepository {
       final res = await client
           .from('battle_questions')
           .select()
+          .order('id', ascending: true)
           .limit(poolLimit);
       final list = (res as List)
           .map((r) => BattleQuestion.fromJson(Map<String, dynamic>.from(r as Map)))
@@ -390,10 +397,397 @@ class BattleRepository {
       if (list.isEmpty) {
         return const Failure('No battle questions found in database. Please add questions in Admin.');
       }
-      list.shuffle();
+      if (battleId != null && battleId.isNotEmpty) {
+        list.shuffle(math.Random(battleId.hashCode));
+      } else {
+        list.shuffle();
+      }
       return Success(list.take(limit).toList());
     } catch (e) {
       return Failure('Failed to load battle questions: $e', e);
+    }
+  }
+
+  /// Find an existing `waiting` battle from another real player or create a new `waiting` room.
+  Future<Map<String, dynamic>> findOrCreateWaitingBattle({
+    required String userId,
+    required int entryFee,
+  }) async {
+    final client = _client;
+    if (client == null || userId.isEmpty) {
+      return {
+        'battle_id': 'btl_${DateTime.now().millisecondsSinceEpoch}',
+        'matched': false,
+        'is_creator': true,
+      };
+    }
+
+    try {
+      final cutoff =
+          DateTime.now().toUtc().subtract(const Duration(minutes: 2)).toIso8601String();
+      final waitingRows = await client
+          .from('battles')
+          .select('id, creator_id, entry_fee, created_at')
+          .eq('status', 'waiting')
+          .eq('entry_fee', entryFee)
+          .neq('creator_id', userId)
+          .gte('created_at', cutoff)
+          .order('created_at', ascending: true)
+          .limit(5);
+
+      for (final row in (waitingRows as List)) {
+        final candidateId = row['id']?.toString() ?? '';
+        final creatorId = row['creator_id']?.toString() ?? '';
+        if (candidateId.isEmpty || creatorId.isEmpty) continue;
+
+        final claimed = await client
+            .from('battles')
+            .update({
+              'opponent_id': userId,
+              'status': 'active',
+            })
+            .eq('id', candidateId)
+            .eq('status', 'waiting')
+            .select('id, creator_id')
+            .maybeSingle();
+
+        if (claimed != null) {
+          final creatorName = await _resolveProfileName(creatorId);
+          return {
+            'battle_id': candidateId,
+            'matched': true,
+            'is_creator': false,
+            'opponent_id': creatorId,
+            'opponent_name': creatorName,
+          };
+        }
+      }
+
+      // No waiting opponent found -> create our own waiting room
+      final newBattleId = 'btl_${DateTime.now().millisecondsSinceEpoch}';
+      await client.from('battles').insert({
+        'id': newBattleId,
+        'creator_id': userId,
+        'entry_fee': entryFee,
+        'status': 'waiting',
+        'creator_score': 0,
+        'opponent_score': 0,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      return {
+        'battle_id': newBattleId,
+        'matched': false,
+        'is_creator': true,
+      };
+    } catch (_) {
+      return {
+        'battle_id': 'btl_${DateTime.now().millisecondsSinceEpoch}',
+        'matched': false,
+        'is_creator': true,
+      };
+    }
+  }
+
+  /// Poll whether another real user joined our waiting battle room.
+  Future<Map<String, dynamic>?> checkWaitingBattleMatched({
+    required String battleId,
+  }) async {
+    final client = _client;
+    if (client == null || battleId.isEmpty) return null;
+    try {
+      final row = await client
+          .from('battles')
+          .select('id, status, opponent_id')
+          .eq('id', battleId)
+          .maybeSingle();
+      if (row == null) return null;
+      final status = (row['status'] ?? '').toString().toLowerCase();
+      final oppId = row['opponent_id']?.toString() ?? '';
+      if (status == 'active' && oppId.isNotEmpty) {
+        final oppName = await _resolveProfileName(oppId);
+        return {
+          'matched': true,
+          'opponent_id': oppId,
+          'opponent_name': oppName,
+        };
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Cancel an unmatched waiting battle room cleanly.
+  Future<void> cancelWaitingBattle({required String battleId}) async {
+    final client = _client;
+    if (client == null || battleId.isEmpty) return;
+    try {
+      await client
+          .from('battles')
+          .update({
+            'status': 'cancelled',
+            'completed_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', battleId)
+          .eq('status', 'waiting');
+    } catch (_) {}
+  }
+
+  /// Build a synchronized BattleSession for an existing battleId (real opponent or bot fallback).
+  Future<Result<BattleSession>> buildSessionForBattle({
+    required String battleId,
+    required String userId,
+    required String playerName,
+    String? opponentId,
+    String? opponentName,
+    int entryFee = 100,
+    bool isBotFallback = false,
+  }) async {
+    final settings = await getBattleSettings();
+    final questionLimit = (settings['defaultQuestions'] as num?)?.toInt() ?? 5;
+    final questionsRes = await getLiveBattleQuestions(
+      limit: questionLimit.clamp(1, 20),
+      battleId: battleId,
+    );
+    if (questionsRes is Failure<List<BattleQuestion>>) {
+      await cancelWaitingBattle(battleId: battleId);
+      return Failure(questionsRes.message, questionsRes.error);
+    }
+    final questions = (questionsRes as Success<List<BattleQuestion>>).data;
+    if (questions.isEmpty) {
+      await cancelWaitingBattle(battleId: battleId);
+      return const Failure('No battle questions available in database.');
+    }
+
+    String resolvedOppName = opponentName?.trim() ?? '';
+    String resolvedOppRank = 'Player';
+    String? resolvedOppAvatarUrl;
+    double? resolvedBotAccuracy;
+    if (isBotFallback || resolvedOppName.isEmpty) {
+      final rawBots = settings['bots'];
+      final activeBots = <Map<String, dynamic>>[];
+      if (rawBots is List) {
+        for (final entry in rawBots) {
+          if (entry is Map) {
+            final map = Map<String, dynamic>.from(entry);
+            final name = map['name']?.toString().trim() ?? '';
+            final isActive = map['isActive'] != false;
+            if (name.isNotEmpty && isActive) {
+              activeBots.add(map);
+            }
+          }
+        }
+      }
+
+      if (activeBots.isNotEmpty) {
+        final picked = activeBots[math.Random().nextInt(activeBots.length)];
+        resolvedOppName = picked['name']?.toString().trim() ?? 'AI Practice Bot';
+        final rank = picked['rank']?.toString().trim() ?? '';
+        resolvedOppRank = rank.isNotEmpty ? rank : 'AI Bot';
+        final rawAvatar = picked['avatarUrl']?.toString().trim();
+        resolvedOppAvatarUrl =
+            (rawAvatar != null && rawAvatar.isNotEmpty) ? rawAvatar : null;
+        resolvedBotAccuracy =
+            ((picked['accuracy'] as num?)?.toDouble() ?? 0.65).clamp(0.2, 0.98);
+      } else {
+        resolvedOppName = 'AI Practice Bot';
+        resolvedOppRank = 'Practice';
+        resolvedBotAccuracy =
+            ((settings['botAccuracy'] as num?)?.toDouble() ?? 0.65).clamp(0.2, 0.98);
+      }
+
+      final client = _client;
+      if (client != null) {
+        try {
+          await client
+              .from('battles')
+              .update({'status': 'active'})
+              .eq('id', battleId)
+              .eq('status', 'waiting');
+        } catch (_) {}
+      }
+    }
+
+    final roundCount = questions.length;
+    return Success(
+      BattleSession(
+        id: battleId,
+        player: BattlePlayer(
+          id: userId.isNotEmpty ? userId : 'p_current',
+          name: playerName.isEmpty ? 'Player' : playerName,
+          rank: '#1',
+          score: 0,
+          roundResults: List<bool?>.filled(roundCount, null),
+        ),
+        opponent: BattlePlayer(
+          id: (opponentId != null && opponentId.isNotEmpty) ? opponentId : 'p_bot',
+          name: resolvedOppName,
+          rank: resolvedOppRank,
+          avatarUrl: resolvedOppAvatarUrl,
+          score: 0,
+          roundResults: List<bool?>.filled(roundCount, null),
+        ),
+        entryFee: entryFee,
+        currentRound: 1,
+        totalRounds: roundCount,
+        questions: questions,
+        state: BattleMatchState.inProgress,
+        botAccuracy: resolvedBotAccuracy,
+      ),
+    );
+  }
+
+  Future<String> _resolveProfileName(String userId) async {
+    final client = _client;
+    if (client == null || userId.isEmpty) return 'Challenger';
+    try {
+      final p = await client
+          .from('profiles')
+          .select('name, email')
+          .eq('id', userId)
+          .maybeSingle();
+      final name = p?['name']?.toString().trim() ?? '';
+      if (name.isNotEmpty) return name;
+      final email = p?['email']?.toString().trim() ?? '';
+      if (email.isNotEmpty) return email.split('@').first;
+    } catch (_) {}
+    return 'Challenger';
+  }
+
+  /// Sync current player's live score to `battles` and return latest battle state.
+  Future<Map<String, dynamic>?> syncPlayerScore({
+    required String battleId,
+    required String userId,
+    required int score,
+  }) async {
+    final client = _client;
+    if (client == null || battleId.isEmpty || userId.isEmpty) return null;
+    try {
+      final row = await client
+          .from('battles')
+          .select('id, creator_id, opponent_id, creator_score, opponent_score, status, winner_id, completed_at')
+          .eq('id', battleId)
+          .maybeSingle();
+      if (row == null) return null;
+
+      final creatorId = row['creator_id']?.toString() ?? '';
+      final opponentId = row['opponent_id']?.toString() ?? '';
+      if (creatorId == userId) {
+        await client
+            .from('battles')
+            .update({'creator_score': score})
+            .eq('id', battleId);
+        row['creator_score'] = score;
+      } else if (opponentId == userId) {
+        await client
+            .from('battles')
+            .update({'opponent_score': score})
+            .eq('id', battleId);
+        row['opponent_score'] = score;
+      }
+      return Map<String, dynamic>.from(row);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Fetch current `battles` row for live opponent score & completion polling.
+  Future<Map<String, dynamic>?> fetchBattleState({
+    required String battleId,
+  }) async {
+    final client = _client;
+    if (client == null || battleId.isEmpty) return null;
+    try {
+      final row = await client
+          .from('battles')
+          .select('id, creator_id, opponent_id, creator_score, opponent_score, status, winner_id, entry_fee, completed_at')
+          .eq('id', battleId)
+          .maybeSingle();
+      if (row == null) return null;
+      return Map<String, dynamic>.from(row);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Finalize a real 2-player battle using 2-phase `completed_at` + `status` handshake:
+  /// - First player to finish saves their score & sets `completed_at` (keeps `status='active'`).
+  /// - Second player to finish sees `completed_at != null`, computes `winner_id`, and sets `status='completed'`.
+  /// - If [forceComplete] is true (after wait timeout), finalizes immediately.
+  Future<Map<String, dynamic>?> finalizeRealBattle({
+    required String battleId,
+    required String userId,
+    required int myScore,
+    bool forceComplete = false,
+  }) async {
+    final client = _client;
+    if (client == null || battleId.isEmpty || userId.isEmpty) return null;
+    try {
+      final row = await client
+          .from('battles')
+          .select('id, creator_id, opponent_id, creator_score, opponent_score, status, winner_id, entry_fee, completed_at')
+          .eq('id', battleId)
+          .maybeSingle();
+      if (row == null) return null;
+
+      final creatorId = row['creator_id']?.toString() ?? '';
+      final opponentId = row['opponent_id']?.toString() ?? '';
+      final isCreator = creatorId == userId;
+      final currentStatus = (row['status'] ?? '').toString().toLowerCase();
+      final otherAlreadyFinished = row['completed_at'] != null;
+
+      int creatorScore = (row['creator_score'] as num?)?.toInt() ?? 0;
+      int opponentScore = (row['opponent_score'] as num?)?.toInt() ?? 0;
+      if (isCreator) {
+        creatorScore = myScore;
+      } else if (opponentId == userId) {
+        opponentScore = myScore;
+      }
+
+      if (currentStatus == 'completed') {
+        // Already completed by the other player — ensure our final score is saved if needed
+        if (isCreator && ((row['creator_score'] as num?)?.toInt() ?? 0) != myScore) {
+          await client.from('battles').update({'creator_score': myScore}).eq('id', battleId);
+        } else if (!isCreator && opponentId == userId && ((row['opponent_score'] as num?)?.toInt() ?? 0) != myScore) {
+          await client.from('battles').update({'opponent_score': myScore}).eq('id', battleId);
+        }
+        return Map<String, dynamic>.from(row);
+      }
+
+      final nowIso = DateTime.now().toUtc().toIso8601String();
+      if (otherAlreadyFinished || forceComplete) {
+        String? winnerId;
+        if (creatorScore > opponentScore && creatorId.isNotEmpty) {
+          winnerId = creatorId;
+        } else if (opponentScore > creatorScore && opponentId.isNotEmpty) {
+          winnerId = opponentId;
+        }
+        final updated = await client
+            .from('battles')
+            .update({
+              if (isCreator) 'creator_score': myScore else 'opponent_score': myScore,
+              'status': 'completed',
+              'winner_id': winnerId,
+              if (row['completed_at'] == null) 'completed_at': nowIso,
+            })
+            .eq('id', battleId)
+            .select('id, creator_id, opponent_id, creator_score, opponent_score, status, winner_id, entry_fee, completed_at')
+            .maybeSingle();
+        return updated != null ? Map<String, dynamic>.from(updated) : null;
+      } else {
+        // We finished first -> mark `completed_at` and keep `status = 'active'` so opponent finishes too
+        final updated = await client
+            .from('battles')
+            .update({
+              if (isCreator) 'creator_score': myScore else 'opponent_score': myScore,
+              'completed_at': nowIso,
+            })
+            .eq('id', battleId)
+            .select('id, creator_id, opponent_id, creator_score, opponent_score, status, winner_id, entry_fee, completed_at')
+            .maybeSingle();
+        return updated != null ? Map<String, dynamic>.from(updated) : null;
+      }
+    } catch (_) {
+      return null;
     }
   }
 

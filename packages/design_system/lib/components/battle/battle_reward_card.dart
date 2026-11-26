@@ -83,13 +83,29 @@ class BattleResultComparisonCard extends StatelessWidget {
                           width: 2.5,
                         ),
                       ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.face_rounded,
-                          size: 38,
-                          color: Color(0xFF059669),
-                        ),
-                      ),
+                      child: (winnerAvatar != null && winnerAvatar!.trim().isNotEmpty)
+                          ? ClipOval(
+                              child: Image.network(
+                                winnerAvatar!.trim(),
+                                width: 58,
+                                height: 58,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => const Center(
+                                  child: Icon(
+                                    Icons.face_rounded,
+                                    size: 38,
+                                    color: Color(0xFF059669),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const Center(
+                              child: Icon(
+                                Icons.face_rounded,
+                                size: 38,
+                                color: Color(0xFF059669),
+                              ),
+                            ),
                     ),
                     Positioned(
                       top: -10,
@@ -205,13 +221,29 @@ class BattleResultComparisonCard extends StatelessWidget {
                       width: 2.0,
                     ),
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.face_5_rounded,
-                      size: 38,
-                      color: Color(0xFFDC2626),
-                    ),
-                  ),
+                  child: (loserAvatar != null && loserAvatar!.trim().isNotEmpty)
+                      ? ClipOval(
+                          child: Image.network(
+                            loserAvatar!.trim(),
+                            width: 58,
+                            height: 58,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => const Center(
+                              child: Icon(
+                                Icons.face_5_rounded,
+                                size: 38,
+                                color: Color(0xFFDC2626),
+                              ),
+                            ),
+                          ),
+                        )
+                      : const Center(
+                          child: Icon(
+                            Icons.face_5_rounded,
+                            size: 38,
+                            color: Color(0xFFDC2626),
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -273,11 +305,13 @@ class BattleResultComparisonCard extends StatelessWidget {
 class BattleRewardSummaryCard extends StatelessWidget {
   final int coinsWon;
   final bool isVictory;
+  final bool isDraw;
 
   const BattleRewardSummaryCard({
     super.key,
     required this.coinsWon,
     this.isVictory = true,
+    this.isDraw = false,
   });
 
   @override
@@ -332,7 +366,9 @@ class BattleRewardSummaryCard extends StatelessWidget {
                         Text(
                           isVictory
                               ? 'You won'
-                              : (coinsWon == 0 ? 'Match Tied' : 'Entry Lost'),
+                              : (isDraw
+                                  ? 'Match Tied (Refunded)'
+                                  : 'Better Luck Next Time'),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -347,9 +383,7 @@ class BattleRewardSummaryCard extends StatelessWidget {
                           child: Text(
                             isVictory
                                 ? '+$coinsWon Coins'
-                                : (coinsWon == 0
-                                      ? '0 Coins'
-                                      : '-$coinsWon Coins'),
+                                : (isDraw ? '$coinsWon Coins' : '0 Coins'),
                             style: TextStyle(
                               fontSize: 23,
                               fontWeight: FontWeight.w900,

@@ -56,6 +56,7 @@ class BattleVersusCard extends StatelessWidget {
               isLeading: isPlayerLeading,
               isCurrentUser: true,
               avatarBg: const Color(0xFF34D399),
+              avatarUrl: playerAvatarUrl,
             ),
           ),
 
@@ -114,6 +115,7 @@ class BattleVersusCard extends StatelessWidget {
               isLeading: isOpponentLeading,
               isCurrentUser: false,
               avatarBg: const Color(0xFFF87171),
+              avatarUrl: opponentAvatarUrl,
             ),
           ),
         ],
@@ -128,7 +130,9 @@ class BattleVersusCard extends StatelessWidget {
     required bool isLeading,
     required bool isCurrentUser,
     required Color avatarBg,
+    String? avatarUrl,
   }) {
+    final hasAvatar = avatarUrl != null && avatarUrl.trim().isNotEmpty;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -148,13 +152,29 @@ class BattleVersusCard extends StatelessWidget {
                   width: isLeading ? 2.5 : 2.0,
                 ),
               ),
-              child: Center(
-                child: Icon(
-                  isCurrentUser ? Icons.face_rounded : Icons.face_5_rounded,
-                  size: 38,
-                  color: avatarBg,
-                ),
-              ),
+              child: hasAvatar
+                  ? ClipOval(
+                      child: Image.network(
+                        avatarUrl.trim(),
+                        width: 58,
+                        height: 58,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Center(
+                          child: Icon(
+                            isCurrentUser ? Icons.face_rounded : Icons.face_5_rounded,
+                            size: 38,
+                            color: avatarBg,
+                          ),
+                        ),
+                      ),
+                    )
+                  : Center(
+                      child: Icon(
+                        isCurrentUser ? Icons.face_rounded : Icons.face_5_rounded,
+                        size: 38,
+                        color: avatarBg,
+                      ),
+                    ),
             ),
             if (isLeading)
               Positioned(
