@@ -178,7 +178,9 @@ class BattleQuestion {
   final String id;
   final String subject;
   final String questionText;
+  final String? questionTextHindi;
   final List<String> options;
+  final List<String>? optionsHindi;
   final int correctAnswer;
   final int timeLimitSeconds;
 
@@ -186,19 +188,45 @@ class BattleQuestion {
     required this.id,
     this.subject = 'General Science',
     required this.questionText,
+    this.questionTextHindi,
     required this.options,
+    this.optionsHindi,
     required this.correctAnswer,
     this.timeLimitSeconds = 15,
   });
 
+  String getDisplayText(bool isHindi) {
+    if (isHindi &&
+        questionTextHindi != null &&
+        questionTextHindi!.trim().isNotEmpty) {
+      return questionTextHindi!;
+    }
+    return questionText;
+  }
+
+  List<String> getDisplayOptions(bool isHindi) {
+    if (isHindi &&
+        optionsHindi != null &&
+        optionsHindi!.length == options.length &&
+        optionsHindi!.any((o) => o.trim().isNotEmpty)) {
+      return optionsHindi!;
+    }
+    return options;
+  }
+
   factory BattleQuestion.fromJson(Map<String, dynamic> json) {
     final rawOptions = json['options_english'] ?? json['options'];
+    final rawOptionsHi = json['options_hindi'];
     return BattleQuestion(
       id: json['id'] as String? ?? 'q_${DateTime.now().microsecondsSinceEpoch}',
       subject: (json['topic'] ?? json['subject']) as String? ?? 'General Science',
       questionText: (json['text_english'] ?? json['question_text']) as String? ?? '',
+      questionTextHindi: json['text_hindi'] as String?,
       options: (rawOptions as List<dynamic>?)?.map((e) => e.toString()).toList() ??
           ['A', 'B', 'C', 'D'],
+      optionsHindi: (rawOptionsHi as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
       correctAnswer: (json['correct_answer'] as num?)?.toInt() ?? 0,
       timeLimitSeconds: (json['time_limit_seconds'] as num?)?.toInt() ?? 15,
     );

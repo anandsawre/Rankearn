@@ -39,6 +39,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
 
   int? _selectedOption;
   bool _isAnswerLocked = false;
+  bool _isHindi = true;
 
   int _turnSeconds = 15; // 15 seconds per question
   Timer? _countdownTimer;
@@ -254,17 +255,10 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
           top: false,
           child: LayoutBuilder(
             builder: (context, constraints) {
-              return Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 540),
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                    child: Column(
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: AppSpacing.pagePadding(context, top: 14, bottom: 14),
+                child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // 1. Dual Player Scoreboard with 3D VS & Circular Timer
@@ -288,15 +282,19 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                           totalRounds: _session.totalRounds,
                           stakeCoins: _session.entryFee,
                           subject: currentQ.subject,
-                          questionText: currentQ.questionText,
+                          questionText: currentQ.getDisplayText(_isHindi),
+                          isHindi: _isHindi,
+                          onLanguageChanged: (val) => setState(() => _isHindi = val),
                         ),
                         const SizedBox(height: 18),
 
                         // 3. Four Vertically Stacked Answer Option Tiles (A, B, C, D)
-                        ...List.generate(currentQ.options.length, (index) {
-                          const letters = ['A', 'B', 'C', 'D'];
-                          final letter = index < letters.length ? letters[index] : '$index';
-                          final text = currentQ.options[index];
+                        ...() {
+                          final displayOptions = currentQ.getDisplayOptions(_isHindi);
+                          return List.generate(displayOptions.length, (index) {
+                            const letters = ['A', 'B', 'C', 'D'];
+                            final letter = index < letters.length ? letters[index] : '$index';
+                            final text = displayOptions[index];
 
                           AnswerTileState tileState = AnswerTileState.defaultState;
                           if (_isAnswerLocked) {
@@ -317,13 +315,12 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
                             state: tileState,
                             onTap: () => _onOptionSelected(index),
                           );
-                        }),
+                        });
+                        }(),
                         const SizedBox(height: 16),
                       ],
                     ),
-                  ),
-                ),
-              );
+                  );
             },
           ),
         ),

@@ -38,6 +38,7 @@ class _MultiplayerArenaScreenState extends State<MultiplayerArenaScreen> {
   int _turnSeconds = 15;
   int? _selectedOption;
   bool _isAnswerLocked = false;
+  bool _isHindi = true;
   Timer? _turnTimer;
   Timer? _rankShiftTimer;
 
@@ -279,8 +280,25 @@ class _MultiplayerArenaScreenState extends State<MultiplayerArenaScreen> {
           ],
         ),
         actions: [
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildLangButton('EN', !_isHindi, () => setState(() => _isHindi = false)),
+                  _buildLangButton('HI', _isHindi, () => setState(() => _isHindi = true)),
+                ],
+              ),
+            ),
+          ),
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: const Color(0xFFFEE2E2),
@@ -385,15 +403,17 @@ class _MultiplayerArenaScreenState extends State<MultiplayerArenaScreen> {
                   ],
                 ),
                 child: Text(
-                  q.questionText,
+                  q.getDisplayText(_isHindi),
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A), height: 1.35),
                 ),
               ),
               const SizedBox(height: 16),
 
               // Options
-              ...List.generate(q.options.length, (idx) {
-                final optionText = q.options[idx];
+              ...() {
+                final displayOptions = q.getDisplayOptions(_isHindi);
+                return List.generate(displayOptions.length, (idx) {
+                  final optionText = displayOptions[idx];
                 final isSelected = _selectedOption == idx;
                 final isCorrectOption = idx == q.correctAnswer;
 
@@ -455,7 +475,8 @@ class _MultiplayerArenaScreenState extends State<MultiplayerArenaScreen> {
                     ),
                   ),
                 );
-              }),
+              });
+              }(),
 
               const SizedBox(height: 16),
 
@@ -516,6 +537,28 @@ class _MultiplayerArenaScreenState extends State<MultiplayerArenaScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLangButton(String label, bool isSelected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF7C3AED) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF64748B),
+            fontSize: 10.5,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),

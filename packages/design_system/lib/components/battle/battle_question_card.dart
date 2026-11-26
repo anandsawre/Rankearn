@@ -12,6 +12,8 @@ class BattleQuestionCard extends StatelessWidget {
   final int? timeLimitSeconds;
   final String questionText;
   final VoidCallback? onHintTap;
+  final bool? isHindi;
+  final ValueChanged<bool>? onLanguageChanged;
 
   const BattleQuestionCard({
     super.key,
@@ -22,6 +24,8 @@ class BattleQuestionCard extends StatelessWidget {
     this.timeLimitSeconds = 12,
     required this.questionText,
     this.onHintTap,
+    this.isHindi,
+    this.onLanguageChanged,
   });
 
   @override
@@ -65,22 +69,23 @@ class BattleQuestionCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
 
-            // Right: Stake: 100 Coins pill
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF9E6),
-                  borderRadius: AppRadii.borderPill,
-                  border: Border.all(color: const Color(0xFFFFE082), width: 1),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('🪙', style: TextStyle(fontSize: 13)),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
+            // Right: Stake Badge + Language Toggle (EN / HI)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF9E6),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFFFE082), width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('🪙', style: TextStyle(fontSize: 13)),
+                      const SizedBox(width: 4),
+                      Text(
                         'Stake: $stakeCoins Coins',
                         style: const TextStyle(
                           fontSize: 11.5,
@@ -91,10 +96,36 @@ class BattleQuestionCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                if (onLanguageChanged != null && isHindi != null) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildLangButton(
+                          'EN',
+                          !isHindi!,
+                          () => onLanguageChanged!(false),
+                        ),
+                        _buildLangButton(
+                          'HI',
+                          isHindi!,
+                          () => onLanguageChanged!(true),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ),
@@ -127,7 +158,7 @@ class BattleQuestionCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: AppRadii.borderXl,
+            borderRadius: AppRadii.borderLg,
             boxShadow: AppShadows.subtle,
             border: Border.all(color: AppColors.battleBorder),
           ),
@@ -181,6 +212,29 @@ class BattleQuestionCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLangButton(String label, bool isSelected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.battleNavy : Colors.transparent,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF64748B),
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'Inter',
+          ),
+        ),
+      ),
     );
   }
 }

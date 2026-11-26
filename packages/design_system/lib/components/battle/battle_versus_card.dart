@@ -43,6 +43,7 @@ class BattleVersusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return BattleWaveCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      borderRadius: AppRadii.borderLg,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

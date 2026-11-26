@@ -285,7 +285,7 @@ class BattleRewardSummaryCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24.0),
+        borderRadius: AppRadii.borderLg,
         border: Border.all(
           color: const Color(0xFFE2E8F0).withAlpha(180),
           width: 1.2,
@@ -304,7 +304,7 @@ class BattleRewardSummaryCard extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24.0),
+        borderRadius: AppRadii.borderLg,
         child: Stack(
           children: [
             // Royal Violet & Sunset Amber Wave Background

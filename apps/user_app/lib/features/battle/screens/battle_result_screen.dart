@@ -39,14 +39,11 @@ class BattleResultScreen extends StatelessWidget {
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              return Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 540),
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    child: Column(
-                      children: [
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: AppSpacing.pagePadding(context, top: 12, bottom: 16),
+                child: Column(
+                  children: [
                         // 1. Victory Banner with Celebratory Trophy, Ribbon & Confetti
                         VictoryBanner(
                           isVictory: result.isVictory,
@@ -102,8 +99,6 @@ class BattleResultScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                       ],
                     ),
-                  ),
-                ),
               );
             },
           ),
@@ -122,7 +117,7 @@ class BattleResultScreen extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadii.borderLg,
         boxShadow: const [
           BoxShadow(
             color: Color(0x33EA580C),

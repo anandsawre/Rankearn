@@ -120,15 +120,12 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
           builder: (context, constraints) {
             final isDesktop = constraints.maxWidth >= 768;
 
-            return Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 540),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: AppSpacing.pagePadding(context, top: 16, bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
                       // 1. Central Radar Visualization
                       const SizedBox(height: 10),
                       MatchmakingRadar(
@@ -177,8 +174,6 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
                       const SizedBox(height: 16),
                     ],
                   ),
-                ),
-              ),
             );
           },
         ),

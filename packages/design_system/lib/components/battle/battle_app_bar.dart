@@ -57,9 +57,10 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
                     tooltip: 'Back',
                   ),
 
-                // Center Title
+                // Left-aligned Title
                 Expanded(
-                  child: Center(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Row(
@@ -76,8 +77,6 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
                               child: Text('1v1 Live Arena'),
                             ),
                           ),
-                          const Text('⚔️', style: TextStyle(fontSize: 16)),
-                          const SizedBox(width: 4),
                           RichText(
                             text: const TextSpan(
                               children: [
@@ -114,8 +113,6 @@ class BattleAppBar extends StatelessWidget implements PreferredSizeWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Text('⚔️', style: TextStyle(fontSize: 16)),
                         ],
                       ),
                     ),

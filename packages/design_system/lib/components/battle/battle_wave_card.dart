@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../tokens/radii.dart';
 
 /// Style variants for Match / Battle Card wave background
 enum BattleWaveStyle { layeredWave, subtleClean }
@@ -36,7 +37,7 @@ class BattleWaveCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 28px rounded corners matching the reference image perfectly
-    final effectiveRadius = borderRadius ?? BorderRadius.circular(28.0);
+    final effectiveRadius = borderRadius ?? AppRadii.borderLg;
     final effectiveBorder =
         border ??
         Border.all(color: const Color(0xFFE2E8F0).withAlpha(160), width: 1.0);
