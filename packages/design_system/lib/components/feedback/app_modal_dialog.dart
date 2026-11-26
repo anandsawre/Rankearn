@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../tokens/colors.dart';
 import '../../tokens/radii.dart';
 import '../../tokens/typography.dart';
@@ -590,109 +591,119 @@ class AppModalDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Rich Gradient Hero Header with subtle geometric ambient design
-              ClipRRect(
-                borderRadius: isMobile
-                    ? BorderRadius.zero
-                    : const BorderRadius.vertical(top: Radius.circular(15)),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(gradient: resolvedGradient),
-                  child: Stack(
-                    children: [
-                      const Positioned.fill(
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            painter: _ModalHeaderPatternPainter(),
+              AnnotatedRegion<SystemUiOverlayStyle>(
+                value: const SystemUiOverlayStyle(
+                  statusBarColor: Colors.transparent,
+                  statusBarIconBrightness: Brightness.light,
+                  statusBarBrightness: Brightness.dark,
+                ),
+                child: ClipRRect(
+                  borderRadius: isMobile
+                      ? BorderRadius.zero
+                      : const BorderRadius.vertical(top: Radius.circular(15)),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(gradient: resolvedGradient),
+                    child: Stack(
+                      children: [
+                        const Positioned.fill(
+                          child: IgnorePointer(
+                            child: CustomPaint(
+                              painter: _ModalHeaderPatternPainter(),
+                            ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          isMobile ? 16 : 22,
-                          (isMobile ? 12 : 18) + topPadding,
-                          isMobile ? 12 : 16,
-                          isMobile ? 14 : 18,
-                        ),
-                        child: Row(
-                          children: [
-                            // Glassmorphic Icon Pod
-                            if (icon != null)
-                              icon!
-                            else if (iconData != null)
-                              Container(
-                                width: isMobile ? 36 : 40,
-                                height: isMobile ? 36 : 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withAlpha(45),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.white.withAlpha(65), width: 1.2),
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(iconData, color: Colors.white, size: isMobile ? 20 : 22),
-                              ),
-                            if (icon != null || iconData != null) SizedBox(width: isMobile ? 10 : 14),
-
-                            // Title & Subtitle in crisp white
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    title,
-                                    style: TextStyle(
-                                      fontFamily: AppTypography.fontHeading,
-                                      fontSize: isMobile ? 16 : 16.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                      letterSpacing: -0.2,
+                        Padding(
+                          padding: isMobile
+                              ? EdgeInsets.fromLTRB(14, topPadding, 12, 0)
+                              : EdgeInsets.fromLTRB(22, 18 + topPadding, 16, 18),
+                          child: SizedBox(
+                            height: isMobile ? 60 : null,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Glassmorphic Icon Pod
+                                if (icon != null)
+                                  icon!
+                                else if (iconData != null)
+                                  Container(
+                                    width: isMobile ? 36 : 40,
+                                    height: isMobile ? 36 : 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withAlpha(45),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.white.withAlpha(65), width: 1.2),
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                    alignment: Alignment.center,
+                                    child: Icon(iconData, color: Colors.white, size: isMobile ? 20 : 22),
                                   ),
-                                  if (subtitle != null && subtitle!.isNotEmpty) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      subtitle!,
-                                      style: TextStyle(
-                                        fontFamily: AppTypography.fontHeading,
-                                        fontSize: isMobile ? 11 : 11.5,
-                                        color: Colors.white.withAlpha(215),
-                                        height: 1.25,
+                                if (icon != null || iconData != null) SizedBox(width: isMobile ? 10 : 14),
+
+                                // Title & Subtitle in crisp white
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        title,
+                                        style: TextStyle(
+                                          fontFamily: AppTypography.fontHeading,
+                                          fontSize: isMobile ? 15.5 : 16.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                          letterSpacing: -0.2,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-
-                            // Trailing widget or badge
-                            if (headerTrailing != null) ...[
-                              const SizedBox(width: 8),
-                              headerTrailing!,
-                            ],
-
-                            // Glass Close Button
-                            if (showCloseButton) ...[
-                              const SizedBox(width: 6),
-                              Material(
-                                color: Colors.white.withAlpha(32),
-                                borderRadius: BorderRadius.circular(8),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(8),
-                                  hoverColor: Colors.white.withAlpha(64),
-                                  onTap: onClose ?? () => Navigator.of(context).pop(),
-                                  child: Padding(
-                                    padding: EdgeInsets.all(isMobile ? 8 : 6),
-                                    child: Icon(Icons.close_rounded, size: isMobile ? 20 : 18, color: Colors.white),
+                                      if (subtitle != null && subtitle!.isNotEmpty) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          subtitle!,
+                                          style: TextStyle(
+                                            fontFamily: AppTypography.fontHeading,
+                                            fontSize: isMobile ? 11 : 11.5,
+                                            color: Colors.white.withAlpha(215),
+                                            height: 1.25,
+                                          ),
+                                          maxLines: isMobile ? 1 : 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ],
-                          ],
+
+                                // Trailing widget or badge
+                                if (headerTrailing != null) ...[
+                                  const SizedBox(width: 8),
+                                  headerTrailing!,
+                                ],
+
+                                // Glass Close Button
+                                if (showCloseButton) ...[
+                                  const SizedBox(width: 6),
+                                  Material(
+                                    color: Colors.white.withAlpha(32),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(8),
+                                      hoverColor: Colors.white.withAlpha(64),
+                                      onTap: onClose ?? () => Navigator.of(context).pop(),
+                                      child: Padding(
+                                        padding: EdgeInsets.all(isMobile ? 8 : 6),
+                                        child: Icon(Icons.close_rounded, size: isMobile ? 20 : 18, color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
