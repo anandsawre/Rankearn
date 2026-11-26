@@ -296,6 +296,8 @@ class AppSwitchTile extends StatelessWidget {
     this.subtitle,
     this.leadingIcon,
     this.variant = AppSwitchVariant.primary,
+    this.titleColor,
+    this.activeTrackColor,
     this.enabled = true,
     this.contentPadding = const EdgeInsets.symmetric(vertical: 6),
   });
@@ -306,6 +308,8 @@ class AppSwitchTile extends StatelessWidget {
   final String? subtitle;
   final IconData? leadingIcon;
   final AppSwitchVariant variant;
+  final Color? titleColor;
+  final Color? activeTrackColor;
   final bool enabled;
   final EdgeInsetsGeometry contentPadding;
 
@@ -329,7 +333,10 @@ class AppSwitchTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: AppTypography.adminTablePrimary.copyWith(fontSize: 13),
+                    style: AppTypography.adminTablePrimary.copyWith(
+                      fontSize: 13,
+                      color: titleColor,
+                    ),
                   ),
                   if (subtitle != null && subtitle!.isNotEmpty) ...[
                     const SizedBox(height: 2),
@@ -346,6 +353,7 @@ class AppSwitchTile extends StatelessWidget {
               value: value,
               variant: variant,
               size: AppSwitchSize.small,
+              activeTrackColor: activeTrackColor,
               onChanged: enabled ? onChanged : null,
             ),
           ],

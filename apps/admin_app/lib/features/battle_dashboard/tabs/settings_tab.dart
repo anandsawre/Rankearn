@@ -279,22 +279,13 @@ class BattleSettingsCards extends StatelessWidget {
             onChanged: (v) => onChanged(settings.copyWith(botAccuracy: v)),
           ),
           const SizedBox(height: 12),
-          Material(
-            type: MaterialType.transparency,
-            child: SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                'Bot Fallback Mode',
-                style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-              ),
-              subtitle: Text(
-                'Pair against simulated AI bot if no real user matches within timeout',
-                style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textSecondary),
-              ),
-              value: settings.botFallback,
-              activeThumbColor: AppColors.battleAdminPurple,
-              onChanged: (v) => onChanged(settings.copyWith(botFallback: v)),
-            ),
+          AppSwitchTile(
+            title: 'Bot Fallback Mode',
+            subtitle: 'Pair against simulated AI bot if no real user matches within timeout',
+            value: settings.botFallback,
+            variant: AppSwitchVariant.primary,
+            contentPadding: EdgeInsets.zero,
+            onChanged: (v) => onChanged(settings.copyWith(botFallback: v)),
           ),
         ],
       ),
@@ -359,22 +350,14 @@ class BattleSettingsCards extends StatelessWidget {
             onChanged: (v) => onChanged(settings.copyWith(speedCheckThreshold: v)),
           ),
           const SizedBox(height: 12),
-          Material(
-            type: MaterialType.transparency,
-            child: SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                'Battle Arena Maintenance Mode',
-                style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w700, color: AppColors.liveRed),
-              ),
-              subtitle: Text(
-                'Temporarily flag new battle creation as paused in config',
-                style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textSecondary),
-              ),
-              value: settings.maintenanceMode,
-              activeThumbColor: AppColors.liveRed,
-              onChanged: (v) => onChanged(settings.copyWith(maintenanceMode: v)),
-            ),
+          AppSwitchTile(
+            title: 'Battle Arena Maintenance Mode',
+            subtitle: 'Temporarily flag new battle creation as paused in config',
+            value: settings.maintenanceMode,
+            titleColor: AppColors.liveRed,
+            activeTrackColor: AppColors.liveRed,
+            contentPadding: EdgeInsets.zero,
+            onChanged: (v) => onChanged(settings.copyWith(maintenanceMode: v)),
           ),
         ],
       ),
