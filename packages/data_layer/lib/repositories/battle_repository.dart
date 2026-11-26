@@ -213,18 +213,35 @@ class BattleRepository {
     });
   }
 
+  /// Fetch Admin-configured Battle Settings from Supabase `app_configs`
+  Future<Map<String, dynamic>> getBattleSettings() async {
+    final client = _client;
+    if (client == null) return const {};
+    try {
+      final res = await client
+          .from('app_configs')
+          .select('value')
+          .eq('key', 'battle_settings')
+          .maybeSingle();
+      if (res != null && res['value'] is Map) {
+        return Map<String, dynamic>.from(res['value'] as Map);
+      }
+    } catch (_) {}
+    return const {};
+  }
+
   /// Get 5 high-yield competitive battle questions
-  Future<Result<List<BattleQuestion>>> getLiveBattleQuestions() async {
+  Future<Result<List<BattleQuestion>>> getLiveBattleQuestions({int limit = 5}) async {
     final client = _client;
     if (client != null) {
       try {
         final res = await client
             .from('battle_questions')
             .select()
-            .limit(5);
+            .limit(limit);
         if (res.isNotEmpty) {
           final list = res.map((r) => BattleQuestion.fromJson(r)).toList();
-          if (list.length >= 5) return Success(list);
+          if (list.length >= limit) return Success(list);
         }
       } catch (_) {}
     }
@@ -279,37 +296,59 @@ class BattleRepository {
     ]);
   }
 
-  /// Instantiate a fresh synchronized 1v1 Battle Session
+  /// Instantiate a fresh synchronized 1v1 Battle Session & register active row in Supabase `battles`
   Future<Result<BattleSession>> createLiveBattleSession({
+    String? userId,
     required String playerName,
     required String opponentName,
     int entryFee = 100,
     String opponentRank = 'Rank #4',
   }) async {
-    final questionsRes = await getLiveBattleQuestions();
+    final settings = await getBattleSettings();
+    final questionLimit = (settings['defaultQuestions'] as num?)?.toInt() ?? 5;
+    final questionsRes = await getLiveBattleQuestions(
+      limit: questionLimit.clamp(1, 20),
+    );
     final questions = questionsRes is Success<List<BattleQuestion>>
         ? questionsRes.data
         : const <BattleQuestion>[];
 
+    final battleId = 'btl_${DateTime.now().millisecondsSinceEpoch}';
+    final client = _client;
+    if (client != null && userId != null && userId.isNotEmpty) {
+      try {
+        await client.from('battles').insert({
+          'id': battleId,
+          'creator_id': userId,
+          'entry_fee': entryFee,
+          'status': 'active',
+          'creator_score': 0,
+          'opponent_score': 0,
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+        });
+      } catch (_) {}
+    }
+
+    final roundCount = questions.isNotEmpty ? questions.length : 5;
     final session = BattleSession(
-      id: 'session_${DateTime.now().millisecondsSinceEpoch}',
+      id: battleId,
       player: BattlePlayer(
-        id: 'p_current',
+        id: userId ?? 'p_current',
         name: playerName.isEmpty ? 'Vikram Singh' : playerName,
         rank: '#1',
         score: 0,
-        roundResults: const [null, null, null, null, null],
+        roundResults: List<bool?>.filled(roundCount, null),
       ),
       opponent: BattlePlayer(
         id: 'p_opponent',
         name: opponentName.isEmpty ? 'Amit Verma (Rank #4)' : opponentName,
         rank: opponentRank,
         score: 0,
-        roundResults: const [null, null, null, null, null],
+        roundResults: List<bool?>.filled(roundCount, null),
       ),
       entryFee: entryFee,
       currentRound: 1,
-      totalRounds: 5,
+      totalRounds: roundCount,
       questions: questions,
       state: BattleMatchState.inProgress,
     );
@@ -319,32 +358,46 @@ class BattleRepository {
 
   /// Authoritative server record of battle completion and reward distribution
   Future<Result<bool>> recordBattleOutcome({
+    String? battleId,
     required String userId,
     required BattleResult result,
     required int entryFee,
   }) async {
     final client = _client;
+    final effectiveBattleId = (battleId != null && battleId.isNotEmpty)
+        ? battleId
+        : 'btl_${DateTime.now().millisecondsSinceEpoch}';
+
     if (client != null && userId.isNotEmpty) {
       try {
-        await client.from('battles').insert({
-          'user_id': userId,
-          'opponent_name': result.opponentName,
-          'my_score': result.playerScore,
+        await client.from('battles').upsert({
+          'id': effectiveBattleId,
+          'creator_id': userId,
+          'entry_fee': entryFee,
+          'status': 'completed',
+          if (result.isVictory) 'winner_id': userId,
+          'creator_score': result.playerScore,
           'opponent_score': result.opponentScore,
-          'result': result.isVictory ? 'Won' : (result.isDraw ? 'Draw' : 'Lost'),
-          'coins_delta': result.isVictory ? (entryFee * 2) : -entryFee,
-          'created_at': DateTime.now().toIso8601String(),
+          'completed_at': DateTime.now().toUtc().toIso8601String(),
         });
       } catch (_) {}
     }
 
-    // Automatically trigger atomic ledger updates
+    // Automatically trigger atomic ledger updates matching Admin Battle Dashboard categories
     if (result.isVictory) {
+      final winAmount = result.coinsWon > 0 ? result.coinsWon : (entryFee * 2);
       await distributeBattleWinnings(
         userId: userId,
-        coinsWon: entryFee * 2,
-        battleId: 'match_${DateTime.now().millisecondsSinceEpoch}',
+        coinsWon: winAmount,
+        battleId: effectiveBattleId,
         battleTitle: 'Battle vs ${result.opponentName}',
+      );
+    } else if (result.isDraw && entryFee > 0) {
+      await refundBattleEntryFee(
+        userId: userId,
+        entryFee: entryFee,
+        battleId: effectiveBattleId,
+        reason: 'Draw',
       );
     }
 
@@ -433,7 +486,7 @@ class BattleRepository {
         'user_id': userId,
         'amount': coinsWon,
         'type': 'earn',
-        'category': 'battle_reward',
+        'category': 'battle_win',
         'reference_id': battleId,
         'title': 'Prize Won: $battleTitle',
         'balance_after': newBalance,

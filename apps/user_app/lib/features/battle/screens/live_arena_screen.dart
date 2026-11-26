@@ -189,6 +189,7 @@ class _LiveArenaScreenState extends State<LiveArenaScreen> {
 
     // Persist to backend
     await _repository.recordBattleOutcome(
+      battleId: _session.id,
       userId: widget.userProfile.id,
       result: result,
       entryFee: _session.entryFee,

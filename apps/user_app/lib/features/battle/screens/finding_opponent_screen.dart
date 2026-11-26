@@ -45,6 +45,7 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
       if (!mounted) return;
 
       final res = await _repository.createLiveBattleSession(
+        userId: widget.profile.id,
         playerName: widget.profile.name.isEmpty ? 'Vikram Singh' : widget.profile.name,
         opponentName: 'Amit Verma (Rank #4)',
         entryFee: widget.entryFee,
