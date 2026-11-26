@@ -59,11 +59,20 @@ class _MultiplayerArenaScreenState extends State<MultiplayerArenaScreen> {
 
   Future<void> _loadQuestions() async {
     final res = await _repository.getLiveBattleQuestions();
-    if (res is Success<List<BattleQuestion>> && mounted) {
+    if (!mounted) return;
+    if (res is Success<List<BattleQuestion>>) {
       setState(() {
         _questions = res.data;
         _startQuestionTimer();
       });
+    } else if (res is Failure<List<BattleQuestion>>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res.message),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+      Navigator.of(context).pop();
     }
   }
 

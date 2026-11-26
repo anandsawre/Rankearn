@@ -192,14 +192,15 @@ class BattleQuestion {
   });
 
   factory BattleQuestion.fromJson(Map<String, dynamic> json) {
+    final rawOptions = json['options_english'] ?? json['options'];
     return BattleQuestion(
       id: json['id'] as String? ?? 'q_${DateTime.now().microsecondsSinceEpoch}',
-      subject: json['subject'] as String? ?? 'General Science',
-      questionText: json['question_text'] as String? ?? '',
-      options: (json['options'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+      subject: (json['topic'] ?? json['subject']) as String? ?? 'General Science',
+      questionText: (json['text_english'] ?? json['question_text']) as String? ?? '',
+      options: (rawOptions as List<dynamic>?)?.map((e) => e.toString()).toList() ??
           ['A', 'B', 'C', 'D'],
-      correctAnswer: json['correct_answer'] as int? ?? 0,
-      timeLimitSeconds: json['time_limit_seconds'] as int? ?? 15,
+      correctAnswer: (json['correct_answer'] as num?)?.toInt() ?? 0,
+      timeLimitSeconds: (json['time_limit_seconds'] as num?)?.toInt() ?? 15,
     );
   }
 
@@ -326,4 +327,30 @@ class BattleResult {
     required this.coinsWon,
     required this.message,
   });
+}
+
+/// Open or Admin-created Battle Room available to join on User side
+class OpenBattleRoom {
+  final String id;
+  final String creatorId;
+  final String creatorName;
+  final String? opponentId;
+  final int entryFee;
+  final String status;
+  final DateTime createdAt;
+
+  const OpenBattleRoom({
+    required this.id,
+    required this.creatorId,
+    required this.creatorName,
+    this.opponentId,
+    required this.entryFee,
+    required this.status,
+    required this.createdAt,
+  });
+
+  bool isAssignedTo(String? userId) =>
+      userId != null &&
+      userId.isNotEmpty &&
+      (opponentId == userId || creatorId == userId);
 }

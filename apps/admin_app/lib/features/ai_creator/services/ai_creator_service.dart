@@ -396,13 +396,20 @@ Return pure JSON array only.
     final payload = questions.asMap().entries.map((entry) {
       final idx = entry.key;
       final q = entry.value;
+      final rawDiff = q.difficulty.toLowerCase().trim();
+      final difficulty =
+          (rawDiff == 'easy' || rawDiff == 'medium' || rawDiff == 'hard')
+              ? rawDiff
+              : 'medium';
       return {
         'id': 'bq_${now.millisecondsSinceEpoch}_$idx',
-        'subject': subjectName,
-        'question_text': q.questionText,
-        'options': q.options,
+        'text_english': q.questionText,
+        if (q.questionTextHi != null && q.questionTextHi!.isNotEmpty)
+          'text_hindi': q.questionTextHi,
+        'options_english': q.options,
         'correct_answer': q.correctOptionIndex.clamp(0, 3),
-        'time_limit_seconds': 15,
+        'topic': subjectName,
+        'difficulty': difficulty,
         'created_at': now.toIso8601String(),
       };
     }).toList();

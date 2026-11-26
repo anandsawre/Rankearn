@@ -183,7 +183,8 @@ class _BattleDashboardTabState extends State<BattleDashboardTab> {
 
   Widget _buildBattleHeroBanner(bool isSmall) {
     return Container(
-      height: 124,
+      height: isSmall ? null : 124,
+      constraints: isSmall ? const BoxConstraints(minHeight: 124) : null,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -280,7 +281,7 @@ class _BattleDashboardTabState extends State<BattleDashboardTab> {
                 ),
                 const SizedBox(height: 5),
                 SizedBox(
-                  width: isSmall ? 220 : 360,
+                  width: isSmall ? double.infinity : 360,
                   child: const Text(
                     'Monitor 1 vs 1, multiplayer matches, rooms, player activity and control live game states.',
                     style: TextStyle(

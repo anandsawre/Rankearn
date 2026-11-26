@@ -33,6 +33,8 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
   List<BattlePlayerModel> _topPlayers = [];
   List<BattleMissionModel> _missions = [];
   List<BattleHistoryItemModel> _history = [];
+  List<OpenBattleRoom> _openBattles = [];
+  bool _isJoiningBattle = false;
 
   @override
   void initState() {
@@ -45,6 +47,7 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
     final playersRes = await _repository.getTopPlayers();
     final missionsRes = await _repository.getDailyMissions();
     final historyRes = await _repository.getBattleHistory();
+    final openRes = await _repository.getOpenBattles(userId: widget.profile.id);
 
     if (!mounted) return;
     setState(() {
@@ -52,7 +55,61 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
       if (playersRes is Success<List<BattlePlayerModel>>) _topPlayers = playersRes.data;
       if (missionsRes is Success<List<BattleMissionModel>>) _missions = missionsRes.data;
       if (historyRes is Success<List<BattleHistoryItemModel>>) _history = historyRes.data;
+      if (openRes is Success<List<OpenBattleRoom>>) _openBattles = openRes.data;
     });
+  }
+
+  Future<void> _joinOpenBattle(OpenBattleRoom battle) async {
+    if (_isJoiningBattle) return;
+    if (!FeatureFlagsRepository().isEnabled('1v1_battle')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ 1v1 Quiz Battles are currently paused by administrator.'),
+          backgroundColor: Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
+    if (widget.userCoins < battle.entryFee) {
+      _showInsufficientCoinsDialog(battle.entryFee);
+      return;
+    }
+
+    setState(() => _isJoiningBattle = true);
+    final res = await _repository.joinExistingBattleSession(
+      battle: battle,
+      userId: widget.profile.id,
+      playerName: widget.profile.name,
+    );
+    if (!mounted) return;
+    setState(() => _isJoiningBattle = false);
+
+    if (res is Success<BattleSession>) {
+      if (battle.entryFee > 0) {
+        widget.onCoinUpdate?.call(-battle.entryFee);
+      }
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => LiveArenaScreen(
+            initialSession: res.data,
+            userCoins: widget.userCoins - battle.entryFee,
+            userProfile: widget.profile,
+            onCoinUpdate: (coinsDelta) {
+              widget.onCoinUpdate?.call(coinsDelta);
+              _loadBattleData();
+            },
+          ),
+        ),
+      );
+      if (mounted) _loadBattleData();
+    } else if (res is Failure<BattleSession>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res.message),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    }
   }
 
   // --- Interactive Matchmaking Flow (Screen 1: Finding Opponent Radar) ---
@@ -706,6 +763,19 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
             if (_selectedTab == BattleNavTab.history) ...[
               _buildHistorySection(),
             ] else ...[
+              if (_openBattles.isNotEmpty) ...[
+                AppSectionHeader(
+                  title: 'Open Battles & Challenges',
+                  icon: Icons.sports_kabaddi_rounded,
+                  iconColor: const Color(0xFF7C3AED),
+                  actionLabel: 'Refresh',
+                  onAction: _loadBattleData,
+                ),
+                const SizedBox(height: 12),
+                _buildOpenBattlesList(),
+                const SizedBox(height: 22),
+              ],
+
               // A. Choose Battle Type Section
               const AppSectionHeader(
                 title: 'Choose Battle Type',
@@ -773,6 +843,128 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
                 ),
         );
       },
+    );
+  }
+
+  // --- Open Admin / Waiting Battles List ---
+  Widget _buildOpenBattlesList() {
+    return Column(
+      children: _openBattles.take(4).map((battle) {
+        final isInvited = battle.isAssignedTo(widget.profile.id);
+        final prizeCoins = battle.entryFee > 0 ? battle.entryFee * 2 : 0;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A0F172A),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF3E8FF),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.bolt_rounded,
+                  color: Color(0xFF7C3AED),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '1v1 vs ${battle.creatorName}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isInvited
+                                ? const Color(0xFFDCFCE7)
+                                : const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            isInvited ? 'ASSIGNED' : 'OPEN',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              color: isInvited
+                                  ? const Color(0xFF15803D)
+                                  : const Color(0xFF2563EB),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      battle.entryFee > 0
+                          ? 'Entry: ${battle.entryFee} Coins • Win: $prizeCoins Coins'
+                          : 'Free Practice Match',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: _isJoiningBattle ? null : () => _joinOpenBattle(battle),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Join',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 

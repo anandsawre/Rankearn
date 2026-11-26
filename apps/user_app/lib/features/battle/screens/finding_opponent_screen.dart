@@ -77,6 +77,14 @@ class _FindingOpponentScreenState extends State<FindingOpponentScreen> {
             ),
           ),
         );
+      } else if (res is Failure<BattleSession>) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res.message),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+        Navigator.of(context).pop();
       }
     });
   }

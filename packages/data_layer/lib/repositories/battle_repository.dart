@@ -230,70 +230,171 @@ class BattleRepository {
     return const {};
   }
 
-  /// Get 5 high-yield competitive battle questions
-  Future<Result<List<BattleQuestion>>> getLiveBattleQuestions({int limit = 5}) async {
+  /// Fetch Open (`waiting`) battles & user-assigned (`active`) battles created by Admin or peers
+  Future<Result<List<OpenBattleRoom>>> getOpenBattles({String? userId}) async {
     final client = _client;
-    if (client != null) {
-      try {
-        final res = await client
-            .from('battle_questions')
-            .select()
-            .limit(limit);
-        if (res.isNotEmpty) {
-          final list = res.map((r) => BattleQuestion.fromJson(r)).toList();
-          if (list.length >= limit) return Success(list);
+    if (client == null) return const Success([]);
+    try {
+      final rows = await client
+          .from('battles')
+          .select('id, creator_id, opponent_id, entry_fee, status, created_at')
+          .inFilter('status', ['waiting', 'active'])
+          .order('created_at', ascending: false)
+          .limit(20);
+
+      final rawList = List<Map<String, dynamic>>.from(rows as List);
+      final visibleRows = rawList.where((r) {
+        final status = (r['status'] ?? '').toString().toLowerCase();
+        final creatorId = r['creator_id']?.toString() ?? '';
+        final opponentId = r['opponent_id']?.toString() ?? '';
+        if (status == 'waiting') {
+          return opponentId.isEmpty || (userId != null && opponentId == userId);
         }
+        if (status == 'active' && userId != null && userId.isNotEmpty) {
+          return creatorId == userId || opponentId == userId;
+        }
+        return false;
+      }).toList();
+
+      final creatorIds = visibleRows
+          .map((r) => r['creator_id']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toSet()
+          .toList();
+
+      final namesById = <String, String>{};
+      if (creatorIds.isNotEmpty) {
+        try {
+          final profiles = await client
+              .from('profiles')
+              .select('id, name, email')
+              .inFilter('id', creatorIds);
+          for (final p in (profiles as List)) {
+            final pid = p['id']?.toString() ?? '';
+            final name = p['name']?.toString().trim() ?? '';
+            final email = p['email']?.toString().trim() ?? '';
+            if (pid.isNotEmpty) {
+              namesById[pid] = name.isNotEmpty
+                  ? name
+                  : (email.isNotEmpty ? email.split('@').first : 'Challenger');
+            }
+          }
+        } catch (_) {}
+      }
+
+      final rooms = visibleRows.map((r) {
+        final cid = r['creator_id']?.toString() ?? '';
+        return OpenBattleRoom(
+          id: r['id']?.toString() ?? '',
+          creatorId: cid,
+          creatorName: namesById[cid] ?? 'Admin / Challenger',
+          opponentId: r['opponent_id']?.toString(),
+          entryFee: (r['entry_fee'] as num?)?.toInt() ?? 0,
+          status: (r['status'] ?? 'waiting').toString(),
+          createdAt: DateTime.tryParse(r['created_at']?.toString() ?? '')?.toLocal() ??
+              DateTime.now(),
+        );
+      }).toList();
+
+      return Success(rooms);
+    } catch (e) {
+      return Failure('Error fetching open battles: $e', e);
+    }
+  }
+
+  /// Join an existing Admin-created or open Battle room and create a live session
+  Future<Result<BattleSession>> joinExistingBattleSession({
+    required OpenBattleRoom battle,
+    required String userId,
+    required String playerName,
+  }) async {
+    final settings = await getBattleSettings();
+    final questionLimit = (settings['defaultQuestions'] as num?)?.toInt() ?? 5;
+    final questionsRes = await getLiveBattleQuestions(
+      limit: questionLimit.clamp(1, 20),
+    );
+    if (questionsRes is Failure<List<BattleQuestion>>) {
+      return Failure(questionsRes.message, questionsRes.error);
+    }
+    final questions = (questionsRes as Success<List<BattleQuestion>>).data;
+    if (questions.isEmpty) {
+      return const Failure('No battle questions available in database.');
+    }
+
+    final client = _client;
+    if (client != null && userId.isNotEmpty) {
+      try {
+        final updatePayload = <String, dynamic>{
+          'status': 'active',
+        };
+        if (battle.creatorId != userId &&
+            (battle.opponentId == null || battle.opponentId!.isEmpty)) {
+          updatePayload['opponent_id'] = userId;
+        }
+        await client.from('battles').update(updatePayload).eq('id', battle.id);
       } catch (_) {}
     }
 
-    // Default reference-accurate curriculum questions
-    return const Success([
-      BattleQuestion(
-        id: 'bq_1',
-        subject: 'Solar Astronomy',
-        questionText: 'Which planet is known as the Red Planet in our solar system?',
-        options: ['Venus', 'Mars', 'Jupiter', 'Mercury'],
-        correctAnswer: 1,
-        timeLimitSeconds: 15,
+    if (battle.entryFee > 0) {
+      await deductBattleEntryFee(
+        userId: userId,
+        entryFee: battle.entryFee,
+        battleId: battle.id,
+        battleTitle: 'Battle vs ${battle.creatorName}',
+      );
+    }
+
+    final roundCount = questions.length;
+
+    return Success(
+      BattleSession(
+        id: battle.id,
+        player: BattlePlayer(
+          id: userId,
+          name: playerName.isEmpty ? 'Player' : playerName,
+          rank: '#1',
+          score: 0,
+          roundResults: List<bool?>.filled(roundCount, null),
+        ),
+        opponent: BattlePlayer(
+          id: battle.creatorId.isNotEmpty ? battle.creatorId : 'p_opponent',
+          name: battle.creatorName,
+          rank: 'Challenger',
+          score: 0,
+          roundResults: List<bool?>.filled(roundCount, null),
+        ),
+        entryFee: battle.entryFee,
+        currentRound: 1,
+        totalRounds: roundCount,
+        questions: questions,
+        state: BattleMatchState.inProgress,
       ),
-      BattleQuestion(
-        id: 'bq_2',
-        subject: 'Indian Geography',
-        questionText: 'What is the capital city of the state of Bihar?',
-        options: ['Gaya', 'Patna', 'Muzaffarpur', 'Bhagalpur'],
-        correctAnswer: 1,
-        timeLimitSeconds: 15,
-      ),
-      BattleQuestion(
-        id: 'bq_3',
-        subject: 'Indian Heritage',
-        questionText: 'Who composed the National Anthem of India "Jana Gana Mana"?',
-        options: [
-          'Bankim Chandra Chatterjee',
-          'Rabindranath Tagore',
-          'Sarojini Naidu',
-          'Subhas Chandra Bose'
-        ],
-        correctAnswer: 1,
-        timeLimitSeconds: 15,
-      ),
-      BattleQuestion(
-        id: 'bq_4',
-        subject: 'General Science',
-        questionText: 'Which is the largest organ in the human body?',
-        options: ['Liver', 'Heart', 'Skin', 'Lungs'],
-        correctAnswer: 2,
-        timeLimitSeconds: 15,
-      ),
-      BattleQuestion(
-        id: 'bq_5',
-        subject: 'Modern History',
-        questionText: 'In which historic year did India gain Independence from British rule?',
-        options: ['1942', '1945', '1947', '1950'],
-        correctAnswer: 2,
-        timeLimitSeconds: 15,
-      ),
-    ]);
+    );
+  }
+
+  /// Fetch live competitive battle questions strictly from Supabase `battle_questions`
+  Future<Result<List<BattleQuestion>>> getLiveBattleQuestions({int limit = 5}) async {
+    final client = _client;
+    if (client == null) {
+      return const Failure('Database connection is not initialized.');
+    }
+    try {
+      final poolLimit = (limit * 4).clamp(limit, 50);
+      final res = await client
+          .from('battle_questions')
+          .select()
+          .limit(poolLimit);
+      final list = (res as List)
+          .map((r) => BattleQuestion.fromJson(Map<String, dynamic>.from(r as Map)))
+          .toList();
+      if (list.isEmpty) {
+        return const Failure('No battle questions found in database. Please add questions in Admin.');
+      }
+      list.shuffle();
+      return Success(list.take(limit).toList());
+    } catch (e) {
+      return Failure('Failed to load battle questions: $e', e);
+    }
   }
 
   /// Instantiate a fresh synchronized 1v1 Battle Session & register active row in Supabase `battles`
@@ -309,9 +410,13 @@ class BattleRepository {
     final questionsRes = await getLiveBattleQuestions(
       limit: questionLimit.clamp(1, 20),
     );
-    final questions = questionsRes is Success<List<BattleQuestion>>
-        ? questionsRes.data
-        : const <BattleQuestion>[];
+    if (questionsRes is Failure<List<BattleQuestion>>) {
+      return Failure(questionsRes.message, questionsRes.error);
+    }
+    final questions = (questionsRes as Success<List<BattleQuestion>>).data;
+    if (questions.isEmpty) {
+      return const Failure('No battle questions available in database.');
+    }
 
     final battleId = 'btl_${DateTime.now().millisecondsSinceEpoch}';
     final client = _client;
