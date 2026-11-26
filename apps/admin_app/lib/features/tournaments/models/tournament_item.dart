@@ -234,7 +234,6 @@ class TournamentItem {
       'is_tournament': true,
       'test_mode': 'tournament',
       'max_participants': maxParticipants,
-      'prize_pool': prizePool,
       'prize_pool_coins': prizePool * 20,
       'duration_minutes': endDate.difference(startDate).inMinutes > 0
           ? endDate.difference(startDate).inMinutes

@@ -146,7 +146,6 @@ class TestSeriesItem {
       'is_tournament': isTournament,
       'entry_fee_coins': entryFeeCoins,
       'prize_pool_coins': prizePoolCoins,
-      'prize_pool': (prizePoolCoins / 20).round(),
       'scheduled_start_time': scheduledStartTime?.toIso8601String(),
       'scheduled_end_time': scheduledEndTime?.toIso8601String(),
       'total_participants': enrollments,
