@@ -585,10 +585,13 @@ class ProfileModals {
         const SizedBox(height: 6),
         TextField(
           controller: controller,
+          cursorColor: AppColors.brandGreen,
           decoration: InputDecoration(
             prefixIcon: Icon(icon, size: 20, color: AppColors.textMuted),
             filled: true,
-            fillColor: AppColors.surfaceSubtle,
+            fillColor: Colors.white,
+            focusColor: Colors.transparent,
+            hoverColor: Colors.transparent,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 12,

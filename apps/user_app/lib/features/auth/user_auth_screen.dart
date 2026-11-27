@@ -368,6 +368,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       controller: phoneController,
                       label: 'Mobile Number',
                       keyboardType: TextInputType.phone,
+                      focusedBorderColor: const Color(0xFF00B96B),
+                      cursorColor: const Color(0xFF00B96B),
                       prefixIcon: const Icon(Icons.phone_rounded, color: Color(0xFF00B96B)),
                     )
                   else
@@ -376,6 +378,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                       label: '6-Digit OTP',
                       keyboardType: TextInputType.number,
                       maxLength: 6,
+                      focusedBorderColor: const Color(0xFF00B96B),
+                      cursorColor: const Color(0xFF00B96B),
                       prefixIcon: const Icon(Icons.security_rounded, color: Color(0xFF00B96B)),
                     ),
                 ],
@@ -515,12 +519,14 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                   controller: resetEmailController,
                   label: 'Registered Email Address',
                   keyboardType: TextInputType.emailAddress,
+                  focusedBorderColor: const Color(0xFF00B96B),
+                  cursorColor: const Color(0xFF00B96B),
                   prefixIcon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF00B96B)),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
+                  height: AppSpacing.adminControlHeight,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00B96B),
@@ -1546,7 +1552,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
             // Primary Action Button (Login / Register) with Brand Green Gradient (No Shadow)
             SizedBox(
               width: double.infinity,
-              height: 48,
+              height: AppSpacing.adminControlHeight,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
@@ -1690,6 +1696,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       label: 'Email Address or Mobile Number',
       keyboardType: TextInputType.emailAddress,
       autofillHints: const [AutofillHints.username, AutofillHints.email, AutofillHints.telephoneNumber],
+      focusedBorderColor: const Color(0xFF00B96B),
+      cursorColor: const Color(0xFF00B96B),
       onChanged: (_) => setState(() {}),
       prefixIcon: Icon(
         isPhoneInput ? Icons.phone_android_rounded : Icons.mail_outline_rounded,
@@ -1723,6 +1731,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       label: 'Email Address',
       keyboardType: TextInputType.emailAddress,
       autofillHints: const [AutofillHints.email],
+      focusedBorderColor: const Color(0xFF00B96B),
+      cursorColor: const Color(0xFF00B96B),
       prefixIcon: const Icon(Icons.mail_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your email address';
@@ -1739,6 +1749,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       isPassword: true,
       autofillHints: [isLogin ? AutofillHints.password : AutofillHints.newPassword],
       fillColor: Colors.white,
+      focusedBorderColor: const Color(0xFF00B96B),
+      cursorColor: const Color(0xFF00B96B),
       prefixIcon: const Icon(Icons.lock_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your password';
@@ -1753,6 +1765,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       controller: _nameController,
       label: 'Full Name',
       autofillHints: const [AutofillHints.name],
+      focusedBorderColor: const Color(0xFF00B96B),
+      cursorColor: const Color(0xFF00B96B),
       prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF00B96B)),
       validator: (val) {
         if (val == null || val.trim().isEmpty) return 'Please enter your full name';
@@ -1769,6 +1783,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
       label: 'Mobile Number',
       keyboardType: TextInputType.phone,
       autofillHints: const [AutofillHints.telephoneNumber],
+      focusedBorderColor: const Color(0xFF00B96B),
+      cursorColor: const Color(0xFF00B96B),
       prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF00B96B)),
       prefixText: showPrefix ? '+91 ' : null,
       validator: (val) {
@@ -1784,6 +1800,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
     return AppTextField.floating(
       controller: _referralController,
       label: 'Referral Code (Optional)',
+      focusedBorderColor: const Color(0xFF00B96B),
+      cursorColor: const Color(0xFF00B96B),
       prefixIcon: const Icon(Icons.card_giftcard_rounded, size: 18, color: Color(0xFF00B96B)),
       fillColor: Colors.white,
       textCapitalization: TextCapitalization.characters,

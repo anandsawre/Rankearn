@@ -333,6 +333,8 @@ class AppModalDialog extends StatelessWidget {
           ),
       filled: true,
       fillColor: fillColor ?? AppColors.surface,
+      focusColor: Colors.transparent,
+      hoverColor: Colors.transparent,
       isDense: isDense ?? true,
       contentPadding: effectiveContentPadding,
       constraints: effectiveConstraints,
@@ -540,7 +542,7 @@ class AppModalDialog extends StatelessWidget {
           bodyBottomPadding,
         );
 
-    return Dialog(
+    final dialogWidget = Dialog(
       shape: isMobile
           ? const RoundedRectangleBorder()
           : const RoundedRectangleBorder(borderRadius: AppRadii.borderLg),
@@ -832,6 +834,19 @@ class AppModalDialog extends StatelessWidget {
         ),
       ),
     );
+
+    if (isMobile) {
+      return AnnotatedRegion<SystemUiOverlayStyle>(
+        sized: false,
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+        ),
+        child: dialogWidget,
+      );
+    }
+    return dialogWidget;
   }
 
   static Widget _buildBodyBackdrop({

@@ -51,7 +51,9 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceSubtle,
+        fillColor: Colors.white,
+        focusColor: Colors.transparent,
+        hoverColor: Colors.transparent,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,

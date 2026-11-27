@@ -40,6 +40,8 @@ class AppTextField extends StatefulWidget {
   final int? maxLength;
   final Iterable<String>? autofillHints;
   final double? height;
+  final Color? focusedBorderColor;
+  final Color? cursorColor;
 
   const AppTextField({
     super.key,
@@ -73,6 +75,8 @@ class AppTextField extends StatefulWidget {
     this.maxLength,
     this.autofillHints,
     this.height,
+    this.focusedBorderColor,
+    this.cursorColor,
   });
 
   /// Factory constructor for modern floating-label form inputs (e.g. Auth Screen).
@@ -106,7 +110,9 @@ class AppTextField extends StatefulWidget {
     this.hintStyle,
     this.maxLength,
     this.autofillHints,
-    this.height,
+    this.height = AppSpacing.adminControlHeight,
+    this.focusedBorderColor,
+    this.cursorColor,
   })  : isFloatingLabel = true,
         floatingLabelBehavior = FloatingLabelBehavior.auto;
 
@@ -142,7 +148,9 @@ class AppTextField extends StatefulWidget {
         labelStyle = null,
         floatingLabelStyle = null,
         maxLength = null,
-        autofillHints = null;
+        autofillHints = null,
+        focusedBorderColor = null,
+        cursorColor = null;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -215,8 +223,12 @@ class _AppTextFieldState extends State<AppTextField> {
       validator: widget.validator,
       enableSuggestions: !widget.isPassword,
       autocorrect: !widget.isPassword,
+      cursorColor: widget.cursorColor,
       style: effectiveStyle,
       decoration: InputDecoration(
+        constraints: widget.height != null
+            ? BoxConstraints(minHeight: widget.height!)
+            : null,
         labelText: widget.label,
         hintText: widget.hintText,
         hintStyle: widget.hintStyle ?? AppTypography.formHint,
@@ -238,6 +250,8 @@ class _AppTextFieldState extends State<AppTextField> {
             : widget.suffixIcon,
         filled: true,
         isDense: widget.isDense,
+        focusColor: Colors.transparent,
+        hoverColor: Colors.transparent,
         fillColor: widget.enabled
             ? (widget.fillColor ?? AppColors.adminCardBackground)
             : (widget.fillColor ?? AppColors.adminCardBackground).withValues(alpha: 0.6),
@@ -252,8 +266,8 @@ class _AppTextFieldState extends State<AppTextField> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: effectiveRadius,
-          borderSide: const BorderSide(
-            color: AppColors.adminPurple,
+          borderSide: BorderSide(
+            color: widget.focusedBorderColor ?? AppColors.adminPurple,
             width: 1.5,
           ),
         ),
@@ -289,10 +303,11 @@ class _AppTextFieldState extends State<AppTextField> {
     final isMultiline = (widget.maxLines > 1);
     final effectiveHeight = widget.height ?? (isMultiline ? null : AppSpacing.adminControlHeight);
 
+    final effectiveFocusedColor = widget.focusedBorderColor ?? AppColors.adminPurple;
     final borderColor = _isFocused
-        ? AppColors.adminPurple
+        ? effectiveFocusedColor
         : (_isHovered
-            ? AppColors.adminPurple.withAlpha(120)
+            ? effectiveFocusedColor.withAlpha(120)
             : AppColors.adminBorder);
 
     // ── Prefix icon inside InputDecoration ──────────────────────────────────
@@ -400,6 +415,7 @@ class _AppTextFieldState extends State<AppTextField> {
           validator: widget.validator,
           enableSuggestions: !widget.isPassword,
           autocorrect: !widget.isPassword,
+          cursorColor: widget.cursorColor,
           style: effectiveStyle,
           textAlignVertical: isMultiline ? TextAlignVertical.top : TextAlignVertical.center,
           decoration: InputDecoration(
@@ -426,6 +442,8 @@ class _AppTextFieldState extends State<AppTextField> {
             isDense: true,
             isCollapsed: false, // KEY: false = Flutter Web centers text properly
             filled: false,
+            focusColor: Colors.transparent,
+            hoverColor: Colors.transparent,
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
