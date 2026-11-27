@@ -74,6 +74,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: [SystemUiOverlay.bottom],
+    );
     _mode = widget.initialMode;
     _phoneFocusNode.addListener(() {
       if (mounted) setState(() {});
@@ -93,6 +97,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
 
   @override
   void dispose() {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
     _authSubscription?.cancel();
     _scrollController.dispose();
     _nameController.dispose();
@@ -618,8 +626,8 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
         final statusBarBgColor = isDesktop ? const Color(0xFFF4F8FF) : Colors.white;
 
         return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle(
-            statusBarColor: statusBarBgColor,
+          value: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
             statusBarIconBrightness: Brightness.dark,
             statusBarBrightness: Brightness.light,
             systemNavigationBarColor: Colors.white,
@@ -627,8 +635,7 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
           ),
           child: Scaffold(
             backgroundColor: statusBarBgColor,
-            body: SafeArea(
-            child: Stack(
+            body: Stack(
               children: [
                 // Background: Desktop Wave or Mobile Ambient Diffused Aura & Arcs (Fixed to Viewport)
                 if (isDesktop)
@@ -688,9 +695,10 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                 ),
 
                 // Main Content Viewport
-                ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                  child: SingleChildScrollView(
+                SafeArea(
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                    child: SingleChildScrollView(
                     controller: _scrollController,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.symmetric(
@@ -742,12 +750,12 @@ class _UserAuthScreenState extends State<UserAuthScreen> {
                     ),
                   ),
                 ),
+                ),
               ],
             ),
           ),
-        ),
-      );
-    },
+        );
+      },
     );
   }
 
